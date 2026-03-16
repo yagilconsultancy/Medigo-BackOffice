@@ -44,7 +44,7 @@ export const AppDashBoardHeader = ({
           }),
       }}
     >
-      <Toolbar>
+      <>
         <RowStack width={"100%"} justifyContent={'space-between'}>
           <AppSearchField 
            placeholder='Search bookings, drivers, or trips…'
@@ -72,7 +72,7 @@ export const AppDashBoardHeader = ({
             />
           </RowStack>
         </RowStack>
-      </Toolbar>
+      </>
     </AppBar>
   );
 };

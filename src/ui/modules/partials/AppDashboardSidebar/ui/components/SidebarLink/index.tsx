@@ -10,6 +10,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { StaticImageData } from 'next/image';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { RowStack, StyledImage, StyledLink } from '../../../../../components';
 import { pxToRem } from '../../../../../../../common';
 
@@ -96,13 +97,13 @@ export const SidebarLink = ({
           </StyledLink>
         </Tooltip>
       ) : (
-        <StyledLink href={link}>
+        <StyledLink href={link} style={{ width: '100%' }}>
           <RowStack
             spacing={'12px'}
             sx={{
               transition: 'all 0.3s ease',
               backgroundColor: isActive
-                ? alpha(theme.palette.primary.main, 0.1)
+                ? 'primary.main'
                 : 'transparent',
               height: '44px',
               width: '100%',
@@ -118,6 +119,9 @@ export const SidebarLink = ({
                 '& .sidebar-link-icon': {
                   filter: 'brightness(0) invert(1)',
                 },
+                '& .sidebar-link-chevron': {
+                  opacity: 1,
+                },
               },
             }}
           >
@@ -131,7 +135,7 @@ export const SidebarLink = ({
                   height: '20px',
                   flexShrink: 0,
                   filter: isActive
-                    ? 'invert(36%) sepia(94%) saturate(1856%) hue-rotate(208deg) brightness(95%) contrast(92%)'
+                    ? 'brightness(0) invert(1)'
                     : 'none',
                   transition: 'filter 0.3s ease',
                 }}
@@ -143,17 +147,29 @@ export const SidebarLink = ({
                 className="sidebar-link-text"
                 noWrap
                 sx={{
+                  flexGrow: 1,
                   fontWeight: isActive ? 500 : 400,
                   fontSize: pxToRem(14),
                   fontFamily: (theme) => theme.typography.fontFamily,
                   lineHeight: pxToRem(21),
-                  color: isActive ? 'primary.main' : '#344054',
+                  color: isActive ? '#FFF' : '#344054',
                   transition: 'color 0.3s ease',
                 }}
               >
                 {text}
               </Typography>
             </Collapse>
+
+            <ChevronRightIcon
+              className="sidebar-link-chevron"
+              sx={{
+                fontSize: '18px',
+                color: '#FFF',
+                ml: 'auto',
+                opacity: isActive ? 1 : 0,
+                transition: 'opacity 0.3s ease',
+              }}
+            />
           </RowStack>
         </StyledLink>
       )}

@@ -44,7 +44,6 @@ export const SidebarLinks = ({
 
   const toggleDropdown = (text: string) => {
     setOpenDropdowns((prev) => ({
-      ...prev,
       [text]: !prev[text],
     }));
   };
@@ -173,13 +172,13 @@ export const SidebarLinks = ({
                                       ? theme.palette.primary.main
                                       : 'transparent'
                                   }`,
-                                  borderRadius: '0 8px 8px 0',
+                                  borderRadius: '12px',
                                   py: '8px',
                                   pl: '12px',
                                   pr: '8px',
                                   display: 'flex',
                                   alignItems: 'center',
-                                  transition: 'all 0.3s ease',
+                                  transition: 'all 0.6s ease',
                                   backgroundColor: isSubActive
                                     ? alpha(theme.palette.primary.main, 0.08)
                                     : 'transparent',
@@ -276,7 +275,16 @@ export const SidebarLinks = ({
                         <StyledImage
                           src={item.icon}
                           alt={item.text}
-                          sx={{ width: '22px', height: '22px' }}
+                          sx={{ 
+                            width: '22px', 
+                            height: '22px',
+                            // filter:
+                            //     'invert(36%) sepia(94%) saturate(1856%) hue-rotate(208deg) brightness(95%) contrast(92%)'
+                            // "&:hover": {
+                            //   filter:
+                            //     'invert(36%) sepia(94%) saturate(1856%) hue-rotate(208deg) brightness(95%) contrast(92%)' 
+                            // }
+                          }}
                         />
                       )}
                     </Box>
