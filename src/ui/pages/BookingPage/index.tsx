@@ -152,15 +152,15 @@ const columns: GridColSpec<BookingRow>[] = [
       return (
         <RowStack spacing={0.5}>
           <IconButton size="small" sx={{ color: '#9CA3AF' }}>
-            <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />
+            <VisibilityOutlinedIcon sx={{ fontSize: 15 }} />
           </IconButton>
           {status === 'Pending' && (
             <>
-              <IconButton size="small" sx={{ color: '#10B981' }}>
-                <CheckCircleOutlineIcon sx={{ fontSize: 18 }} />
+              <IconButton size="small" sx={{ color: '#9CA3AF' }}>
+                <CheckCircleOutlineIcon sx={{ fontSize: 15 }} />
               </IconButton>
-              <IconButton size="small" sx={{ color: '#EF4444' }}>
-                <CancelOutlinedIcon sx={{ fontSize: 18 }} />
+              <IconButton size="small" sx={{ color: '#9CA3AF' }}>
+                <CancelOutlinedIcon sx={{ fontSize: 15 }} />
               </IconButton>
             </>
           )}
@@ -223,69 +223,69 @@ export const BookingPage = () => {
           title="Booking Management"
           desc={`Review, approve, and manage all patient transport bookings`}
         />
-      </Stack>
-      <AppGridtable
-        columns={columns}
-        data={filteredBookings}
-        initialPageSize={7}
-        sx={{
-          height: 'auto',
-          width: '100%',
-        }}
-      >
-        <RowStack justifyContent={'space-between'} width={'100%'}>
-          <RowStack spacing={1}>
-            {statusFilter.map((filter, index) => (
-              <AppPillCount
-                {...filter}
-                key={index}
-                onClick={() => setActiveFilter(filter.text)}
-              />
-            ))}
-          </RowStack>
-          <RowStack spacing={1}>
-            <AppSearchField
-              name="search"
-              placeholder="Search bookings..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              boxProps={{
-                sx: { width: '240px' },
-              }}
-            />
-            <RowStack
-              spacing={1}
-              sx={{
-                padding: '11.5px 16.07px',
-                borderRadius: '14px',
-                background: '#F7F9FB',
-                border: '0.67px solid #E8ECF0',
-                cursor: 'pointer',
-              }}
-            >
-              <StyledImage
-                src={filterIcon}
-                alt="filter"
-                sx={{
-                  width: '15px',
-                  height: '15px',
+        <AppGridtable
+          columns={columns}
+          data={filteredBookings}
+          initialPageSize={4}
+          sx={{
+            height: 'auto',
+            width: '100%',
+          }}
+        >
+          <RowStack justifyContent={'space-between'} width={'100%'}>
+            <RowStack spacing={1}>
+              {statusFilter.map((filter, index) => (
+                <AppPillCount
+                  {...filter}
+                  key={index}
+                  onClick={() => setActiveFilter(filter.text)}
+                />
+              ))}
+            </RowStack>
+            <RowStack spacing={1}>
+              <AppSearchField
+                name="search"
+                placeholder="Search bookings..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                boxProps={{
+                  sx: { width: '240px' },
                 }}
               />
-              <Typography
+              <RowStack
+                spacing={1}
                 sx={{
-                  color: (theme) => theme.color.grey,
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(13),
-                  lineHeight: '19.5px',
+                  padding: '11.5px 16.07px',
+                  borderRadius: '14px',
+                  background: '#F7F9FB',
+                  border: '0.67px solid #E8ECF0',
+                  cursor: 'pointer',
                 }}
               >
-                Filter
-              </Typography>
+                <StyledImage
+                  src={filterIcon}
+                  alt="filter"
+                  sx={{
+                    width: '15px',
+                    height: '15px',
+                  }}
+                />
+                <Typography
+                  sx={{
+                    color: (theme) => theme.color.grey,
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(13),
+                    lineHeight: '19.5px',
+                  }}
+                >
+                  Filter
+                </Typography>
+              </RowStack>
             </RowStack>
           </RowStack>
-        </RowStack>
-      </AppGridtable>
+        </AppGridtable>
+      </Stack>
     </AppDashboardLayout>
   );
 };

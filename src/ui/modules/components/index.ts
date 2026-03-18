@@ -19,3 +19,5 @@ export * from './DashboardTitleAndDesc';
 export * from './AppTab';
 export * from './AppCardparent';
 export * from './AppPillCount';
+export * from "./AppGoogleMap";
+export * from "./AppGoogleMapProvider";

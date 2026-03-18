@@ -49,32 +49,36 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         text: 'Booking Management',
         dropdown: [
           { text: 'All Bookings', link: '/bookings' },
-          { text: 'New Booking', link: '/bookings/new' },
-          { text: 'Booking History', link: '/bookings/history' },
+          { text: 'Pending Bookings', link: '/bookings/pending' },
+          { text: 'Scheduled Trips', link: '/bookings/scheduled' },
+          { text: 'Cancelled Trips', link: '/bookings/cancelled' },
         ],
       },
       {
         icon: dispatchIcon,
         text: 'Dispatch Center',
         dropdown: [
-          { text: 'Live Dispatch', link: '/dispatch' },
-          { text: 'Dispatch History', link: '/dispatch/history' },
+          { text: 'Live Dispatch Map', link: '/dispatch' },
+          { text: 'Ride Management', link: '/dispatch/rides' },
+          { text: 'Auto Dispatch Settings', link: '/dispatch/settings' },
         ],
       },
       {
         icon: gpsIcon,
         text: 'GPS Tracking',
         dropdown: [
-          { text: 'Live Tracking', link: '/gps' },
-          { text: 'Route History', link: '/gps/history' },
+          { text: 'Live Driver Map', link: '/gps' },
+          { text: 'Active Trip Map', link: '/gps/trips' },
+          { text: 'Driver Route History', link: '/gps/history' },
         ],
       },
       {
         icon: fleetIcon,
         text: 'Fleet Management',
         dropdown: [
-          { text: 'All Fleets', link: '/fleet' },
-          { text: 'Maintenance', link: '/fleet/maintenance' },
+          { text: 'Fleet Companies', link: '/fleet' },
+          { text: 'Fleet Vehicles', link: '/fleet/vehicles' },
+          { text: 'Fleet Drivers', link: '/fleet/drivers' },
         ],
       },
       {
@@ -82,9 +86,8 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         text: 'Driver Management',
         dropdown: [
           { text: 'All Drivers', link: '/drivers' },
-          { text: 'Drivers Profiles', link: '/drivers/profiles' },
-          { text: 'Driver Documents', link: '/drivers/documents' },
           { text: 'Driver Status', link: '/drivers/status' },
+          { text: 'Driver Profiles', link: '/drivers/profiles' },
         ],
       },
       {
@@ -101,6 +104,14 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         dropdown: [
           { text: 'All Riders', link: '/riders' },
           { text: 'Rider Profiles', link: '/riders/profiles' },
+        ],
+      },
+      {
+        icon: supportIcon,
+        text: 'Caregiver Management',
+        dropdown: [
+          { text: 'All Caregivers', link: '/caregivers' },
+          { text: 'Caregiver Profiles', link: '/caregivers/profiles' },
         ],
       },
       {
