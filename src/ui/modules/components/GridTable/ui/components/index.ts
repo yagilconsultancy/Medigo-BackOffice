@@ -1,2 +1,2 @@
-export * from "./GridLoader";
-export * from "./DataGridPagination";
+export * from './GridLoader';
+export * from './DataGridPagination';

@@ -13,7 +13,7 @@ export const useTextFieldStyles = ({
   fontSize = {
     xs: '0.875rem',
     md: '1rem',
-    lg: pxToRem(13)
+    lg: pxToRem(13),
   },
   variant = 'outlined',
   error,

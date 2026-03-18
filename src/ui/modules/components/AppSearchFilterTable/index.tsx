@@ -8,12 +8,6 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import {
-  AppDataGrid,
-  AppDataGridProps,
-  GridRow,
-  GridSortSpec,
-} from '../AppDataGrid';
-import {
   alpha,
   Box,
   Divider,
@@ -26,7 +20,7 @@ import React, { useCallback, useState } from 'react';
 import { RowStack } from '../RowStack';
 import { AppSearchField } from '../TextField';
 import { StyledImage } from '../StyledImage';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import filterIcon from './ui/assets/icons/filter.svg';
 import downloadIcon from './ui/assets/icons/download.svg';
 import { pxToRem } from '../../../../common';
@@ -34,6 +28,7 @@ import { AppDropdownMenu } from '../AppDropdownMenu';
 import { AppButton } from '../AppButton';
 import { ArrowForwardIos } from '@mui/icons-material';
 import { toast } from 'sonner';
+import { AppDataGridProps, GridRow, GridTable } from '../GridTable';
 
 // Initialize dayjs plugins
 dayjs.extend(utc);
@@ -490,7 +485,7 @@ export const AppSearchFilterTable = <T extends GridRow>({
                     width: { xs: '100%', md: '40%', lg: '326px' },
                     height: '38px',
                     borderRadius: '12px',
-                    border: `1px solid ${theme.dashboard.borderColor}`,
+                    // border: `1px solid ${theme.dashboard.borderColor}`,
                     boxShadow: '#1018280D',
                   },
                 }}
@@ -518,7 +513,7 @@ export const AppSearchFilterTable = <T extends GridRow>({
         </Grid>
       </Grid>
 
-      <AppDataGrid
+      <GridTable
         {...dataGridProps}
         columns={columns}
         fetchData={handleFetchData}

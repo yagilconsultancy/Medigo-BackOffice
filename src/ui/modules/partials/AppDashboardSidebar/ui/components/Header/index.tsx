@@ -16,7 +16,7 @@ export const Header = ({ isSidebarOpen, handleClick }: HeaderProps) => {
       sx={{
         transition: 'all 1s',
         position: 'relative',
-        zIndex: 9999
+        zIndex: 9999,
       }}
     >
       <RowStack justifyContent={'space-between'}>
@@ -25,7 +25,7 @@ export const Header = ({ isSidebarOpen, handleClick }: HeaderProps) => {
           alt="mediride Logo"
           sx={{
             width: isSidebarOpen ? '108px' : '71px',
-            height: isSidebarOpen ? "auto" : "40px"
+            height: isSidebarOpen ? 'auto' : '40px',
           }}
         />
         <IconButton
@@ -35,13 +35,17 @@ export const Header = ({ isSidebarOpen, handleClick }: HeaderProps) => {
             background: theme.palette.background.default,
             borderRadius: '50%',
             border: `1.33px solid #E8ECF0`,
-            position: !isSidebarOpen ? 'absolute' : "none",
-            right: !isSidebarOpen ? "-25px" : "0px",
-            zIndex: 9999
+            position: !isSidebarOpen ? 'absolute' : 'none',
+            right: !isSidebarOpen ? '-25px' : '0px',
+            zIndex: 9999,
           }}
           onClick={handleClick}
         >
-          {isSidebarOpen ? <ChevronLeftOutlinedIcon /> : <ChevronRightOutlinedIcon />}
+          {isSidebarOpen ? (
+            <ChevronLeftOutlinedIcon />
+          ) : (
+            <ChevronRightOutlinedIcon />
+          )}
         </IconButton>
       </RowStack>
     </Box>

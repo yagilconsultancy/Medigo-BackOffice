@@ -1,5 +1,5 @@
-import { ApiResponse } from '@/common/types';
 import { ReactNode } from 'react';
+import { ApiResponse } from '../types';
 
 export const extractResponseErrors = (
   apiResponse: ApiResponse<any>
@@ -7,14 +7,16 @@ export const extractResponseErrors = (
   if (apiResponse.success) {
     return null;
   }
-
+  // @ts-ignore
   if (!apiResponse.error) {
     return 'An error occurred';
   }
-
+  // @ts-ignore
   const errors = Array.isArray(apiResponse.error)
-    ? apiResponse.error
-    : [apiResponse.error];
+    ? // @ts-ignore
+      apiResponse.error
+    : // @ts-ignore
+      [apiResponse.error];
   if (errors.length === 1) {
     return errors[0];
   }

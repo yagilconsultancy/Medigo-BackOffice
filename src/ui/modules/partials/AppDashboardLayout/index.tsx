@@ -51,7 +51,9 @@ export const AppDashboardLayout = ({ children }: AppLayoutProps) => {
           },
           width: {
             xs: 'calc(100% - 0px)',
-            sm: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${collapsedWidth}px)`,
+            sm: sidebarOpen
+              ? `calc(100% - ${drawerWidth}px)`
+              : `calc(100% - ${collapsedWidth}px)`,
           },
           background: '#F7F9FB',
         }}

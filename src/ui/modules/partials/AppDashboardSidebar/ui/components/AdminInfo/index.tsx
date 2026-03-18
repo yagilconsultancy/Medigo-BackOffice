@@ -26,7 +26,7 @@ export const AdminInfo = ({
     >
       <Avatar src={icon.src} alt="user" />
       {isSideBarOpen && (
-        <Stack spacing={.3}>
+        <Stack spacing={0.3}>
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
@@ -46,7 +46,7 @@ export const AdminInfo = ({
               fontSize: pxToRem(11),
               lineHeight: '16.5px',
               fontStyle: 'regular',
-              color: "#6B7280",
+              color: '#6B7280',
             }}
           >
             {userMail}

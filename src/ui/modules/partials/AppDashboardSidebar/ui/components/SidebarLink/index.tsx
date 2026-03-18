@@ -66,9 +66,7 @@ export const SidebarLink = ({
                 width: '48px',
                 height: '48px',
                 borderRadius: '12px',
-                backgroundColor: isActive
-                  ? 'primary.main'
-                  : 'transparent',
+                backgroundColor: isActive ? 'primary.main' : 'transparent',
                 mx: 'auto',
                 mb: '4px',
                 transition: 'all 0.3s ease',
@@ -102,9 +100,7 @@ export const SidebarLink = ({
             spacing={'12px'}
             sx={{
               transition: 'all 0.3s ease',
-              backgroundColor: isActive
-                ? 'primary.main'
-                : 'transparent',
+              backgroundColor: isActive ? 'primary.main' : 'transparent',
               height: '44px',
               width: '100%',
               borderRadius: '12px',
@@ -134,9 +130,7 @@ export const SidebarLink = ({
                   width: '20px',
                   height: '20px',
                   flexShrink: 0,
-                  filter: isActive
-                    ? 'brightness(0) invert(1)'
-                    : 'none',
+                  filter: isActive ? 'brightness(0) invert(1)' : 'none',
                   transition: 'filter 0.3s ease',
                 }}
               />

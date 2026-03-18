@@ -152,10 +152,10 @@ export function formatTotalNumber(num: number | undefined): string {
 }
 
 export const getTodayDate = (date: Date = new Date()) => {
-  return date.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
   });
 };
 

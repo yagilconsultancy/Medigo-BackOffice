@@ -52,9 +52,7 @@ export const SidebarLinks = ({
     <Box sx={{ px: isSidebarOpen ? '12px' : '8px', py: '8px' }}>
       {sidebarList.map((section, index) => (
         <Box key={section.header}>
-          {index > 0 && (
-            <Divider sx={{ my: '8px', borderColor: '#E8ECF0' }} />
-          )}
+          {index > 0 && <Divider sx={{ my: '8px', borderColor: '#E8ECF0' }} />}
 
           {/* Section Header */}
           {isSidebarOpen && section.header && (
@@ -275,14 +273,14 @@ export const SidebarLinks = ({
                         <StyledImage
                           src={item.icon}
                           alt={item.text}
-                          sx={{ 
-                            width: '22px', 
+                          sx={{
+                            width: '22px',
                             height: '22px',
                             // filter:
                             //     'invert(36%) sepia(94%) saturate(1856%) hue-rotate(208deg) brightness(95%) contrast(92%)'
                             // "&:hover": {
                             //   filter:
-                            //     'invert(36%) sepia(94%) saturate(1856%) hue-rotate(208deg) brightness(95%) contrast(92%)' 
+                            //     'invert(36%) sepia(94%) saturate(1856%) hue-rotate(208deg) brightness(95%) contrast(92%)'
                             // }
                           }}
                         />

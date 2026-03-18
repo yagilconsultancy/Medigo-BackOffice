@@ -1,3 +1,3 @@
-export * from "./CardDesc";
-export * from "./CardTitle";
-export * from "./CardTitleAndDesc";
+export * from './CardDesc';
+export * from './CardTitle';
+export * from './CardTitleAndDesc';

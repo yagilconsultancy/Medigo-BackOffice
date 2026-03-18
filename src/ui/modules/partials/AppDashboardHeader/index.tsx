@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  AppBar,
-  Avatar,
-  Badge,
-  Toolbar
-} from '@mui/material';
+import { AppBar, Avatar, Badge, Toolbar } from '@mui/material';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { AppSearchField, RowStack } from '../../components';
@@ -29,7 +24,7 @@ export const AppDashBoardHeader = ({
       elevation={0}
       position="fixed"
       sx={{
-        height: sidebarOpen ? '75px' : "auto",
+        height: sidebarOpen ? '75px' : 'auto',
         background: (theme) => theme.palette.background.default,
         padding: '12px',
         pr: { xs: '20px', lg: '80px' },
@@ -45,10 +40,8 @@ export const AppDashBoardHeader = ({
       }}
     >
       <>
-        <RowStack width={"100%"} justifyContent={'space-between'}>
-          <AppSearchField 
-           placeholder='Search bookings, drivers, or trips…'
-          />
+        <RowStack width={'100%'} justifyContent={'space-between'}>
+          <AppSearchField placeholder="Search bookings, drivers, or trips…" />
           <RowStack spacing={1}>
             <IconComponent
               icon={

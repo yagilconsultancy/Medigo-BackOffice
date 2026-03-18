@@ -55,15 +55,19 @@ export const CustomTablePaginationActions = ({
   };
 
   return (
-    <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
-      
+    <Box
+      display="flex"
+      alignItems="center"
+      justifyContent="space-between"
+      width="100%"
+    >
       {/* Dynamic text */}
       <Typography
-        sx={{ 
-          fontWeight: 400, 
+        sx={{
+          fontWeight: 400,
           fontSize: pxToRem(12.5),
           lineHeight: '18.75px',
-          color: 'text.secondary'
+          color: 'text.secondary',
         }}
       >
         Showing {start}–{end} of {count} vehicles
@@ -75,7 +79,7 @@ export const CustomTablePaginationActions = ({
           onClick={(event) => onPageChange(event, page - 1)}
           disabled={page === 0}
           sx={{
-            background: "#F7F9FB",
+            background: '#F7F9FB',
             width: '30px',
             height: '30px',
             borderRadius: '8px',
@@ -117,7 +121,7 @@ export const CustomTablePaginationActions = ({
           onClick={(event) => onPageChange(event, page + 1)}
           disabled={page >= totalPages - 1}
           sx={{
-            background: "#F7F9FB",
+            background: '#F7F9FB',
             width: '30px',
             height: '30px',
             borderRadius: '8px',

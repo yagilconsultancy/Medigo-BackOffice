@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   DataGrid,
@@ -8,15 +8,18 @@ import {
   GridPaginationModel,
   GridSortDirection,
   MuiEvent,
-} from "@mui/x-data-grid";
-import React, { MouseEvent, useCallback, useEffect, useState } from "react";
-import { DataGridLoader, DataGridPagination } from "./ui/components";
-import { alpha, Stack, useTheme } from "@mui/material";
-import { pxToRem } from "../../../../common";
+} from '@mui/x-data-grid';
+import React, { MouseEvent, useCallback, useEffect, useState } from 'react';
+import { DataGridLoader, DataGridPagination } from './ui/components';
+import { alpha, Stack, useTheme } from '@mui/material';
+import { pxToRem } from '../../../../common';
 
 export type GridRow = { id: string | number };
 
-export type GridColSpec<T extends GridRow> = Omit<GridColDef<T>, "field" | "headerName"> & {
+export type GridColSpec<T extends GridRow> = Omit<
+  GridColDef<T>,
+  'field' | 'headerName'
+> & {
   field: Extract<keyof T, string> | string;
   headerName: string;
 };
@@ -34,18 +37,18 @@ export type GridDataFetchResult<T extends GridRow> = {
 export type GridDataFetcher<T extends GridRow> = (
   page: number,
   pageSize: number,
-  sortModel: GridSortSpec<T>[],
+  sortModel: GridSortSpec<T>[]
 ) => Promise<GridDataFetchResult<T>>;
 
 export type AppDataGridProps<T extends GridRow> = Omit<
   DataGridProps,
-  | "columns"
-  | "rows"
-  | "onRowClick"
-  | "paginationModel"
-  | "rowCount"
-  | "paginationMode"
-  | "hideFooter"
+  | 'columns'
+  | 'rows'
+  | 'onRowClick'
+  | 'paginationModel'
+  | 'rowCount'
+  | 'paginationMode'
+  | 'hideFooter'
 > & {
   columns: GridColSpec<T>[];
   /** If provided, the grid will fetch data from the server */
@@ -55,7 +58,11 @@ export type AppDataGridProps<T extends GridRow> = Omit<
   disableRowClick?: boolean;
   initialPageSize?: number;
   checkboxSelection?: boolean;
-  onRowClick?: (row: T, event: MuiEvent<MouseEvent>, details: GridCallbackDetails) => void;
+  onRowClick?: (
+    row: T,
+    event: MuiEvent<MouseEvent>,
+    details: GridCallbackDetails
+  ) => void;
   /** When true, automatic pagination will be disabled and the value of "data" will be used. This requires manual server-side pagination handling */
   disableAutoPagination?: boolean;
   /** Useful for manual server-side pagination */
@@ -93,13 +100,20 @@ export const GridTable = <T extends GridRow>({
   });
   const [sortModel, setSortModel] = useState<GridSortSpec<T>[]>([]);
 
-  const rowClickHandler: DataGridProps["onRowClick"] = (params, event, details) => {
+  const rowClickHandler: DataGridProps['onRowClick'] = (
+    params,
+    event,
+    details
+  ) => {
     if (disableRowClick || !onRowClick) return;
 
     onRowClick(params.row, event, details);
   };
 
-  const handleRowClick = useCallback(rowClickHandler, [onRowClick, disableRowClick]);
+  const handleRowClick = useCallback(rowClickHandler, [
+    onRowClick,
+    disableRowClick,
+  ]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -155,10 +169,10 @@ export const GridTable = <T extends GridRow>({
             <Stack
               spacing={3}
               sx={{
-                alignItems: "center",
-                justifyContent: "center",
-                maxWidth: "100%",
-                minWidth: "100%",
+                alignItems: 'center',
+                justifyContent: 'center',
+                maxWidth: '100%',
+                minWidth: '100%',
                 py: 4,
               }}
             >
@@ -170,48 +184,48 @@ export const GridTable = <T extends GridRow>({
       }}
       sx={{
         fontFamily: (theme) => theme.typography.fontFamily,
-        "&, [class^=MuiDataGrid]": {
-          border: 'none'
+        '&, [class^=MuiDataGrid]': {
+          border: 'none',
         },
-        "& .MuiDataGrid-container--top [role=row]": {
-          backgroundColor: alpha("#828282", 0.1),
-          borderRadius: "4px",
+        '& .MuiDataGrid-container--top [role=row]': {
+          backgroundColor: alpha('#828282', 0.1),
+          borderRadius: '4px',
         },
-        "& .MuiDataGrid-columnHeader": {
-          background: alpha("#828282", 0.1),
-          borderBottom: "none !important",
+        '& .MuiDataGrid-columnHeader': {
+          background: alpha('#828282', 0.1),
+          borderBottom: 'none !important',
         },
-        "& .MuiDataGrid-columnHeaderTitle": {
+        '& .MuiDataGrid-columnHeaderTitle': {
           fontFamily: theme.typography.fontFamily,
           color: theme.palette.text.secondary,
           fontWeight: 600,
           fontSize: pxToRem(12),
-          lineHeight: "18px",
-          fontStyle: "semibold",
+          lineHeight: '18px',
+          fontStyle: 'semibold',
         },
-        "& .MuiDataGrid-row": {
-          backgroundColor: "#fff",
-          borderRadius: "4px",
-          boxShadow: "none",
-          transition: ".3s ease",
-          cursor: disableRowClick ? "default" : "pointer",
-          outline: 'none'
+        '& .MuiDataGrid-row': {
+          backgroundColor: '#fff',
+          borderRadius: '4px',
+          boxShadow: 'none',
+          transition: '.3s ease',
+          cursor: disableRowClick ? 'default' : 'pointer',
+          outline: 'none',
         },
-        "& .MuiDataGrid-scrollbarContent": {
+        '& .MuiDataGrid-scrollbarContent': {
           '::-webkit-scrollbar': { display: 'none' },
           scrollbarWidth: 'none',
         },
-        "& .MuiDataGrid-cell": {
-          color: "text.secondary",
+        '& .MuiDataGrid-cell': {
+          color: 'text.secondary',
           fontWeight: 400,
           fontSize: pxToRem(13),
-          lineHeight: "19.5px",
-          fontStyle: "normal",
-          display: "flex",
-          alignItems: "center",
-          "&:focus": {
+          lineHeight: '19.5px',
+          fontStyle: 'normal',
+          display: 'flex',
+          alignItems: 'center',
+          '&:focus': {
             outline: 'none',
-          }
+          },
         },
         ...sx,
       }}

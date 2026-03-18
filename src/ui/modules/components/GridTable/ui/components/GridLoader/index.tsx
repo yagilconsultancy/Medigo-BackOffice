@@ -5,9 +5,9 @@ import {
   gridRowCountSelector,
   useGridApiContext,
   useGridSelector,
-} from "@mui/x-data-grid";
-import { CircularProgress, LinearProgress } from "@mui/material";
-import { CSSProperties, forwardRef, ReactElement } from "react";
+} from '@mui/x-data-grid';
+import { CircularProgress, LinearProgress } from '@mui/material';
+import { CSSProperties, forwardRef, ReactElement } from 'react';
 
 const LOADING_VARIANTS: Record<
   GridLoadingOverlayVariant,
@@ -16,13 +16,13 @@ const LOADING_VARIANTS: Record<
     style: CSSProperties;
   }
 > = {
-  "circular-progress": {
+  'circular-progress': {
     component: () => <CircularProgress color="primary" />,
     style: {},
   },
-  "linear-progress": {
+  'linear-progress': {
     component: () => <LinearProgress color="primary" />,
-    style: { display: "block" },
+    style: { display: 'block' },
   },
   skeleton: {
     component: () => <></>,
@@ -38,8 +38,8 @@ export type DataGridLoaderProps = GridOverlayProps & {
 export const DataGridLoader = forwardRef<HTMLDivElement, DataGridLoaderProps>(
   function DataGridLoader(props, ref) {
     const {
-      variant = "linear-progress",
-      noRowsVariant = "circular-progress",
+      variant = 'linear-progress',
+      noRowsVariant = 'circular-progress',
       style,
       ...other
     } = props;
@@ -51,7 +51,11 @@ export const DataGridLoader = forwardRef<HTMLDivElement, DataGridLoaderProps>(
     const Component = activeVariant.component;
 
     return (
-      <GridOverlay style={{ ...activeVariant.style, ...style }} {...other} ref={ref}>
+      <GridOverlay
+        style={{ ...activeVariant.style, ...style }}
+        {...other}
+        ref={ref}
+      >
         <Component />
       </GridOverlay>
     );
@@ -59,4 +63,4 @@ export const DataGridLoader = forwardRef<HTMLDivElement, DataGridLoaderProps>(
 );
 
 // **This is the key line** to satisfy `react/display-name`:
-DataGridLoader.displayName = "DataGridLoader";
+DataGridLoader.displayName = 'DataGridLoader';
