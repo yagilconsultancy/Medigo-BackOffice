@@ -18,3 +18,4 @@ export * from './AppGridTable';
 export * from './DashboardTitleAndDesc';
 export * from './AppTab';
 export * from './AppCardparent';
+export * from './AppPillCount';

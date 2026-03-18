@@ -1,5 +1,5 @@
-import { BookingPage } from "../../ui/pages"
+import { BookingPage } from '../../ui/pages';
 
 export default function Booking() {
-    return <BookingPage />
+  return <BookingPage />;
 }
