@@ -16,7 +16,7 @@ export const AppDashboardLayout = ({ children }: AppLayoutProps) => {
   const collapsedWidth = isXs ? 0 : 72; // Width when sidebar is collapsed
 
   // Initialize sidebar as open
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Handler to toggle sidebar state
   const handleSidebarToggle = () => {
@@ -51,8 +51,9 @@ export const AppDashboardLayout = ({ children }: AppLayoutProps) => {
           },
           width: {
             xs: 'calc(100% - 0px)',
-            sm: 'calc(100% - 300px)',
+            sm: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${collapsedWidth}px)`,
           },
+          background: '#F7F9FB',
         }}
       >
         {/* Header */}
@@ -66,12 +67,11 @@ export const AppDashboardLayout = ({ children }: AppLayoutProps) => {
         <Box
           sx={{
             flexGrow: 1,
-            marginLeft: '31px',
-            marginY: '28px',
-            marginRight: '47px',
+            // marginLeft: '31px',
+            // marginY: '28px',
+            // marginRight: '47px',
             overflowY: 'auto',
             overflowX: 'hidden',
-            // background: 'red',
           }}
         >
           <Toolbar />

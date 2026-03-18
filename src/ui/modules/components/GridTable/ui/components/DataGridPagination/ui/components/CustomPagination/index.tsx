@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, TablePagination } from '@mui/material';
 import { CustomTablePaginationActions } from '../CustomTablePaginationAction';
-import { RowStack } from '../../../../../../../RowStack';
 
 interface PaginationProps {
   count: number;
@@ -54,6 +53,7 @@ export const CustomPagination = ({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          borderTop: '0.67px solid #F0F4F8',
           // width: 'auto',
           '.MuiTablePagination-toolbar': {
             display: 'flex',

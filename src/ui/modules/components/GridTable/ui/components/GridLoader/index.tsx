@@ -5,9 +5,9 @@ import {
   gridRowCountSelector,
   useGridApiContext,
   useGridSelector,
-} from '@mui/x-data-grid';
-import { CircularProgress, LinearProgress, Theme } from '@mui/material';
-import { CSSProperties, forwardRef, ReactElement } from 'react';
+} from "@mui/x-data-grid";
+import { CircularProgress, LinearProgress } from "@mui/material";
+import { CSSProperties, forwardRef, ReactElement } from "react";
 
 const LOADING_VARIANTS: Record<
   GridLoadingOverlayVariant,
@@ -16,16 +16,16 @@ const LOADING_VARIANTS: Record<
     style: CSSProperties;
   }
 > = {
-  'circular-progress': {
-    component: () => <CircularProgress color="warning" />,
+  "circular-progress": {
+    component: () => <CircularProgress color="primary" />,
     style: {},
   },
-  'linear-progress': {
-    component: () => <LinearProgress color="warning" />,
-    style: { display: 'block' },
+  "linear-progress": {
+    component: () => <LinearProgress color="primary" />,
+    style: { display: "block" },
   },
   skeleton: {
-    component: () => <></>, // No support for skeleton loading right now
+    component: () => <></>,
     style: {},
   },
 };
@@ -36,10 +36,10 @@ export type DataGridLoaderProps = GridOverlayProps & {
 };
 
 export const DataGridLoader = forwardRef<HTMLDivElement, DataGridLoaderProps>(
-  (props, ref) => {
+  function DataGridLoader(props, ref) {
     const {
-      variant = 'linear-progress',
-      noRowsVariant = 'circular-progress',
+      variant = "linear-progress",
+      noRowsVariant = "circular-progress",
       style,
       ...other
     } = props;
@@ -48,18 +48,15 @@ export const DataGridLoader = forwardRef<HTMLDivElement, DataGridLoaderProps>(
     const rowsCount = useGridSelector(apiRef, gridRowCountSelector);
     const activeVariant =
       LOADING_VARIANTS[rowsCount === 0 ? noRowsVariant : variant];
-    const component = activeVariant.component();
+    const Component = activeVariant.component;
 
     return (
-      <GridOverlay
-        style={{ ...activeVariant.style, ...style }}
-        {...other}
-        ref={ref}
-      >
-        {component}
+      <GridOverlay style={{ ...activeVariant.style, ...style }} {...other} ref={ref}>
+        <Component />
       </GridOverlay>
     );
   }
 );
 
-DataGridLoader.displayName = 'DataGridLoader';
+// **This is the key line** to satisfy `react/display-name`:
+DataGridLoader.displayName = "DataGridLoader";

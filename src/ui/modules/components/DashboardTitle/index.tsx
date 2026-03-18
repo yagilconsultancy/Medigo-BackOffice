@@ -9,10 +9,12 @@ export function DashboardTitle({ title }: DashboardTitleProps) {
   return (
     <Typography
       sx={{
-        fontWeight: 126,
-        fontSize: pxToRem(20),
-        lineHeight: '26px',
-        color: (theme) => theme.color.black,
+        fontFamily: (theme) => theme.typography.fontFamily,
+        fontWeight: 500,
+        fontSize: pxToRem(24),
+        fontStyle: 'medium',
+        lineHeight: '36px',
+        color: (theme) => theme.color.deepBlue,
       }}
     >
       {title}

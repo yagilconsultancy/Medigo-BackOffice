@@ -9,8 +9,12 @@ export * from './TextField';
 export * from './AppLogo';
 export * from './HeroLabel';
 export * from './HeroDescription';
-export * from './AppDataGrid';
 export * from './AppModal';
 export * from './DashboardTitle';
 export * from './AuthTitleAndDesc';
 export * from './VisuallyHiddenInput';
+export * from "./GridTable";
+export * from "./AppGridTable";
+export * from "./DashboardTitleAndDesc"
+export * from "./AppTab"
+export * from "./AppCardparent"

@@ -151,6 +151,14 @@ export function formatTotalNumber(num: number | undefined): string {
   });
 }
 
+export const getTodayDate = (date: Date = new Date()) => {
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
 export function secondsToTime(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
