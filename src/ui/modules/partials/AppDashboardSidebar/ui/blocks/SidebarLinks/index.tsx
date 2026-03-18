@@ -74,7 +74,11 @@ export const SidebarLinks = ({
             </Typography>
           )}
 
-          {section.items.map((item) => (
+          {section.items.map((item) => {
+            const isDropdownActive = item.dropdown?.some(
+              (subItem) => pathname === subItem.link
+            );
+            return (
             <Box key={item.text}>
               {item.dropdown ? (
                 // Dropdown item
@@ -256,7 +260,12 @@ export const SidebarLinks = ({
                         width: '48px',
                         height: '48px',
                         borderRadius: '12px',
-                        backgroundColor: 'transparent',
+                        borderLeft: isDropdownActive
+                          ? `3px solid ${theme.palette.primary.main}`
+                          : '3px solid transparent',
+                        backgroundColor: isDropdownActive
+                          ? alpha(theme.palette.primary.main, 0.08)
+                          : 'transparent',
                         mx: 'auto',
                         mb: '4px',
                         cursor: 'pointer',
@@ -276,12 +285,10 @@ export const SidebarLinks = ({
                           sx={{
                             width: '22px',
                             height: '22px',
-                            // filter:
-                            //     'invert(36%) sepia(94%) saturate(1856%) hue-rotate(208deg) brightness(95%) contrast(92%)'
-                            // "&:hover": {
-                            //   filter:
-                            //     'invert(36%) sepia(94%) saturate(1856%) hue-rotate(208deg) brightness(95%) contrast(92%)'
-                            // }
+                            filter: isDropdownActive
+                              ? 'invert(36%) sepia(94%) saturate(1856%) hue-rotate(208deg) brightness(95%) contrast(92%)'
+                              : 'none',
+                            transition: 'filter 0.3s ease',
                           }}
                         />
                       )}
@@ -298,7 +305,8 @@ export const SidebarLinks = ({
                 />
               )}
             </Box>
-          ))}
+          );
+          })}
         </Box>
       ))}
     </Box>
