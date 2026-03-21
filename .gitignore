@@ -43,3 +43,7 @@ yalc.lock
 .env.local
 
 .idea
+
+# Claude
+CLAUDE.md
+.mcp.json

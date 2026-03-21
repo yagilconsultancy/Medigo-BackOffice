@@ -104,10 +104,12 @@ const allBookings: BookingRow[] = [
 export const BookingPage = () => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [openApprove, setOpenApprove] = useState<boolean>(false)
-  const [openDecline, setOpenDecline] = useState<boolean>(false)
-  const [openDetail, setOpenDetail] = useState<boolean>(false)
-  const [statusDetail, setStatusDetail] = useState<"Approved" | "Declined" | "Pending">(null)
+  const [openApprove, setOpenApprove] = useState<boolean>(false);
+  const [openDecline, setOpenDecline] = useState<boolean>(false);
+  const [openDetail, setOpenDetail] = useState<boolean>(false);
+  const [statusDetail, setStatusDetail] = useState<
+    'Approved' | 'Declined' | 'Pending'
+  >(null);
 
   const filteredBookings = useMemo(() => {
     let filtered = allBookings;
@@ -152,117 +154,117 @@ export const BookingPage = () => {
   ];
 
   const handleOpenApprove = () => {
-    setOpenApprove(true)
-  }
-  const handleOpenDetail = (status: "Approved" | "Declined" | "Pending") => {
-    setOpenDetail(true)
-    setStatusDetail(status)
-  }
+    setOpenApprove(true);
+  };
+  const handleOpenDetail = (status: 'Approved' | 'Declined' | 'Pending') => {
+    setOpenDetail(true);
+    setStatusDetail(status);
+  };
 
   const handleCloseApprove = () => {
-    setOpenApprove(false)
-  }
+    setOpenApprove(false);
+  };
 
   const handleOpenDecline = () => {
-    setOpenDecline(true)
-  }
+    setOpenDecline(true);
+  };
 
   const handleCloseDecline = () => {
-    setOpenDecline(false)
-  }
+    setOpenDecline(false);
+  };
 
   const handleCloseDetail = () => {
-    setOpenDetail(false)
-  }
+    setOpenDetail(false);
+  };
 
   const columns: GridColSpec<BookingRow>[] = [
-  {
-    field: 'bookingId',
-    headerName: 'Booking ID',
-    flex: 1,
-    minWidth: 120,
-    renderCell: (params) => <BookingIdComponent bookingId={params.value} />,
-  },
-  {
-    field: 'patient',
-    headerName: 'Client',
-    flex: 1.2,
-    minWidth: 150,
-    renderCell: (params) => <ClientComponent text={params.value} />,
-  },
-  {
-    field: 'pickupLocation',
-    headerName: 'Pickup Location',
-    flex: 1.5,
-    minWidth: 180,
-  },
-  {
-    field: 'destination',
-    headerName: 'Destination',
-    flex: 1.3,
-    minWidth: 180,
-  },
-  {
-    field: 'dateTime',
-    headerName: 'Date & Time',
-    flex: 1.3,
-    minWidth: 180,
-  },
-  {
-    field: 'status',
-    headerName: 'Status',
-    flex: 0.8,
-    minWidth: 100,
-    renderCell: (params) => (
-      <StatusComponent status={params.value as BookingRow['status']} />
-    ),
-  },
-  {
-    field: 'actions' as string,
-    headerName: 'Actions',
-    flex: 0.8,
-    minWidth: 120,
-    sortable: false,
-    renderCell: (params) => {
-      const status = params.row.status;
-      return (
-        <RowStack spacing={0.5}>
-          <IconButton 
-            size="small" 
-            sx={{ 
-              color: '#9CA3AF' 
-            }}
-            onClick={() => handleOpenDetail(status)}
-          >
-            <VisibilityOutlinedIcon sx={{ fontSize: 15 }} />
-          </IconButton>
-          {status === 'Pending' && (
-            <>
-              <IconButton 
-                size="small" 
-                sx={{ 
-                  color: '#9CA3AF' 
-                }}
-                onClick={handleOpenApprove}
-              >
-                <CheckCircleOutlineIcon sx={{ fontSize: 15 }} />
-              </IconButton>
-              <IconButton 
-                size="small" 
-                sx={{ 
-                  color: '#9CA3AF' 
-                }}
-                onClick={handleOpenDecline}
-              >
-                <CancelOutlinedIcon sx={{ fontSize: 15 }} />
-              </IconButton>
-            </>
-          )}
-        </RowStack>
-      );
+    {
+      field: 'bookingId',
+      headerName: 'Booking ID',
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => <BookingIdComponent bookingId={params.value} />,
     },
-  },
-];
+    {
+      field: 'patient',
+      headerName: 'Client',
+      flex: 1.2,
+      minWidth: 150,
+      renderCell: (params) => <ClientComponent text={params.value} />,
+    },
+    {
+      field: 'pickupLocation',
+      headerName: 'Pickup Location',
+      flex: 1.5,
+      minWidth: 180,
+    },
+    {
+      field: 'destination',
+      headerName: 'Destination',
+      flex: 1.3,
+      minWidth: 180,
+    },
+    {
+      field: 'dateTime',
+      headerName: 'Date & Time',
+      flex: 1.3,
+      minWidth: 180,
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+      flex: 0.8,
+      minWidth: 100,
+      renderCell: (params) => (
+        <StatusComponent status={params.value as BookingRow['status']} />
+      ),
+    },
+    {
+      field: 'actions' as string,
+      headerName: 'Actions',
+      flex: 0.8,
+      minWidth: 120,
+      sortable: false,
+      renderCell: (params) => {
+        const status = params.row.status;
+        return (
+          <RowStack spacing={0.5}>
+            <IconButton
+              size="small"
+              sx={{
+                color: '#9CA3AF',
+              }}
+              onClick={() => handleOpenDetail(status)}
+            >
+              <VisibilityOutlinedIcon sx={{ fontSize: 15 }} />
+            </IconButton>
+            {status === 'Pending' && (
+              <>
+                <IconButton
+                  size="small"
+                  sx={{
+                    color: '#9CA3AF',
+                  }}
+                  onClick={handleOpenApprove}
+                >
+                  <CheckCircleOutlineIcon sx={{ fontSize: 15 }} />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  sx={{
+                    color: '#9CA3AF',
+                  }}
+                  onClick={handleOpenDecline}
+                >
+                  <CancelOutlinedIcon sx={{ fontSize: 15 }} />
+                </IconButton>
+              </>
+            )}
+          </RowStack>
+        );
+      },
+    },
+  ];
 
   return (
     <AppDashboardLayout>
@@ -334,33 +336,33 @@ export const BookingPage = () => {
           </RowStack>
         </AppGridtable>
       </Stack>
-      <ApproveDeclineModal 
-       modalLabel='approve-modal'
-       open={openApprove}
-       handleClose={handleCloseApprove}
-       title='Approve Booking'
-       text='BK-20491 · Claire Beaumont · Mar 9, 2026 · 09:00 AM'
-       location='120 King St W, Toronto, ON → Toronto General Hospital'
-       textBeforeBtn='This will mark the booking as approved and notify the patient.'
-       textBtn='Confirm Approval'
-       btnBg='#059669'
+      <ApproveDeclineModal
+        modalLabel="approve-modal"
+        open={openApprove}
+        handleClose={handleCloseApprove}
+        title="Approve Booking"
+        text="BK-20491 · Claire Beaumont · Mar 9, 2026 · 09:00 AM"
+        location="120 King St W, Toronto, ON → Toronto General Hospital"
+        textBeforeBtn="This will mark the booking as approved and notify the patient."
+        textBtn="Confirm Approval"
+        btnBg="#059669"
       />
-      <ApproveDeclineModal 
-       modalLabel='decline-modal'
-       open={openDecline}
-       handleClose={handleCloseDecline}
-       title='Decline Booking'
-       text='BK-20491 · Claire Beaumont · Mar 9, 2026 · 09:00 AM'
-       location='120 King St W, Toronto, ON → Toronto General Hospital'
-       textBeforeBtn='This will decline the booking and notify the patient.'
-       textBtn='Confirm Decline'
-       btnBg='#EF4444'
+      <ApproveDeclineModal
+        modalLabel="decline-modal"
+        open={openDecline}
+        handleClose={handleCloseDecline}
+        title="Decline Booking"
+        text="BK-20491 · Claire Beaumont · Mar 9, 2026 · 09:00 AM"
+        location="120 King St W, Toronto, ON → Toronto General Hospital"
+        textBeforeBtn="This will decline the booking and notify the patient."
+        textBtn="Confirm Decline"
+        btnBg="#EF4444"
       />
-      <BookingDetailModal 
-       open={openDetail}
-       handleClose={handleCloseDetail}
-       bookingId={"BK-20491"}
-       status={statusDetail}
+      <BookingDetailModal
+        open={openDetail}
+        handleClose={handleCloseDetail}
+        bookingId={'BK-20491'}
+        status={statusDetail}
       />
     </AppDashboardLayout>
   );
