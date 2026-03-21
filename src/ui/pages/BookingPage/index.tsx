@@ -18,6 +18,8 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import {
+  ApproveDeclineModal,
+  BookingDetailModal,
   BookingIdComponent,
   ClientComponent,
   StatusComponent,
@@ -99,7 +101,81 @@ const allBookings: BookingRow[] = [
   },
 ];
 
-const columns: GridColSpec<BookingRow>[] = [
+export const BookingPage = () => {
+  const [activeFilter, setActiveFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [openApprove, setOpenApprove] = useState<boolean>(false)
+  const [openDecline, setOpenDecline] = useState<boolean>(false)
+  const [openDetail, setOpenDetail] = useState<boolean>(false)
+  const [statusDetail, setStatusDetail] = useState<"Approved" | "Declined" | "Pending">(null)
+
+  const filteredBookings = useMemo(() => {
+    let filtered = allBookings;
+
+    if (activeFilter !== 'All') {
+      filtered = filtered.filter((b) => b.status === activeFilter);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (b) =>
+          b.bookingId.toLowerCase().includes(query) ||
+          b.patient.toLowerCase().includes(query) ||
+          b.pickupLocation.toLowerCase().includes(query) ||
+          b.destination.toLowerCase().includes(query) ||
+          b.dateTime.toLowerCase().includes(query) ||
+          b.status.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [activeFilter, searchQuery]);
+
+  const statusFilter = [
+    { text: 'All', count: allBookings.length, active: activeFilter === 'All' },
+    {
+      text: 'Pending',
+      count: allBookings.filter((b) => b.status === 'Pending').length,
+      active: activeFilter === 'Pending',
+    },
+    {
+      text: 'Approved',
+      count: allBookings.filter((b) => b.status === 'Approved').length,
+      active: activeFilter === 'Approved',
+    },
+    {
+      text: 'Declined',
+      count: allBookings.filter((b) => b.status === 'Declined').length,
+      active: activeFilter === 'Declined',
+    },
+  ];
+
+  const handleOpenApprove = () => {
+    setOpenApprove(true)
+  }
+  const handleOpenDetail = (status: "Approved" | "Declined" | "Pending") => {
+    setOpenDetail(true)
+    setStatusDetail(status)
+  }
+
+  const handleCloseApprove = () => {
+    setOpenApprove(false)
+  }
+
+  const handleOpenDecline = () => {
+    setOpenDecline(true)
+  }
+
+  const handleCloseDecline = () => {
+    setOpenDecline(false)
+  }
+
+  const handleCloseDetail = () => {
+    setOpenDetail(false)
+  }
+
+  const columns: GridColSpec<BookingRow>[] = [
   {
     field: 'bookingId',
     headerName: 'Booking ID',
@@ -151,15 +227,33 @@ const columns: GridColSpec<BookingRow>[] = [
       const status = params.row.status;
       return (
         <RowStack spacing={0.5}>
-          <IconButton size="small" sx={{ color: '#9CA3AF' }}>
+          <IconButton 
+            size="small" 
+            sx={{ 
+              color: '#9CA3AF' 
+            }}
+            onClick={() => handleOpenDetail(status)}
+          >
             <VisibilityOutlinedIcon sx={{ fontSize: 15 }} />
           </IconButton>
           {status === 'Pending' && (
             <>
-              <IconButton size="small" sx={{ color: '#9CA3AF' }}>
+              <IconButton 
+                size="small" 
+                sx={{ 
+                  color: '#9CA3AF' 
+                }}
+                onClick={handleOpenApprove}
+              >
                 <CheckCircleOutlineIcon sx={{ fontSize: 15 }} />
               </IconButton>
-              <IconButton size="small" sx={{ color: '#9CA3AF' }}>
+              <IconButton 
+                size="small" 
+                sx={{ 
+                  color: '#9CA3AF' 
+                }}
+                onClick={handleOpenDecline}
+              >
                 <CancelOutlinedIcon sx={{ fontSize: 15 }} />
               </IconButton>
             </>
@@ -169,52 +263,6 @@ const columns: GridColSpec<BookingRow>[] = [
     },
   },
 ];
-
-export const BookingPage = () => {
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredBookings = useMemo(() => {
-    let filtered = allBookings;
-
-    if (activeFilter !== 'All') {
-      filtered = filtered.filter((b) => b.status === activeFilter);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (b) =>
-          b.bookingId.toLowerCase().includes(query) ||
-          b.patient.toLowerCase().includes(query) ||
-          b.pickupLocation.toLowerCase().includes(query) ||
-          b.destination.toLowerCase().includes(query) ||
-          b.dateTime.toLowerCase().includes(query) ||
-          b.status.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [activeFilter, searchQuery]);
-
-  const statusFilter = [
-    { text: 'All', count: allBookings.length, active: activeFilter === 'All' },
-    {
-      text: 'Pending',
-      count: allBookings.filter((b) => b.status === 'Pending').length,
-      active: activeFilter === 'Pending',
-    },
-    {
-      text: 'Approved',
-      count: allBookings.filter((b) => b.status === 'Approved').length,
-      active: activeFilter === 'Approved',
-    },
-    {
-      text: 'Declined',
-      count: allBookings.filter((b) => b.status === 'Declined').length,
-      active: activeFilter === 'Declined',
-    },
-  ];
 
   return (
     <AppDashboardLayout>
@@ -286,6 +334,34 @@ export const BookingPage = () => {
           </RowStack>
         </AppGridtable>
       </Stack>
+      <ApproveDeclineModal 
+       modalLabel='approve-modal'
+       open={openApprove}
+       handleClose={handleCloseApprove}
+       title='Approve Booking'
+       text='BK-20491 · Claire Beaumont · Mar 9, 2026 · 09:00 AM'
+       location='120 King St W, Toronto, ON → Toronto General Hospital'
+       textBeforeBtn='This will mark the booking as approved and notify the patient.'
+       textBtn='Confirm Approval'
+       btnBg='#059669'
+      />
+      <ApproveDeclineModal 
+       modalLabel='decline-modal'
+       open={openDecline}
+       handleClose={handleCloseDecline}
+       title='Decline Booking'
+       text='BK-20491 · Claire Beaumont · Mar 9, 2026 · 09:00 AM'
+       location='120 King St W, Toronto, ON → Toronto General Hospital'
+       textBeforeBtn='This will decline the booking and notify the patient.'
+       textBtn='Confirm Decline'
+       btnBg='#EF4444'
+      />
+      <BookingDetailModal 
+       open={openDetail}
+       handleClose={handleCloseDetail}
+       bookingId={"BK-20491"}
+       status={statusDetail}
+      />
     </AppDashboardLayout>
   );
 };

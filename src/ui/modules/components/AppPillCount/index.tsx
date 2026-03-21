@@ -23,7 +23,7 @@ export const AppPillCount = ({
       onClick={onClick}
       sx={{
         padding: '8.12px 16.06px',
-        border: active ? `0.67px solid #E5E7EB` : 'none',
+        border: !active ? `0.67px solid #E5E7EB` : 'none',
         background: active ? theme.palette.primary.main : 'transparent',
         borderRadius: '10px',
         cursor: 'pointer',
@@ -41,7 +41,7 @@ export const AppPillCount = ({
       </Typography>
       <Centered
         sx={{
-          background: '#FFFFFF40',
+          background: active ? '#FFFFFF40' : '#F0F4F8',
           borderRadius: '50%',
           width: '18.46px',
           height: '17.33px',
