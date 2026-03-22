@@ -14,7 +14,12 @@ import {
 import { styled } from '@mui/material/styles';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { AppButton, DashboardTitleAndDesc, RowStack, StyledImage } from '../../modules/components';
+import {
+  AppButton,
+  DashboardTitleAndDesc,
+  RowStack,
+  StyledImage,
+} from '../../modules/components';
 import { pxToRem } from '../../../common';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -84,7 +89,7 @@ export const AutoDispatchPage = () => {
   const [prioritizeRating, setPrioritizeRating] = useState(true);
   const [prioritizeFleet, setPrioritizeFleet] = useState(false);
   const [matchVehicleType, setMatchVehicleType] = useState(true);
-  const theme = useTheme()
+  const theme = useTheme();
   const [fallbackOptions, setFallbackOptions] = useState<Set<FallbackOption>>(
     new Set(['expandRadius', 'notifyDispatch'])
   );
@@ -167,9 +172,9 @@ export const AutoDispatchPage = () => {
     <AppDashboardLayout>
       <Stack spacing={'24px'}>
         {/* Header */}
-        <DashboardTitleAndDesc 
-         title='Auto Dispatch Settings'
-         desc="Configure rules and logic for automatic driver-to-ride matching"
+        <DashboardTitleAndDesc
+          title="Auto Dispatch Settings"
+          desc="Configure rules and logic for automatic driver-to-ride matching"
         />
 
         {/* Auto Dispatch Engine Card */}
@@ -228,15 +233,17 @@ export const AutoDispatchPage = () => {
             </Stack>
           </RowStack>
           <RowStack spacing={'8px'} sx={{ flexShrink: 0 }}>
-            <Chip 
-             label={isEnabled ? 'Enabled' : 'Disabled'}
-             sx={{
+            <Chip
+              label={isEnabled ? 'Enabled' : 'Disabled'}
+              sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
                 fontWeight: 600,
                 fontSize: pxToRem(12.5),
                 color: isEnabled ? '#059669' : theme.color.lightGrey,
-                background: isEnabled ? alpha("#059669", .1) : alpha(theme.color.lightGrey, .1)
-             }}
+                background: isEnabled
+                  ? alpha('#059669', 0.1)
+                  : alpha(theme.color.lightGrey, 0.1),
+              }}
             />
             <IOSSwitch
               checked={isEnabled}

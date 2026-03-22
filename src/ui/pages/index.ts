@@ -7,3 +7,4 @@ export * from './CancelledTripsPage';
 export * from './DispatchPage';
 export * from './RideAssignmentPage';
 export * from './AutoDispatchPage';
+export * from './LiveDispatchMapPage';

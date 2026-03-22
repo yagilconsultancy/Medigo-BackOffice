@@ -1,4 +1,6 @@
 import { Box, Chip, LinearProgress, Stack, Typography } from '@mui/material';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import { RowStack, StyledImage } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import speedIcon from '../../assets/icons/speed-icon.svg';
@@ -6,7 +8,7 @@ import speedIcon from '../../assets/icons/speed-icon.svg';
 export type ActiveTrip = {
   id: string;
   tripId: string;
-  status: 'In Transit' | 'Arriving' | 'Loading';
+  status: 'In Transit' | 'Arriving' | 'Loading' | 'Completed';
   statusColor: string;
   statusBg: string;
   eta: string;
@@ -98,17 +100,33 @@ export const ActiveTripCard = ({
               borderRadius: '9px',
             }}
           />
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: pxToRem(11),
-              color: (theme) => theme.color.lightGrey,
-              marginLeft: 'auto !important',
-            }}
-          >
-            {trip.eta}
-          </Typography>
+          <RowStack spacing={'4px'} sx={{ marginLeft: 'auto !important' }}>
+            {trip.status === 'Completed' ? (
+              <CheckCircleOutlinedIcon
+                sx={{ fontSize: 14, color: '#059669' }}
+              />
+            ) : (
+              <AccessTimeOutlinedIcon
+                sx={{
+                  fontSize: 14,
+                  color: (theme) => theme.color.lightGrey,
+                }}
+              />
+            )}
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 400,
+                fontSize: pxToRem(11),
+                color:
+                  trip.status === 'Completed'
+                    ? '#059669'
+                    : (theme) => theme.color.lightGrey,
+              }}
+            >
+              {trip.eta}
+            </Typography>
+          </RowStack>
         </RowStack>
 
         {/* Patient + Driver */}
