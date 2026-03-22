@@ -14,7 +14,10 @@ import { GridColSpec } from '../../modules/components/GridTable';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import { CancelledTripDetailModal, CancelledTripDetail } from './ui/components';
-import { BookingIdComponent, StatusComponent } from '../BookingPage/ui/components';
+import {
+  BookingIdComponent,
+  StatusComponent,
+} from '../BookingPage/ui/components';
 import { BookingRow } from '../BookingPage';
 
 type CancelledTripRow = {
@@ -25,7 +28,7 @@ type CancelledTripRow = {
   date: string;
   reason: string;
   cancelledBy: string;
-  refund: BookingRow["status"];
+  refund: BookingRow['status'];
   amount: string;
 };
 

@@ -180,7 +180,7 @@ export const PendingBookingPage = () => {
       <Stack spacing={'24px'}>
         {/* Header */}
         <Stack spacing={'4px'}>
-          <DashboardTitle title='Pending Bookings' />
+          <DashboardTitle title="Pending Bookings" />
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,

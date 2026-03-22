@@ -96,14 +96,18 @@ export const PendingBookingCard = ({
             <Chip
               label={booking.serviceType}
               size="small"
-              icon={booking.chipIcon ? <StyledImage 
-                 src={booking.chipIcon}
-                 alt="chip-icon"
-                 sx={{
-                  width: '11px',
-                  height: '11px'
-                 }}
-              /> : null}
+              icon={
+                booking.chipIcon ? (
+                  <StyledImage
+                    src={booking.chipIcon}
+                    alt="chip-icon"
+                    sx={{
+                      width: '11px',
+                      height: '11px',
+                    }}
+                  />
+                ) : null
+              }
               sx={{
                 background: booking.serviceTypeBg,
                 color: booking.serviceTypeColor,
@@ -152,7 +156,12 @@ export const PendingBookingCard = ({
 
           {/* Route */}
           <RowStack spacing={'8px'}>
-            <StyledImage src={locationIcon} alt="location" width={13} height={13} />
+            <StyledImage
+              src={locationIcon}
+              alt="location"
+              width={13}
+              height={13}
+            />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
@@ -183,7 +192,12 @@ export const PendingBookingCard = ({
           {/* Special Note */}
           {booking.specialNote && (
             <RowStack spacing={'6px'}>
-              <StyledImage src={warningIcon} alt="warning" width={12} height={12} />
+              <StyledImage
+                src={warningIcon}
+                alt="warning"
+                width={12}
+                height={12}
+              />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,

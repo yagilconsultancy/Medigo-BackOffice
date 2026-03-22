@@ -93,9 +93,7 @@ export const CancelledTripDetailModal = ({
                 justifyContent: 'center',
               }}
             >
-              <CancelOutlinedIcon
-                sx={{ fontSize: 20, color: '#EF4444' }}
-              />
+              <CancelOutlinedIcon sx={{ fontSize: 20, color: '#EF4444' }} />
             </Box>
             <Stack spacing={'2px'}>
               <Typography
@@ -139,7 +137,12 @@ export const CancelledTripDetailModal = ({
                 }}
               >
                 <RowStack spacing={'6px'}>
-                  <StyledImage src={patientIcon} alt="patient" width={14} height={14} />
+                  <StyledImage
+                    src={patientIcon}
+                    alt="patient"
+                    width={14}
+                    height={14}
+                  />
                   <Typography
                     sx={{
                       fontFamily: (theme) => theme.typography.fontFamily,
@@ -184,7 +187,12 @@ export const CancelledTripDetailModal = ({
                 }}
               >
                 <RowStack spacing={'6px'}>
-                  <StyledImage src={dateIcon} alt="date" width={14} height={14} />
+                  <StyledImage
+                    src={dateIcon}
+                    alt="date"
+                    width={14}
+                    height={14}
+                  />
                   <Typography
                     sx={{
                       fontFamily: (theme) => theme.typography.fontFamily,
@@ -232,7 +240,12 @@ export const CancelledTripDetailModal = ({
           >
             <Stack spacing={'4px'}>
               <RowStack spacing={'6px'}>
-                <StyledImage src={pickupIcon} alt="pickup" width={14} height={14} />
+                <StyledImage
+                  src={pickupIcon}
+                  alt="pickup"
+                  width={14}
+                  height={14}
+                />
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,
@@ -259,7 +272,12 @@ export const CancelledTripDetailModal = ({
             </Stack>
             <Stack spacing={'4px'}>
               <RowStack spacing={'6px'}>
-                <StyledImage src={destinationIcon} alt="destination" width={14} height={14} />
+                <StyledImage
+                  src={destinationIcon}
+                  alt="destination"
+                  width={14}
+                  height={14}
+                />
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,

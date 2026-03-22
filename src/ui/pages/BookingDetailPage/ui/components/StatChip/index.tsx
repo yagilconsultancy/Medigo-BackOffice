@@ -45,7 +45,7 @@ export const StatChip = ({
         </Typography>
       </RowStack>
       <RowStack spacing={'6px'}>
-         {pulse && (
+        {pulse && (
           <Box
             sx={{
               width: 8,

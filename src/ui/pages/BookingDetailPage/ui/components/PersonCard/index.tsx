@@ -87,16 +87,62 @@ export const PersonCard = ({
   const iconSize = { width: 11, height: 11 };
 
   const infoRows = [
-    { icon: <StyledImage src={phoneIcon} alt="phone" {...iconSize} />, label: 'Phone', value: phone },
-    { icon: <StyledImage src={emailIcon} alt="email" {...iconSize} />, label: 'Email', value: email },
-    { icon: <StyledImage src={insuranceIcon} alt="insurance" {...iconSize} />, label: 'Insurance', value: insurance },
-    { icon: <StyledImage src={insuranceIcon} alt="member since" {...iconSize} />, label: 'Member Since', value: memberSince },
-    { icon: <StyledImage src={driverinfoIcon} alt="vehicle" {...iconSize} />, label: 'Vehicle', value: vehicle },
-    { icon: <StyledImage src={insuranceIcon} alt="plate" {...iconSize} />, label: 'Plate', value: plate },
-    { icon: <StyledImage src={totaltripsIcon} alt="total trips" {...iconSize} />, label: 'Total Trips', value: totalTrips },
-    { icon: <StyledImage src={specialtyIcon} alt="specialty" {...iconSize} />, label: 'Specialty', value: specialty },
-    { icon: <StyledImage src={certsIcon} alt="certs" {...iconSize} />, label: 'Certs', value: certs },
-    { icon: <StyledImage src={totaltripsIcon} alt="assignments" {...iconSize} />, label: 'Assignments', value: assignments },
+    {
+      icon: <StyledImage src={phoneIcon} alt="phone" {...iconSize} />,
+      label: 'Phone',
+      value: phone,
+    },
+    {
+      icon: <StyledImage src={emailIcon} alt="email" {...iconSize} />,
+      label: 'Email',
+      value: email,
+    },
+    {
+      icon: <StyledImage src={insuranceIcon} alt="insurance" {...iconSize} />,
+      label: 'Insurance',
+      value: insurance,
+    },
+    {
+      icon: (
+        <StyledImage src={insuranceIcon} alt="member since" {...iconSize} />
+      ),
+      label: 'Member Since',
+      value: memberSince,
+    },
+    {
+      icon: <StyledImage src={driverinfoIcon} alt="vehicle" {...iconSize} />,
+      label: 'Vehicle',
+      value: vehicle,
+    },
+    {
+      icon: <StyledImage src={insuranceIcon} alt="plate" {...iconSize} />,
+      label: 'Plate',
+      value: plate,
+    },
+    {
+      icon: (
+        <StyledImage src={totaltripsIcon} alt="total trips" {...iconSize} />
+      ),
+      label: 'Total Trips',
+      value: totalTrips,
+    },
+    {
+      icon: <StyledImage src={specialtyIcon} alt="specialty" {...iconSize} />,
+      label: 'Specialty',
+      value: specialty,
+    },
+    {
+      icon: <StyledImage src={certsIcon} alt="certs" {...iconSize} />,
+      label: 'Certs',
+      value: certs,
+    },
+    {
+      icon: (
+        <StyledImage src={totaltripsIcon} alt="assignments" {...iconSize} />
+      ),
+      label: 'Assignments',
+      value: assignments,
+    },
   ].filter((row) => row.value);
 
   return (

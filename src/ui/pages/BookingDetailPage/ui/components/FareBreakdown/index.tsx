@@ -75,7 +75,11 @@ export const FareBreakdown = ({
       <Stack spacing={'12px'}>
         {[
           { label: 'Base Fare', amount: baseFare, percentage: 86 },
-          { label: 'Care Assistant Fee', amount: careAssistantFee, percentage: 82 },
+          {
+            label: 'Care Assistant Fee',
+            amount: careAssistantFee,
+            percentage: 82,
+          },
           { label: 'Platform Fee', amount: platformFee, percentage: 76 },
         ].map((row) => (
           <FareRow key={row.label} {...row} />
@@ -114,7 +118,7 @@ export const FareBreakdown = ({
         </Typography>
       </RowStack>
 
-      <RowStack alignItems={"start"} spacing={'6px'}>
+      <RowStack alignItems={'start'} spacing={'6px'}>
         <Typography
           sx={{
             fontFamily: (theme) => theme.typography.fontFamily,

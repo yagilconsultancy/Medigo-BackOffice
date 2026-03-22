@@ -23,7 +23,7 @@ type BookingDetailtModalProps = {
   open: boolean;
   handleClose: () => void;
   bookingId: string;
-  status: BookingRow["status"];
+  status: BookingRow['status'];
 };
 
 export const BookingDetailModal = ({

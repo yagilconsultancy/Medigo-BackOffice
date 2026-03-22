@@ -6,7 +6,7 @@ import { pxToRem } from '../../../../../../common';
 import { InfoCard } from '../InfoCard';
 import FmdGoodOutlinedIcon from '@mui/icons-material/FmdGoodOutlined';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
-import locationIcon from "../../assets/icons/location-icon.svg"
+import locationIcon from '../../assets/icons/location-icon.svg';
 import EastIcon from '@mui/icons-material/East';
 
 type LocationBoxProps = {
@@ -137,10 +137,10 @@ export const LiveRouteCard = ({
             icon={
               <StyledImage
                 src={locationIcon}
-                alt='location-icon'
+                alt="location-icon"
                 sx={{
                   width: '12px',
-                  height: '12px'
+                  height: '12px',
                 }}
               />
             }

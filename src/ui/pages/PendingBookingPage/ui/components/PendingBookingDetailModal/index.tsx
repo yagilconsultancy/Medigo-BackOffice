@@ -126,7 +126,12 @@ export const PendingBookingDetailModal = ({
               padding: '13px 16px',
             }}
           >
-            <StyledImage src={warningIcon} alt="warning" width={14} height={14} />
+            <StyledImage
+              src={warningIcon}
+              alt="warning"
+              width={14}
+              height={14}
+            />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

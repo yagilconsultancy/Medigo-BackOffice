@@ -4,3 +4,4 @@ export * from './BookingDetailPage';
 export * from './PendingBookingPage';
 export * from './ScheduledTripsPage';
 export * from './CancelledTripsPage';
+export * from './DispatchPage';

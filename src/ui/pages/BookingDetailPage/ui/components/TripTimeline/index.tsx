@@ -11,10 +11,10 @@ import { RowStack, StyledImage } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import { useState } from 'react';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import currentTimelineIcon from "../../assets/icons/currenttimeline-icon.svg"
+import currentTimelineIcon from '../../assets/icons/currenttimeline-icon.svg';
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
-import tripTimelineIcon from "../../assets/icons/triptimeline-Icon.svg"
-import adminIcon from "../../assets/icons/service-icon.svg"
+import tripTimelineIcon from '../../assets/icons/triptimeline-Icon.svg';
+import adminIcon from '../../assets/icons/service-icon.svg';
 
 type TimelineEntry = {
   time: string;
@@ -44,25 +44,29 @@ export const TripTimeline = ({
   const tabs = [
     {
       label: 'Trip Timeline',
-      icon: <StyledImage 
-       src={tripTimelineIcon}
-       alt="trip-timeline"
-       sx={{
-        width: '13px',
-        height: '13px'
-       }}
-      />,
+      icon: (
+        <StyledImage
+          src={tripTimelineIcon}
+          alt="trip-timeline"
+          sx={{
+            width: '13px',
+            height: '13px',
+          }}
+        />
+      ),
     },
     {
       label: 'Admin Notes',
-      icon: <StyledImage 
-       src={adminIcon}
-       alt="trip-timeline"
-       sx={{
-        width: '13px',
-        height: '13px'
-       }}
-      />,
+      icon: (
+        <StyledImage
+          src={adminIcon}
+          alt="trip-timeline"
+          sx={{
+            width: '13px',
+            height: '13px',
+          }}
+        />
+      ),
     },
   ];
 
@@ -154,13 +158,13 @@ export const TripTimeline = ({
                       sx={{ fontSize: 12, color: '#059669' }}
                     />
                   ) : entry.isCurrent ? (
-                    <StyledImage 
-                     src={currentTimelineIcon}
-                     alt='current-timeline'
-                     sx={{
-                      width: '13px',
-                      height: '13px'
-                     }}
+                    <StyledImage
+                      src={currentTimelineIcon}
+                      alt="current-timeline"
+                      sx={{
+                        width: '13px',
+                        height: '13px',
+                      }}
                     />
                   ) : (
                     <AccessTimeOutlinedIcon

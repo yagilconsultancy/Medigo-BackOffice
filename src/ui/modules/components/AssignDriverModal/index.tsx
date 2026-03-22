@@ -1,10 +1,5 @@
 import { Box, IconButton, Stack, Typography } from '@mui/material';
-import {
-  AppButton,
-  AppModal,
-  RowStack,
-  StyledImage,
-} from '..';
+import { AppButton, AppModal, RowStack, StyledImage } from '..';
 import { pxToRem } from '../../../../common';
 import CloseIcon from '@mui/icons-material/Close';
 import { useState } from 'react';
@@ -231,7 +226,12 @@ export const AssignDriverModal = ({
 
                 {/* Checkmark for selected */}
                 {isSelected && (
-                  <StyledImage src={checkIcon} alt="selected" width={16} height={16} />
+                  <StyledImage
+                    src={checkIcon}
+                    alt="selected"
+                    width={16}
+                    height={16}
+                  />
                 )}
               </RowStack>
             );

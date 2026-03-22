@@ -15,9 +15,7 @@ type BreadcrumbsProps = {
   breadcrumbsData: CustomBreadcrumbsProps[];
 };
 
-export function CustomBreadCrumbs({
-  breadcrumbsData,
-}: BreadcrumbsProps) {
+export function CustomBreadCrumbs({ breadcrumbsData }: BreadcrumbsProps) {
   const theme = useTheme();
 
   const breadcrumbs = breadcrumbsData.map((breadcrumb, index) => {
@@ -52,9 +50,9 @@ export function CustomBreadCrumbs({
           fontWeight: 400,
           lineHeight: '20.25px',
           fontStyle: 'normal',
-          "&:hover": {
-            textDecoration: 'underline'
-          }
+          '&:hover': {
+            textDecoration: 'underline',
+          },
         }}
       >
         {breadcrumb.text}

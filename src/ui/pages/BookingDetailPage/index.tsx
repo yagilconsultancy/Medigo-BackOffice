@@ -197,9 +197,7 @@ export const BookingDetailPage = () => {
               >
                 {data.createdAt}
               </Typography>
-              <NavigateNextIcon
-                sx={{ fontSize: 13, color: '#D1D5DB' }}
-              />
+              <NavigateNextIcon sx={{ fontSize: 13, color: '#D1D5DB' }} />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
@@ -245,11 +243,7 @@ export const BookingDetailPage = () => {
                   background: alpha('#2F6FED', 0.9),
                 },
               }}
-              startIcon={
-                <LoopIcon
-                  sx={{ fontSize: 13, color: '#FFFFFF' }}
-                />
-              }
+              startIcon={<LoopIcon sx={{ fontSize: 13, color: '#FFFFFF' }} />}
             >
               Assign Driver
             </AppButton>
@@ -269,34 +263,66 @@ export const BookingDetailPage = () => {
         <RowStack spacing={'12px'} width="100%">
           {[
             {
-              icon: <StyledImage src={tripstatusIcon} alt="trip status" {...statIconSize} />,
+              icon: (
+                <StyledImage
+                  src={tripstatusIcon}
+                  alt="trip status"
+                  {...statIconSize}
+                />
+              ),
               label: 'Trip Status',
               value: data.stats.tripStatus,
               valueColor: '#ED8A2F',
               pulse: true,
             },
             {
-              icon: <StyledImage src={dollarIcon} alt="total fare" {...statIconSize} />,
+              icon: (
+                <StyledImage
+                  src={dollarIcon}
+                  alt="total fare"
+                  {...statIconSize}
+                />
+              ),
               label: 'Total Fare',
               value: data.stats.totalFare,
             },
             {
-              icon: <StyledImage src={distanceIcon} alt="distance" {...statIconSize} />,
+              icon: (
+                <StyledImage
+                  src={distanceIcon}
+                  alt="distance"
+                  {...statIconSize}
+                />
+              ),
               label: 'Distance',
               value: data.stats.distance,
             },
             {
-              icon: <StyledImage src={timeIcon} alt="duration" {...statIconSize} />,
+              icon: (
+                <StyledImage src={timeIcon} alt="duration" {...statIconSize} />
+              ),
               label: 'Est. Duration',
               value: data.stats.estDuration,
             },
             {
-              icon: <StyledImage src={locationIcon} alt="picked up at" {...statIconSize} />,
+              icon: (
+                <StyledImage
+                  src={locationIcon}
+                  alt="picked up at"
+                  {...statIconSize}
+                />
+              ),
               label: 'Picked Up At',
               value: data.stats.pickedUpAt,
             },
             {
-              icon: <StyledImage src={clockIcon} alt="eta arrival" {...statIconSize} />,
+              icon: (
+                <StyledImage
+                  src={clockIcon}
+                  alt="eta arrival"
+                  {...statIconSize}
+                />
+              ),
               label: 'ETA Arrival',
               value: data.stats.etaArrival,
             },
@@ -313,7 +339,12 @@ export const BookingDetailPage = () => {
               {/* Service Type */}
               <InfoCard
                 icon={
-                  <StyledImage src={serviceIcon} alt="service type" width={12} height={12} />
+                  <StyledImage
+                    src={serviceIcon}
+                    alt="service type"
+                    width={12}
+                    height={12}
+                  />
                 }
                 title="Service Type"
               >
@@ -337,7 +368,12 @@ export const BookingDetailPage = () => {
                           justifyContent: 'center',
                         }}
                       >
-                        <StyledImage src={usergroupIcon} alt="service" width={18} height={18} />
+                        <StyledImage
+                          src={usergroupIcon}
+                          alt="service"
+                          width={18}
+                          height={18}
+                        />
                       </Box>
                       <Stack spacing={'1px'}>
                         <Typography
@@ -366,12 +402,26 @@ export const BookingDetailPage = () => {
                   <Stack spacing={'8px'}>
                     {[
                       {
-                        icon: <StyledImage src={driverIcon} alt="driver" width={12} height={12} />,
+                        icon: (
+                          <StyledImage
+                            src={driverIcon}
+                            alt="driver"
+                            width={12}
+                            height={12}
+                          />
+                        ),
                         label: 'Driver',
                         status: data.serviceType.driver,
                       },
                       {
-                        icon: <StyledImage src={careassistantIcon} alt="care assistant" width={12} height={12} />,
+                        icon: (
+                          <StyledImage
+                            src={careassistantIcon}
+                            alt="care assistant"
+                            width={12}
+                            height={12}
+                          />
+                        ),
                         label: 'Care Assistant',
                         status: data.serviceType.careAssistant,
                       },
@@ -389,7 +439,8 @@ export const BookingDetailPage = () => {
                           {row.icon}
                           <Typography
                             sx={{
-                              fontFamily: (theme) => theme.typography.fontFamily,
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
                               fontWeight: 600,
                               fontSize: pxToRem(10.5),
                               color: (theme) => theme.color.grey,
@@ -419,7 +470,12 @@ export const BookingDetailPage = () => {
               {/* Rider Information */}
               <InfoCard
                 icon={
-                  <StyledImage src={riderIcon} alt="rider" width={12} height={12} />
+                  <StyledImage
+                    src={riderIcon}
+                    alt="rider"
+                    width={12}
+                    height={12}
+                  />
                 }
                 title="Rider Information"
               >
@@ -436,7 +492,12 @@ export const BookingDetailPage = () => {
               {/* Driver Information */}
               <InfoCard
                 icon={
-                  <StyledImage src={driverinfoIcon} alt="driver info" width={12} height={12} />
+                  <StyledImage
+                    src={driverinfoIcon}
+                    alt="driver info"
+                    width={12}
+                    height={12}
+                  />
                 }
                 title="Driver Information"
               >
@@ -456,7 +517,12 @@ export const BookingDetailPage = () => {
               {/* Care Assistant */}
               <InfoCard
                 icon={
-                  <StyledImage src={careassistantIcon} alt="care assistant" width={12} height={12} />
+                  <StyledImage
+                    src={careassistantIcon}
+                    alt="care assistant"
+                    width={12}
+                    height={12}
+                  />
                 }
                 title="Care Assistant"
               >

@@ -14,7 +14,7 @@ export const StatusComponent = ({ status }: StatusComponentProps) => {
     Declined: theme.color.error,
     None: theme.color.lightGrey,
     Processed: theme.color.success,
-    "Full Refund": theme.color.success,
+    'Full Refund': theme.color.success,
   };
 
   const color = statusColorMap[status];
