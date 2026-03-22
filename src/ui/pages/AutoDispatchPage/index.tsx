@@ -1,12 +1,74 @@
 'use client';
 
-import { Box, Grid, Stack, Switch, Typography } from '@mui/material';
+import {
+  alpha,
+  Box,
+  Chip,
+  Grid,
+  Stack,
+  Switch,
+  SwitchProps,
+  Typography,
+  useTheme,
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { AppButton, RowStack, StyledImage } from '../../modules/components';
+import { AppButton, DashboardTitleAndDesc, RowStack, StyledImage } from '../../modules/components';
 import { pxToRem } from '../../../common';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import autoassignIcon from '../DispatchPage/ui/assets/icons/autoassign-icon.svg';
+import settingIcon from './ui/assets/icons/setting-icon.svg';
+
+// ─── iOS-style Switch ────────────────────────────────────────────────────────
+
+const IOSSwitch = styled((props: SwitchProps) => (
+  <Switch focusVisibleClassName=".Mui-focusVisible" disableRipple {...props} />
+))(({ theme }) => ({
+  width: 42,
+  height: 26,
+  padding: 0,
+  '& .MuiSwitch-switchBase': {
+    padding: 0,
+    margin: 2,
+    transitionDuration: '300ms',
+    '&.Mui-checked': {
+      transform: 'translateX(16px)',
+      color: '#fff',
+      '& + .MuiSwitch-track': {
+        backgroundColor: '#2F6FED',
+        opacity: 1,
+        border: 0,
+      },
+      '&.Mui-disabled + .MuiSwitch-track': {
+        opacity: 0.5,
+      },
+    },
+    '&.Mui-focusVisible .MuiSwitch-thumb': {
+      color: '#2F6FED',
+      border: '6px solid #fff',
+    },
+    '&.Mui-disabled .MuiSwitch-thumb': {
+      color: theme.palette.grey[100],
+    },
+    '&.Mui-disabled + .MuiSwitch-track': {
+      opacity: 0.7,
+    },
+  },
+  '& .MuiSwitch-thumb': {
+    boxSizing: 'border-box',
+    width: 22,
+    height: 22,
+  },
+  '& .MuiSwitch-track': {
+    borderRadius: 26 / 2,
+    backgroundColor: '#E9E9EA',
+    opacity: 1,
+    transition: theme.transitions.create(['background-color'], {
+      duration: 500,
+    }),
+  },
+}));
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -22,6 +84,7 @@ export const AutoDispatchPage = () => {
   const [prioritizeRating, setPrioritizeRating] = useState(true);
   const [prioritizeFleet, setPrioritizeFleet] = useState(false);
   const [matchVehicleType, setMatchVehicleType] = useState(true);
+  const theme = useTheme()
   const [fallbackOptions, setFallbackOptions] = useState<Set<FallbackOption>>(
     new Set(['expandRadius', 'notifyDispatch'])
   );
@@ -104,30 +167,10 @@ export const AutoDispatchPage = () => {
     <AppDashboardLayout>
       <Stack spacing={'24px'}>
         {/* Header */}
-        <Stack spacing={'4px'}>
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 500,
-              fontSize: pxToRem(24),
-              lineHeight: '36px',
-              color: (theme) => theme.color.deepBlue,
-            }}
-          >
-            Auto Dispatch Settings
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: pxToRem(14),
-              lineHeight: '21px',
-              color: (theme) => theme.color.lightGrey,
-            }}
-          >
-            Configure rules and logic for automatic driver-to-ride matching
-          </Typography>
-        </Stack>
+        <DashboardTitleAndDesc 
+         title='Auto Dispatch Settings'
+         desc="Configure rules and logic for automatic driver-to-ride matching"
+        />
 
         {/* Auto Dispatch Engine Card */}
         <RowStack
@@ -142,10 +185,11 @@ export const AutoDispatchPage = () => {
           <RowStack spacing={'14px'}>
             <Box
               sx={{
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 borderRadius: '50%',
-                background: '#F3F4F6',
+                background: '#EBF2FF',
+                border: '1.5px solid #2F6FED',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -153,10 +197,10 @@ export const AutoDispatchPage = () => {
               }}
             >
               <StyledImage
-                src={autoassignIcon}
+                src={settingIcon}
                 alt="auto-dispatch"
-                width={20}
-                height={20}
+                width={22}
+                height={22}
               />
             </Box>
             <Stack spacing={'2px'}>
@@ -184,32 +228,19 @@ export const AutoDispatchPage = () => {
             </Stack>
           </RowStack>
           <RowStack spacing={'8px'} sx={{ flexShrink: 0 }}>
-            <Typography
-              sx={{
+            <Chip 
+             label={isEnabled ? 'Enabled' : 'Disabled'}
+             sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
                 fontWeight: 600,
                 fontSize: pxToRem(12.5),
-                color: isEnabled ? '#059669' : (theme) => theme.color.lightGrey,
-              }}
-            >
-              {isEnabled ? 'Enabled' : 'Disabled'}
-            </Typography>
-            <Switch
+                color: isEnabled ? '#059669' : theme.color.lightGrey,
+                background: isEnabled ? alpha("#059669", .1) : alpha(theme.color.lightGrey, .1)
+             }}
+            />
+            <IOSSwitch
               checked={isEnabled}
               onChange={() => setIsEnabled(!isEnabled)}
-              sx={{
-                '& .MuiSwitch-switchBase.Mui-checked': {
-                  color: '#2F6FED',
-                  '& + .MuiSwitch-track': {
-                    backgroundColor: '#2F6FED',
-                    opacity: 1,
-                  },
-                },
-                '& .MuiSwitch-track': {
-                  backgroundColor: '#D1D5DB',
-                  opacity: 1,
-                },
-              }}
             />
           </RowStack>
         </RowStack>
@@ -374,22 +405,9 @@ export const AutoDispatchPage = () => {
                         {rule.description}
                       </Typography>
                     </Stack>
-                    <Switch
+                    <IOSSwitch
                       checked={rule.checked}
                       onChange={rule.onChange}
-                      sx={{
-                        '& .MuiSwitch-switchBase.Mui-checked': {
-                          color: '#2F6FED',
-                          '& + .MuiSwitch-track': {
-                            backgroundColor: '#2F6FED',
-                            opacity: 1,
-                          },
-                        },
-                        '& .MuiSwitch-track': {
-                          backgroundColor: '#D1D5DB',
-                          opacity: 1,
-                        },
-                      }}
                     />
                   </RowStack>
                 ))}
@@ -452,12 +470,11 @@ export const AutoDispatchPage = () => {
                   }}
                 >
                   <RowStack spacing={'8px'} sx={{ marginBottom: '4px' }}>
-                    <Box
+                    <CheckCircleIcon
                       sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background: isSelected ? item.dotColor : '#D1D5DB',
+                        width: 18,
+                        height: 18,
+                        color: isSelected ? item.dotColor : '#D1D5DB',
                         flexShrink: 0,
                       }}
                     />
