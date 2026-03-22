@@ -1,15 +1,10 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
-import {
-  AppButton,
-  RowStack,
-  StyledImage,
-} from '../../../../../modules/components';
+import { AppButton, RowStack, StyledImage } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
-import { StaticImageData } from 'next/image';
-import pickupIcon from '../../assets/icons/pickup-icon.svg';
-import destinationIcon from '../../assets/icons/destination-icon.svg';
-import warningIcon from '../../assets/icons/warning-icon.svg';
-import assignIcon from '../../assets/icons/assign-icon.svg';
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
+import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined';
+import userGroupIcon from "../../assets/icons/assigndriver-Icon.svg"
 
 export type DispatchBooking = {
   id: string;
@@ -54,7 +49,7 @@ export const DispatchBookingCard = ({
               fontFamily: (theme) => theme.typography.fontFamily,
               fontWeight: 700,
               fontSize: pxToRem(13),
-              color: (theme) => theme.color.deepBlue,
+              color: '#2F6FED',
             }}
           >
             {booking.bookingId}
@@ -88,16 +83,21 @@ export const DispatchBookingCard = ({
             />
           )}
         </RowStack>
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 400,
-            fontSize: pxToRem(12),
-            color: (theme) => theme.color.lightGrey,
-          }}
-        >
-          {booking.time}
-        </Typography>
+        <RowStack spacing={'4px'}>
+          <AccessTimeOutlinedIcon
+            sx={{ fontSize: 14, color: (theme) => theme.color.lightGrey }}
+          />
+          <Typography
+            sx={{
+              fontFamily: (theme) => theme.typography.fontFamily,
+              fontWeight: 400,
+              fontSize: pxToRem(12),
+              color: (theme) => theme.color.lightGrey,
+            }}
+          >
+            {booking.time}
+          </Typography>
+        </RowStack>
       </RowStack>
 
       {/* Patient Name */}
@@ -113,9 +113,17 @@ export const DispatchBookingCard = ({
       </Typography>
 
       {/* Route */}
-      <Stack spacing={'4px'}>
-        <RowStack spacing={'6px'}>
-          <StyledImage src={pickupIcon} alt="pickup" width={12} height={12} />
+      <Stack spacing={'6px'}>
+        <RowStack spacing={'8px'}>
+          <Box
+            sx={{
+              width: 7,
+              height: 7,
+              borderRadius: '50%',
+              border: '1.5px solid #9CA3AF',
+              flexShrink: 0,
+            }}
+          />
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
@@ -127,12 +135,15 @@ export const DispatchBookingCard = ({
             {booking.pickup}
           </Typography>
         </RowStack>
-        <RowStack spacing={'6px'}>
-          <StyledImage
-            src={destinationIcon}
-            alt="destination"
-            width={12}
-            height={12}
+        <RowStack spacing={'8px'}>
+          <Box
+            sx={{
+              width: 7,
+              height: 7,
+              borderRadius: '50%',
+              background: '#374151',
+              flexShrink: 0,
+            }}
           />
           <Typography
             sx={{
@@ -157,7 +168,7 @@ export const DispatchBookingCard = ({
             padding: '8px 12px',
           }}
         >
-          <StyledImage src={warningIcon} alt="warning" width={12} height={12} />
+          <WarningAmberRoundedIcon sx={{ fontSize: 14, color: '#D97706' }} />
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
@@ -181,7 +192,7 @@ export const DispatchBookingCard = ({
             padding: '10px 14px',
           }}
         >
-          <StyledImage src={assignIcon} alt="assigned" width={14} height={14} />
+          <PersonAddAltOutlinedIcon sx={{ fontSize: 16, color: '#059669' }} />
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
@@ -221,15 +232,20 @@ export const DispatchBookingCard = ({
               background: '#2563EB',
             },
           }}
+          startIcon={
+            <StyledImage 
+             src={userGroupIcon}
+             alt="assign-driver"
+             sx={{
+              width: '13px',
+              height: '13px'
+             }}
+            />
+          }
         >
-          <RowStack spacing={'6px'}>
-            <StyledImage src={assignIcon} alt="assign" width={14} height={14} />
-            <span>
               {needsCareAssistant
                 ? 'Assign Driver + Care Assistant'
                 : 'Assign Driver'}
-            </span>
-          </RowStack>
         </AppButton>
       )}
     </Stack>

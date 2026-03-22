@@ -1,11 +1,12 @@
 'use client';
 
-import { Box, Grid, Stack, Typography } from '@mui/material';
+import { Box, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppButton,
   AppGoogleMap,
   AppGoogleMapsProvider,
+  DashboardTitleAndDesc,
   RowStack,
   StyledImage,
 } from '../../modules/components';
@@ -23,11 +24,13 @@ import {
   DispatchAssignModal,
 } from './ui/components';
 
-import pendingIcon from './ui/assets/icons/pending-icon.svg';
-import assignedIcon from './ui/assets/icons/assigned-icon.svg';
-import driversIcon from './ui/assets/icons/drivers-icon.svg';
-import ontripIcon from './ui/assets/icons/ontrip-icon.svg';
-import autoassignIcon from './ui/assets/icons/autoassign-icon.svg';
+import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
+import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
+import pendingIcon from "./ui/assets/icons/dispatch-pending-Icon.svg"
+import driverIcon from "./ui/assets/icons/driverinfo-icon.svg"
+import userGroupIcon from "./ui/assets/icons/drivermanagement-Icon.svg"
+import tripIcon from "./ui/assets/icons/tripstatus-icon.svg"
+import assignIcon from "./ui/assets/icons/assign-icon.svg"
 
 // ─── Sample Data ────────────────────────────────────────────────────────────
 
@@ -263,25 +266,25 @@ export const DispatchPage = () => {
       progress: '0/5 assigned',
     },
     {
-      icon: assignedIcon,
+      icon: driverIcon,
       value: '89',
       label: 'Assigned Today',
       subtitle: 'Dispatched trips',
       badge: { text: '+0 this session', color: '#059669', bg: '#ECFDF5' },
     },
     {
-      icon: driversIcon,
+      icon: userGroupIcon,
       value: '32',
       label: 'Available Drivers',
       subtitle: 'Ready to dispatch',
-      link: { text: 'Online now', color: '#2F6FED' },
+      badge: { text: 'Online now', color: '#2F6FED', bg: '#EEF3FF' },
     },
     {
-      icon: ontripIcon,
+      icon: tripIcon,
       value: '62',
       label: 'Drivers On Trip',
       subtitle: 'Active rides',
-      link: { text: 'Live tracking', color: '#2F6FED' },
+      badge: { text: 'Live tracking', color: '#9CA3AF', bg: '#F3F4F6' },
     },
   ];
 
@@ -290,85 +293,75 @@ export const DispatchPage = () => {
       <Stack spacing={'24px'}>
         {/* Header */}
         <RowStack justifyContent="space-between">
-          <Stack spacing={'4px'}>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 500,
-                fontSize: pxToRem(24),
-                lineHeight: '36px',
-                color: (theme) => theme.color.deepBlue,
-              }}
-            >
-              Dispatch Center
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
-                fontSize: pxToRem(14),
-                lineHeight: '21px',
-                color: (theme) => theme.color.lightGrey,
-              }}
-            >
-              Assign drivers to pending bookings and monitor active dispatches
-            </Typography>
-          </Stack>
+          <DashboardTitleAndDesc
+            title="Dispatch Center"
+            desc="Assign drivers to pending bookings and monitor active dispatches"
+          />
 
           {/* View Toggle */}
-          <RowStack
-            spacing={'0px'}
+          <Tabs
+            value={activeView === 'assignments' ? 0 : 1}
+            onChange={(_, newValue) =>
+              setActiveView(newValue === 0 ? 'assignments' : 'liveMap')
+            }
             sx={{
+              minHeight: 'auto',
               background: '#F3F4F6',
               borderRadius: '10px',
               padding: '3px',
+              '& .MuiTabs-indicator': {
+                display: 'none',
+              },
+              '& .MuiTabs-flexContainer': {
+                gap: 0,
+              },
             }}
           >
-            <Box
-              onClick={() => setActiveView('assignments')}
+            <Tab
+              icon={<GridViewOutlinedIcon sx={{ fontSize: pxToRem(16), color: (theme) => theme.color.deepBlue }} />}
+              iconPosition="start"
+              label="Assignments"
+              disableRipple
               sx={{
+                minHeight: 'auto',
+                minWidth: 'auto',
                 padding: '8px 20px',
                 borderRadius: '8px',
-                background:
-                  activeView === 'assignments' ? '#2F6FED' : 'transparent',
-                cursor: 'pointer',
+                textTransform: 'none',
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 600,
+                fontSize: pxToRem(12.5),
+                color: '#6B7280',
                 transition: 'all 0.2s',
+                '&.Mui-selected': {
+                  color: (theme) => theme.color.deepBlue,
+                  background: '#ffffff',
+                },
               }}
-            >
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(12.5),
-                  color: activeView === 'assignments' ? '#FFFFFF' : '#6B7280',
-                }}
-              >
-                Assignments
-              </Typography>
-            </Box>
-            <Box
-              onClick={() => setActiveView('liveMap')}
+            />
+            <Tab
+              icon={<MapOutlinedIcon sx={{ fontSize: 16 }} />}
+              iconPosition="start"
+              label="Live Map"
+              disableRipple
               sx={{
+                minHeight: 'auto',
+                minWidth: 'auto',
                 padding: '8px 20px',
                 borderRadius: '8px',
-                background:
-                  activeView === 'liveMap' ? '#2F6FED' : 'transparent',
-                cursor: 'pointer',
+                textTransform: 'none',
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 600,
+                fontSize: pxToRem(12.5),
+                color: '#6B7280',
                 transition: 'all 0.2s',
+                '&.Mui-selected': {
+                  color: '#2F6FED',
+                  background: '#FFFFFF',
+                },
               }}
-            >
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(12.5),
-                  color: activeView === 'liveMap' ? '#FFFFFF' : '#6B7280',
-                }}
-              >
-                Live Map
-              </Typography>
-            </Box>
-          </RowStack>
+            />
+          </Tabs>
         </RowStack>
 
         {/* Stat Cards */}
@@ -417,13 +410,23 @@ export const DispatchPage = () => {
                   </Typography>
                 </Stack>
 
-                {pendingBookings.map((booking) => (
-                  <DispatchBookingCard
-                    key={booking.id}
-                    booking={booking}
-                    onAssignDriver={() => handleAssignDriver(booking)}
-                  />
-                ))}
+                <Stack
+                 sx={{
+                  height: '600px',
+                  overflowY: 'auto',
+                  '::-webkit-scrollbar': { display: 'none' },
+                  scrollbarWidth: 'none',
+                 }}
+                 spacing={.4}
+                >
+                  {pendingBookings.map((booking) => (
+                    <DispatchBookingCard
+                      key={booking.id}
+                      booking={booking}
+                      onAssignDriver={() => handleAssignDriver(booking)}
+                    />
+                  ))}
+                </Stack>
               </Stack>
             </Grid>
 
@@ -475,16 +478,16 @@ export const DispatchPage = () => {
                       minWidth: 'auto',
                       '&:hover': { background: '#EBF2FF' },
                     }}
+                    startIcon={<StyledImage 
+                       src={assignIcon}
+                       alt="assign-driver"
+                       sx={{
+                        width: '13px',
+                        height: '13px'
+                       }}
+                    />}
                   >
-                    <RowStack spacing={'6px'}>
-                      <StyledImage
-                        src={autoassignIcon}
-                        alt="auto-assign"
-                        width={14}
-                        height={14}
-                      />
-                      <span>Auto Assign All</span>
-                    </RowStack>
+                    Auto Assign All
                   </AppButton>
                 </RowStack>
 

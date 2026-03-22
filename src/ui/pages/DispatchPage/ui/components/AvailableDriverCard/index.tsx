@@ -1,7 +1,6 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
-import { RowStack, StyledImage } from '../../../../../modules/components';
+import { RowStack } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
-import distanceIcon from '../../assets/icons/distance-icon.svg';
 
 export type AvailableDriver = {
   id: string;
@@ -81,8 +80,16 @@ export const AvailableDriverCard = ({ driver }: AvailableDriverCardProps) => {
         >
           {driver.vehicle}
         </Typography>
-        <RowStack spacing={'8px'}>
+        <Typography
+          sx={{
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 400,
+            fontSize: pxToRem(11),
+            color: (theme) => theme.color.lightGrey,
+          }}
+        >
           <Typography
+            component="span"
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
               fontWeight: 600,
@@ -92,35 +99,10 @@ export const AvailableDriverCard = ({ driver }: AvailableDriverCardProps) => {
           >
             ★ {driver.rating}
           </Typography>
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: pxToRem(11),
-              color: (theme) => theme.color.lightGrey,
-            }}
-          >
-            {driver.trips} trips
-          </Typography>
-          <RowStack spacing={'4px'}>
-            <StyledImage
-              src={distanceIcon}
-              alt="distance"
-              width={10}
-              height={10}
-            />
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
-                fontSize: pxToRem(11),
-                color: (theme) => theme.color.lightGrey,
-              }}
-            >
-              {driver.distance}
-            </Typography>
-          </RowStack>
-        </RowStack>
+          {' · '}
+          {driver.trips} trips{' · '}
+          {driver.distance}
+        </Typography>
       </Stack>
 
       {/* Status + ETA */}

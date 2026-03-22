@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { RowStack, StyledImage } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
+import { ReactNode } from 'react';
 import { StaticImageData } from 'next/image';
 
 type DispatchStatCardProps = {
@@ -52,7 +53,14 @@ export const DispatchStatCard = ({
             justifyContent: 'center',
           }}
         >
-          <StyledImage src={icon} alt={label} width={18} height={18} />
+          <StyledImage 
+            src={icon}
+            alt='icon'
+            sx={{
+              width: '17px',
+              height: '17px'
+            }}
+          />
         </Box>
         {badge && (
           <Typography
