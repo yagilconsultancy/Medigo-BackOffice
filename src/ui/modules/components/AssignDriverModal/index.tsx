@@ -4,11 +4,11 @@ import {
   AppModal,
   RowStack,
   StyledImage,
-} from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+} from '..';
+import { pxToRem } from '../../../../common';
 import CloseIcon from '@mui/icons-material/Close';
 import { useState } from 'react';
-import checkIcon from '../../assets/icons/check-Icon.svg';
+import checkIcon from './assets/icons/check-Icon.svg';
 
 type Driver = {
   id: string;

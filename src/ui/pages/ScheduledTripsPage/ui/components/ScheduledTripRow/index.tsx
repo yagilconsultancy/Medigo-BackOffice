@@ -133,19 +133,19 @@ export const ScheduledTripRow = ({ trip, isLast }: ScheduledTripRowProps) => {
       </Stack>
 
       {/* Driver Assignment */}
-      <Stack alignItems="flex-end" sx={{ flexShrink: 0 }}>
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 400,
-            fontSize: pxToRem(11),
-            color: (theme) => theme.color.lightGrey,
-          }}
-        >
-          Driver
-        </Typography>
-        {isUnassigned ? (
-          <Stack spacing={'4px'} alignItems="flex-end">
+      {isUnassigned ? (
+        <RowStack spacing={'12px'} sx={{ flexShrink: 0 }}>
+          <Stack alignItems="flex-end">
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 400,
+                fontSize: pxToRem(11),
+                color: (theme) => theme.color.lightGrey,
+              }}
+            >
+              Driver
+            </Typography>
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
@@ -156,25 +156,37 @@ export const ScheduledTripRow = ({ trip, isLast }: ScheduledTripRowProps) => {
             >
               Unassigned
             </Typography>
-            <AppButton
-              onClick={trip.onAssign}
-              sx={{
-                background: '#2F6FED',
-                color: '#FFFFFF',
-                fontWeight: 600,
-                fontSize: pxToRem(12),
-                borderRadius: '8px',
-                padding: '6px 16px',
-                minWidth: 'auto',
-                '&:hover': {
-                  background: '#2563EB',
-                },
-              }}
-            >
-              Assign
-            </AppButton>
           </Stack>
-        ) : (
+          <AppButton
+            onClick={trip.onAssign}
+            sx={{
+              background: '#2F6FED',
+              color: '#FFFFFF',
+              fontWeight: 600,
+              fontSize: pxToRem(12),
+              borderRadius: '8px',
+              padding: '6px 16px',
+              minWidth: 'auto',
+              '&:hover': {
+                background: '#2563EB',
+              },
+            }}
+          >
+            Assign
+          </AppButton>
+        </RowStack>
+      ) : (
+        <Stack alignItems="flex-end" sx={{ flexShrink: 0 }}>
+          <Typography
+            sx={{
+              fontFamily: (theme) => theme.typography.fontFamily,
+              fontWeight: 400,
+              fontSize: pxToRem(11),
+              color: (theme) => theme.color.lightGrey,
+            }}
+          >
+            Driver
+          </Typography>
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
@@ -185,8 +197,8 @@ export const ScheduledTripRow = ({ trip, isLast }: ScheduledTripRowProps) => {
           >
             {trip.driverName}
           </Typography>
-        )}
-      </Stack>
+        </Stack>
+      )}
     </RowStack>
   );
 };

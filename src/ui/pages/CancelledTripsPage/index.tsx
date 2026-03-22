@@ -8,13 +8,14 @@ import {
   AppSearchField,
   DashboardTitleAndDesc,
   RowStack,
-  StyledImage,
 } from '../../modules/components';
 import { pxToRem } from '../../../common';
 import { GridColSpec } from '../../modules/components/GridTable';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
-import filterIcon from '../BookingPage/ui/assets/icons/filter-Icon.svg';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import { CancelledTripDetailModal, CancelledTripDetail } from './ui/components';
+import { BookingIdComponent, StatusComponent } from '../BookingPage/ui/components';
+import { BookingRow } from '../BookingPage';
 
 type CancelledTripRow = {
   id: string;
@@ -24,7 +25,7 @@ type CancelledTripRow = {
   date: string;
   reason: string;
   cancelledBy: string;
-  refund: 'Pending' | 'Processed' | 'Full Refund' | 'None';
+  refund: BookingRow["status"];
   amount: string;
 };
 
@@ -197,19 +198,6 @@ const tripDetails: Record<string, CancelledTripDetail> = {
   },
 };
 
-const getRefundChipStyles = (refund: CancelledTripRow['refund']) => {
-  switch (refund) {
-    case 'Pending':
-      return { color: '#D97706', bg: '#FFFBEB' };
-    case 'Processed':
-    case 'Full Refund':
-      return { color: '#059669', bg: '#ECFDF5' };
-    case 'None':
-    default:
-      return { color: '#9CA3AF', bg: '#F3F4F6' };
-  }
-};
-
 export const CancelledTripsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [detailOpen, setDetailOpen] = useState(false);
@@ -242,29 +230,18 @@ export const CancelledTripsPage = () => {
       headerName: 'Booking ID',
       flex: 0.8,
       minWidth: 100,
-      renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 600,
-            fontSize: pxToRem(12.5),
-            color: '#2F6FED',
-          }}
-        >
-          {params.value}
-        </Typography>
-      ),
+      renderCell: (params) => <BookingIdComponent bookingId={params.value} />,
     },
     {
       field: 'patient',
       headerName: 'Patient',
-      flex: 1.1,
+      flex: 1,
       minWidth: 140,
     },
     {
       field: 'route',
       headerName: 'Route',
-      flex: 1.8,
+      flex: 1,
       minWidth: 220,
     },
     {
@@ -288,27 +265,9 @@ export const CancelledTripsPage = () => {
     {
       field: 'refund',
       headerName: 'Refund',
-      flex: 0.8,
+      flex: 1,
       minWidth: 100,
-      renderCell: (params) => {
-        const styles = getRefundChipStyles(
-          params.value as CancelledTripRow['refund']
-        );
-        return (
-          <Chip
-            label={params.value}
-            size="small"
-            sx={{
-              background: styles.bg,
-              color: styles.color,
-              fontSize: pxToRem(11.5),
-              fontWeight: 600,
-              height: '22px',
-              borderRadius: '11px',
-            }}
-          />
-        );
-      },
+      renderCell: (params) => <StatusComponent status={params.value} />,
     },
     {
       field: 'amount',
@@ -405,57 +364,28 @@ export const CancelledTripsPage = () => {
           }}
         >
           <RowStack justifyContent="space-between" width="100%">
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 500,
-                fontSize: pxToRem(16),
-                color: (theme) => theme.color.deepBlue,
-              }}
-            >
-              Cancelled Trips
-            </Typography>
             <RowStack spacing={1}>
-              <AppSearchField
-                name="search"
-                placeholder="Search cancelled trips..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                boxProps={{
-                  sx: { width: '240px' },
-                }}
-              />
-              <RowStack
-                spacing={1}
+              <CancelOutlinedIcon sx={{ color: '#4B5563' }} />
+              <Typography
                 sx={{
-                  padding: '11.5px 16.07px',
-                  borderRadius: '14px',
-                  background: '#F7F9FB',
-                  border: '0.67px solid #E8ECF0',
-                  cursor: 'pointer',
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 500,
+                  fontSize: pxToRem(16),
+                  color: (theme) => theme.color.deepBlue,
                 }}
               >
-                <StyledImage
-                  src={filterIcon}
-                  alt="filter"
-                  sx={{
-                    width: '15px',
-                    height: '15px',
-                  }}
-                />
-                <Typography
-                  sx={{
-                    color: (theme) => theme.color.grey,
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(13),
-                    lineHeight: '19.5px',
-                  }}
-                >
-                  Filter
-                </Typography>
-              </RowStack>
+                Cancelled Trips
+              </Typography>
             </RowStack>
+            <AppSearchField
+              name="search"
+              placeholder="Search cancelled trips..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              boxProps={{
+                sx: { width: '240px' },
+              }}
+            />
           </RowStack>
         </AppGridtable>
       </Stack>

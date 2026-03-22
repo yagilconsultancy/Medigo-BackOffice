@@ -17,12 +17,13 @@ import pickupIcon from '../../assets/icons/pickup-Icon.svg';
 import warningIcon from '../../assets/icons/warning-Icon.svg';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useRouter } from 'next/navigation';
+import { BookingRow } from '../../..';
 
 type BookingDetailtModalProps = {
   open: boolean;
   handleClose: () => void;
   bookingId: string;
-  status: 'Pending' | 'Approved' | 'Declined';
+  status: BookingRow["status"];
 };
 
 export const BookingDetailModal = ({

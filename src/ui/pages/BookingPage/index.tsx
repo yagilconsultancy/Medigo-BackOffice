@@ -32,7 +32,7 @@ export type BookingRow = {
   pickupLocation: string;
   destination: string;
   dateTime: string;
-  status: 'Pending' | 'Approved' | 'Declined';
+  status: 'Pending' | 'Approved' | 'Declined' | 'None' | 'Processed' | 'Full Refund';
 };
 
 const allBookings: BookingRow[] = [
@@ -107,9 +107,7 @@ export const BookingPage = () => {
   const [openApprove, setOpenApprove] = useState<boolean>(false);
   const [openDecline, setOpenDecline] = useState<boolean>(false);
   const [openDetail, setOpenDetail] = useState<boolean>(false);
-  const [statusDetail, setStatusDetail] = useState<
-    'Approved' | 'Declined' | 'Pending'
-  >(null);
+  const [statusDetail, setStatusDetail] = useState<BookingRow["status"]>(null);
 
   const filteredBookings = useMemo(() => {
     let filtered = allBookings;
@@ -156,7 +154,7 @@ export const BookingPage = () => {
   const handleOpenApprove = () => {
     setOpenApprove(true);
   };
-  const handleOpenDetail = (status: 'Approved' | 'Declined' | 'Pending') => {
+  const handleOpenDetail = (status: BookingRow["status"]) => {
     setOpenDetail(true);
     setStatusDetail(status);
   };

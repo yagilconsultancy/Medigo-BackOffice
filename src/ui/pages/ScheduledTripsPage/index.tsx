@@ -2,10 +2,11 @@
 
 import { Box, Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { RowStack } from '../../modules/components';
+import { AssignDriverModal, RowStack } from '../../modules/components';
 import { pxToRem } from '../../../common';
 import { ScheduledTripRow, ScheduledTrip } from './ui/components';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
+import { useState } from 'react';
 
 const statCards = [
   { value: '6', label: 'Upcoming Trips' },
@@ -85,7 +86,58 @@ const scheduledTrips: ScheduledTrip[] = [
   },
 ];
 
+const availableDrivers = [
+  {
+    id: '1',
+    initials: 'MJ',
+    initialsColor: '#2F6FED',
+    name: 'Marcus Johnson',
+    vehicle: 'Toyota Sienna · 2022',
+    rating: 4.9,
+  },
+  {
+    id: '2',
+    initials: 'DC',
+    initialsColor: '#F59E0B',
+    name: 'David Chen',
+    vehicle: 'Ford Escape · 2023',
+    rating: 4.8,
+  },
+  {
+    id: '3',
+    initials: 'AK',
+    initialsColor: '#8B5CF6',
+    name: 'Anna Kim',
+    vehicle: 'Toyota Camry · 2022',
+    rating: 4.6,
+  },
+  {
+    id: '4',
+    initials: 'KC',
+    initialsColor: '#0EA5E9',
+    name: 'Kevin Cho',
+    vehicle: 'Ford Explorer · 2022',
+    rating: 4.6,
+  },
+  {
+    id: '5',
+    initials: 'GM',
+    initialsColor: '#D97706',
+    name: 'Grace Miller',
+    vehicle: 'Buick Enclave · 2021',
+    rating: 4.4,
+  },
+];
+
 export const ScheduledTripsPage = () => {
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState<ScheduledTrip | null>(null);
+
+  const handleOpenAssignDriver = (trip: ScheduledTrip) => {
+    setSelectedTrip(trip);
+    setAssignModalOpen(true);
+  };
+
   return (
     <AppDashboardLayout>
       <Stack spacing={'24px'}>
@@ -191,12 +243,30 @@ export const ScheduledTripsPage = () => {
           {scheduledTrips.map((trip, index) => (
             <ScheduledTripRow
               key={trip.id}
-              trip={trip}
+              trip={{
+                ...trip,
+                onAssign: () => handleOpenAssignDriver(trip),
+              }}
               isLast={index === scheduledTrips.length - 1}
             />
           ))}
         </Stack>
       </Stack>
+
+      {/* Assign Driver Modal */}
+      {selectedTrip && (
+        <AssignDriverModal
+          open={assignModalOpen}
+          handleClose={() => setAssignModalOpen(false)}
+          bookingId={selectedTrip.bookingId}
+          patientName={selectedTrip.patientName}
+          rideType={selectedTrip.vehicleType}
+          pickup={selectedTrip.route.split(' → ')[0] || selectedTrip.route}
+          destination={selectedTrip.route.split(' → ')[1] || ''}
+          dateTime={selectedTrip.dateTime}
+          drivers={availableDrivers}
+        />
+      )}
     </AppDashboardLayout>
   );
 };

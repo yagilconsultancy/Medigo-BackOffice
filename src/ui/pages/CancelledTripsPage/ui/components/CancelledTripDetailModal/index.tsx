@@ -3,11 +3,15 @@ import {
   AppButton,
   AppModal,
   RowStack,
+  StyledImage,
 } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import CloseIcon from '@mui/icons-material/Close';
-import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
-import FmdGoodOutlinedIcon from '@mui/icons-material/FmdGoodOutlined';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import patientIcon from '../../assets/icons/patient-Icon.svg';
+import dateIcon from '../../assets/icons/date-Icon.svg';
+import pickupIcon from '../../assets/icons/pickup-Icon.svg';
+import destinationIcon from '../../assets/icons/destination-Icon.svg';
 
 export type CancelledTripDetail = {
   bookingId: string;
@@ -37,6 +41,23 @@ export const CancelledTripDetailModal = ({
   trip,
 }: CancelledTripDetailModalProps) => {
   if (!trip) return null;
+
+  const detailRows = [
+    { label: 'Cancellation Reason', value: trip.cancellationReason },
+    { label: 'Cancelled By', value: trip.cancelledBy },
+    { label: 'Assigned Driver', value: trip.assignedDriver },
+    { label: 'Refund Status', value: trip.refundStatus },
+    { label: 'Amount', value: trip.amount },
+  ];
+
+  const [date, time] = trip.dateTime.split(', ').reduce(
+    (acc, part, index) => {
+      if (index === 0) acc[0] = part;
+      else acc[1] = acc[1] ? `${acc[1]}, ${part}` : part;
+      return acc;
+    },
+    ['', ''] as [string, string]
+  );
 
   return (
     <AppModal
@@ -72,7 +93,7 @@ export const CancelledTripDetailModal = ({
                 justifyContent: 'center',
               }}
             >
-              <WarningAmberRoundedIcon
+              <CancelOutlinedIcon
                 sx={{ fontSize: 20, color: '#EF4444' }}
               />
             </Box>
@@ -107,24 +128,35 @@ export const CancelledTripDetailModal = ({
         {/* Body */}
         <Stack spacing={'20px'} sx={{ padding: '24px' }}>
           {/* Patient & Date Grid */}
-          <Grid container spacing={2}>
+          <Grid container spacing={'12px'}>
             <Grid size={{ xs: 6 }}>
-              <Stack spacing={'4px'}>
+              <Stack
+                spacing={'6px'}
+                sx={{
+                  background: '#F7F9FB',
+                  borderRadius: '14px',
+                  padding: '16px',
+                }}
+              >
+                <RowStack spacing={'6px'}>
+                  <StyledImage src={patientIcon} alt="patient" width={14} height={14} />
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 500,
+                      fontSize: pxToRem(11),
+                      color: (theme) => theme.color.lightGrey,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Patient
+                  </Typography>
+                </RowStack>
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(11),
-                    color: (theme) => theme.color.lightGrey,
-                  }}
-                >
-                  Patient
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(13),
+                    fontWeight: 700,
+                    fontSize: pxToRem(14),
                     color: (theme) => theme.color.deepBlue,
                   }}
                 >
@@ -143,90 +175,151 @@ export const CancelledTripDetailModal = ({
               </Stack>
             </Grid>
             <Grid size={{ xs: 6 }}>
-              <Stack spacing={'4px'}>
+              <Stack
+                spacing={'6px'}
+                sx={{
+                  background: '#F7F9FB',
+                  borderRadius: '14px',
+                  padding: '16px',
+                }}
+              >
+                <RowStack spacing={'6px'}>
+                  <StyledImage src={dateIcon} alt="date" width={14} height={14} />
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 500,
+                      fontSize: pxToRem(11),
+                      color: (theme) => theme.color.lightGrey,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Date & Time
+                  </Typography>
+                </RowStack>
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(11),
-                    color: (theme) => theme.color.lightGrey,
+                    fontWeight: 700,
+                    fontSize: pxToRem(14),
+                    color: (theme) => theme.color.deepBlue,
                   }}
                 >
-                  Date & Time
+                  {date}
                 </Typography>
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(13),
-                    color: (theme) => theme.color.deepBlue,
+                    fontWeight: 400,
+                    fontSize: pxToRem(11.5),
+                    color: (theme) => theme.color.lightGrey,
                   }}
                 >
-                  {trip.dateTime}
+                  {time}
                 </Typography>
               </Stack>
             </Grid>
           </Grid>
 
           {/* Route */}
-          <Stack spacing={'8px'}>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
-                fontSize: pxToRem(11),
-                color: (theme) => theme.color.lightGrey,
-              }}
-            >
-              Route
-            </Typography>
-            <Stack spacing={'6px'}>
-              <RowStack spacing={'8px'}>
-                <FmdGoodOutlinedIcon sx={{ fontSize: 16, color: '#2F6FED' }} />
+          <Stack
+            spacing={'12px'}
+            sx={{
+              background: '#F7F9FB',
+              borderRadius: '14px',
+              padding: '16px',
+            }}
+          >
+            <Stack spacing={'4px'}>
+              <RowStack spacing={'6px'}>
+                <StyledImage src={pickupIcon} alt="pickup" width={14} height={14} />
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,
                     fontWeight: 500,
-                    fontSize: pxToRem(12.5),
-                    color: (theme) => theme.color.deepBlue,
+                    fontSize: pxToRem(11),
+                    color: '#2F6FED',
+                    textTransform: 'uppercase',
                   }}
                 >
-                  {trip.pickup}
+                  Pickup
                 </Typography>
               </RowStack>
-              <RowStack spacing={'8px'}>
-                <FmdGoodOutlinedIcon sx={{ fontSize: 16, color: '#EF4444' }} />
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 500,
+                  fontSize: pxToRem(13),
+                  color: (theme) => theme.color.deepBlue,
+                  paddingLeft: '20px',
+                }}
+              >
+                {trip.pickup}
+              </Typography>
+            </Stack>
+            <Stack spacing={'4px'}>
+              <RowStack spacing={'6px'}>
+                <StyledImage src={destinationIcon} alt="destination" width={14} height={14} />
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,
                     fontWeight: 500,
-                    fontSize: pxToRem(12.5),
-                    color: (theme) => theme.color.deepBlue,
+                    fontSize: pxToRem(11),
+                    color: '#EF4444',
+                    textTransform: 'uppercase',
                   }}
                 >
-                  {trip.destination}
+                  Destination
                 </Typography>
               </RowStack>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 500,
+                  fontSize: pxToRem(13),
+                  color: (theme) => theme.color.deepBlue,
+                  paddingLeft: '20px',
+                }}
+              >
+                {trip.destination}
+              </Typography>
             </Stack>
           </Stack>
 
           {/* Detail Rows */}
-          <Stack
-            spacing={0}
-            sx={{
-              border: '0.67px solid #F3F4F6',
-              borderRadius: '12px',
-              overflow: 'hidden',
-            }}
-          >
-            <DetailRow
-              label="Cancellation Reason"
-              value={trip.cancellationReason}
-            />
-            <DetailRow label="Cancelled By" value={trip.cancelledBy} />
-            <DetailRow label="Assigned Driver" value={trip.assignedDriver} />
-            <DetailRow label="Refund Status" value={trip.refundStatus} />
-            <DetailRow label="Amount" value={trip.amount} isLast />
+          <Stack spacing={'8px'}>
+            {detailRows.map((row, index) => (
+              <RowStack
+                key={index}
+                justifyContent="space-between"
+                sx={{
+                  background: '#F7F9FB',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 400,
+                    fontSize: pxToRem(12.5),
+                    color: (theme) => theme.color.lightGrey,
+                  }}
+                >
+                  {row.label}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(12.5),
+                    color: (theme) => theme.color.deepBlue,
+                  }}
+                >
+                  {row.value}
+                </Typography>
+              </RowStack>
+            ))}
           </Stack>
 
           {/* Close Button */}
@@ -251,42 +344,3 @@ export const CancelledTripDetailModal = ({
     </AppModal>
   );
 };
-
-const DetailRow = ({
-  label,
-  value,
-  isLast,
-}: {
-  label: string;
-  value: string;
-  isLast?: boolean;
-}) => (
-  <RowStack
-    justifyContent="space-between"
-    sx={{
-      padding: '12px 16px',
-      borderBottom: isLast ? 'none' : '0.67px solid #F3F4F6',
-    }}
-  >
-    <Typography
-      sx={{
-        fontFamily: (theme) => theme.typography.fontFamily,
-        fontWeight: 400,
-        fontSize: pxToRem(12.5),
-        color: (theme) => theme.color.lightGrey,
-      }}
-    >
-      {label}
-    </Typography>
-    <Typography
-      sx={{
-        fontFamily: (theme) => theme.typography.fontFamily,
-        fontWeight: 600,
-        fontSize: pxToRem(12.5),
-        color: (theme) => theme.color.deepBlue,
-      }}
-    >
-      {value}
-    </Typography>
-  </RowStack>
-);

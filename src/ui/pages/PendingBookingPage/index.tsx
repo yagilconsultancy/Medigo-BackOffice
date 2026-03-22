@@ -9,8 +9,8 @@ import {
   PendingStatCard,
   PendingBookingCard,
   PendingBookingDetailModal,
-  AssignDriverModal,
 } from './ui/components';
+import { AssignDriverModal } from '../../modules/components';
 import { PendingBooking } from './ui/components/PendingBookingCard';
 
 const pendingBookings: PendingBooking[] = [
