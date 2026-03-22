@@ -1,13 +1,13 @@
 import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
-import { RowStack } from '../../../../../modules/components';
+import { RowStack, StyledImage } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
-import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
-import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
-import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import { StaticImageData } from 'next/image';
+import timeIcon from '../../assets/icons/time-icon.svg';
+import riderIcon from '../../assets/icons/rider-icon.svg';
+import locationIcon from '../../assets/icons/location-icon.svg';
+import warningIcon from '../../assets/icons/warning-Icon.svg';
 
 export type PendingBooking = {
   id: string;
@@ -20,6 +20,7 @@ export type PendingBooking = {
   serviceTypeBg: string;
   serviceIcon?: boolean;
   waitTime: string;
+  chipIcon?: StaticImageData | null;
   patientName: string;
   patientAge: number;
   patientPhone: string;
@@ -63,7 +64,7 @@ export const PendingBookingCard = ({
             flexShrink: 0,
           }}
         >
-          <AccessTimeOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />
+          <StyledImage src={timeIcon} alt="time" width={20} height={20} />
         </Box>
 
         {/* Content */}
@@ -95,6 +96,14 @@ export const PendingBookingCard = ({
             <Chip
               label={booking.serviceType}
               size="small"
+              icon={booking.chipIcon ? <StyledImage 
+                 src={booking.chipIcon}
+                 alt="chip-icon"
+                 sx={{
+                  width: '11px',
+                  height: '11px'
+                 }}
+              /> : null}
               sx={{
                 background: booking.serviceTypeBg,
                 color: booking.serviceTypeColor,
@@ -118,9 +127,7 @@ export const PendingBookingCard = ({
 
           {/* Patient info */}
           <RowStack spacing={'8px'}>
-            <PersonOutlineOutlinedIcon
-              sx={{ fontSize: 13, color: '#9CA3AF' }}
-            />
+            <StyledImage src={riderIcon} alt="rider" width={13} height={13} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
@@ -145,7 +152,7 @@ export const PendingBookingCard = ({
 
           {/* Route */}
           <RowStack spacing={'8px'}>
-            <LocationOnOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
+            <StyledImage src={locationIcon} alt="location" width={13} height={13} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
@@ -160,9 +167,7 @@ export const PendingBookingCard = ({
 
           {/* Date/Time */}
           <RowStack spacing={'8px'}>
-            <CalendarTodayOutlinedIcon
-              sx={{ fontSize: 13, color: '#9CA3AF' }}
-            />
+            <StyledImage src={timeIcon} alt="date" width={13} height={13} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
@@ -178,9 +183,7 @@ export const PendingBookingCard = ({
           {/* Special Note */}
           {booking.specialNote && (
             <RowStack spacing={'6px'}>
-              <WarningAmberOutlinedIcon
-                sx={{ fontSize: 12, color: '#D97706' }}
-              />
+              <StyledImage src={warningIcon} alt="warning" width={12} height={12} />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
@@ -198,28 +201,28 @@ export const PendingBookingCard = ({
         {/* Action Buttons */}
         <RowStack spacing={'4px'} sx={{ flexShrink: 0 }}>
           <IconButton
-            onClick={onViewDetail}
-            sx={{
-              width: 30,
-              height: 30,
-              borderRadius: '7px',
-              border: '0.67px solid #E5E7EB',
-              background: '#FFFFFF',
-            }}
-          >
-            <VisibilityOutlinedIcon sx={{ fontSize: 15, color: '#6B7280' }} />
-          </IconButton>
-          <IconButton
             onClick={onAssignDriver}
             sx={{
               width: 30,
               height: 30,
               borderRadius: '7px',
-              border: '0.67px solid #E5E7EB',
+              // border: '0.67px solid #E5E7EB',
               background: '#FFFFFF',
             }}
           >
-            <PersonAddAltOutlinedIcon sx={{ fontSize: 15, color: '#6B7280' }} />
+            <PersonAddAltOutlinedIcon sx={{ fontSize: 15, color: '#9CA3AF' }} />
+          </IconButton>
+          <IconButton
+            onClick={onViewDetail}
+            sx={{
+              width: 30,
+              height: 30,
+              borderRadius: '7px',
+              // border: '0.67px solid #E5E7EB',
+              background: '#FFFFFF',
+            }}
+          >
+            <VisibilityOutlinedIcon sx={{ fontSize: 15, color: '#9CA3AF' }} />
           </IconButton>
         </RowStack>
       </RowStack>

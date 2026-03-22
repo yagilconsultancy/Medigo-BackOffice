@@ -2,7 +2,7 @@
 
 import { Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { RowStack } from '../../modules/components';
+import { DashboardTitle, RowStack } from '../../modules/components';
 import { pxToRem } from '../../../common';
 import { useState } from 'react';
 import {
@@ -180,17 +180,7 @@ export const PendingBookingPage = () => {
       <Stack spacing={'24px'}>
         {/* Header */}
         <Stack spacing={'4px'}>
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 500,
-              fontSize: pxToRem(24),
-              lineHeight: '36px',
-              color: (theme) => theme.color.deepBlue,
-            }}
-          >
-            Pending Bookings
-          </Typography>
+          <DashboardTitle title='Pending Bookings' />
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,

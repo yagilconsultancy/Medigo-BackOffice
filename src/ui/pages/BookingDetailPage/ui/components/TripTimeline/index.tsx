@@ -7,14 +7,14 @@ import {
   TimelineContent,
   TimelineDot,
 } from '@mui/lab';
-import { RowStack } from '../../../../../modules/components';
+import { RowStack, StyledImage } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import { useState } from 'react';
-import TimelineOutlinedIcon from '@mui/icons-material/TimelineOutlined';
-import NoteAltOutlinedIcon from '@mui/icons-material/NoteAltOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import currentTimelineIcon from "../../assets/icons/currenttimeline-icon.svg"
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import tripTimelineIcon from "../../assets/icons/triptimeline-Icon.svg"
+import adminIcon from "../../assets/icons/service-icon.svg"
 
 type TimelineEntry = {
   time: string;
@@ -44,11 +44,25 @@ export const TripTimeline = ({
   const tabs = [
     {
       label: 'Trip Timeline',
-      icon: <TimelineOutlinedIcon sx={{ fontSize: 13 }} />,
+      icon: <StyledImage 
+       src={tripTimelineIcon}
+       alt="trip-timeline"
+       sx={{
+        width: '13px',
+        height: '13px'
+       }}
+      />,
     },
     {
       label: 'Admin Notes',
-      icon: <NoteAltOutlinedIcon sx={{ fontSize: 13 }} />,
+      icon: <StyledImage 
+       src={adminIcon}
+       alt="trip-timeline"
+       sx={{
+        width: '13px',
+        height: '13px'
+       }}
+      />,
     },
   ];
 
@@ -140,8 +154,13 @@ export const TripTimeline = ({
                       sx={{ fontSize: 12, color: '#059669' }}
                     />
                   ) : entry.isCurrent ? (
-                    <LocalShippingOutlinedIcon
-                      sx={{ fontSize: 13, color: '#FFFFFF' }}
+                    <StyledImage 
+                     src={currentTimelineIcon}
+                     alt='current-timeline'
+                     sx={{
+                      width: '13px',
+                      height: '13px'
+                     }}
                     />
                   ) : (
                     <AccessTimeOutlinedIcon

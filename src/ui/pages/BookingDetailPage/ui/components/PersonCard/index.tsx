@@ -1,15 +1,14 @@
 import { Box, Stack, Typography } from '@mui/material';
-import { RowStack } from '../../../../../modules/components';
+import { RowStack, StyledImage } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import StarIcon from '@mui/icons-material/Star';
-import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
-import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
-import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
-import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
-import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
-import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
-import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import phoneIcon from '../../assets/icons/phone-icon.svg';
+import emailIcon from '../../assets/icons/email-icon.svg';
+import insuranceIcon from '../../assets/icons/insurance-icon.svg';
+import driverinfoIcon from '../../assets/icons/driverinfo-icon.svg';
+import totaltripsIcon from '../../assets/icons/totaltrips-icon.svg';
+import specialtyIcon from '../../assets/icons/specialty-icon.svg';
+import certsIcon from '../../assets/icons/certs-icon.svg';
 
 type InfoRowProps = {
   icon: React.ReactNode;
@@ -85,7 +84,20 @@ export const PersonCard = ({
   certs,
   assignments,
 }: PersonCardProps) => {
-  const iconSx = { fontSize: 11, color: '#9CA3AF' };
+  const iconSize = { width: 11, height: 11 };
+
+  const infoRows = [
+    { icon: <StyledImage src={phoneIcon} alt="phone" {...iconSize} />, label: 'Phone', value: phone },
+    { icon: <StyledImage src={emailIcon} alt="email" {...iconSize} />, label: 'Email', value: email },
+    { icon: <StyledImage src={insuranceIcon} alt="insurance" {...iconSize} />, label: 'Insurance', value: insurance },
+    { icon: <StyledImage src={insuranceIcon} alt="member since" {...iconSize} />, label: 'Member Since', value: memberSince },
+    { icon: <StyledImage src={driverinfoIcon} alt="vehicle" {...iconSize} />, label: 'Vehicle', value: vehicle },
+    { icon: <StyledImage src={insuranceIcon} alt="plate" {...iconSize} />, label: 'Plate', value: plate },
+    { icon: <StyledImage src={totaltripsIcon} alt="total trips" {...iconSize} />, label: 'Total Trips', value: totalTrips },
+    { icon: <StyledImage src={specialtyIcon} alt="specialty" {...iconSize} />, label: 'Specialty', value: specialty },
+    { icon: <StyledImage src={certsIcon} alt="certs" {...iconSize} />, label: 'Certs', value: certs },
+    { icon: <StyledImage src={totaltripsIcon} alt="assignments" {...iconSize} />, label: 'Assignments', value: assignments },
+  ].filter((row) => row.value);
 
   return (
     <Stack spacing={'12px'}>
@@ -174,76 +186,14 @@ export const PersonCard = ({
       </RowStack>
 
       <Stack spacing={'8px'}>
-        {phone && (
+        {infoRows.map((row) => (
           <InfoRow
-            icon={<PhoneOutlinedIcon sx={iconSx} />}
-            label="Phone"
-            value={phone}
+            key={row.label}
+            icon={row.icon}
+            label={row.label}
+            value={row.value!}
           />
-        )}
-        {email && (
-          <InfoRow
-            icon={<EmailOutlinedIcon sx={iconSx} />}
-            label="Email"
-            value={email}
-          />
-        )}
-        {insurance && (
-          <InfoRow
-            icon={<BadgeOutlinedIcon sx={iconSx} />}
-            label="Insurance"
-            value={insurance}
-          />
-        )}
-        {memberSince && (
-          <InfoRow
-            icon={<CalendarTodayOutlinedIcon sx={iconSx} />}
-            label="Member Since"
-            value={memberSince}
-          />
-        )}
-        {vehicle && (
-          <InfoRow
-            icon={<DirectionsCarOutlinedIcon sx={iconSx} />}
-            label="Vehicle"
-            value={vehicle}
-          />
-        )}
-        {plate && (
-          <InfoRow
-            icon={<BadgeOutlinedIcon sx={iconSx} />}
-            label="Plate"
-            value={plate}
-          />
-        )}
-        {totalTrips && (
-          <InfoRow
-            icon={<WorkOutlineOutlinedIcon sx={iconSx} />}
-            label="Total Trips"
-            value={totalTrips}
-          />
-        )}
-        {specialty && (
-          <InfoRow
-            icon={<WorkOutlineOutlinedIcon sx={iconSx} />}
-            label="Specialty"
-            value={specialty}
-          />
-        )}
-        {certs && (
-          <InfoRow
-            icon={<VerifiedOutlinedIcon sx={iconSx} />}
-            label="Certs"
-            value={certs}
-          />
-        )}
-        {assignments && (
-          <InfoRow
-            icon={<AssignmentOutlinedIcon sx={iconSx} />}
-            label="Assignments"
-            value={assignments}
-          />
-        )}
+        ))}
       </Stack>
     </Stack>
   );

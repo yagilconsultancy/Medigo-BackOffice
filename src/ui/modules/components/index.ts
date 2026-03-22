@@ -21,3 +21,4 @@ export * from './AppCardparent';
 export * from './AppPillCount';
 export * from './AppGoogleMap';
 export * from './AppGoogleMapProvider';
+export * from './CustomBreadCrumbs';

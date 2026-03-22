@@ -1,12 +1,13 @@
 import { Box, LinearProgress, Stack, Typography } from '@mui/material';
-import { RowStack } from '../../../../../modules/components';
+import { RowStack, StyledImage } from '../../../../../modules/components';
 import { AppGoogleMap } from '../../../../../modules/components';
 import { AppGoogleMapsProvider } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import { InfoCard } from '../InfoCard';
 import FmdGoodOutlinedIcon from '@mui/icons-material/FmdGoodOutlined';
-import MyLocationOutlinedIcon from '@mui/icons-material/MyLocationOutlined';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
+import locationIcon from "../../assets/icons/location-icon.svg"
+import EastIcon from '@mui/icons-material/East';
 
 type LocationBoxProps = {
   icon: React.ReactNode;
@@ -93,17 +94,6 @@ export const LiveRouteCard = ({
               padding: '4px 12px',
             }}
           >
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 600,
-                fontSize: pxToRem(11),
-                lineHeight: '16.5px',
-                color: 'primary.main',
-              }}
-            >
-              Tracking Active
-            </Typography>
             <Box
               sx={{
                 width: 8,
@@ -128,19 +118,37 @@ export const LiveRouteCard = ({
                 },
               }}
             />
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 600,
+                fontSize: pxToRem(11),
+                lineHeight: '16.5px',
+                color: 'primary.main',
+              }}
+            >
+              Tracking Active
+            </Typography>
           </RowStack>
         </RowStack>
 
         <RowStack spacing={'8px'}>
           <LocationBox
             icon={
-              <MyLocationOutlinedIcon sx={{ fontSize: 12, color: '#374151' }} />
+              <StyledImage
+                src={locationIcon}
+                alt='location-icon'
+                sx={{
+                  width: '12px',
+                  height: '12px'
+                }}
+              />
             }
             iconBg="#F0FDF4"
             label="Pickup"
             address={pickupAddress}
           />
-          <FmdGoodOutlinedIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />
+          <EastIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />
           <LocationBox
             icon={
               <FmdGoodOutlinedIcon sx={{ fontSize: 12, color: '#2F6FED' }} />

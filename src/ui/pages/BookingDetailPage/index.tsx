@@ -3,10 +3,15 @@
 import { Box, Chip, Grid, Stack, Typography, alpha } from '@mui/material';
 import { useParams } from 'next/navigation';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { AppButton, RowStack } from '../../modules/components';
+import {
+  AppButton,
+  CustomBreadCrumbs,
+  DashboardTitle,
+  RowStack,
+  StyledImage,
+} from '../../modules/components';
 import { pxToRem } from '../../../common';
 import {
-  Breadcrumb,
   StatChip,
   InfoCard,
   PersonCard,
@@ -14,19 +19,22 @@ import {
   TripTimeline,
   FareBreakdown,
 } from './ui/components';
-import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
-import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
-import StraightenOutlinedIcon from '@mui/icons-material/StraightenOutlined';
-import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
-import FlightTakeoffOutlinedIcon from '@mui/icons-material/FlightTakeoffOutlined';
-import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined';
 import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined';
-import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import LoopIcon from '@mui/icons-material/Loop';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
-import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
-import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
-import HealthAndSafetyOutlinedIcon from '@mui/icons-material/HealthAndSafetyOutlined';
+import tripstatusIcon from './ui/assets/icons/tripstatus-icon.svg';
+import dollarIcon from './ui/assets/icons/dollar-icon.svg';
+import distanceIcon from './ui/assets/icons/distance-icon.svg';
+import timeIcon from './ui/assets/icons/time-icon.svg';
+import locationIcon from './ui/assets/icons/location-icon.svg';
+import clockIcon from './ui/assets/icons/clock-icon.svg';
+import serviceIcon from './ui/assets/icons/service-icon.svg';
+import usergroupIcon from './ui/assets/icons/usergroup-icon.svg';
+import riderIcon from './ui/assets/icons/rider-icon.svg';
+import driverinfoIcon from './ui/assets/icons/driverinfo-icon.svg';
+import driverIcon from './ui/assets/icons/driver-icon.svg';
+import careassistantIcon from './ui/assets/icons/careassistant-icon.svg';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 
 const bookingData = {
   bookingId: 'BK-20491',
@@ -129,7 +137,7 @@ const statusColorMap = {
   Declined: '#DC2626',
 };
 
-const iconSx = { fontSize: 14, color: '#9CA3AF' };
+const statIconSize = { width: 14, height: 14 };
 
 export const BookingDetailPage = () => {
   const params = useParams();
@@ -140,23 +148,19 @@ export const BookingDetailPage = () => {
   return (
     <AppDashboardLayout>
       <Stack spacing={'20px'}>
-        <Breadcrumb bookingId={bookingId} />
+        <CustomBreadCrumbs
+          breadcrumbsData={[
+            { href: '/bookings', text: 'Booking Management' },
+            { href: '/bookings', text: 'All Bookings' },
+            { href: '#', text: bookingId },
+          ]}
+        />
 
         {/* Header */}
         <RowStack justifyContent="space-between" width="100%">
           <Stack spacing={'6px'}>
             <RowStack spacing={'10px'}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 500,
-                  fontSize: pxToRem(24),
-                  lineHeight: '36px',
-                  color: (theme) => theme.color.deepBlue,
-                }}
-              >
-                Booking Details
-              </Typography>
+              <DashboardTitle title="Booking Details" />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
@@ -193,13 +197,8 @@ export const BookingDetailPage = () => {
               >
                 {data.createdAt}
               </Typography>
-              <Box
-                sx={{
-                  width: 4,
-                  height: 4,
-                  borderRadius: '50%',
-                  background: '#D1D5DB',
-                }}
+              <NavigateNextIcon
+                sx={{ fontSize: 13, color: '#D1D5DB' }}
               />
               <Typography
                 sx={{
@@ -237,7 +236,7 @@ export const BookingDetailPage = () => {
             </AppButton>
             <AppButton
               sx={{
-                background: 'primary.main',
+                background: (theme) => theme.palette.primary.main,
                 color: '#FFFFFF',
                 fontWeight: 600,
                 fontSize: pxToRem(12.5),
@@ -247,7 +246,7 @@ export const BookingDetailPage = () => {
                 },
               }}
               startIcon={
-                <LocalShippingOutlinedIcon
+                <LoopIcon
                   sx={{ fontSize: 13, color: '#FFFFFF' }}
                 />
               }
@@ -268,261 +267,235 @@ export const BookingDetailPage = () => {
 
         {/* Stat Chips */}
         <RowStack spacing={'12px'} width="100%">
-          <StatChip
-            icon={<AccessTimeOutlinedIcon sx={iconSx} />}
-            label="Trip Status"
-            value={data.stats.tripStatus}
-            valueColor="#ED8A2F"
-            pulse
-          />
-          <StatChip
-            icon={<AttachMoneyOutlinedIcon sx={iconSx} />}
-            label="Total Fare"
-            value={data.stats.totalFare}
-          />
-          <StatChip
-            icon={<StraightenOutlinedIcon sx={iconSx} />}
-            label="Distance"
-            value={data.stats.distance}
-          />
-          <StatChip
-            icon={<TimerOutlinedIcon sx={iconSx} />}
-            label="Est. Duration"
-            value={data.stats.estDuration}
-          />
-          <StatChip
-            icon={<FlightTakeoffOutlinedIcon sx={iconSx} />}
-            label="Picked Up At"
-            value={data.stats.pickedUpAt}
-          />
-          <StatChip
-            icon={<ScheduleOutlinedIcon sx={iconSx} />}
-            label="ETA Arrival"
-            value={data.stats.etaArrival}
-          />
+          {[
+            {
+              icon: <StyledImage src={tripstatusIcon} alt="trip status" {...statIconSize} />,
+              label: 'Trip Status',
+              value: data.stats.tripStatus,
+              valueColor: '#ED8A2F',
+              pulse: true,
+            },
+            {
+              icon: <StyledImage src={dollarIcon} alt="total fare" {...statIconSize} />,
+              label: 'Total Fare',
+              value: data.stats.totalFare,
+            },
+            {
+              icon: <StyledImage src={distanceIcon} alt="distance" {...statIconSize} />,
+              label: 'Distance',
+              value: data.stats.distance,
+            },
+            {
+              icon: <StyledImage src={timeIcon} alt="duration" {...statIconSize} />,
+              label: 'Est. Duration',
+              value: data.stats.estDuration,
+            },
+            {
+              icon: <StyledImage src={locationIcon} alt="picked up at" {...statIconSize} />,
+              label: 'Picked Up At',
+              value: data.stats.pickedUpAt,
+            },
+            {
+              icon: <StyledImage src={clockIcon} alt="eta arrival" {...statIconSize} />,
+              label: 'ETA Arrival',
+              value: data.stats.etaArrival,
+            },
+          ].map((chip) => (
+            <StatChip key={chip.label} {...chip} />
+          ))}
         </RowStack>
 
         {/* Main Content: Left sidebar + Right content */}
-        <RowStack spacing={'16px'} alignItems="flex-start" width="100%">
+        <Grid container spacing={'20px'}>
           {/* Left Column */}
-          <Stack spacing={'16px'} sx={{ width: 260, flexShrink: 0 }}>
-            {/* Service Type */}
-            <InfoCard
-              icon={
-                <MedicalServicesOutlinedIcon
-                  sx={{ fontSize: 12, color: '#9CA3AF' }}
-                />
-              }
-              title="Service Type"
-            >
-              <Stack spacing={'12px'}>
-                <Box
-                  sx={{
-                    background: '#F0FDF4',
-                    borderRadius: '14px',
-                    padding: '12px',
-                  }}
-                >
-                  <RowStack spacing={'10px'}>
-                    <Box
-                      sx={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: '14px',
-                        background: '#DCFCE7',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <MedicalServicesOutlinedIcon
-                        sx={{ fontSize: 18, color: '#16A34A' }}
-                      />
-                    </Box>
-                    <Stack spacing={'1px'}>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 700,
-                          fontSize: pxToRem(13.5),
-                          color: '#15803D',
-                        }}
-                      >
-                        {data.serviceType.title}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(11.5),
-                          color: '#4ADE80',
-                        }}
-                      >
-                        {data.serviceType.description}
-                      </Typography>
-                    </Stack>
-                  </RowStack>
-                </Box>
-                <Stack spacing={'8px'}>
-                  <RowStack
-                    justifyContent="space-between"
+          <Grid size={{ sm: 12, lg: 3 }}>
+            <Stack spacing={'16px'}>
+              {/* Service Type */}
+              <InfoCard
+                icon={
+                  <StyledImage src={serviceIcon} alt="service type" width={12} height={12} />
+                }
+                title="Service Type"
+              >
+                <Stack spacing={'12px'}>
+                  <Box
                     sx={{
-                      background: '#F7F9FB',
-                      borderRadius: '10px',
-                      padding: '9px 12px',
+                      background: '#F0FDF4',
+                      borderRadius: '14px',
+                      padding: '12px',
                     }}
                   >
-                    <RowStack spacing={'8px'}>
-                      <DirectionsCarOutlinedIcon
-                        sx={{ fontSize: 12, color: '#9CA3AF' }}
-                      />
-                      <Typography
+                    <RowStack spacing={'10px'}>
+                      <Box
                         sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 600,
-                          fontSize: pxToRem(10.5),
-                          color: (theme) => theme.color.grey,
+                          width: 38,
+                          height: 38,
+                          borderRadius: '14px',
+                          background: '#DCFCE7',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                         }}
                       >
-                        Driver
-                      </Typography>
+                        <StyledImage src={usergroupIcon} alt="service" width={18} height={18} />
+                      </Box>
+                      <Stack spacing={'1px'}>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 700,
+                            fontSize: pxToRem(13.5),
+                            color: '#15803D',
+                          }}
+                        >
+                          {data.serviceType.title}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 400,
+                            fontSize: pxToRem(11.5),
+                            color: '#4ADE80',
+                          }}
+                        >
+                          {data.serviceType.description}
+                        </Typography>
+                      </Stack>
                     </RowStack>
-                    <Chip
-                      label={data.serviceType.driver}
-                      size="small"
-                      sx={{
-                        background: alpha('#059669', 0.1),
-                        color: '#059669',
-                        fontSize: pxToRem(10.5),
-                        fontWeight: 700,
-                        height: '20px',
-                        borderRadius: '10px',
-                      }}
-                    />
-                  </RowStack>
-                  <RowStack
-                    justifyContent="space-between"
-                    sx={{
-                      background: '#F7F9FB',
-                      borderRadius: '10px',
-                      padding: '9px 12px',
-                    }}
-                  >
-                    <RowStack spacing={'8px'}>
-                      <HealthAndSafetyOutlinedIcon
-                        sx={{ fontSize: 12, color: '#9CA3AF' }}
-                      />
-                      <Typography
+                  </Box>
+                  <Stack spacing={'8px'}>
+                    {[
+                      {
+                        icon: <StyledImage src={driverIcon} alt="driver" width={12} height={12} />,
+                        label: 'Driver',
+                        status: data.serviceType.driver,
+                      },
+                      {
+                        icon: <StyledImage src={careassistantIcon} alt="care assistant" width={12} height={12} />,
+                        label: 'Care Assistant',
+                        status: data.serviceType.careAssistant,
+                      },
+                    ].map((row) => (
+                      <RowStack
+                        key={row.label}
+                        justifyContent="space-between"
                         sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 600,
-                          fontSize: pxToRem(10.5),
-                          color: (theme) => theme.color.grey,
+                          background: '#F7F9FB',
+                          borderRadius: '10px',
+                          padding: '9px 12px',
                         }}
                       >
-                        Care Assistant
-                      </Typography>
-                    </RowStack>
-                    <Chip
-                      label={data.serviceType.careAssistant}
-                      size="small"
-                      sx={{
-                        background: alpha('#059669', 0.1),
-                        color: '#059669',
-                        fontSize: pxToRem(10.5),
-                        fontWeight: 700,
-                        height: '20px',
-                        borderRadius: '10px',
-                      }}
-                    />
-                  </RowStack>
+                        <RowStack spacing={'8px'}>
+                          {row.icon}
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) => theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(10.5),
+                              color: (theme) => theme.color.grey,
+                            }}
+                          >
+                            {row.label}
+                          </Typography>
+                        </RowStack>
+                        <Chip
+                          label={row.status}
+                          size="small"
+                          sx={{
+                            background: alpha('#059669', 0.1),
+                            color: '#059669',
+                            fontSize: pxToRem(10.5),
+                            fontWeight: 700,
+                            height: '20px',
+                            borderRadius: '10px',
+                          }}
+                        />
+                      </RowStack>
+                    ))}
+                  </Stack>
                 </Stack>
-              </Stack>
-            </InfoCard>
+              </InfoCard>
 
-            {/* Rider Information */}
-            <InfoCard
-              icon={
-                <PersonOutlineOutlinedIcon
-                  sx={{ fontSize: 12, color: '#9CA3AF' }}
+              {/* Rider Information */}
+              <InfoCard
+                icon={
+                  <StyledImage src={riderIcon} alt="rider" width={12} height={12} />
+                }
+                title="Rider Information"
+              >
+                <PersonCard
+                  initials={data.rider.initials}
+                  name={data.rider.name}
+                  phone={data.rider.phone}
+                  email={data.rider.email}
+                  insurance={data.rider.insurance}
+                  memberSince={data.rider.memberSince}
                 />
-              }
-              title="Rider Information"
-            >
-              <PersonCard
-                initials={data.rider.initials}
-                name={data.rider.name}
-                phone={data.rider.phone}
-                email={data.rider.email}
-                insurance={data.rider.insurance}
-                memberSince={data.rider.memberSince}
-              />
-            </InfoCard>
+              </InfoCard>
 
-            {/* Driver Information */}
-            <InfoCard
-              icon={
-                <DirectionsCarOutlinedIcon
-                  sx={{ fontSize: 12, color: '#9CA3AF' }}
+              {/* Driver Information */}
+              <InfoCard
+                icon={
+                  <StyledImage src={driverinfoIcon} alt="driver info" width={12} height={12} />
+                }
+                title="Driver Information"
+              >
+                <PersonCard
+                  initials={data.driver.initials}
+                  name={data.driver.name}
+                  rating={data.driver.rating}
+                  badge={data.driver.badge}
+                  badgeColor={data.driver.badgeColor}
+                  phone={data.driver.phone}
+                  vehicle={data.driver.vehicle}
+                  plate={data.driver.plate}
+                  totalTrips={data.driver.totalTrips}
                 />
-              }
-              title="Driver Information"
-            >
-              <PersonCard
-                initials={data.driver.initials}
-                name={data.driver.name}
-                rating={data.driver.rating}
-                badge={data.driver.badge}
-                badgeColor={data.driver.badgeColor}
-                phone={data.driver.phone}
-                vehicle={data.driver.vehicle}
-                plate={data.driver.plate}
-                totalTrips={data.driver.totalTrips}
-              />
-            </InfoCard>
+              </InfoCard>
 
-            {/* Care Assistant */}
-            <InfoCard
-              icon={
-                <HealthAndSafetyOutlinedIcon
-                  sx={{ fontSize: 12, color: '#9CA3AF' }}
+              {/* Care Assistant */}
+              <InfoCard
+                icon={
+                  <StyledImage src={careassistantIcon} alt="care assistant" width={12} height={12} />
+                }
+                title="Care Assistant"
+              >
+                <PersonCard
+                  initials={data.careAssistant.initials}
+                  initialsColor={data.careAssistant.initialsColor}
+                  name={data.careAssistant.name}
+                  rating={data.careAssistant.rating}
+                  phone={data.careAssistant.phone}
+                  specialty={data.careAssistant.specialty}
+                  certs={data.careAssistant.certs}
+                  assignments={data.careAssistant.assignments}
                 />
-              }
-              title="Care Assistant"
-            >
-              <PersonCard
-                initials={data.careAssistant.initials}
-                initialsColor={data.careAssistant.initialsColor}
-                name={data.careAssistant.name}
-                rating={data.careAssistant.rating}
-                phone={data.careAssistant.phone}
-                specialty={data.careAssistant.specialty}
-                certs={data.careAssistant.certs}
-                assignments={data.careAssistant.assignments}
-              />
-            </InfoCard>
-          </Stack>
+              </InfoCard>
+            </Stack>
+          </Grid>
 
           {/* Right Column */}
-          <Stack spacing={'16px'} sx={{ flex: 1 }}>
-            <LiveRouteCard
-              pickupAddress={data.route.pickup}
-              destinationAddress={data.route.destination}
-              tripProgress={data.route.tripProgress}
-            />
-            <TripTimeline
-              entries={data.timeline}
-              adminNotes={data.adminNotes}
-            />
-            <FareBreakdown
-              baseFare={data.fare.baseFare}
-              careAssistantFee={data.fare.careAssistantFee}
-              platformFee={data.fare.platformFee}
-              totalAmount={data.fare.totalAmount}
-              paymentMethod={data.fare.paymentMethod}
-            />
-          </Stack>
-        </RowStack>
+          <Grid size={{ sm: 12, lg: 9 }}>
+            <Stack spacing={'16px'}>
+              <LiveRouteCard
+                pickupAddress={data.route.pickup}
+                destinationAddress={data.route.destination}
+                tripProgress={data.route.tripProgress}
+              />
+              <TripTimeline
+                entries={data.timeline}
+                adminNotes={data.adminNotes}
+              />
+              <FareBreakdown
+                baseFare={data.fare.baseFare}
+                careAssistantFee={data.fare.careAssistantFee}
+                platformFee={data.fare.platformFee}
+                totalAmount={data.fare.totalAmount}
+                paymentMethod={data.fare.paymentMethod}
+              />
+            </Stack>
+          </Grid>
+        </Grid>
       </Stack>
     </AppDashboardLayout>
   );

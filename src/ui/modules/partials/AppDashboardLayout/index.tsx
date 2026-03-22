@@ -74,6 +74,8 @@ export const AppDashboardLayout = ({ children }: AppLayoutProps) => {
             // marginRight: '47px',
             overflowY: 'auto',
             overflowX: 'hidden',
+            '::-webkit-scrollbar': { display: 'none' },
+            scrollbarWidth: 'none',
           }}
         >
           <Toolbar />

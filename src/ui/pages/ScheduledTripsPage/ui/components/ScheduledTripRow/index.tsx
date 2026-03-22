@@ -2,7 +2,7 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import { AppButton, RowStack } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
-import RepeatOutlinedIcon from '@mui/icons-material/RepeatOutlined';
+import LoopIcon from '@mui/icons-material/Loop';;
 
 export type ScheduledTrip = {
   id: string;
@@ -89,7 +89,7 @@ export const ScheduledTripRow = ({ trip, isLast }: ScheduledTripRowProps) => {
           {trip.recurrence && (
             <Chip
               icon={
-                <RepeatOutlinedIcon
+                <LoopIcon
                   sx={{ fontSize: 11, color: '#6366F1 !important' }}
                 />
               }

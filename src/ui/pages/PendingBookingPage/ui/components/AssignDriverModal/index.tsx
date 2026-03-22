@@ -3,11 +3,12 @@ import {
   AppButton,
   AppModal,
   RowStack,
+  StyledImage,
 } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import CloseIcon from '@mui/icons-material/Close';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useState } from 'react';
+import checkIcon from '../../assets/icons/check-Icon.svg';
 
 type Driver = {
   id: string;
@@ -230,7 +231,7 @@ export const AssignDriverModal = ({
 
                 {/* Checkmark for selected */}
                 {isSelected && (
-                  <CheckCircleIcon sx={{ fontSize: 16, color: '#2F6FED' }} />
+                  <StyledImage src={checkIcon} alt="selected" width={16} height={16} />
                 )}
               </RowStack>
             );
@@ -257,7 +258,7 @@ export const AssignDriverModal = ({
             onClick={handleConfirm}
             disabled={!selectedDriverId}
             sx={{
-              background: 'primary.main',
+              background: (theme) => theme.palette.primary.main,
               color: '#FFFFFF',
               fontWeight: 600,
               fontSize: pxToRem(13),

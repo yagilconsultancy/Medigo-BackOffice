@@ -45,18 +45,7 @@ export const StatChip = ({
         </Typography>
       </RowStack>
       <RowStack spacing={'6px'}>
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 700,
-            fontSize: pxToRem(16),
-            lineHeight: '24px',
-            color: valueColor || ((theme) => theme.color.deepBlue),
-          }}
-        >
-          {value}
-        </Typography>
-        {pulse && (
+         {pulse && (
           <Box
             sx={{
               width: 8,
@@ -82,6 +71,17 @@ export const StatChip = ({
             }}
           />
         )}
+        <Typography
+          sx={{
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 700,
+            fontSize: pxToRem(14),
+            lineHeight: '21px',
+            color: valueColor || ((theme) => theme.color.deepBlue),
+          }}
+        >
+          {value}
+        </Typography>
       </RowStack>
     </Stack>
   );

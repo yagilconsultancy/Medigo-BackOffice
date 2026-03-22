@@ -3,10 +3,11 @@ import {
   AppButton,
   AppModal,
   RowStack,
+  StyledImage,
 } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import CloseIcon from '@mui/icons-material/Close';
-import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import warningIcon from '../../assets/icons/warning-Icon.svg';
 
 type DetailRow = {
   label: string;
@@ -125,7 +126,7 @@ export const PendingBookingDetailModal = ({
               padding: '13px 16px',
             }}
           >
-            <WarningAmberOutlinedIcon sx={{ fontSize: 14, color: '#92400E' }} />
+            <StyledImage src={warningIcon} alt="warning" width={14} height={14} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
@@ -161,7 +162,7 @@ export const PendingBookingDetailModal = ({
               onAssignDriver();
             }}
             sx={{
-              background: 'primary.main',
+              background: (theme) => theme.palette.primary.main,
               color: '#FFFFFF',
               fontWeight: 600,
               fontSize: pxToRem(13),

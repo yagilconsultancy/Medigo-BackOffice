@@ -1,4 +1,3 @@
-export * from './Breadcrumb';
 export * from './StatChip';
 export * from './InfoCard';
 export * from './PersonCard';
