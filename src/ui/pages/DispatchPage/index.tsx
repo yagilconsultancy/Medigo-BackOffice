@@ -26,11 +26,11 @@ import {
 
 import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
-import pendingIcon from "./ui/assets/icons/dispatch-pending-Icon.svg"
-import driverIcon from "./ui/assets/icons/driverinfo-icon.svg"
-import userGroupIcon from "./ui/assets/icons/drivermanagement-Icon.svg"
-import tripIcon from "./ui/assets/icons/tripstatus-icon.svg"
-import assignIcon from "./ui/assets/icons/assign-icon.svg"
+import pendingIcon from './ui/assets/icons/dispatch-pending-Icon.svg';
+import driverIcon from './ui/assets/icons/driverinfo-icon.svg';
+import userGroupIcon from './ui/assets/icons/drivermanagement-Icon.svg';
+import tripIcon from './ui/assets/icons/tripstatus-icon.svg';
+import assignIcon from './ui/assets/icons/assign-icon.svg';
 
 // ─── Sample Data ────────────────────────────────────────────────────────────
 
@@ -318,7 +318,14 @@ export const DispatchPage = () => {
             }}
           >
             <Tab
-              icon={<GridViewOutlinedIcon sx={{ fontSize: pxToRem(16), color: (theme) => theme.color.deepBlue }} />}
+              icon={
+                <GridViewOutlinedIcon
+                  sx={{
+                    fontSize: pxToRem(16),
+                    color: (theme) => theme.color.deepBlue,
+                  }}
+                />
+              }
               iconPosition="start"
               label="Assignments"
               disableRipple
@@ -367,7 +374,7 @@ export const DispatchPage = () => {
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
           {statCards.map((card, index) => (
-            <Grid key={index} size={{ xs: 6, lg: 3 }}>
+            <Grid key={index} size={{ xs: 6, lg: 3 }} alignItems={'stretch'}>
               <DispatchStatCard {...card} />
             </Grid>
           ))}
@@ -411,13 +418,13 @@ export const DispatchPage = () => {
                 </Stack>
 
                 <Stack
-                 sx={{
-                  height: '600px',
-                  overflowY: 'auto',
-                  '::-webkit-scrollbar': { display: 'none' },
-                  scrollbarWidth: 'none',
-                 }}
-                 spacing={.4}
+                  sx={{
+                    height: '600px',
+                    overflowY: 'auto',
+                    '::-webkit-scrollbar': { display: 'none' },
+                    scrollbarWidth: 'none',
+                  }}
+                  spacing={0.4}
                 >
                   {pendingBookings.map((booking) => (
                     <DispatchBookingCard
@@ -478,14 +485,16 @@ export const DispatchPage = () => {
                       minWidth: 'auto',
                       '&:hover': { background: '#EBF2FF' },
                     }}
-                    startIcon={<StyledImage 
-                       src={assignIcon}
-                       alt="assign-driver"
-                       sx={{
-                        width: '13px',
-                        height: '13px'
-                       }}
-                    />}
+                    startIcon={
+                      <StyledImage
+                        src={assignIcon}
+                        alt="assign-driver"
+                        sx={{
+                          width: '13px',
+                          height: '13px',
+                        }}
+                      />
+                    }
                   >
                     Auto Assign All
                   </AppButton>

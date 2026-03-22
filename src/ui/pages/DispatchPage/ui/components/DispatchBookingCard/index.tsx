@@ -1,10 +1,14 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
-import { AppButton, RowStack, StyledImage } from '../../../../../modules/components';
+import {
+  AppButton,
+  RowStack,
+  StyledImage,
+} from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined';
-import userGroupIcon from "../../assets/icons/assigndriver-Icon.svg"
+import userGroupIcon from '../../assets/icons/assigndriver-Icon.svg';
 
 export type DispatchBooking = {
   id: string;
@@ -233,19 +237,19 @@ export const DispatchBookingCard = ({
             },
           }}
           startIcon={
-            <StyledImage 
-             src={userGroupIcon}
-             alt="assign-driver"
-             sx={{
-              width: '13px',
-              height: '13px'
-             }}
+            <StyledImage
+              src={userGroupIcon}
+              alt="assign-driver"
+              sx={{
+                width: '13px',
+                height: '13px',
+              }}
             />
           }
         >
-              {needsCareAssistant
-                ? 'Assign Driver + Care Assistant'
-                : 'Assign Driver'}
+          {needsCareAssistant
+            ? 'Assign Driver + Care Assistant'
+            : 'Assign Driver'}
         </AppButton>
       )}
     </Stack>

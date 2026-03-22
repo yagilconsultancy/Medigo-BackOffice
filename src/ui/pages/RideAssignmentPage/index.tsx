@@ -192,7 +192,7 @@ export const RideAssignmentPage = () => {
         {/* Two-Column Layout */}
         <Grid container spacing={'20px'}>
           {/* Left: Unassigned Rides */}
-          <Grid size={{ xs: 12, lg: 5 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Stack
               spacing={'12px'}
               sx={{
@@ -240,7 +240,7 @@ export const RideAssignmentPage = () => {
           </Grid>
 
           {/* Right: Available Drivers */}
-          <Grid size={{ xs: 12, lg: 7 }}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <Stack
               spacing={'12px'}
               sx={{

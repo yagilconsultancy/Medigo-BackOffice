@@ -35,7 +35,9 @@ export const ActiveTripCard = ({
       onClick={onClick}
       sx={{
         padding: '14px 16px',
-        borderLeft: `3px solid ${trip.driverInitialsColor}`,
+        borderLeft: isSelected
+          ? `3px solid ${trip.driverInitialsColor}`
+          : 'none',
         borderBottom: '0.67px solid #F3F4F6',
         cursor: 'pointer',
         background: isSelected ? '#F7F9FB' : 'transparent',

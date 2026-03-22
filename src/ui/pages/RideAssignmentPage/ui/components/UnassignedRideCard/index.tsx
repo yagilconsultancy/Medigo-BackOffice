@@ -3,6 +3,7 @@ import { RowStack, StyledImage } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import pickupIcon from '../../../../DispatchPage/ui/assets/icons/pickup-icon.svg';
 import destinationIcon from '../../../../DispatchPage/ui/assets/icons/destination-icon.svg';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 export type UnassignedRide = {
   id: string;
@@ -38,7 +39,7 @@ export const UnassignedRideCard = ({
       spacing={'10px'}
       onClick={!isAssigned ? onClick : undefined}
       sx={{
-        background: isSelected ? '#F7F9FB' : '#FFFFFF',
+        background: isSelected ? '#EBF2FF' : '#F7F9FB',
         borderRadius: '14px',
         padding: '16px',
         border: isSelected ? '1.5px solid #2F6FED' : '0.67px solid #EAECF0',
@@ -123,39 +124,34 @@ export const UnassignedRideCard = ({
       )}
 
       {/* Route */}
-      <Stack spacing={'4px'}>
-        <RowStack spacing={'6px'}>
-          <StyledImage src={pickupIcon} alt="pickup" width={12} height={12} />
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: pxToRem(12),
-              color: (theme) => theme.color.lightGrey,
-            }}
-          >
-            {ride.pickup}
-          </Typography>
-        </RowStack>
-        <RowStack spacing={'6px'}>
-          <StyledImage
-            src={destinationIcon}
-            alt="destination"
-            width={12}
-            height={12}
-          />
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: pxToRem(12),
-              color: (theme) => theme.color.lightGrey,
-            }}
-          >
-            {ride.destination}
-          </Typography>
-        </RowStack>
-      </Stack>
+      <Typography
+        sx={{
+          fontFamily: (theme) => theme.typography.fontFamily,
+          fontWeight: 400,
+          fontSize: pxToRem(12),
+          color: (theme) => theme.color.lightGrey,
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '4px',
+        }}
+      >
+        <StyledImage
+          src={pickupIcon}
+          alt="pickup"
+          sx={{ width: '12px', height: '12px' }}
+        />
+        {ride.pickup}
+        <ArrowForwardIcon
+          sx={{ width: '12px', height: '12px', color: '#6B7280' }}
+        />
+        <StyledImage
+          src={destinationIcon}
+          alt="destination"
+          sx={{ width: '12px', height: '12px' }}
+        />
+        {ride.destination}
+      </Typography>
 
       {/* Time + Distance */}
       <Typography

@@ -39,6 +39,7 @@ export const DispatchStatCard = ({
         padding: '20px',
         flex: 1,
         border: '0.67px solid #EAECF0',
+        height: '100%',
       }}
     >
       <RowStack justifyContent="space-between">
@@ -53,12 +54,12 @@ export const DispatchStatCard = ({
             justifyContent: 'center',
           }}
         >
-          <StyledImage 
+          <StyledImage
             src={icon}
-            alt='icon'
+            alt="icon"
             sx={{
               width: '17px',
-              height: '17px'
+              height: '17px',
             }}
           />
         </Box>
