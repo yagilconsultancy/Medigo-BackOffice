@@ -10,3 +10,4 @@ export * from './AutoDispatchPage';
 export * from './LiveDispatchMapPage';
 export * from './ActiveTripMapPage';
 export * from './DriverRouteHistoryPage';
+export * from './PerformanceMetricsPage';
