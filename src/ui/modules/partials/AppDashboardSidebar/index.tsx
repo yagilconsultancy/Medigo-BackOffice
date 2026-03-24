@@ -73,7 +73,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         ],
       },
       {
-        icon: fleetIcon,
+        icon: fleetIcon, 
         text: 'Fleet Management',
         dropdown: [
           { text: 'Fleet Applications', link: '/#fleet' },
