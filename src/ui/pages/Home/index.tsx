@@ -209,117 +209,6 @@ const recentData = [
   },
 ];
 
-// const columns = [
-//   { field: "fleet", headerName: "Fleet", flex: 1.5, minWidth: 200 },
-//   { field: "contact", headerName: "Contact", flex: 1.5, minWidth: 200 },
-//   { field: "city", headerName: "City", flex: 1, minWidth: 150 },
-//   { field: "vehicles", headerName: "Vehicles", flex: 0.7, minWidth: 120 },
-//   { field: "drivers", headerName: "Drivers", flex: 0.7, minWidth: 120 },
-//   { field: "revenue", headerName: "Revenue", flex: 1, minWidth: 150 },
-//   { field: "status", headerName: "Status", flex: 1, minWidth: 150 },
-//   { field: "joined", headerName: "Joined", flex: 1, minWidth: 150 },
-//   { field: "actions", headerName: "Actions", flex: 0.5, minWidth: 100 },
-// ];
-
-// const rows = [
-//   {
-//     id: "FL-001",
-//     fleet: "MedRide Express",
-//     contact: "Jean-Pierre Côté (jpcote@medride.ca)",
-//     city: "Toronto, ON",
-//     vehicles: 48,
-//     drivers: 42,
-//     revenue: "$128,400",
-//     status: "Active",
-//     joined: "Jan 2024",
-//     actions: "view",
-//   },
-//   {
-//     id: "FL-002",
-//     fleet: "CareTransit Co.",
-//     contact: "Anya Singh (anya@caretransit.ca)",
-//     city: "Vancouver, BC",
-//     vehicles: 36,
-//     drivers: 31,
-//     revenue: "$94,200",
-//     status: "Active",
-//     joined: "Feb 2024",
-//     actions: "view",
-//   },
-//   {
-//     id: "FL-003",
-//     fleet: "HealthHaul LLC",
-//     contact: "David Kim (david@healthhaul.ca)",
-//     city: "Montréal, QC",
-//     vehicles: 29,
-//     drivers: 24,
-//     revenue: "$71,600",
-//     status: "Active",
-//     joined: "Mar 2024",
-//     actions: "view",
-//   },
-//   {
-//     id: "FL-004",
-//     fleet: "SafeRide Medical",
-//     contact: "Tina Nguyen (tina@saferidemed.ca)",
-//     city: "Calgary, AB",
-//     vehicles: 22,
-//     drivers: 19,
-//     revenue: "$58,800",
-//     status: "Active",
-//     joined: "Apr 2024",
-//     actions: "view",
-//   },
-//   {
-//     id: "FL-005",
-//     fleet: "PatientPath Inc.",
-//     contact: "Marc Beausoleil (marc@patientpath.ca)",
-//     city: "Edmonton, AB",
-//     vehicles: 18,
-//     drivers: 16,
-//     revenue: "$32,100",
-//     status: "Suspended",
-//     joined: "May 2024",
-//     actions: "view",
-//   },
-//   {
-//     id: "FL-006",
-//     fleet: "MobiCare Transport",
-//     contact: "Sandra Lee (sandra@mobicare.ca)",
-//     city: "Ottawa, ON",
-//     vehicles: 31,
-//     drivers: 27,
-//     revenue: "$83,500",
-//     status: "Active",
-//     joined: "Jun 2024",
-//     actions: "view",
-//   },
-//   {
-//     id: "FL-007",
-//     fleet: "Apex Medical Rides",
-//     contact: "Robert Gallant (robert@apexmed.ca)",
-//     city: "Winnipeg, MB",
-//     vehicles: 25,
-//     drivers: 21,
-//     revenue: "$66,900",
-//     status: "Active",
-//     joined: "Jul 2024",
-//     actions: "view",
-//   },
-//   {
-//     id: "FL-008",
-//     fleet: "QuickCare Mobility",
-//     contact: "Priya Sharma (priya@quickcare.ca)",
-//     city: "Halifax, NS",
-//     vehicles: 14,
-//     drivers: 12,
-//     revenue: "—",
-//     status: "Pending",
-//     joined: "Jan 2025",
-//     actions: "view",
-//   },
-// ];
-
 export const HomePage = () => {
   const today = getTodayDate();
   const [activeTripTab, setActiveTripTab] = useState(0);
@@ -395,11 +284,14 @@ export const HomePage = () => {
             </AppCardparent>
           </Grid>
         </Grid>
-        <Grid container spacing={'20px'}>
+        <Grid container spacing={'20px'} alignItems={"stretch"}>
           <Grid
             size={{
               sm: 12,
               lg: 6,
+            }}
+            sx={{
+              height: 'auto'
             }}
           >
             <AppCardparent>
@@ -419,6 +311,9 @@ export const HomePage = () => {
               sm: 12,
               lg: 6,
             }}
+            sx={{
+              height: 'auto'
+            }}
           >
             <AppCardparent>
               <Stack spacing={'19.83px'}>
@@ -437,48 +332,3 @@ export const HomePage = () => {
     </AppDashboardLayout>
   );
 };
-
-{
-  /* <AppGridtable
-          columns={columns}
-          // isFetchingData={isFetching}
-          data={rows}
-          // onRowClick={handleRowClicked}
-          // onPaginationModelChange={setPaginationModel}
-          // initialPageSize={itemsPerPage}
-          // permissionErrorState={
-          //   has403Error ? (
-          //     <PermissionError
-          //       message={
-          //         errorMessage || "You do not have permission to access this resource."
-          //       }
-          //     />
-          //   ) : undefined
-          // }
-          // emptyState={
-          //   !customersData.length ? (
-          //     <EmptyState
-          //       emptyState={
-          //         <Typography
-          //           sx={{
-          //             fontSize: pxToRem(14),
-          //             fontWeight: 400,
-          //             color: "text.primary",
-          //             lineHeight: "140%",
-          //           }}
-          //         >
-          //           No Registered user at this time
-          //         </Typography>
-          //       }
-          //     />
-          //   ) : undefined
-          // }
-          sx={{
-            height: "auto",
-            width: "100%",
-            // minHeight: !customersData.length ? "400px" : "auto",
-          }}
-        >
-          <Typography variant="h6">Customers</Typography>
-        </AppGridtable> */
-}

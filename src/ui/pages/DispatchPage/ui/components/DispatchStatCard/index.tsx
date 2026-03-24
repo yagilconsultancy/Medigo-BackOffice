@@ -9,6 +9,7 @@ type DispatchStatCardProps = {
   value: string;
   label: string;
   subtitle: string;
+  iconBg?: string;
   badge?: {
     text: string;
     color: string;
@@ -26,6 +27,7 @@ export const DispatchStatCard = ({
   value,
   label,
   subtitle,
+  iconBg,
   badge,
   link,
   progress,
@@ -48,7 +50,7 @@ export const DispatchStatCard = ({
             width: 40,
             height: 40,
             borderRadius: '12px',
-            background: '#F7F9FB',
+            background: iconBg || '#F7F9FB',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -114,16 +116,18 @@ export const DispatchStatCard = ({
         >
           {label}
         </Typography>
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 400,
-            fontSize: pxToRem(11.5),
-            color: (theme) => theme.color.lightGrey,
-          }}
-        >
-          {subtitle}
-        </Typography>
+        {subtitle && (
+          <Typography
+            sx={{
+              fontFamily: (theme) => theme.typography.fontFamily,
+              fontWeight: 400,
+              fontSize: pxToRem(11.5),
+              color: (theme) => theme.color.lightGrey,
+            }}
+          >
+            {subtitle}
+          </Typography>
+        )}
       </Stack>
       {progress && (
         <Typography
