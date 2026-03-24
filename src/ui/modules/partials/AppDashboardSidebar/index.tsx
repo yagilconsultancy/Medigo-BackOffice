@@ -76,11 +76,11 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         icon: fleetIcon, 
         text: 'Fleet Management',
         dropdown: [
-          { text: 'Fleet Applications', link: '/#fleet' },
-          { text: 'Fleet Companies', link: '/#fleet/companies' },
-          { text: 'Fleet Drivers', link: '/#fleet/drivers' },
-          { text: 'Fleet Vehicles', link: '/#fleet/vehicles' },
-          { text: 'Fleet Earnings', link: '/#fleet/earnings' },
+          { text: 'Fleet Applications', link: '/fleet' },
+          { text: 'Fleet Companies', link: '/fleet/companies' },
+          { text: 'Fleet Drivers', link: '/fleet/drivers' },
+          { text: 'Fleet Vehicles', link: '/fleet/vehicles' },
+          { text: 'Fleet Earnings', link: '/fleet/earnings' },
         ],
       },
       {

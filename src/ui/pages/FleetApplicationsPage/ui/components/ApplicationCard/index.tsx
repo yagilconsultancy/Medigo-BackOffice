@@ -1,13 +1,9 @@
-'use client';
-
-import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
-import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import { Box, IconButton, Stack, Typography } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
-import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import FolderOpenOutlinedIcon from '@mui/icons-material/FolderOpenOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import { RowStack } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 
@@ -16,66 +12,73 @@ import { pxToRem } from '../../../../../../common';
 export type ApplicationStatus =
   | 'Pending'
   | 'Approved'
-  | 'More Info Required'
-  | 'Rejected';
+  | 'Rejected'
+  | 'More Info Required';
 
-export type FleetApplication = {
+export type FleetApplicationRow = {
   id: string;
   appId: string;
   companyName: string;
-  status: ApplicationStatus;
-  contactName: string;
+  fleetSize: number;
+  contactPerson: string;
   contactEmail: string;
-  location: string;
-  vehicleCount: number;
+  contactPhone: string;
+  city: string;
   submittedDate: string;
-  description: string;
+  status: ApplicationStatus;
+  message: string;
   documents: string[];
 };
 
-// ─── Status Config ──────────────────────────────────────────────────────────
+// ─── Status Badge Config ────────────────────────────────────────────────────
 
-const statusConfig: Record<ApplicationStatus, { color: string; bg: string }> = {
-  Pending: { color: '#D97706', bg: '#FFFBEB' },
-  Approved: { color: '#059669', bg: '#ECFDF5' },
-  'More Info Required': { color: '#6366F1', bg: '#EEF2FF' },
-  Rejected: { color: '#EF4444', bg: '#FEF2F2' },
+const statusConfig: Record<
+  ApplicationStatus,
+  { color: string; bg: string; dotColor: string }
+> = {
+  Pending: { color: '#D97706', bg: '#FFFBEB', dotColor: '#F59E0B' },
+  Approved: { color: '#059669', bg: '#ECFDF5', dotColor: '#10B981' },
+  Rejected: { color: '#EF4444', bg: '#FEF2F2', dotColor: '#EF4444' },
+  'More Info Required': { color: '#2F6FED', bg: '#EBF2FF', dotColor: '#2F6FED' },
 };
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 type ApplicationCardProps = {
-  application: FleetApplication;
-  onApprove?: (id: string) => void;
-  onReject?: (id: string) => void;
-  onRequestDocs?: (id: string) => void;
-  onView?: (id: string) => void;
+  application: FleetApplicationRow;
+  onClick: () => void;
+  onApprove: () => void;
+  onReject: () => void;
+  onRequestDocs: () => void;
 };
 
 export const ApplicationCard = ({
   application,
+  onClick,
   onApprove,
   onReject,
   onRequestDocs,
-  onView,
 }: ApplicationCardProps) => {
-  const status = statusConfig[application.status];
-  const isPending = application.status === 'Pending';
+  const badge = statusConfig[application.status];
 
   return (
     <Stack
+      spacing={'14px'}
       sx={{
         background: '#FFFFFF',
         borderRadius: '16px',
+        padding: '20px',
         border: '0.67px solid #F0F4F8',
-        boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-        padding: '18px 20px',
+        transition: 'all 0.15s ease',
+        '&:hover': {
+          borderColor: '#E2E8F0',
+          boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
+        },
       }}
     >
-      <RowStack justifyContent="space-between" alignItems="flex-start">
-        {/* Left: Icon + Content */}
-        <RowStack spacing={'14px'} alignItems="flex-start" sx={{ flex: 1 }}>
-          {/* Building Icon */}
+      {/* Header: Icon + Name + App ID + Status Badge + Action Icons */}
+      <RowStack justifyContent="space-between">
+        <RowStack spacing={'12px'}>
           <Box
             sx={{
               width: 42,
@@ -88,18 +91,18 @@ export const ApplicationCard = ({
               flexShrink: 0,
             }}
           >
-            <BusinessOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
+            <DescriptionOutlinedIcon
+              sx={{ fontSize: 18, color: '#2F6FED' }}
+            />
           </Box>
-
-          {/* Content */}
-          <Stack spacing={'6px'} sx={{ flex: 1 }}>
-            {/* Row 1: Name + App ID + Status */}
-            <RowStack spacing={'10px'}>
+          <Stack spacing={'2px'}>
+            <RowStack spacing={'10px'} alignItems="center">
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
                   fontWeight: 700,
                   fontSize: pxToRem(14),
+                  lineHeight: '1.3em',
                   color: '#111827',
                 }}
               >
@@ -120,18 +123,17 @@ export const ApplicationCard = ({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '5px',
-                  background: status.bg,
+                  background: badge.bg,
                   borderRadius: '100px',
-                  padding: '2px 10px 2px 7px',
+                  padding: '2px 10px',
                 }}
               >
                 <Box
                   sx={{
-                    width: 7,
-                    height: 7,
+                    width: 6,
+                    height: 6,
                     borderRadius: '50%',
-                    border: `1.5px solid ${status.color}`,
-                    background: 'transparent',
+                    background: badge.dotColor,
                   }}
                 />
                 <Typography
@@ -139,16 +141,16 @@ export const ApplicationCard = ({
                     fontFamily: (theme) => theme.typography.fontFamily,
                     fontWeight: 600,
                     fontSize: pxToRem(11),
-                    color: status.color,
+                    lineHeight: '1.5em',
+                    color: badge.color,
                   }}
                 >
                   {application.status}
                 </Typography>
               </Box>
             </RowStack>
-
-            {/* Row 2: Contact · Location · Vehicles · Date */}
-            <RowStack spacing={'16px'} flexWrap="wrap">
+            {/* Contact Info Line */}
+            <RowStack spacing={'6px'} sx={{ flexWrap: 'wrap' }}>
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
@@ -157,8 +159,9 @@ export const ApplicationCard = ({
                   color: '#6B7280',
                 }}
               >
-                {application.contactName} · {application.contactEmail}
+                {application.contactPerson}
               </Typography>
+              <Dot />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
@@ -167,8 +170,9 @@ export const ApplicationCard = ({
                   color: '#6B7280',
                 }}
               >
-                {application.location}
+                {application.contactEmail}
               </Typography>
+              <Box sx={{ width: '16px' }} />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
@@ -177,8 +181,20 @@ export const ApplicationCard = ({
                   color: '#6B7280',
                 }}
               >
-                {application.vehicleCount} vehicles
+                {application.city}
               </Typography>
+              <Box sx={{ width: '16px' }} />
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 400,
+                  fontSize: pxToRem(12),
+                  color: '#6B7280',
+                }}
+              >
+                {application.fleetSize} vehicles
+              </Typography>
+              <Box sx={{ width: '16px' }} />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
@@ -190,149 +206,157 @@ export const ApplicationCard = ({
                 Submitted {application.submittedDate}
               </Typography>
             </RowStack>
-
-            {/* Row 3: Description */}
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
-                fontSize: pxToRem(12),
-                color: '#4B5563',
-                lineHeight: 1.5,
-              }}
-            >
-              {application.description}
-            </Typography>
-
-            {/* Row 4: Documents */}
-            <RowStack spacing={'8px'}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(10.5),
-                  color: '#9CA3AF',
-                }}
-              >
-                DOCS:
-              </Typography>
-              {application.documents.map((doc) => (
-                <RowStack
-                  key={doc}
-                  spacing={'4px'}
-                  sx={{
-                    background: '#F7F9FB',
-                    border: '0.67px solid #E8ECF0',
-                    borderRadius: '100px',
-                    padding: '2px 10px 2px 7px',
-                  }}
-                >
-                  <LockOutlinedIcon
-                    sx={{ fontSize: 10, color: '#6B7280' }}
-                  />
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 500,
-                      fontSize: pxToRem(11),
-                      color: '#374151',
-                    }}
-                  >
-                    {doc}
-                  </Typography>
-                </RowStack>
-              ))}
-            </RowStack>
           </Stack>
         </RowStack>
 
-        {/* Right: Action Buttons */}
-        <RowStack spacing={'2px'}>
-          <Tooltip title="View Details">
-            <IconButton
-              size="small"
-              onClick={() => onView?.(application.id)}
-              sx={{
-                width: 28,
-                height: 28,
-                borderRadius: '7px',
-                '&:hover': { background: '#F7F9FB' },
-              }}
-            >
+        {/* Action Icons */}
+        <RowStack spacing={'4px'}>
+          <ActionIcon
+            icon={
               <VisibilityOutlinedIcon
-                sx={{ fontSize: 15, color: '#6B7280' }}
+                sx={{ fontSize: 15, color: '#9CA3AF' }}
               />
-            </IconButton>
-          </Tooltip>
-          {isPending && (
-            <>
-              <Tooltip title="Approve">
-                <IconButton
-                  size="small"
-                  onClick={() => onApprove?.(application.id)}
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '7px',
-                    '&:hover': { background: '#ECFDF5' },
-                  }}
-                >
-                  <CheckCircleOutlinedIcon
-                    sx={{ fontSize: 15, color: '#059669' }}
-                  />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Reject">
-                <IconButton
-                  size="small"
-                  onClick={() => onReject?.(application.id)}
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '7px',
-                    '&:hover': { background: '#FEF2F2' },
-                  }}
-                >
-                  <CancelOutlinedIcon
-                    sx={{ fontSize: 15, color: '#EF4444' }}
-                  />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Request Documents">
-                <IconButton
-                  size="small"
-                  onClick={() => onRequestDocs?.(application.id)}
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '7px',
-                    '&:hover': { background: '#F7F9FB' },
-                  }}
-                >
-                  <DescriptionOutlinedIcon
-                    sx={{ fontSize: 15, color: '#6B7280' }}
-                  />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Files">
-                <IconButton
-                  size="small"
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '7px',
-                    '&:hover': { background: '#F7F9FB' },
-                  }}
-                >
-                  <FolderOutlinedIcon
-                    sx={{ fontSize: 15, color: '#6B7280' }}
-                  />
-                </IconButton>
-              </Tooltip>
-            </>
+            }
+            onClick={onClick}
+          />
+          {application.status !== 'Approved' && (
+            <ActionIcon
+              icon={
+                <CheckCircleOutlineIcon
+                  sx={{ fontSize: 15, color: '#9CA3AF' }}
+                />
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                onApprove();
+              }}
+            />
+          )}
+          {application.status !== 'Rejected' && (
+            <ActionIcon
+              icon={
+                <CancelOutlinedIcon
+                  sx={{ fontSize: 15, color: '#9CA3AF' }}
+                />
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                onReject();
+              }}
+            />
+          )}
+          {application.status === 'Pending' && (
+            <ActionIcon
+              icon={
+                <FolderOpenOutlinedIcon
+                  sx={{ fontSize: 15, color: '#9CA3AF' }}
+                />
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                onRequestDocs();
+              }}
+            />
           )}
         </RowStack>
+      </RowStack>
+
+      {/* Application Message */}
+      <Typography
+        sx={{
+          fontFamily: (theme) => theme.typography.fontFamily,
+          fontWeight: 400,
+          fontSize: pxToRem(13),
+          lineHeight: '1.65em',
+          color: '#4B5563',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        }}
+      >
+        {application.message}
+      </Typography>
+
+      {/* Document Chips */}
+      <RowStack spacing={'8px'} alignItems="center">
+        <Typography
+          sx={{
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 600,
+            fontSize: pxToRem(11),
+            color: '#9CA3AF',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+          }}
+        >
+          Docs:
+        </Typography>
+        {application.documents.map((doc) => (
+          <RowStack
+            key={doc}
+            spacing={'6px'}
+            sx={{
+              background: '#F7F9FB',
+              border: '0.67px solid #E8ECF0',
+              borderRadius: '10px',
+              padding: '5px 10px',
+            }}
+          >
+            <DescriptionOutlinedIcon
+              sx={{ fontSize: 12, color: '#2F6FED' }}
+            />
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 500,
+                fontSize: pxToRem(11),
+                color: '#374151',
+              }}
+            >
+              {doc}
+            </Typography>
+          </RowStack>
+        ))}
       </RowStack>
     </Stack>
   );
 };
+
+// ─── Sub-Components ─────────────────────────────────────────────────────────
+
+const Dot = () => (
+  <Box
+    sx={{
+      width: 3,
+      height: 3,
+      borderRadius: '50%',
+      background: '#D1D5DB',
+      flexShrink: 0,
+    }}
+  />
+);
+
+const ActionIcon = ({
+  icon,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  onClick: (e: React.MouseEvent) => void;
+}) => (
+  <IconButton
+    onClick={onClick}
+    sx={{
+      width: 30,
+      height: 30,
+      borderRadius: '8px',
+      border: '0.67px solid #E8ECF0',
+      background: '#FFFFFF',
+      '&:hover': {
+        background: '#F7F9FB',
+      },
+    }}
+  >
+    {icon}
+  </IconButton>
+);

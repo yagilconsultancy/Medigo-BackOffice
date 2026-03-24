@@ -1,17 +1,21 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { Grid, Pagination, Stack, Typography } from '@mui/material';
+import { Grid, Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
+import {
+  AppSearchField,
+  DashboardTitleAndDesc,
+  RowStack,
+} from '../../modules/components';
 import { DispatchStatCard } from '../DispatchPage/ui/components/DispatchStatCard';
 import {
   ApplicationCard,
-  FleetApplication,
+  FleetApplicationRow,
   ApplicationStatus,
-  FleetApproveModal,
-  FleetRejectModal,
-  FleetRequestDocsModal,
+  FleetApplicationDetailModal,
+  FleetActionModal,
+  FleetActionType,
 } from './ui/components';
 import { pxToRem } from '../../../common';
 
@@ -20,28 +24,31 @@ import pendingReviewIcon from './ui/assets/icons/pending-review-icon.svg';
 import approvedIcon from './ui/assets/icons/approved-icon.svg';
 import rejectedIcon from './ui/assets/icons/rejected-icon.svg';
 
-// ─── Filter Types ───────────────────────────────────────────────────────────
+// ─── Filter Tabs ────────────────────────────────────────────────────────────
 
-type FilterStatus = 'All' | ApplicationStatus;
-
-// ─── Constants ──────────────────────────────────────────────────────────────
-
-const ITEMS_PER_PAGE = 7;
+const filterTabs: { label: string; status: ApplicationStatus | 'All' }[] = [
+  { label: 'All', status: 'All' },
+  { label: 'Pending', status: 'Pending' },
+  { label: 'Approved', status: 'Approved' },
+  { label: 'More Info Required', status: 'More Info Required' },
+  { label: 'Rejected', status: 'Rejected' },
+];
 
 // ─── Sample Data ────────────────────────────────────────────────────────────
 
-const applicationsData: FleetApplication[] = [
+const applicationsData: FleetApplicationRow[] = [
   {
     id: '1',
     appId: 'APP-2401',
     companyName: 'SwiftCare Mobility',
-    status: 'Pending',
-    contactName: 'Olivier Renaud',
+    fleetSize: 12,
+    contactPerson: 'Olivier Renaud',
     contactEmail: 'orenaud@swiftcare.ca',
-    location: 'Toronto, ON',
-    vehicleCount: 12,
+    contactPhone: '+1 (416) 555-1223',
+    city: 'Toronto, ON',
     submittedDate: 'Mar 6, 2026',
-    description:
+    status: 'Pending',
+    message:
       'We operate a fleet of 12 wheelchair-accessible vehicles in Greater Toronto and are looking to partner with Medigo to expand our reach into medical transportation across the GTA.',
     documents: ['Business License', 'Insurance Certificate', 'Vehicle List'],
   },
@@ -49,13 +56,14 @@ const applicationsData: FleetApplication[] = [
     id: '2',
     appId: 'APP-2402',
     companyName: 'HealRide Transport',
-    status: 'Pending',
-    contactName: 'Fatima Al-Rashid',
+    fleetSize: 8,
+    contactPerson: 'Fatima Al-Rashid',
     contactEmail: 'fatima@healride.ca',
-    location: 'Vancouver, BC',
-    vehicleCount: 8,
+    contactPhone: '+1 (604) 555-7712',
+    city: 'Vancouver, BC',
     submittedDate: 'Mar 5, 2026',
-    description:
+    status: 'Pending',
+    message:
       'HealRide specializes in non-emergency medical transportation for dialysis and oncology patients across Metro Vancouver and the Lower Mainland.',
     documents: ['Business License', 'Vehicle Registration'],
   },
@@ -63,13 +71,14 @@ const applicationsData: FleetApplication[] = [
     id: '3',
     appId: 'APP-2403',
     companyName: 'PrimePath Medical',
-    status: 'Approved',
-    contactName: 'Samuel Grégoire',
+    fleetSize: 20,
+    contactPerson: 'Samuel Grégoire',
     contactEmail: 'samuel@primepath.ca',
-    location: 'Montréal, QC',
-    vehicleCount: 20,
+    contactPhone: '+1 (514) 555-4890',
+    city: 'Montréal, QC',
     submittedDate: 'Mar 3, 2026',
-    description:
+    status: 'Approved',
+    message:
       'We are an established NEMT provider with 20 vehicles including stretcher transport units, serving hospitals across the Island of Montréal.',
     documents: [
       'Business License',
@@ -82,13 +91,14 @@ const applicationsData: FleetApplication[] = [
     id: '4',
     appId: 'APP-2404',
     companyName: 'CarePath Logistics',
-    status: 'More Info Required',
-    contactName: 'Diana Chambers',
+    fleetSize: 6,
+    contactPerson: 'Diana Chambers',
     contactEmail: 'diana@carepath.ca',
-    location: 'Calgary, AB',
-    vehicleCount: 6,
+    contactPhone: '+1 (403) 555-9981',
+    city: 'Calgary, AB',
     submittedDate: 'Feb 28, 2026',
-    description:
+    status: 'More Info Required',
+    message:
       'Small fleet focused on assisted rides for elderly patients across Calgary and the surrounding communities in southern Alberta.',
     documents: ['Business License'],
   },
@@ -96,13 +106,14 @@ const applicationsData: FleetApplication[] = [
     id: '5',
     appId: 'APP-2405',
     companyName: 'TrustRide Inc.',
-    status: 'Rejected',
-    contactName: 'Kevin Cho',
+    fleetSize: 15,
+    contactPerson: 'Kevin Cho',
     contactEmail: 'kevin@trustride.ca',
-    location: 'Ottawa, ON',
-    vehicleCount: 15,
+    contactPhone: '+1 (613) 555-3345',
+    city: 'Ottawa, ON',
     submittedDate: 'Feb 25, 2026',
-    description:
+    status: 'Rejected',
+    message:
       'We serve the Ottawa-Gatineau region with 15 vehicles including accessible transport for patients attending the Ottawa Hospital and Civic campuses.',
     documents: ['Business License', 'Insurance Certificate'],
   },
@@ -110,174 +121,108 @@ const applicationsData: FleetApplication[] = [
     id: '6',
     appId: 'APP-2406',
     companyName: 'MedLink Transport',
-    status: 'Pending',
-    contactName: 'Camille Dupont',
+    fleetSize: 10,
+    contactPerson: 'Camille Dupont',
     contactEmail: 'camille@medlink.ca',
-    location: 'Winnipeg, MB',
-    vehicleCount: 10,
+    contactPhone: '+1 (204) 555-2241',
+    city: 'Winnipeg, MB',
     submittedDate: 'Mar 7, 2026',
-    description:
+    status: 'Pending',
+    message:
       'MedLink serves the Winnipeg medical community with reliable transport for hospital appointments at Health Sciences Centre and St. Boniface Hospital.',
     documents: ['Business License', 'Vehicle List', 'Insurance Certificate'],
-  },
-  {
-    id: '7',
-    appId: 'APP-2407',
-    companyName: 'CareWheels Express',
-    status: 'Pending',
-    contactName: 'Lisa Chen',
-    contactEmail: 'lchen@carewheels.ca',
-    location: 'Halifax, NS',
-    vehicleCount: 7,
-    submittedDate: 'Feb 22, 2026',
-    description:
-      'CareWheels Express provides accessible and on-demand medical rides in Halifax and surrounding communities, with a focus on rural healthcare access.',
-    documents: ['Business License', 'Insurance Certificate'],
-  },
-  {
-    id: '8',
-    appId: 'APP-2408',
-    companyName: 'NorthStar Medical Transport',
-    status: 'Approved',
-    contactName: 'Jessica Martinez',
-    contactEmail: 'jmartinez@northstar.ca',
-    location: 'Regina, SK',
-    vehicleCount: 9,
-    submittedDate: 'Feb 20, 2026',
-    description:
-      'NorthStar Medical Transport offers scheduled and on-demand patient transportation across Saskatchewan with a fleet of fully equipped vehicles.',
-    documents: ['Business License', 'Vehicle List', 'Insurance Certificate'],
-  },
-  {
-    id: '9',
-    appId: 'APP-2409',
-    companyName: 'PacificRide Health',
-    status: 'Pending',
-    contactName: "Ryan O'Brien",
-    contactEmail: 'robrien@pacificride.ca',
-    location: 'Victoria, BC',
-    vehicleCount: 7,
-    submittedDate: 'Feb 18, 2026',
-    description:
-      'PacificRide Health focuses on non-emergency medical transportation for patients on Vancouver Island, connecting rural communities to urban hospitals.',
-    documents: ['Business License', 'Insurance Certificate', 'Vehicle List'],
-  },
-  {
-    id: '10',
-    appId: 'APP-2410',
-    companyName: 'Atlantic Care Express',
-    status: 'More Info Required',
-    contactName: 'Marie Tremblay',
-    contactEmail: 'mtremblay@atlanticcare.ca',
-    location: 'Fredericton, NB',
-    vehicleCount: 4,
-    submittedDate: 'Feb 15, 2026',
-    description:
-      'Atlantic Care Express is a growing patient transport service in New Brunswick, providing rides to medical appointments across the Fredericton and Moncton areas.',
-    documents: ['Business License'],
-  },
-];
-
-// ─── Filter Config ──────────────────────────────────────────────────────────
-
-const filterOptions: FilterStatus[] = [
-  'All',
-  'Pending',
-  'Approved',
-  'More Info Required',
-  'Rejected',
-];
-
-// ─── Stat Cards Config ──────────────────────────────────────────────────────
-
-const statCards = [
-  {
-    icon: totalApplicationsIcon,
-    value: '24',
-    label: 'Total Applications',
-    iconBg: '#EBF2FF',
-  },
-  {
-    icon: pendingReviewIcon,
-    value: '8',
-    label: 'Pending Review',
-    iconBg: '#FFFBEB',
-  },
-  {
-    icon: approvedIcon,
-    value: '12',
-    label: 'Approved',
-    iconBg: '#ECFDF5',
-  },
-  {
-    icon: rejectedIcon,
-    value: '4',
-    label: 'Rejected',
-    iconBg: '#FEF2F2',
   },
 ];
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const FleetApplicationsPage = () => {
-  const [activeFilter, setActiveFilter] = useState<FilterStatus>('All');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [approveOpen, setApproveOpen] = useState(false);
-  const [rejectOpen, setRejectOpen] = useState(false);
-  const [requestDocsOpen, setRequestDocsOpen] = useState(false);
-  const [selectedApp, setSelectedApp] = useState<FleetApplication | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<ApplicationStatus | 'All'>('All');
+  const [selectedApplication, setSelectedApplication] =
+    useState<FleetApplicationRow | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Action modal state
+  const [actionModalOpen, setActionModalOpen] = useState(false);
+  const [actionType, setActionType] = useState<FleetActionType>('approve');
+  const [actionApplication, setActionApplication] =
+    useState<FleetApplicationRow | null>(null);
 
   const filteredApplications = useMemo(() => {
-    if (activeFilter === 'All') return applicationsData;
-    return applicationsData.filter((app) => app.status === activeFilter);
-  }, [activeFilter]);
+    let filtered = applicationsData;
 
-  const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
+    if (activeTab !== 'All') {
+      filtered = filtered.filter((a) => a.status === activeTab);
+    }
 
-  const paginatedApplications = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredApplications.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredApplications, currentPage]);
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (a) =>
+          a.companyName.toLowerCase().includes(query) ||
+          a.appId.toLowerCase().includes(query) ||
+          a.contactPerson.toLowerCase().includes(query) ||
+          a.city.toLowerCase().includes(query)
+      );
+    }
 
-  const showingStart = (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const showingEnd = Math.min(
-    currentPage * ITEMS_PER_PAGE,
-    filteredApplications.length
-  );
+    return filtered;
+  }, [searchQuery, activeTab]);
 
-  const findApp = useCallback(
-    (id: string) => applicationsData.find((app) => app.id === id) || null,
+  const statusCounts = useMemo(() => {
+    return {
+      total: applicationsData.length,
+      pending: applicationsData.filter((a) => a.status === 'Pending').length,
+      approved: applicationsData.filter((a) => a.status === 'Approved').length,
+      rejected: applicationsData.filter((a) => a.status === 'Rejected').length,
+    };
+  }, []);
+
+  const statCards = [
+    {
+      icon: totalApplicationsIcon,
+      value: String(statusCounts.total),
+      label: 'Total Applications',
+      subtitle: 'All fleet applications',
+      iconBg: '#EBF2FF',
+    },
+    {
+      icon: pendingReviewIcon,
+      value: String(statusCounts.pending),
+      label: 'Pending Review',
+      subtitle: 'Awaiting decision',
+      iconBg: '#FFFBEB',
+    },
+    {
+      icon: approvedIcon,
+      value: String(statusCounts.approved),
+      label: 'Approved',
+      subtitle: 'Accepted partners',
+      iconBg: '#ECFDF5',
+    },
+    {
+      icon: rejectedIcon,
+      value: String(statusCounts.rejected),
+      label: 'Rejected',
+      subtitle: 'Declined applications',
+      iconBg: '#FEF2F2',
+    },
+  ];
+
+  const handleCardClick = (application: FleetApplicationRow) => {
+    setSelectedApplication(application);
+    setModalOpen(true);
+  };
+
+  const openActionModal = useCallback(
+    (type: FleetActionType, application: FleetApplicationRow) => {
+      setActionType(type);
+      setActionApplication(application);
+      setActionModalOpen(true);
+    },
     []
   );
-
-  const handleApprove = useCallback(
-    (id: string) => {
-      setSelectedApp(findApp(id));
-      setApproveOpen(true);
-    },
-    [findApp]
-  );
-
-  const handleReject = useCallback(
-    (id: string) => {
-      setSelectedApp(findApp(id));
-      setRejectOpen(true);
-    },
-    [findApp]
-  );
-
-  const handleRequestDocs = useCallback(
-    (id: string) => {
-      setSelectedApp(findApp(id));
-      setRequestDocsOpen(true);
-    },
-    [findApp]
-  );
-
-  const handleFilterChange = useCallback((filter: FilterStatus) => {
-    setActiveFilter(filter);
-    setCurrentPage(1);
-  }, []);
 
   return (
     <AppDashboardLayout>
@@ -285,117 +230,127 @@ export const FleetApplicationsPage = () => {
         {/* Header */}
         <DashboardTitleAndDesc
           title="Fleet Applications"
-          desc="Review and manage incoming fleet partner applications"
+          desc="Review and manage fleet partner applications"
         />
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
           {statCards.map((card, index) => (
             <Grid key={index} size={{ xs: 6, lg: 3 }}>
-              <DispatchStatCard {...card} subtitle="" />
+              <DispatchStatCard {...card} />
             </Grid>
           ))}
         </Grid>
 
-        {/* Filter Pills */}
-        <RowStack spacing={'8px'}>
-          {filterOptions.map((filter) => (
-            <Typography
-              key={filter}
-              onClick={() => handleFilterChange(filter)}
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 600,
-                fontSize: pxToRem(12.5),
-                color: activeFilter === filter ? '#FFFFFF' : '#6B7280',
-                background: activeFilter === filter ? '#2F6FED' : '#FFFFFF',
-                border: `0.67px solid ${activeFilter === filter ? '#2F6FED' : '#E8ECF0'}`,
-                borderRadius: '20px',
-                padding: '7px 16px',
-                cursor: 'pointer',
-                userSelect: 'none',
-                transition: 'all 0.15s ease',
-                '&:hover': {
-                  background: activeFilter === filter ? '#2F6FED' : '#F7F9FB',
-                },
-              }}
-            >
-              {filter}
-            </Typography>
-          ))}
+        {/* Tab Filters + Search */}
+        <RowStack justifyContent="space-between">
+          <RowStack spacing={'0px'}>
+            {filterTabs.map((tab) => (
+              <Typography
+                key={tab.label}
+                onClick={() => setActiveTab(tab.status)}
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 600,
+                  fontSize: pxToRem(12.5),
+                  color:
+                    activeTab === tab.status ? '#FFFFFF' : '#6B7280',
+                  background:
+                    activeTab === tab.status ? '#2F6FED' : 'transparent',
+                  border: `0.67px solid ${activeTab === tab.status ? '#2F6FED' : '#E8ECF0'}`,
+                  borderRadius: '20px',
+                  padding: '7px 16px',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  transition: 'all 0.15s ease',
+                  '&:hover': {
+                    background:
+                      activeTab === tab.status ? '#2F6FED' : '#F7F9FB',
+                  },
+                }}
+              >
+                {tab.label}
+              </Typography>
+            ))}
+          </RowStack>
+          <AppSearchField
+            name="search"
+            placeholder="Search applications..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            boxProps={{
+              sx: { width: '280px' },
+            }}
+          />
         </RowStack>
 
         {/* Application Cards */}
         <Stack spacing={'12px'}>
-          {paginatedApplications.map((application) => (
+          {filteredApplications.map((application) => (
             <ApplicationCard
               key={application.id}
               application={application}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onRequestDocs={handleRequestDocs}
+              onClick={() => handleCardClick(application)}
+              onApprove={() => openActionModal('approve', application)}
+              onReject={() => openActionModal('reject', application)}
+              onRequestDocs={() =>
+                openActionModal('request-docs', application)
+              }
             />
           ))}
-        </Stack>
 
-        {/* Pagination Footer */}
-        <RowStack justifyContent="space-between">
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: pxToRem(12.5),
-              color: '#6B7280',
-            }}
-          >
-            Showing {showingStart}&ndash;{showingEnd} of{' '}
-            {filteredApplications.length} vehicles
-          </Typography>
-          {totalPages > 1 && (
-            <Pagination
-              count={totalPages}
-              page={currentPage}
-              onChange={(_, page) => setCurrentPage(page)}
-              size="small"
-              shape="rounded"
-              sx={{
-                '& .MuiPaginationItem-root': {
+          {filteredApplications.length === 0 && (
+            <Stack
+              alignItems="center"
+              justifyContent="center"
+              sx={{ padding: '60px 0' }}
+            >
+              <Typography
+                sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
                   fontWeight: 500,
-                  fontSize: pxToRem(12),
-                  minWidth: 30,
-                  height: 30,
-                  borderRadius: '8px',
-                  color: '#374151',
-                  '&.Mui-selected': {
-                    background: '#2F6FED',
-                    color: '#FFFFFF',
-                    '&:hover': {
-                      background: '#2563EB',
-                    },
-                  },
-                },
-              }}
-            />
+                  fontSize: pxToRem(14),
+                  color: '#9CA3AF',
+                }}
+              >
+                No applications found
+              </Typography>
+            </Stack>
           )}
-        </RowStack>
+        </Stack>
       </Stack>
 
-      {/* Modals */}
-      <FleetApproveModal
-        open={approveOpen}
-        handleClose={() => setApproveOpen(false)}
-        application={selectedApp}
+      {/* Detail Modal */}
+      <FleetApplicationDetailModal
+        open={modalOpen}
+        setOpen={setModalOpen}
+        application={selectedApplication}
+        onApprove={() => {
+          if (selectedApplication) {
+            setModalOpen(false);
+            openActionModal('approve', selectedApplication);
+          }
+        }}
+        onReject={() => {
+          if (selectedApplication) {
+            setModalOpen(false);
+            openActionModal('reject', selectedApplication);
+          }
+        }}
+        onRequestDocs={() => {
+          if (selectedApplication) {
+            setModalOpen(false);
+            openActionModal('request-docs', selectedApplication);
+          }
+        }}
       />
-      <FleetRejectModal
-        open={rejectOpen}
-        handleClose={() => setRejectOpen(false)}
-        application={selectedApp}
-      />
-      <FleetRequestDocsModal
-        open={requestDocsOpen}
-        handleClose={() => setRequestDocsOpen(false)}
-        application={selectedApp}
+
+      {/* Action Confirmation Modal */}
+      <FleetActionModal
+        open={actionModalOpen}
+        setOpen={setActionModalOpen}
+        actionType={actionType}
+        application={actionApplication}
       />
     </AppDashboardLayout>
   );
