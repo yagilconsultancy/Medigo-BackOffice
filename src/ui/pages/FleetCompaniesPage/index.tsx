@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Box, Grid, IconButton, Stack, Typography } from '@mui/material';
+import { useState, useMemo, useCallback } from 'react';
+import { Grid, IconButton, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import MoreVertOutlinedIcon from '@mui/icons-material/MoreVertOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
@@ -9,9 +9,9 @@ import {
   AppButton,
   AppGridtable,
   AppSearchField,
+  AppNotificationSnackbar,
   DashboardTitleAndDesc,
   RowStack,
-  StyledImage,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { DispatchStatCard } from '../DispatchPage/ui/components/DispatchStatCard';
@@ -19,6 +19,9 @@ import {
   CompanyNameCell,
   FleetStatusChip,
   FleetCompanyStatus,
+  FleetCompanyDrawer,
+  FleetCompanyRow,
+  AddFleetPartnerModal,
 } from './ui/components';
 import { pxToRem } from '../../../common';
 
@@ -26,31 +29,16 @@ import totalFleetsIcon from './ui/assets/icons/total-fleets-icon.svg';
 import activeFleetsIcon from './ui/assets/icons/active-fleets-icon.svg';
 import fleetVehiclesIcon from './ui/assets/icons/fleet-vehicles-icon.svg';
 import fleetDriversIcon from './ui/assets/icons/fleet-drivers-icon.svg';
-import filterIcon from '../BookingPage/ui/assets/icons/filter-Icon.svg';
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-
-export type FleetCompanyRow = {
-  id: string;
-  fleetId: string;
-  companyName: string;
-  contactPerson: string;
-  contactEmail: string;
-  city: string;
-  vehicles: number;
-  drivers: number;
-  revenue: string;
-  status: FleetCompanyStatus;
-  joinedDate: string;
-};
-
-// ─── Sample Data (from Figma) ───────────────────────────────────────────────
+// ─── Sample Data ────────────────────────────────────────────────────────────
 
 const companiesData: FleetCompanyRow[] = [
   {
     id: '1',
     fleetId: 'FL-001',
     companyName: 'MedRide Express',
+    initials: 'MR',
+    color: '#2F6FED',
     contactPerson: 'Jean-Pierre Côté',
     contactEmail: 'jpcote@medride.ca',
     city: 'Toronto, ON',
@@ -64,6 +52,8 @@ const companiesData: FleetCompanyRow[] = [
     id: '2',
     fleetId: 'FL-002',
     companyName: 'CareTransit Co.',
+    initials: 'CT',
+    color: '#10B981',
     contactPerson: 'Anya Singh',
     contactEmail: 'anya@caretransit.ca',
     city: 'Vancouver, BC',
@@ -77,12 +67,14 @@ const companiesData: FleetCompanyRow[] = [
     id: '3',
     fleetId: 'FL-003',
     companyName: 'HealthHaul LLC',
+    initials: 'HH',
+    color: '#6366F1',
     contactPerson: 'David Kim',
     contactEmail: 'david@healthhaul.ca',
-    city: 'Montréal, QC',
-    vehicles: 52,
-    drivers: 45,
-    revenue: '$108,600',
+    city: 'Montreal, QC',
+    vehicles: 29,
+    drivers: 24,
+    revenue: '$71,600',
     status: 'Active',
     joinedDate: 'Mar 2024',
   },
@@ -90,66 +82,76 @@ const companiesData: FleetCompanyRow[] = [
     id: '4',
     fleetId: 'FL-004',
     companyName: 'SafeRide Medical',
-    contactPerson: 'Lisa Tremblay',
-    contactEmail: 'lisa@saferide.ca',
-    city: 'Ottawa, ON',
-    vehicles: 28,
-    drivers: 22,
-    revenue: '$62,300',
+    initials: 'SR',
+    color: '#F59E0B',
+    contactPerson: 'Tina Nguyen',
+    contactEmail: 'tina@saferidemd.ca',
+    city: 'Calgary, AB',
+    vehicles: 22,
+    drivers: 19,
+    revenue: '$58,800',
     status: 'Active',
     joinedDate: 'Apr 2024',
   },
   {
     id: '5',
     fleetId: 'FL-005',
-    companyName: 'MobiCare Transport',
-    contactPerson: 'Kevin Cho',
-    contactEmail: 'kevin@mobicare.ca',
-    city: 'Calgary, AB',
-    vehicles: 40,
-    drivers: 34,
-    revenue: '$86,500',
-    status: 'Active',
+    companyName: 'PatientPath Inc.',
+    initials: 'PP',
+    color: '#EC4899',
+    contactPerson: 'Marc Beausoleil',
+    contactEmail: 'marc@patientpath.ca',
+    city: 'Edmonton, AB',
+    vehicles: 18,
+    drivers: 16,
+    revenue: '$32,100',
+    status: 'Suspended',
     joinedDate: 'May 2024',
   },
   {
     id: '6',
     fleetId: 'FL-006',
-    companyName: 'Apex Medical Rides',
-    contactPerson: 'Emma Dubois',
-    contactEmail: 'emma@apexmedical.ca',
-    city: 'Edmonton, AB',
-    vehicles: 32,
-    drivers: 26,
-    revenue: '$71,200',
-    status: 'Inactive',
+    companyName: 'MobiCare Transport',
+    initials: 'MC',
+    color: '#0EA5E9',
+    contactPerson: 'Sandra Lee',
+    contactEmail: 'sandra@mobicare.ca',
+    city: 'Ottawa, ON',
+    vehicles: 31,
+    drivers: 27,
+    revenue: '$83,500',
+    status: 'Active',
     joinedDate: 'Jun 2024',
   },
   {
     id: '7',
     fleetId: 'FL-007',
-    companyName: 'SwiftCare Mobility',
-    contactPerson: 'Olivier Renaud',
-    contactEmail: 'orenaud@swiftcare.ca',
+    companyName: 'Apex Medical Rides',
+    initials: 'AM',
+    color: '#8B5CF6',
+    contactPerson: 'Robert Gallant',
+    contactEmail: 'robert@apexmed.ca',
     city: 'Winnipeg, MB',
-    vehicles: 24,
-    drivers: 18,
-    revenue: '$52,400',
+    vehicles: 25,
+    drivers: 21,
+    revenue: '$66,900',
     status: 'Active',
     joinedDate: 'Jul 2024',
   },
   {
     id: '8',
     fleetId: 'FL-008',
-    companyName: 'VitalMove Health',
-    contactPerson: 'Robert Patel',
-    contactEmail: 'rpatel@vitalmove.ca',
-    city: 'Hamilton, ON',
-    vehicles: 24,
-    drivers: 13,
-    revenue: '$38,600',
-    status: 'Active',
-    joinedDate: 'Aug 2024',
+    companyName: 'QuickCare Mobility',
+    initials: 'QC',
+    color: '#D97706',
+    contactPerson: 'Priya Sharma',
+    contactEmail: 'priya@quickcare.ca',
+    city: 'Halifax, NS',
+    vehicles: 14,
+    drivers: 12,
+    revenue: '—',
+    status: 'Pending',
+    joinedDate: 'Jan 2025',
   },
 ];
 
@@ -157,6 +159,12 @@ const companiesData: FleetCompanyRow[] = [
 
 export const FleetCompaniesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCompany, setSelectedCompany] =
+    useState<FleetCompanyRow | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const filteredCompanies = useMemo(() => {
     if (!searchQuery.trim()) return companiesData;
@@ -175,7 +183,7 @@ export const FleetCompaniesPage = () => {
       icon: totalFleetsIcon,
       value: '12',
       label: 'Total Fleets',
-      subtitle: 'All registered fleets',
+      subtitle: 'All fleet partners',
       iconBg: '#EBF2FF',
     },
     {
@@ -196,21 +204,38 @@ export const FleetCompaniesPage = () => {
       icon: fleetDriversIcon,
       value: '231',
       label: 'Fleet Drivers',
-      subtitle: 'Active fleet drivers',
+      subtitle: 'Registered drivers',
       iconBg: '#FFFBEB',
     },
   ];
+
+  const handleRowClick = useCallback((row: FleetCompanyRow) => {
+    setSelectedCompany(row);
+    setDrawerOpen(true);
+  }, []);
+
+  const handleStatusChange = useCallback(
+    (company: FleetCompanyRow, newStatus: FleetCompanyStatus) => {
+      setSnackbarMessage(`Status updated to ${newStatus}`);
+      setSnackbarOpen(true);
+      // Update the selected company status locally for drawer UI
+      setSelectedCompany({ ...company, status: newStatus });
+    },
+    []
+  );
 
   const columns: GridColSpec<FleetCompanyRow>[] = [
     {
       field: 'companyName',
       headerName: 'Fleet',
       flex: 1.4,
-      minWidth: 180,
+      minWidth: 200,
       renderCell: (params) => (
         <CompanyNameCell
           name={params.row.companyName}
           fleetId={params.row.fleetId}
+          initials={params.row.initials}
+          color={params.row.color}
         />
       ),
     },
@@ -224,10 +249,9 @@ export const FleetCompaniesPage = () => {
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 500,
+              fontWeight: 400,
               fontSize: pxToRem(13),
-              color: '#111827',
-              lineHeight: '18px',
+              color: '#374151',
             }}
           >
             {params.row.contactPerson}
@@ -236,9 +260,8 @@ export const FleetCompaniesPage = () => {
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
               fontWeight: 400,
-              fontSize: pxToRem(11),
+              fontSize: pxToRem(11.5),
               color: '#9CA3AF',
-              lineHeight: '16px',
             }}
           >
             {params.row.contactEmail}
@@ -250,7 +273,7 @@ export const FleetCompaniesPage = () => {
       field: 'city',
       headerName: 'City',
       flex: 0.8,
-      minWidth: 110,
+      minWidth: 120,
     },
     {
       field: 'vehicles',
@@ -273,15 +296,13 @@ export const FleetCompaniesPage = () => {
       headerName: 'Revenue',
       flex: 0.7,
       minWidth: 100,
-      headerAlign: 'right',
-      align: 'right',
       renderCell: (params) => (
         <Typography
           sx={{
             fontFamily: (theme) => theme.typography.fontFamily,
             fontWeight: 600,
             fontSize: pxToRem(13),
-            color: '#059669',
+            color: '#111827',
           }}
         >
           {params.value}
@@ -291,8 +312,8 @@ export const FleetCompaniesPage = () => {
     {
       field: 'status',
       headerName: 'Status',
-      flex: 0.6,
-      minWidth: 90,
+      flex: 0.7,
+      minWidth: 120,
       renderCell: (params) => (
         <FleetStatusChip status={params.value as FleetCompanyStatus} />
       ),
@@ -328,18 +349,18 @@ export const FleetCompaniesPage = () => {
           />
           <AppButton
             variant="contained"
+            onClick={() => setAddModalOpen(true)}
             sx={{
               background: '#2F6FED',
-              borderRadius: '12px',
-              padding: '10px 20px',
+              borderRadius: '14px',
+              padding: '8px 20px',
               textTransform: 'none',
-              fontFamily: (theme) => theme.typography.fontFamily,
               fontWeight: 600,
               fontSize: pxToRem(13),
-              '&:hover': { background: '#2558C9' },
+              '&:hover': { background: '#2560D4' },
             }}
-            startIcon={<AddOutlinedIcon sx={{ fontSize: 16 }} />}
           >
+            <AddOutlinedIcon sx={{ fontSize: 15, marginRight: '6px' }} />
             Add Fleet Partner
           </AppButton>
         </RowStack>
@@ -358,66 +379,65 @@ export const FleetCompaniesPage = () => {
           columns={columns}
           data={filteredCompanies}
           initialPageSize={8}
+          onRowClick={(row) => handleRowClick(row)}
           sx={{
             height: 'auto',
             width: '100%',
           }}
         >
           <RowStack justifyContent={'space-between'} width={'100%'}>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 700,
-                fontSize: pxToRem(15),
-                color: '#111827',
-              }}
-            >
-              All Fleet Partners
-            </Typography>
-            <RowStack spacing={1}>
-              <AppSearchField
-                name="search"
-                placeholder="Search fleets..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                boxProps={{
-                  sx: { width: '240px' },
-                }}
-              />
-              <RowStack
-                spacing={1}
+            <RowStack spacing={'8px'}>
+              <Typography
                 sx={{
-                  padding: '11.5px 16.07px',
-                  borderRadius: '14px',
-                  background: '#F7F9FB',
-                  border: '0.67px solid #E8ECF0',
-                  cursor: 'pointer',
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 500,
+                  fontSize: pxToRem(18),
+                  color: '#111827',
                 }}
               >
-                <StyledImage
-                  src={filterIcon}
-                  alt="filter"
-                  sx={{
-                    width: '15px',
-                    height: '15px',
-                  }}
-                />
-                <Typography
-                  sx={{
-                    color: (theme) => theme.color.grey,
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(13),
-                    lineHeight: '19.5px',
-                  }}
-                >
-                  Filter
-                </Typography>
-              </RowStack>
+                Fleet Partners
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 400,
+                  fontSize: pxToRem(13),
+                  color: '#6B7280',
+                }}
+              >
+                {filteredCompanies.length} registered fleet companies
+              </Typography>
             </RowStack>
+            <AppSearchField
+              name="search"
+              placeholder="Search fleets..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              boxProps={{
+                sx: { width: '260px' },
+              }}
+            />
           </RowStack>
         </AppGridtable>
       </Stack>
+
+      {/* View Company Drawer */}
+      <FleetCompanyDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        company={selectedCompany}
+        onStatusChange={handleStatusChange}
+      />
+
+      {/* Add Fleet Partner Modal */}
+      <AddFleetPartnerModal open={addModalOpen} setOpen={setAddModalOpen} />
+
+      {/* Notification Snackbar */}
+      <AppNotificationSnackbar
+        open={snackbarOpen}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+      />
     </AppDashboardLayout>
   );
 };
