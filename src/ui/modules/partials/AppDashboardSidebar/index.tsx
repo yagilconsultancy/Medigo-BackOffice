@@ -78,6 +78,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         dropdown: [
           { text: 'Fleet Applications', link: '/fleet' },
           { text: 'Fleet Companies', link: '/fleet/companies' },
+          { text: 'Fleet Profiles', link: '/fleet/profiles' },
           { text: 'Fleet Drivers', link: '/fleet/drivers' },
           { text: 'Fleet Vehicles', link: '/fleet/vehicles' },
           { text: 'Fleet Earnings', link: '/fleet/earnings' },

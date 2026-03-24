@@ -1,3 +1,4 @@
+import { useRouter } from 'next/navigation';
 import { Box, Drawer, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { RowStack } from '../../../../../modules/components';
@@ -69,6 +70,8 @@ export const FleetCompanyDrawer = ({
   company,
   onStatusChange,
 }: FleetCompanyDrawerProps) => {
+  const router = useRouter();
+
   if (!company) return null;
 
   return (
@@ -256,6 +259,10 @@ export const FleetCompanyDrawer = ({
         {/* Footer Buttons */}
         <Stack spacing={'8px'} sx={{ padding: '24px 28px' }}>
           <Box
+            onClick={() => {
+              onClose();
+              router.push('/fleet/profiles');
+            }}
             sx={{
               display: 'flex',
               alignItems: 'center',

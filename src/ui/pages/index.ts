@@ -15,6 +15,7 @@ export * from './DriverRatingsPage';
 export * from './DriverLeaderboardPage';
 export * from './FleetApplicationsPage';
 export * from './FleetCompaniesPage';
+export * from './FleetProfilesPage';
 export * from './FleetDriversPage';
 export * from './FleetVehiclesPage';
 export * from './FleetEarningsPage';
