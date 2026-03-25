@@ -20,3 +20,5 @@ export * from './FleetDriversPage';
 export * from './FleetVehiclesPage';
 export * from './FleetEarningsPage';
 export * from './AllDriversPage';
+export * from './DriverDocumentsPage';
+export * from './DriverProfilesPage';

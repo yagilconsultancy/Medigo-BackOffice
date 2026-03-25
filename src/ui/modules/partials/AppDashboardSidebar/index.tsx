@@ -90,6 +90,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         dropdown: [
           { text: 'All Drivers', link: '/drivers' },
           { text: 'Drivers Profiles', link: '/drivers/profiles' },
+          { text: 'Driver Documents', link: '/drivers/documents' },
           { text: 'Driver Status', link: '/drivers/status' },
           { text: 'Performance Metrics', link: '/performance' },
           { text: 'Driver Ratings', link: '/performance/ratings' },
