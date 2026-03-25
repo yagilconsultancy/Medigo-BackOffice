@@ -1,29 +1,31 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Grid, IconButton, Stack, Typography } from '@mui/material';
-import MoreVertOutlinedIcon from '@mui/icons-material/MoreVertOutlined';
+import { useState, useMemo, useCallback } from 'react';
+import {
+  Grid,
+  IconButton,
+  Stack,
+  Typography,
+} from '@mui/material';
+import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppGridtable,
   AppSearchField,
+  AppNotificationSnackbar,
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { DispatchStatCard } from '../DispatchPage/ui/components/DispatchStatCard';
 import {
   VehicleStatusChip,
   VehicleStatus,
   DocValidityChip,
   DocValidity,
+  FleetVehicleDrawer,
+  ScheduleMaintenanceModal,
 } from './ui/components';
 import { pxToRem } from '../../../common';
-
-import totalVehiclesIcon from './ui/assets/icons/total-vehicles-icon.svg';
-import inServiceIcon from './ui/assets/icons/in-service-icon.svg';
-import maintenanceIcon from './ui/assets/icons/maintenance-icon.svg';
-import wavVehiclesIcon from './ui/assets/icons/wav-vehicles-icon.svg';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,8 @@ export type FleetVehicleRow = {
   status: VehicleStatus;
   insurance: DocValidity;
   registration: DocValidity;
+  mileage: string;
+  vin: string;
 };
 
 // ─── Fleet Filter Options ───────────────────────────────────────────────────
@@ -65,6 +69,8 @@ const vehiclesData: FleetVehicleRow[] = [
     status: 'Active',
     insurance: 'Valid',
     registration: 'Valid',
+    mileage: '62,400 mi',
+    vin: '5FNRL6H74MB049221',
   },
   {
     id: '2',
@@ -77,6 +83,8 @@ const vehiclesData: FleetVehicleRow[] = [
     status: 'Active',
     insurance: 'Valid',
     registration: 'Valid',
+    mileage: '48,200 mi',
+    vin: '4T1BF1FK5CU521234',
   },
   {
     id: '3',
@@ -89,6 +97,8 @@ const vehiclesData: FleetVehicleRow[] = [
     status: 'Maintenance',
     insurance: 'Valid',
     registration: 'Expiring',
+    mileage: '85,100 mi',
+    vin: '2C4RDGCG5LR198765',
   },
   {
     id: '4',
@@ -101,54 +111,64 @@ const vehiclesData: FleetVehicleRow[] = [
     status: 'Active',
     insurance: 'Valid',
     registration: 'Valid',
+    mileage: '31,800 mi',
+    vin: '1FTBW2CM3NKA43210',
   },
   {
     id: '5',
     vehicleId: 'VH-005',
-    vehicle: '2023 Honda Odyssey',
-    plate: 'QRS-1234',
+    vehicle: '2021 Dodge Grand Caravan',
+    plate: 'MNO-7890',
     category: 'Standard Ride',
     fleet: 'HealthHaul LLC',
-    driver: 'James Thompson',
+    driver: 'Marc Lefebvre',
     status: 'Active',
     insurance: 'Valid',
     registration: 'Valid',
+    mileage: '72,600 mi',
+    vin: '2C4RDGCG1LR167890',
   },
   {
     id: '6',
-    vehicleId: 'VH-008',
-    vehicle: '2022 Chrysler Pacifica',
-    plate: 'TUV-5678',
-    category: 'Wheelchair Accessible',
-    fleet: 'SafeRide Medical',
-    driver: 'Aisha Patel',
-    status: 'Active',
-    insurance: 'Expiring',
-    registration: 'Valid',
-  },
-  {
-    id: '7',
-    vehicleId: 'VH-009',
-    vehicle: '2021 Toyota Camry',
-    plate: 'WXY-9012',
-    category: 'Standard Ride',
-    fleet: 'MobiCare Transport',
-    driver: 'Robert Nguyen',
+    vehicleId: 'VH-013',
+    vehicle: '2021 Mercedes Sprinter',
+    plate: 'QRS-0123',
+    category: 'Assisted Ride',
+    fleet: 'HealthHaul LLC',
+    driver: 'Priya Mehta',
     status: 'Active',
     insurance: 'Valid',
     registration: 'Valid',
+    mileage: '55,300 mi',
+    vin: 'WD3PE8CD2LP123456',
+  },
+  {
+    id: '7',
+    vehicleId: 'VH-007',
+    vehicle: '2020 Ford Transit',
+    plate: 'STU-5678',
+    category: 'Standard Ride',
+    fleet: 'SafeRide Medical',
+    driver: "Ryan O'Brien",
+    status: 'Inactive',
+    insurance: 'Expired',
+    registration: 'Valid',
+    mileage: '98,200 mi',
+    vin: '1FTBW2CM0LKB56789',
   },
   {
     id: '8',
-    vehicleId: 'VH-010',
-    vehicle: '2020 Ford Escape',
-    plate: 'ABC-3456',
-    category: 'Standard Ride',
-    fleet: 'HealthHaul LLC',
-    driver: 'Lisa Tremblay',
-    status: 'Inactive',
-    insurance: 'Expired',
-    registration: 'Expired',
+    vehicleId: 'VH-008',
+    vehicle: '2021 Chevrolet Express',
+    plate: 'VWX-9012',
+    category: 'Assisted Ride',
+    fleet: 'MobiCare Transport',
+    driver: 'Isabelle Roy',
+    status: 'Active',
+    insurance: 'Valid',
+    registration: 'Valid',
+    mileage: '44,700 mi',
+    vin: '1GCWGAFG5M1234567',
   },
 ];
 
@@ -157,6 +177,12 @@ const vehiclesData: FleetVehicleRow[] = [
 export const FleetVehiclesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFleetFilter, setActiveFleetFilter] = useState('All');
+  const [selectedVehicle, setSelectedVehicle] =
+    useState<FleetVehicleRow | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [maintenanceModalOpen, setMaintenanceModalOpen] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const filteredVehicles = useMemo(() => {
     let filtered = vehiclesData;
@@ -180,36 +206,67 @@ export const FleetVehiclesPage = () => {
     return filtered;
   }, [searchQuery, activeFleetFilter]);
 
+  const statusCounts = useMemo(() => {
+    return {
+      total: vehiclesData.length,
+      active: vehiclesData.filter((v) => v.status === 'Active').length,
+      maintenance: vehiclesData.filter((v) => v.status === 'Maintenance')
+        .length,
+      inactive: vehiclesData.filter((v) => v.status === 'Inactive').length,
+    };
+  }, []);
+
   const statCards = [
     {
-      icon: totalVehiclesIcon,
-      value: '8',
+      value: String(statusCounts.total),
       label: 'Total Fleet Vehicles',
-      subtitle: 'Across all fleets',
-      iconBg: '#EBF2FF',
+      valueColor: '#2F6FED',
     },
     {
-      icon: inServiceIcon,
-      value: '6',
+      value: String(statusCounts.active),
       label: 'Active',
-      subtitle: 'Currently operating',
-      iconBg: '#ECFDF5',
+      valueColor: '#10B981',
     },
     {
-      icon: maintenanceIcon,
-      value: '1',
+      value: String(statusCounts.maintenance),
       label: 'Maintenance',
-      subtitle: 'Scheduled service',
-      iconBg: '#FFFBEB',
+      valueColor: '#D97706',
     },
     {
-      icon: wavVehiclesIcon,
-      value: '1',
+      value: String(statusCounts.inactive),
       label: 'Inactive',
-      subtitle: 'Out of service',
-      iconBg: '#EEF2FF',
+      valueColor: '#6B7280',
     },
   ];
+
+  const handleRowClick = useCallback((row: FleetVehicleRow) => {
+    setSelectedVehicle(row);
+    setDrawerOpen(true);
+  }, []);
+
+  const handleStatusChange = useCallback(
+    (vehicle: FleetVehicleRow, newStatus: VehicleStatus) => {
+      setSnackbarMessage(`${vehicle.vehicle} status updated to ${newStatus}`);
+      setSnackbarOpen(true);
+      setSelectedVehicle({ ...vehicle, status: newStatus });
+    },
+    []
+  );
+
+  const handleScheduleMaintenance = useCallback(() => {
+    setMaintenanceModalOpen(true);
+  }, []);
+
+  const handleConfirmSchedule = useCallback(
+    (date: string, notes: string) => {
+      setMaintenanceModalOpen(false);
+      setSnackbarMessage(
+        `Maintenance scheduled for ${selectedVehicle?.vehicle ?? 'vehicle'} on ${date}`
+      );
+      setSnackbarOpen(true);
+    },
+    [selectedVehicle]
+  );
 
   const columns: GridColSpec<FleetVehicleRow>[] = [
     {
@@ -303,7 +360,7 @@ export const FleetVehiclesPage = () => {
       sortable: false,
       renderCell: () => (
         <IconButton size="small" sx={{ color: '#9CA3AF' }}>
-          <MoreVertOutlinedIcon sx={{ fontSize: 16 }} />
+          <DirectionsCarOutlinedIcon sx={{ fontSize: 16 }} />
         </IconButton>
       ),
     },
@@ -315,20 +372,51 @@ export const FleetVehiclesPage = () => {
         {/* Header */}
         <DashboardTitleAndDesc
           title="Fleet Vehicles"
-          desc="Track and manage all vehicles registered under fleet partners"
+          desc="Vehicles registered under fleet partner companies"
         />
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
           {statCards.map((card, index) => (
             <Grid key={index} size={{ xs: 6, lg: 3 }}>
-              <DispatchStatCard {...card} />
+              <Stack
+                sx={{
+                  background: '#FFFFFF',
+                  border: '0.67px solid #E8ECF0',
+                  borderRadius: '14px',
+                  padding: '16px 20px',
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 700,
+                    fontSize: pxToRem(24),
+                    lineHeight: '1.3em',
+                    color: card.valueColor,
+                  }}
+                >
+                  {card.value}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 500,
+                    fontSize: pxToRem(12.5),
+                    lineHeight: '1.5em',
+                    color: '#6B7280',
+                    marginTop: '2px',
+                  }}
+                >
+                  {card.label}
+                </Typography>
+              </Stack>
             </Grid>
           ))}
         </Grid>
 
-        {/* Fleet Filter Pills */}
-        <RowStack spacing={'8px'} flexWrap="wrap">
+        {/* Fleet Filter Tabs */}
+        <RowStack spacing={'0px'}>
           {fleetFilters.map((filter) => (
             <Typography
               key={filter}
@@ -336,16 +424,17 @@ export const FleetVehiclesPage = () => {
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
                 fontWeight: 600,
-                fontSize: pxToRem(12.5),
+                fontSize: pxToRem(12),
                 color: activeFleetFilter === filter ? '#FFFFFF' : '#6B7280',
                 background:
-                  activeFleetFilter === filter ? '#2F6FED' : '#FFFFFF',
+                  activeFleetFilter === filter ? '#2F6FED' : 'transparent',
                 border: `0.67px solid ${activeFleetFilter === filter ? '#2F6FED' : '#E8ECF0'}`,
                 borderRadius: '20px',
-                padding: '7px 16px',
+                padding: '6px 14px',
                 cursor: 'pointer',
                 userSelect: 'none',
                 transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap',
                 '&:hover': {
                   background:
                     activeFleetFilter === filter ? '#2F6FED' : '#F7F9FB',
@@ -362,6 +451,7 @@ export const FleetVehiclesPage = () => {
           columns={columns}
           data={filteredVehicles}
           initialPageSize={8}
+          onRowClick={(row) => handleRowClick(row)}
           sx={{
             height: 'auto',
             width: '100%',
@@ -369,11 +459,17 @@ export const FleetVehiclesPage = () => {
         >
           <RowStack justifyContent={'space-between'} width={'100%'}>
             <RowStack spacing={'8px'}>
+              <DirectionsCarOutlinedIcon
+                sx={{
+                  fontSize: 20,
+                  color: (theme) => theme.palette.primary.main,
+                }}
+              />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 700,
-                  fontSize: pxToRem(15),
+                  fontWeight: 600,
+                  fontSize: pxToRem(16),
                   color: '#111827',
                 }}
               >
@@ -390,20 +486,42 @@ export const FleetVehiclesPage = () => {
                 ({filteredVehicles.length} vehicles)
               </Typography>
             </RowStack>
-            <RowStack spacing={1}>
-              <AppSearchField
-                name="search"
-                placeholder="Search vehicles..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                boxProps={{
-                  sx: { width: '240px' },
-                }}
-              />
-            </RowStack>
+            <AppSearchField
+              name="search"
+              placeholder="Search vehicles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              boxProps={{
+                sx: { width: '240px' },
+              }}
+            />
           </RowStack>
         </AppGridtable>
       </Stack>
+
+      {/* Vehicle Detail Drawer */}
+      <FleetVehicleDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        vehicle={selectedVehicle}
+        onStatusChange={handleStatusChange}
+        onScheduleMaintenance={handleScheduleMaintenance}
+      />
+
+      {/* Schedule Maintenance Modal */}
+      <ScheduleMaintenanceModal
+        open={maintenanceModalOpen}
+        onClose={() => setMaintenanceModalOpen(false)}
+        vehicle={selectedVehicle}
+        onConfirm={handleConfirmSchedule}
+      />
+
+      {/* Notification Snackbar */}
+      <AppNotificationSnackbar
+        open={snackbarOpen}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+      />
     </AppDashboardLayout>
   );
 };
