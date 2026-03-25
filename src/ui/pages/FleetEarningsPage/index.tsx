@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import {
+  alpha,
   Box,
   Grid,
   LinearProgress,
@@ -307,7 +308,8 @@ export const FleetEarningsPage = () => {
             justifyContent: 'center',
             height: '30px',
             padding: '0 14px',
-            background: '#10B981',
+            background: alpha("#2F6FED", .1),
+            border: '0.67px solid #2F6FED',
             borderRadius: '8px',
             cursor: 'pointer',
             transition: 'opacity 0.15s ease',
@@ -319,7 +321,7 @@ export const FleetEarningsPage = () => {
               fontFamily: (theme) => theme.typography.fontFamily,
               fontWeight: 600,
               fontSize: pxToRem(12),
-              color: '#FFFFFF',
+              color: '#2F6FED',
               whiteSpace: 'nowrap',
             }}
           >

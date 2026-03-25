@@ -57,7 +57,7 @@ export const PayoutModal = ({
           sx={{
             background:
               'linear-gradient(135deg, rgba(47, 111, 237, 1) 0%, rgba(47, 111, 237, 0.8) 100%)',
-            padding: '20px 24px',
+            // padding: '20px 24px',
             position: 'relative',
           }}
         >

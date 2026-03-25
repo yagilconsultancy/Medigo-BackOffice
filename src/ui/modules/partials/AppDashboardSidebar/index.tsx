@@ -89,14 +89,8 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         text: 'Driver Management',
         dropdown: [
           { text: 'All Drivers', link: '/drivers' },
+          { text: 'Drivers Profiles', link: '/drivers/profiles' },
           { text: 'Driver Status', link: '/drivers/status' },
-          { text: 'Driver Profiles', link: '/drivers/profiles' },
-        ],
-      },
-      {
-        icon: driverPerformanceIcon,
-        text: 'Driver Performance',
-        dropdown: [
           { text: 'Performance Metrics', link: '/performance' },
           { text: 'Driver Ratings', link: '/performance/ratings' },
           { text: 'Driver Leaderboard', link: '/performance/leaderboard' },
