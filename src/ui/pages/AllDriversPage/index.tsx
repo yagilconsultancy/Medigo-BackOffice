@@ -29,7 +29,11 @@ import {
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { DriverDetailDrawer, EditDriverDrawer } from './ui/components';
+import {
+  DriverDetailDrawer,
+  EditDriverDrawer,
+  AddDriverDrawer,
+} from './ui/components';
 import { pxToRem } from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -303,6 +307,7 @@ export const AllDriversPage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [editDriver, setEditDriver] = useState<AllDriverRow | null>(null);
+  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
 
   const filteredDrivers = useMemo(() => {
     if (!searchQuery.trim()) return driversData;
@@ -594,6 +599,7 @@ export const AllDriversPage = () => {
             desc="Manage your driver roster, documents, fleet assignments, and status"
           />
           <Box
+            onClick={() => setAddDrawerOpen(true)}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -744,6 +750,12 @@ export const AllDriversPage = () => {
         open={editDrawerOpen}
         onClose={() => setEditDrawerOpen(false)}
         driver={editDriver}
+      />
+
+      {/* Add Driver Drawer */}
+      <AddDriverDrawer
+        open={addDrawerOpen}
+        onClose={() => setAddDrawerOpen(false)}
       />
     </AppDashboardLayout>
   );

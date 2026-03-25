@@ -30,8 +30,10 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
-import { toast } from 'sonner';
-import { RowStack } from '../../../../../modules/components';
+import {
+  RowStack,
+  AppNotificationSnackbar,
+} from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import { AllDriverRow, DriverStatus } from '../../../index';
 
@@ -246,6 +248,10 @@ export const DriverDetailDrawer = ({
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [selectedFleet, setSelectedFleet] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+  }>({ open: false, message: '' });
 
   if (!driver) return null;
 
@@ -258,22 +264,29 @@ export const DriverDetailDrawer = ({
   const statusConfig = statusChipConfig[driver.status];
 
   const handleSuspend = () => {
-    toast.success(`${driver.name} suspended`);
+    setSnackbar({ open: true, message: `${driver.name} suspended` });
   };
 
   const handleSaveFleet = () => {
-    toast.success(`Fleet assignment updated for ${driver.name}`);
+    setSnackbar({
+      open: true,
+      message: `Fleet assignment updated for ${driver.name}`,
+    });
     setShowFleetForm(false);
     setSelectedFleet('');
   };
 
   const handleReassignVehicle = () => {
-    toast.success(`Vehicle reassigned for ${driver.name}`);
+    setSnackbar({
+      open: true,
+      message: `Vehicle reassigned for ${driver.name}`,
+    });
     setShowVehicleForm(false);
     setSelectedVehicle('');
   };
 
   return (
+    <>
     <Drawer
       anchor="right"
       open={open}
@@ -513,6 +526,13 @@ export const DriverDetailDrawer = ({
         </Box>
       </Stack>
     </Drawer>
+
+      <AppNotificationSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar({ open: false, message: '' })}
+        message={snackbar.message}
+      />
+    </>
   );
 };
 
