@@ -13,7 +13,7 @@ import {
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
 import StarIcon from '@mui/icons-material/Star';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
+import NearMeOutlinedIcon from '@mui/icons-material/NearMeOutlined';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
@@ -24,18 +24,12 @@ import {
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { DispatchStatCard } from '../DispatchPage/ui/components/DispatchStatCard';
 import {
   FleetDriverProfileDrawer,
   FleetDriverRow,
   DriverStatus,
 } from './ui/components';
 import { pxToRem } from '../../../common';
-
-import totalDriversIcon from './ui/assets/icons/total-drivers-icon.svg';
-import availableDriversIcon from './ui/assets/icons/available-drivers-icon.svg';
-import onTripIcon from './ui/assets/icons/on-trip-icon.svg';
-import offDutyIcon from './ui/assets/icons/off-duty-icon.svg';
 
 // ─── Status Config ──────────────────────────────────────────────────────────
 
@@ -48,16 +42,16 @@ const statusChipConfig: Record<
     bg: '#ECFDF5',
     icon: (
       <CheckCircleOutlineIcon
-        sx={{ fontSize: 12, color: '#059669 !important' }}
+        sx={{ fontSize: pxToRem(11), color: '#059669 !important' }}
       />
     ),
   },
   'On Trip': {
-    color: '#D97706',
-    bg: '#FFFBEB',
+    color: '#6366F1',
+    bg: '#EEF2FF',
     icon: (
-      <DirectionsCarOutlinedIcon
-        sx={{ fontSize: 12, color: '#D97706 !important' }}
+      <NearMeOutlinedIcon
+        sx={{ fontSize: pxToRem(11), color: '#6366F1 !important' }}
       />
     ),
   },
@@ -65,14 +59,14 @@ const statusChipConfig: Record<
     color: '#6B7280',
     bg: '#F3F4F6',
     icon: (
-      <AccessTimeIcon sx={{ fontSize: 12, color: '#6B7280 !important' }} />
+      <AccessTimeIcon sx={{ fontSize: pxToRem(11), color: '#6B7280 !important' }} />
     ),
   },
   Suspended: {
     color: '#EF4444',
     bg: '#FEF2F2',
     icon: (
-      <AccessTimeIcon sx={{ fontSize: 12, color: '#EF4444 !important' }} />
+      <AccessTimeIcon sx={{ fontSize: pxToRem(11), color: '#EF4444 !important' }} />
     ),
   },
 };
@@ -256,32 +250,24 @@ export const FleetDriversPage = () => {
 
   const statCards = [
     {
-      icon: totalDriversIcon,
       value: String(statusCounts.total),
       label: 'Total Fleet Drivers',
-      subtitle: '',
-      iconBg: '#EBF2FF',
+      valueColor: '#2F6FED',
     },
     {
-      icon: availableDriversIcon,
       value: String(statusCounts.available),
       label: 'Available',
-      subtitle: '',
-      iconBg: '#ECFDF5',
+      valueColor: '#10B981',
     },
     {
-      icon: onTripIcon,
       value: String(statusCounts.onTrip),
       label: 'On Trip',
-      subtitle: '',
-      iconBg: '#FFFBEB',
+      valueColor: '#D97706',
     },
     {
-      icon: offDutyIcon,
       value: String(statusCounts.offDuty),
       label: 'Off Duty',
-      subtitle: '',
-      iconBg: '#F3F4F6',
+      valueColor: '#6B7280',
     },
   ];
 
@@ -466,7 +452,38 @@ export const FleetDriversPage = () => {
         <Grid container spacing={'12px'}>
           {statCards.map((card, index) => (
             <Grid key={index} size={{ xs: 6, lg: 3 }}>
-              <DispatchStatCard {...card} />
+              <Stack
+                sx={{
+                  background: '#FFFFFF',
+                  border: '0.67px solid #E8ECF0',
+                  borderRadius: '14px',
+                  padding: '16px 20px',
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 700,
+                    fontSize: pxToRem(24),
+                    lineHeight: '1.3em',
+                    color: card.valueColor,
+                  }}
+                >
+                  {card.value}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 500,
+                    fontSize: pxToRem(12.5),
+                    lineHeight: '1.5em',
+                    color: '#6B7280',
+                    marginTop: '2px',
+                  }}
+                >
+                  {card.label}
+                </Typography>
+              </Stack>
             </Grid>
           ))}
         </Grid>
@@ -516,7 +533,7 @@ export const FleetDriversPage = () => {
         >
           <RowStack justifyContent={'space-between'} width={'100%'}>
             <RowStack spacing={'8px'}>
-              <PeopleOutlineIcon sx={{ fontSize: 20, color: '#9CA3AF' }} />
+              <PeopleOutlineIcon sx={{ fontSize: 20, color: (theme) => theme.palette.primary.main }} />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
