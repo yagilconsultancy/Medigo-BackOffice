@@ -8,6 +8,7 @@ import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined';
+import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import {
@@ -191,14 +192,61 @@ export const ReviewSuspensionsModal = ({
             gap: '20px',
           }}
         >
-          {suspendedDriversData.map((driver) => (
-            <SuspendedDriverCard
-              key={driver.id}
-              driver={driver}
-              onLift={() => handleLift(driver)}
-              onKeep={() => handleKeep(driver)}
-            />
-          ))}
+          {suspendedDriversData.length === 0 ? (
+            <Stack
+              alignItems={'center'}
+              justifyContent={'center'}
+              spacing={'16px'}
+              sx={{ py: '80px' }}
+            >
+              <Box
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: '16px',
+                  background: '#ECFDF5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <TaskAltOutlinedIcon
+                  sx={{ fontSize: 26, color: '#059669' }}
+                />
+              </Box>
+              <Typography
+                sx={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 700,
+                  fontSize: pxToRem(15),
+                  color: '#374151',
+                  lineHeight: '1.5em',
+                }}
+              >
+                All clear
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 400,
+                  fontSize: pxToRem(13),
+                  color: '#9CA3AF',
+                  lineHeight: '1.5em',
+                }}
+              >
+                No drivers are currently suspended.
+              </Typography>
+            </Stack>
+          ) : (
+            suspendedDriversData.map((driver) => (
+              <SuspendedDriverCard
+                key={driver.id}
+                driver={driver}
+                onLift={() => handleLift(driver)}
+                onKeep={() => handleKeep(driver)}
+              />
+            ))
+          )}
         </Box>
 
         {/* Footer */}

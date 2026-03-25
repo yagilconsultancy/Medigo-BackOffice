@@ -10,7 +10,10 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { ReviewSuspensionsModal } from './ui/components';
+import {
+  ReviewSuspensionsModal,
+  ReviewApplicationsModal,
+} from './ui/components';
 import { pxToRem } from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -143,6 +146,7 @@ const pendingDrivers: PendingDriver[] = [
 
 export const DriverStatusPage = () => {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [applicationsModalOpen, setApplicationsModalOpen] = useState(false);
 
   const statCards = [
     {
@@ -433,29 +437,31 @@ export const DriverStatusPage = () => {
               </Box>
             </RowStack>
 
-            <Box
-              onClick={() => setReviewModalOpen(true)}
-              sx={{
-                padding: '8px 16px',
-                borderRadius: '9px',
-                background: '#FEF2F2',
-                border: '0.67px solid #FECACA',
-                cursor: 'pointer',
-                '&:hover': { opacity: 0.8 },
-              }}
-            >
-              <Typography
+            {suspendedDrivers.length > 0 && (
+              <Box
+                onClick={() => setReviewModalOpen(true)}
                 sx={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 600,
-                  fontSize: pxToRem(12.5),
-                  color: '#EF4444',
-                  textAlign: 'center',
+                  padding: '8px 16px',
+                  borderRadius: '9px',
+                  background: '#FEF2F2',
+                  border: '0.67px solid #FECACA',
+                  cursor: 'pointer',
+                  '&:hover': { opacity: 0.8 },
                 }}
               >
-                Review Suspensions
-              </Typography>
-            </Box>
+                <Typography
+                  sx={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600,
+                    fontSize: pxToRem(12.5),
+                    color: '#EF4444',
+                    textAlign: 'center',
+                  }}
+                >
+                  Review Suspensions
+                </Typography>
+              </Box>
+            )}
           </RowStack>
 
           <Grid container spacing={'12px'} sx={{ padding: '16px 24px' }}>
@@ -602,6 +608,7 @@ export const DriverStatusPage = () => {
             </RowStack>
 
             <Box
+              onClick={() => setApplicationsModalOpen(true)}
               sx={{
                 padding: '8px 16px',
                 borderRadius: '9px',
@@ -696,6 +703,12 @@ export const DriverStatusPage = () => {
       <ReviewSuspensionsModal
         open={reviewModalOpen}
         onClose={() => setReviewModalOpen(false)}
+      />
+
+      {/* Review Applications Modal */}
+      <ReviewApplicationsModal
+        open={applicationsModalOpen}
+        onClose={() => setApplicationsModalOpen(false)}
       />
     </AppDashboardLayout>
   );
