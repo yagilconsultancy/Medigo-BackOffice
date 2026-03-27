@@ -37,3 +37,4 @@ export * from './StatementsPage';
 export * from './IncidentsPage';
 export * from './SafetyAlertsPage';
 export * from './IncidentInvestigationsPage';
+export * from './DisciplinaryActionsPage';

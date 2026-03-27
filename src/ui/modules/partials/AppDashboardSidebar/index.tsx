@@ -149,6 +149,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
           { text: 'Incidents', link: '/safety' },
           { text: 'Safety Reports', link: '/safety/reports' },
           { text: 'Investigations', link: '/safety/investigations' },
+          { text: 'Disciplinary Actions', link: '/safety/disciplinary' },
         ],
       },
       {
