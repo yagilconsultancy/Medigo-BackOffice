@@ -138,7 +138,8 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         text: 'Invoices & Billing',
         dropdown: [
           { text: 'All Invoices', link: '/invoices' },
-          { text: 'Billing Settings', link: '/invoices/settings' },
+          { text: 'Billing History', link: '/invoices/settings' },
+          { text: 'Statements', link: '/invoices/statements' },
         ],
       },
       {

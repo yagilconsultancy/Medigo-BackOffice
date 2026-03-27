@@ -1,7 +1,7 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloseIcon from "@mui/icons-material/Close";
 import { Avatar, Box, Dialog, IconButton, Slide, Stack, Typography } from "@mui/material";
-import { forwardRef, ReactElement, useMemo, useRef, useState } from "react";
+import { forwardRef, ReactElement, ReactNode, useMemo, useRef, useState } from "react";
 import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 import { TransitionProps } from "@mui/material/transitions";
 import { Viewer, Worker } from "@react-pdf-viewer/core";
@@ -13,6 +13,7 @@ export const CLOUD_FRONT_BASE_URL = process.env["NEXT_PUBLIC_CLOUD_FRONT_URL"];
 export interface ImagePdfViewerProps {
   imageFileName: string;
   fileUri: string;
+  children?: ReactNode;
 }
 
 const Transition = forwardRef<unknown, TransitionProps & { children: ReactElement }>(
@@ -28,7 +29,7 @@ const Transition = forwardRef<unknown, TransitionProps & { children: ReactElemen
 const isPdf = (url: string) => url.toLowerCase().endsWith(".pdf");
 const isUri = (url: string) => url.toLowerCase().startsWith("https://");
 
-export const ImagePdfViewer = ({ imageFileName, fileUri }: ImagePdfViewerProps) => {
+export const ImagePdfViewer = ({ imageFileName, fileUri, children }: ImagePdfViewerProps) => {
   const [openViewerModal, setOpenViewerModal] = useState(false);
 
   const defaultLayoutPluginInstanceRef = useRef(defaultLayoutPlugin());
@@ -46,29 +47,35 @@ export const ImagePdfViewer = ({ imageFileName, fileUri }: ImagePdfViewerProps) 
 
   return (
     <>
-      <RowStack
-        spacing={1}
-        onClick={handleOpen}
-        sx={{
-          cursor: "pointer",
-          alignItems: "center",
-        }}
-      >
-        <AttachFileIcon sx={{ color: "text.primary" }} />
-
-        <Typography
+      {children ? (
+        <Box onClick={handleOpen} sx={{ cursor: "pointer" }}>
+          {children}
+        </Box>
+      ) : (
+        <RowStack
+          spacing={1}
+          onClick={handleOpen}
           sx={{
-            color: "primary.main",
-            fontWeight: 500,
-            fontSize: pxToRem(16),
-            lineHeight: "24px",
-            fontFamily: (theme) => theme.typography.fontFamily,
-            textDecoration: "underline",
+            cursor: "pointer",
+            alignItems: "center",
           }}
         >
-          {imageFileName}
-        </Typography>
-      </RowStack>
+          <AttachFileIcon sx={{ color: "text.primary" }} />
+
+          <Typography
+            sx={{
+              color: "primary.main",
+              fontWeight: 500,
+              fontSize: pxToRem(16),
+              lineHeight: "24px",
+              fontFamily: (theme) => theme.typography.fontFamily,
+              textDecoration: "underline",
+            }}
+          >
+            {imageFileName}
+          </Typography>
+        </RowStack>
+      )}
 
       <Dialog
         open={openViewerModal}

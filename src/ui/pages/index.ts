@@ -31,3 +31,6 @@ export * from './RevenueDashboardPage';
 export * from './CaregiverPayoutPage';
 export * from './DriverPayoutPage';
 export * from './RefundManagementPage';
+export * from './InvoiceListPage';
+export * from './BillingHistoryPage';
+export * from './StatementsPage';
