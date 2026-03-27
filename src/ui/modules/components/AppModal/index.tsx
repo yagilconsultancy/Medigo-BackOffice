@@ -20,6 +20,7 @@ export interface AppModalProps {
   label: string;
   // right?: boolean;
   // left?: boolean;
+  padding?: string;
   sx?: SxProps;
 }
 
@@ -28,6 +29,7 @@ export const AppModal: React.FC<AppModalProps> = ({
   setOpen,
   label,
   children,
+  padding = '28px 32px',
   sx,
   // right,
   // left,
@@ -66,7 +68,7 @@ export const AppModal: React.FC<AppModalProps> = ({
           margin: '20px',
           overflowX: 'hidden',
           maxWidth: 'calc(100vw - 40px)',
-          padding: '28px 32px',
+          padding,
         },
       }}
       sx={{

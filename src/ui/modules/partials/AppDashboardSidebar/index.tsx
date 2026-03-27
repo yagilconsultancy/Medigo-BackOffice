@@ -127,7 +127,10 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         text: 'Payments & Finance',
         dropdown: [
           { text: 'Transactions', link: '/payments' },
-          { text: 'Revenue', link: '/payments/revenue' },
+          { text: 'Revenue Dashboard', link: '/payments/revenue' },
+          { text: 'Driver Payout', link: '/payments/driver-payout' },
+          { text: 'Caregiver Payout', link: '/payments/caregiver-payout' },
+          { text: 'Refund Management', link: '/payments/refunds' },
         ],
       },
       {
