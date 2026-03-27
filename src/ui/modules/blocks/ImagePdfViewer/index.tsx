@@ -1,11 +1,12 @@
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloseIcon from "@mui/icons-material/Close";
 import { Avatar, Box, Dialog, IconButton, Slide, Stack, Typography } from "@mui/material";
-import { Loader, pxToRem, RowStack } from "@flxfleet-frontend-apps/component-library";
 import { forwardRef, ReactElement, useMemo, useRef, useState } from "react";
 import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 import { TransitionProps } from "@mui/material/transitions";
 import { Viewer, Worker } from "@react-pdf-viewer/core";
+import { Loader, RowStack } from "../../components";
+import { pxToRem } from "../../../../common";
 
 export const CLOUD_FRONT_BASE_URL = process.env["NEXT_PUBLIC_CLOUD_FRONT_URL"];
 
@@ -61,7 +62,7 @@ export const ImagePdfViewer = ({ imageFileName, fileUri }: ImagePdfViewerProps) 
             fontWeight: 500,
             fontSize: pxToRem(16),
             lineHeight: "24px",
-            fontFamily: (theme) => theme.font.body,
+            fontFamily: (theme) => theme.typography.fontFamily,
             textDecoration: "underline",
           }}
         >
