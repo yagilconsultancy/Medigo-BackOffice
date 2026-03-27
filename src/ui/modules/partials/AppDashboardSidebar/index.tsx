@@ -118,6 +118,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         text: 'Vehicle Management',
         dropdown: [
           { text: 'All Vehicles', link: '/vehicles' },
+          { text: 'Vehicle Profiles', link: '/vehicles/profiles' },
           { text: 'Vehicle Documents', link: '/vehicles/documents' },
         ],
       },

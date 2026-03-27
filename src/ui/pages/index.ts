@@ -23,3 +23,6 @@ export * from './AllDriversPage';
 export * from './DriverDocumentsPage';
 export * from './DriverProfilesPage';
 export * from './DriverStatusPage';
+export * from './AllVehiclesPage';
+export * from './VehicleProfilesPage';
+export * from './VehicleDocumentsPage';
