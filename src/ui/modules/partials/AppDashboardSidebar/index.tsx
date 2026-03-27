@@ -148,6 +148,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         dropdown: [
           { text: 'Incidents', link: '/safety' },
           { text: 'Safety Reports', link: '/safety/reports' },
+          { text: 'Investigations', link: '/safety/investigations' },
         ],
       },
       {

@@ -34,3 +34,6 @@ export * from './RefundManagementPage';
 export * from './InvoiceListPage';
 export * from './BillingHistoryPage';
 export * from './StatementsPage';
+export * from './IncidentsPage';
+export * from './SafetyAlertsPage';
+export * from './IncidentInvestigationsPage';
