@@ -3,6 +3,7 @@
 import {
   Box,
   Collapse,
+  InputAdornment,
   TextField,
   TextFieldProps,
   Typography,
@@ -19,6 +20,7 @@ export type AppTextFieldProps = TextFieldProps & {
   fontSize?: object;
   marginTop?: object;
   errorMessage?: string;
+  endIcon?: React.ReactNode;
 };
 
 export const AppTextField = (props: AppTextFieldProps) => {
@@ -28,6 +30,7 @@ export const AppTextField = (props: AppTextFieldProps) => {
       xs: '0',
     },
     errorMessage,
+    endIcon,
     ...rest
   } = props;
   const styles = useTextFieldStyles(props);
@@ -45,6 +48,14 @@ export const AppTextField = (props: AppTextFieldProps) => {
         {...rest}
         sx={styles}
         error={error}
+        InputProps={{
+          ...(rest as any).InputProps,
+          ...(endIcon && {
+            endAdornment: (
+              <InputAdornment position="end">{endIcon}</InputAdornment>
+            ),
+          }),
+        }}
       />
       <Collapse in={error} orientation={'vertical'}>
         <RowStack

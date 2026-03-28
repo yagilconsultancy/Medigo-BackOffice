@@ -42,3 +42,6 @@ export * from './NotificationsPage';
 export * from './FleetNotificationsPage';
 export * from './RiderNotificationsPage';
 export * from './DriverNotificationsPage';
+export * from './CitiesServiceAreaPage';
+export * from './RideTypesPage';
+export * from './RolesPermissionsPage';

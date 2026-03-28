@@ -63,17 +63,17 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
           { text: 'Auto Dispatch Settings', link: '/dispatch/settings' },
         ],
       },
+      // {
+      //   icon: gpsIcon,
+      //   text: 'GPS Tracking',
+      //   dropdown: [
+      //     { text: 'Live Driver Map', link: '/gps' },
+      //     { text: 'Active Trip Map', link: '/gps/trips' },
+      //     { text: 'Driver Route History', link: '/gps/history' },
+      //   ],
+      // },
       {
-        icon: gpsIcon,
-        text: 'GPS Tracking',
-        dropdown: [
-          { text: 'Live Driver Map', link: '/gps' },
-          { text: 'Active Trip Map', link: '/gps/trips' },
-          { text: 'Driver Route History', link: '/gps/history' },
-        ],
-      },
-      {
-        icon: fleetIcon, 
+        icon: fleetIcon,
         text: 'Fleet Management',
         dropdown: [
           { text: 'Fleet Applications', link: '/fleet' },
@@ -85,32 +85,20 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         ],
       },
       {
-        icon: driverManagementIcon,
-        text: 'Driver Management',
+        icon: settingsIcon,
+        text: 'Service Management',
         dropdown: [
-          { text: 'All Drivers', link: '/drivers' },
-          { text: 'Drivers Profiles', link: '/drivers/profiles' },
-          { text: 'Driver Documents', link: '/drivers/documents' },
-          { text: 'Driver Status', link: '/drivers/status' },
-          { text: 'Performance Metrics', link: '/performance' },
-          { text: 'Driver Ratings', link: '/performance/ratings' },
-          { text: 'Driver Leaderboard', link: '/performance/leaderboard' },
+          { text: 'Service Provider', link: '/services/providers' },
         ],
       },
       {
         icon: riderManagementIcon,
-        text: 'Rider Management',
+        text: 'Facility & Client Mgt',
         dropdown: [
           { text: 'All Riders', link: '/riders' },
           { text: 'Rider Profiles', link: '/riders/profiles' },
-        ],
-      },
-      {
-        icon: supportIcon,
-        text: 'Caregiver Management',
-        dropdown: [
-          { text: 'All Caregivers', link: '/caregivers' },
-          { text: 'Caregiver Profiles', link: '/caregivers/profiles' },
+          { text: 'Rider Activity', link: '/riders/activity' },
+          { text: 'Rider Issues', link: '/riders/issues' },
         ],
       },
       {
@@ -120,11 +108,12 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
           { text: 'All Vehicles', link: '/vehicles' },
           { text: 'Vehicle Profiles', link: '/vehicles/profiles' },
           { text: 'Vehicle Documents', link: '/vehicles/documents' },
+          { text: 'Vehicle Categories', link: '/vehicles/categories' },
         ],
       },
       {
         icon: paymentIcon,
-        text: 'Payments & Finance',
+        text: 'Payment Management',
         dropdown: [
           { text: 'Transactions', link: '/payments' },
           { text: 'Revenue Dashboard', link: '/payments/revenue' },
@@ -135,20 +124,25 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       },
       {
         icon: invoiceIcon,
-        text: 'Invoices & Billing',
+        text: 'Pricing Management',
         dropdown: [
-          { text: 'All Invoices', link: '/invoices' },
-          { text: 'Billing History', link: '/invoices/settings' },
-          { text: 'Statements', link: '/invoices/statements' },
+          { text: 'Pricing Dashboard', link: '/pricing' },
+          { text: 'Fare Configuration', link: '/pricing/fares' },
+          { text: 'Surcharges', link: '/pricing/surcharges' },
+          { text: 'Recurring & Packages', link: '/pricing/packages' },
+          { text: 'Pricing Configuration', link: '/pricing/configuration' },
+          { text: 'Pricing Logs', link: '/pricing/logs' },
+          { text: 'Commission Settings', link: '/pricing/commissions' },
+          { text: 'Cancellation Policy', link: '/pricing/cancellation' },
         ],
       },
       {
         icon: safetyIcon,
         text: 'Safety & Incidents',
         dropdown: [
-          { text: 'Incidents', link: '/safety' },
-          { text: 'Safety Reports', link: '/safety/reports' },
-          { text: 'Investigations', link: '/safety/investigations' },
+          { text: 'Incident Report', link: '/safety' },
+          { text: 'Safety Alerts', link: '/safety/reports' },
+          { text: 'Incident Investigation', link: '/safety/investigations' },
           { text: 'Disciplinary Actions', link: '/safety/disciplinary' },
         ],
       },
@@ -156,9 +150,9 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         icon: notificationIcon,
         text: 'Notifications',
         dropdown: [
-          { text: 'All Notifications', link: '/notifications' },
-          { text: 'Driver Notifications', link: '/notifications/drivers' },
+          { text: 'System Notifications', link: '/notifications' },
           { text: 'Rider Notifications', link: '/notifications/riders' },
+          { text: 'Driver Notifications', link: '/notifications/drivers' },
           { text: 'Fleet Notifications', link: '/notifications/fleet' },
         ],
       },
@@ -166,24 +160,18 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         icon: supportIcon,
         text: 'Support & Service',
         dropdown: [
-          { text: 'Tickets', link: '/support' },
-          { text: 'FAQ', link: '/support/faq' },
-        ],
-      },
-      {
-        icon: settingsIcon,
-        text: 'Dashboard Settings',
-        dropdown: [
-          { text: 'General', link: '/settings' },
-          { text: 'Preferences', link: '/settings/preferences' },
+          { text: 'Support Ticket', link: '/support' },
+          { text: 'Trip Issue Resolution', link: '/support/issues' },
+          { text: 'Contact Logs', link: '/support/contacts' },
         ],
       },
       {
         icon: rolesIcon,
-        text: 'Roles & Permissions',
+        text: 'Dashboard Settings',
         dropdown: [
-          { text: 'All Roles', link: '/roles' },
-          { text: 'Permissions', link: '/roles/permissions' },
+          { text: 'Cities & Service Area', link: '/settings/areas' },
+          { text: 'Ride Types', link: '/settings/ride-types' },
+          { text: 'Roles & Permissions', link: '/settings/permissions' },
         ],
       },
       {
@@ -191,6 +179,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         text: 'System Logs & Security',
         dropdown: [
           { text: 'Activity Logs', link: '/logs' },
+          { text: 'Login History', link: '/logs/history' },
           { text: 'Security Settings', link: '/logs/security' },
         ],
       },
