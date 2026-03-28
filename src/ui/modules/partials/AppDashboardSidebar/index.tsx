@@ -157,7 +157,9 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         text: 'Notifications',
         dropdown: [
           { text: 'All Notifications', link: '/notifications' },
-          { text: 'Settings', link: '/notifications/settings' },
+          { text: 'Driver Notifications', link: '/notifications/drivers' },
+          { text: 'Rider Notifications', link: '/notifications/riders' },
+          { text: 'Fleet Notifications', link: '/notifications/fleet' },
         ],
       },
       {
