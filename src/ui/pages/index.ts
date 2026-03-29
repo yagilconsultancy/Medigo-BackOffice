@@ -45,3 +45,6 @@ export * from './DriverNotificationsPage';
 export * from './CitiesServiceAreaPage';
 export * from './RideTypesPage';
 export * from './RolesPermissionsPage';
+export * from './ActivityLogsPage';
+export * from './SecuritySettingsPage';
+export * from './LoginHistoryPage';
