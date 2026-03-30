@@ -25,12 +25,13 @@ import {
   AppNotificationSnackbar,
   DashboardTitleAndDesc,
   RowStack,
+  AppButton,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
 import {
   VehicleDetailDrawer,
-  AddVehicleDrawer,
   EditVehicleDrawer,
+  AddVehicleDrawer,
   ScheduleServiceModal,
 } from './ui/components';
 import { pxToRem } from '../../../common';
@@ -657,7 +658,13 @@ export const AllVehiclesPage = () => {
             title="Vehicle Management"
             desc="Manage vehicles, categories, documents, and assignments"
           />
-          <Box
+          <AppButton
+            onClick={() => setAddDrawerOpen(true)}
+            startIcon={<AddOutlinedIcon sx={{ fontSize: 16, color: '#FFFFFF' }} />}
+          >
+            Add Vehicle
+          </AppButton>
+          {/* <Box
             onClick={() => setAddDrawerOpen(true)}
             sx={{
               display: 'flex',
@@ -684,7 +691,7 @@ export const AllVehiclesPage = () => {
             >
               Add Vehicle
             </Typography>
-          </Box>
+          </Box> */}
         </RowStack>
 
         {/* Stat Cards */}

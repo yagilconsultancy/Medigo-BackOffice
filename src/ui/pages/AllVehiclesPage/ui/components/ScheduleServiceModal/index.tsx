@@ -13,8 +13,13 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
-import { AppModal, RowStack } from '../../../../../modules/components';
+import {
+  AppModal,
+  RowStack,
+  AppDatePickerPopover,
+} from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
+import dayjs, { Dayjs } from 'dayjs';
 import type { VehicleRow } from '../../..';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -45,25 +50,25 @@ export const ScheduleServiceModal = ({
   onConfirm,
 }: ScheduleServiceModalProps) => {
   const [serviceType, setServiceType] = useState('');
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState<Dayjs | null>(null);
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
     if (open) {
       setServiceType('');
-      setDate('');
+      setDate(null);
       setNotes('');
     }
   }, [open]);
 
   const isFormValid = useMemo(
-    () => serviceType.trim().length > 0 && date.trim().length > 0,
+    () => serviceType.trim().length > 0 && date !== null,
     [serviceType, date]
   );
 
   const handleConfirm = useCallback(() => {
-    if (isFormValid) {
-      onConfirm(serviceType, date, notes);
+    if (isFormValid && date) {
+      onConfirm(serviceType, date.format('YYYY-MM-DD'), notes);
     }
   }, [isFormValid, serviceType, date, notes, onConfirm]);
 
@@ -74,17 +79,22 @@ export const ScheduleServiceModal = ({
       open={open}
       setOpen={() => onClose()}
       label="schedule-service-modal"
+      padding='0px'
       sx={{
         '& .MuiDialog-paper': {
           width: '460px',
-          maxWidth: '460px',
           borderRadius: '16px',
           boxShadow: '0px 24px 64px 0px rgba(0, 0, 0, 0.18)',
           overflow: 'visible',
         },
       }}
     >
-      <Stack spacing={'20px'} sx={{ padding: '24px 24px 0' }}>
+      <Stack 
+        spacing={'20px'}
+        sx={{
+          padding: '24px',
+        }}
+      >
         {/* Header */}
         <RowStack spacing={'12px'} sx={{ position: 'relative' }}>
           <Box
@@ -237,32 +247,21 @@ export const ScheduleServiceModal = ({
             >
               Service Date
             </Typography>
-            <TextField
-              type="date"
+            <AppDatePickerPopover
               value={date}
-              onChange={(e) => setDate(e.target.value)}
-              fullWidth
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  height: '39px',
-                  background: '#F7F9FB',
-                  borderRadius: '10px',
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 400,
-                  fontSize: pxToRem(13),
-                  color: '#111827',
-                  '& fieldset': {
-                    borderColor: '#E8ECF0',
-                    borderWidth: '0.67px',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: '#E8ECF0',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#2F6FED',
-                    borderWidth: '1px',
-                  },
-                },
+              onChange={(newDate) => setDate(newDate)}
+              minDate={dayjs()}
+              buttonSx={{
+                height: 39,
+                borderRadius: '10px',
+                background: '#F7F9FB',
+                border: '0.67px solid #E8ECF0',
+                width: '100%',
+              }}
+              textSx={{
+                fontWeight: 400,
+                fontSize: pxToRem(13),
+                color: date ? '#111827' : 'rgba(55, 65, 81, 0.5)',
               }}
             />
           </Stack>

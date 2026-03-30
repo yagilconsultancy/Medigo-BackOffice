@@ -12,6 +12,8 @@ type AppDatePickerPopoverProps = {
   value: Dayjs | null;
   onChange: (date: Dayjs | null) => void;
   format?: string;
+  maxDate?: Dayjs;
+  minDate?: Dayjs;
   buttonSx?: SxProps;
   iconSx?: SxProps;
   textSx?: SxProps;
@@ -21,6 +23,8 @@ export const AppDatePickerPopover = ({
   value,
   onChange,
   format = 'MMM DD, YYYY',
+  maxDate,
+  minDate,
   buttonSx,
   iconSx,
   textSx,
@@ -84,6 +88,8 @@ export const AppDatePickerPopover = ({
       >
         <DateCalendar
           value={value}
+          maxDate={maxDate}
+          minDate={minDate}
           onChange={(newDate) => {
             onChange(newDate);
             setAnchorEl(null);

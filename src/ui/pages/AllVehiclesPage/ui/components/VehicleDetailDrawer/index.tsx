@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Drawer, IconButton, Stack, Typography } from '@mui/material';
+import { Box, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SpeedOutlinedIcon from '@mui/icons-material/SpeedOutlined';
 import AirlineSeatReclineNormalOutlinedIcon from '@mui/icons-material/AirlineSeatReclineNormalOutlined';
@@ -13,7 +13,7 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import EventOutlinedIcon from '@mui/icons-material/EventOutlined';
 import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { RowStack } from '../../../../../modules/components';
+import { AppModal, RowStack } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import type { VehicleRow } from '../../..';
 
@@ -92,23 +92,26 @@ export const VehicleDetailDrawer = ({
   ];
 
   return (
-    <Drawer
-      anchor="right"
+    <AppModal
       open={open}
-      onClose={onClose}
+      setOpen={() => onClose()}
+      label="vehicle-detail-modal"
+      padding="0px"
       sx={{
-        '& .MuiDrawer-paper': {
-          width: '540px',
-          boxShadow: '0px 24px 64px 0px rgba(0, 0, 0, 0.14)',
-          border: 'none',
+        '& .MuiDialog-paper': {
+          width: 480,
+          maxWidth: 480,
+          borderRadius: '20px',
+          boxShadow: '0px 32px 80px 0px rgba(0, 0, 0, 0.18)',
+          overflow: 'hidden',
         },
       }}
     >
-      <Stack sx={{ height: '100%', overflow: 'auto' }}>
+      <Stack>
         {/* Close Button */}
         <RowStack
           justifyContent={'flex-end'}
-          sx={{ padding: '20px 24px 0' }}
+          sx={{ padding: '16px 20px 0' }}
         >
           <IconButton
             onClick={onClose}
@@ -118,6 +121,7 @@ export const VehicleDetailDrawer = ({
               borderRadius: '8px',
               background: '#F3F4F6',
               border: '0.67px solid #E5E7EB',
+              '&:hover': { background: '#E5E7EB' },
             }}
           >
             <CloseIcon sx={{ fontSize: 14, color: '#6B7280' }} />
@@ -128,7 +132,7 @@ export const VehicleDetailDrawer = ({
         <Stack
           alignItems={'center'}
           sx={{
-            padding: '16px 24px 24px',
+            padding: '8px 24px 24px',
             borderBottom: '0.67px solid #F0F4F8',
           }}
         >
@@ -278,7 +282,7 @@ export const VehicleDetailDrawer = ({
         </Stack>
 
         {/* Vehicle Details Section */}
-        <Stack spacing={'8px'} sx={{ padding: '24px 32px', flex: 1 }}>
+        <Stack spacing={'8px'} sx={{ padding: '20px 24px' }}>
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
@@ -310,73 +314,76 @@ export const VehicleDetailDrawer = ({
               />
             ))}
           </Box>
-
-          {/* Footer Buttons */}
-          <RowStack spacing={'12px'} sx={{ paddingTop: '4px' }}>
-            <Box
-              onClick={onEditVehicle}
-              sx={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                height: 40,
-                background: '#F7F9FB',
-                border: '0.67px solid #E5E7EB',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                transition: 'opacity 0.15s ease',
-                '&:hover': { opacity: 0.85 },
-              }}
-            >
-              <EditOutlinedIcon sx={{ fontSize: 13, color: '#374151' }} />
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(13),
-                  lineHeight: '1.5em',
-                  color: '#374151',
-                }}
-              >
-                Edit Vehicle
-              </Typography>
-            </Box>
-            <Box
-              onClick={onScheduleService}
-              sx={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                height: 40,
-                background: '#FFFBEB',
-                border: '0.67px solid #FDE68A',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                transition: 'opacity 0.15s ease',
-                '&:hover': { opacity: 0.85 },
-              }}
-            >
-              <BuildOutlinedIcon sx={{ fontSize: 13, color: '#D97706' }} />
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(13),
-                  lineHeight: '1.5em',
-                  color: '#D97706',
-                }}
-              >
-                Schedule Service
-              </Typography>
-            </Box>
-          </RowStack>
         </Stack>
+
+        {/* Footer Buttons */}
+        <RowStack
+          spacing={'12px'}
+          sx={{ padding: '0 24px 20px' }}
+        >
+          <Box
+            onClick={onEditVehicle}
+            sx={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              height: 40,
+              background: '#F7F9FB',
+              border: '0.67px solid #E5E7EB',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              transition: 'opacity 0.15s ease',
+              '&:hover': { opacity: 0.85 },
+            }}
+          >
+            <EditOutlinedIcon sx={{ fontSize: 13, color: '#374151' }} />
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 600,
+                fontSize: pxToRem(13),
+                lineHeight: '1.5em',
+                color: '#374151',
+              }}
+            >
+              Edit Vehicle
+            </Typography>
+          </Box>
+          <Box
+            onClick={onScheduleService}
+            sx={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              height: 40,
+              background: '#FFFBEB',
+              border: '0.67px solid #FDE68A',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              transition: 'opacity 0.15s ease',
+              '&:hover': { opacity: 0.85 },
+            }}
+          >
+            <BuildOutlinedIcon sx={{ fontSize: 13, color: '#D97706' }} />
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 600,
+                fontSize: pxToRem(13),
+                lineHeight: '1.5em',
+                color: '#D97706',
+              }}
+            >
+              Schedule Service
+            </Typography>
+          </Box>
+        </RowStack>
       </Stack>
-    </Drawer>
+    </AppModal>
   );
 };
 

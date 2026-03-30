@@ -135,7 +135,7 @@ const payoutSchedule = [
     statusBg: '#F3F4F6',
     statusDot: '#D1D5DB',
     statusColor: '#9CA3AF',
-    desc: 'Monthly Payout · 18 drivers',
+    desc: 'Weekly Payout · 112 drivers',
     amount: 'Est. $19,800',
     amountColor: '#6B7280',
     cardBg: '#FAFAFA',
@@ -147,7 +147,7 @@ const payoutSchedule = [
     statusBg: '#F3F4F6',
     statusDot: '#D1D5DB',
     statusColor: '#9CA3AF',
-    desc: 'Monthly Payout · 56 drivers',
+    desc: 'Monthly Payout · 18 drivers',
     amount: 'Est. $14,200',
     amountColor: '#6B7280',
     cardBg: '#FAFAFA',
@@ -195,7 +195,7 @@ const earningsBreakdown = [
     iconBg: '#F0FDF7',
     value: '$142,360',
     label: 'Net Driver Pool',
-    desc: '80% allocated to drivers',
+    desc: '50% allocated to drivers',
   },
 ];
 
@@ -1048,7 +1048,7 @@ export const DriverPayoutPage = () => {
                 Monthly Earnings Distribution
               </Typography>
 
-              <RowStack spacing={'24px'} alignItems={'center'}>
+              <Stack alignItems={'center'} spacing={'24px'}>
                 {/* Donut Chart */}
                 <Box
                   sx={{
@@ -1056,14 +1056,14 @@ export const DriverPayoutPage = () => {
                     flexShrink: 0,
                   }}
                 >
-                  <ResponsiveContainer width={200} height={200}>
+                  <ResponsiveContainer width={220} height={220}>
                     <PieChart>
                       <Pie
                         data={donutData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={90}
+                        innerRadius={65}
+                        outerRadius={100}
                         paddingAngle={2}
                         dataKey="value"
                         strokeWidth={0}
@@ -1116,14 +1116,19 @@ export const DriverPayoutPage = () => {
                   </Stack>
                 </Box>
 
-                {/* Legend */}
-                <Stack spacing={'14px'} sx={{ flex: 1 }}>
+                {/* Legend - Horizontal Row */}
+                <RowStack
+                  spacing={'24px'}
+                  justifyContent={'space-between'}
+                  flexWrap={'wrap'}
+                  width={"100%"}
+                  sx={{
+                    padding: '42px'
+                  }}
+                >
                   {donutData.map((d) => (
-                    <RowStack
-                      key={d.name}
-                      justifyContent={'space-between'}
-                    >
-                      <RowStack spacing={'10px'}>
+                    <Stack key={d.name} alignItems={'center'} spacing={'4px'}>
+                      <RowStack spacing={'6px'}>
                         <Box
                           sx={{
                             width: 10,
@@ -1138,41 +1143,39 @@ export const DriverPayoutPage = () => {
                             fontFamily: (theme) =>
                               theme.typography.fontFamily,
                             fontWeight: 400,
-                            fontSize: pxToRem(13),
+                            fontSize: pxToRem(12),
                             color: '#6B7280',
                           }}
                         >
                           {d.name}
                         </Typography>
                       </RowStack>
-                      <RowStack spacing={'8px'}>
-                        <Typography
-                          sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
-                            fontWeight: 700,
-                            fontSize: pxToRem(16),
-                            color: '#111827',
-                          }}
-                        >
-                          {d.value}%
-                        </Typography>
-                        <Typography
-                          sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
-                            fontWeight: 400,
-                            fontSize: pxToRem(12),
-                            color: '#9CA3AF',
-                          }}
-                        >
-                          {d.amount}
-                        </Typography>
-                      </RowStack>
-                    </RowStack>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) =>
+                            theme.typography.fontFamily,
+                          fontWeight: 700,
+                          fontSize: pxToRem(16),
+                          color: '#111827',
+                        }}
+                      >
+                        {d.value}%
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) =>
+                            theme.typography.fontFamily,
+                          fontWeight: 400,
+                          fontSize: pxToRem(11.5),
+                          color: '#9CA3AF',
+                        }}
+                      >
+                        {d.amount}
+                      </Typography>
+                    </Stack>
                   ))}
-                </Stack>
-              </RowStack>
+                </RowStack>
+              </Stack>
             </Stack>
           </Grid>
         </Grid>
