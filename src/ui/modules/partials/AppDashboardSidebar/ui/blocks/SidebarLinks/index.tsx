@@ -179,10 +179,11 @@ export const SidebarLinks = ({
                       <AccordionDetails sx={{ padding: 0 }}>
                         <Box
                           sx={{
-                            ml: '32px',
+                            ml: '22px',
                             display: 'flex',
                             flexDirection: 'column',
                             py: '4px',
+                            borderLeft: '2px solid #E8ECF0',
                           }}
                         >
                           {item.dropdown.map((subItem) => {
