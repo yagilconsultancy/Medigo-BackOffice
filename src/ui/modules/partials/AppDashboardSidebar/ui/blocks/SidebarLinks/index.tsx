@@ -1,13 +1,15 @@
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   alpha,
   Box,
-  Collapse,
   Divider,
   Tooltip,
   Typography,
   useTheme,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 import { SidebarLink } from '../../components';
@@ -38,15 +40,32 @@ export const SidebarLinks = ({
   const theme = useTheme();
   const pathname = usePathname();
 
-  const [openDropdowns, setOpenDropdowns] = useState<{
-    [key: string]: boolean;
-  }>({});
-
-  const toggleDropdown = (text: string) => {
-    setOpenDropdowns((prev) => ({
-      [text]: !prev[text],
-    }));
+  // Find which accordion should be expanded based on current route
+  const findActiveAccordion = (): string | false => {
+    for (const section of sidebarList) {
+      for (const item of section.items) {
+        if (item.dropdown?.some((subItem) => pathname === subItem.link)) {
+          return item.text;
+        }
+      }
+    }
+    return false;
   };
+
+  const [expanded, setExpanded] = useState<string | false>(findActiveAccordion);
+
+  // Auto-expand when route changes (e.g., direct navigation, browser back/forward)
+  useEffect(() => {
+    const activeAccordion = findActiveAccordion();
+    if (activeAccordion) {
+      setExpanded(activeAccordion);
+    }
+  }, [pathname]);
+
+  const handleAccordionChange =
+    (panel: string) => (_: React.SyntheticEvent, isExpanded: boolean) => {
+      setExpanded(isExpanded ? panel : false);
+    };
 
   return (
     <Box sx={{ px: isSidebarOpen ? '12px' : '8px', py: '8px' }}>
@@ -83,17 +102,32 @@ export const SidebarLinks = ({
                 {item.dropdown ? (
                   // Dropdown item
                   isSidebarOpen ? (
-                    <>
-                      <RowStack
-                        onClick={() => toggleDropdown(item.text)}
+                    <Accordion
+                      expanded={expanded === item.text}
+                      onChange={handleAccordionChange(item.text)}
+                      disableGutters
+                      elevation={0}
+                      sx={{
+                        backgroundColor: 'transparent',
+                        '&:before': { display: 'none' },
+                      }}
+                    >
+                      <AccordionSummary
+                        expandIcon={
+                          <KeyboardArrowDownIcon
+                            sx={{ fontSize: '18px', color: '#9CA3AF' }}
+                          />
+                        }
                         sx={{
-                          cursor: 'pointer',
+                          minHeight: '44px',
                           height: '44px',
                           borderRadius: '12px',
                           px: '12px',
                           mb: '4px',
-                          alignItems: 'center',
                           transition: 'all 0.3s ease',
+                          '& .MuiAccordionSummary-content': {
+                            margin: 0,
+                          },
                           '&:hover': {
                             backgroundColor: alpha(
                               theme.palette.primary.main,
@@ -109,52 +143,40 @@ export const SidebarLinks = ({
                           },
                         }}
                       >
-                        {item.icon && (
-                          <StyledImage
-                            className="dropdown-icon"
-                            src={item.icon}
-                            alt={item.text}
+                        <RowStack sx={{ flexGrow: 1, alignItems: 'center' }}>
+                          {item.icon && (
+                            <StyledImage
+                              className="dropdown-icon"
+                              src={item.icon}
+                              alt={item.text}
+                              sx={{
+                                width: '20px',
+                                height: '20px',
+                                flexShrink: 0,
+                                transition: 'filter 0.3s ease',
+                              }}
+                            />
+                          )}
+                          <Typography
+                            className="dropdown-text"
+                            noWrap
                             sx={{
-                              width: '20px',
-                              height: '20px',
-                              flexShrink: 0,
-                              transition: 'filter 0.3s ease',
+                              flexGrow: 1,
+                              fontWeight: 400,
+                              fontSize: pxToRem(14),
+                              fontFamily: theme.typography.fontFamily,
+                              lineHeight: pxToRem(21),
+                              ml: '12px',
+                              color: '#344054',
+                              transition: 'color 0.3s ease',
                             }}
-                          />
-                        )}
-                        <Typography
-                          className="dropdown-text"
-                          noWrap
-                          sx={{
-                            flexGrow: 1,
-                            fontWeight: 400,
-                            fontSize: pxToRem(14),
-                            fontFamily: theme.typography.fontFamily,
-                            lineHeight: pxToRem(21),
-                            ml: '12px',
-                            color: '#344054',
-                            transition: 'color 0.3s ease',
-                          }}
-                        >
-                          {item.text}
-                        </Typography>
-                        <Box
-                          sx={{
-                            color: '#9CA3AF',
-                            display: 'flex',
-                            alignItems: 'center',
-                            transition: 'transform 0.3s ease',
-                            transform: openDropdowns[item.text]
-                              ? 'rotate(180deg)'
-                              : 'rotate(0deg)',
-                          }}
-                        >
-                          <KeyboardArrowDownIcon sx={{ fontSize: '18px' }} />
-                        </Box>
-                      </RowStack>
+                          >
+                            {item.text}
+                          </Typography>
+                        </RowStack>
+                      </AccordionSummary>
 
-                      {/* Dropdown Items */}
-                      <Collapse in={openDropdowns[item.text]}>
+                      <AccordionDetails sx={{ padding: 0 }}>
                         <Box
                           sx={{
                             ml: '32px',
@@ -234,8 +256,8 @@ export const SidebarLinks = ({
                             );
                           })}
                         </Box>
-                      </Collapse>
-                    </>
+                      </AccordionDetails>
+                    </Accordion>
                   ) : (
                     // Collapsed dropdown item - icon only with tooltip
                     <Tooltip
