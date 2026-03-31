@@ -10,10 +10,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import {
-  DashboardTitleAndDesc,
-  RowStack,
-} from '../../modules/components';
+import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
 import { DocumentViewModal } from './ui/components';
 import { pxToRem } from '../../../common';
 
@@ -351,8 +348,9 @@ const vehiclesData: VehicleDocRow[] = [
 
 export const VehicleDocumentsPage = () => {
   const [activeFilter, setActiveFilter] = useState<DocStatus | null>(null);
-  const [selectedDoc, setSelectedDoc] =
-    useState<VehicleDocumentDetail | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<VehicleDocumentDetail | null>(
+    null
+  );
   const [modalOpen, setModalOpen] = useState(false);
 
   const filterCounts = useMemo(() => {
@@ -430,9 +428,7 @@ export const VehicleDocumentsPage = () => {
               return (
                 <Box
                   key={chip.status}
-                  onClick={() =>
-                    setActiveFilter(isActive ? null : chip.status)
-                  }
+                  onClick={() => setActiveFilter(isActive ? null : chip.status)}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -443,9 +439,7 @@ export const VehicleDocumentsPage = () => {
                     border: `0.67px solid ${config.borderColor}`,
                     cursor: 'pointer',
                     opacity: isActive ? 1 : 0.85,
-                    outline: isActive
-                      ? `2px solid ${config.color}`
-                      : 'none',
+                    outline: isActive ? `2px solid ${config.color}` : 'none',
                     outlineOffset: '1px',
                     transition: 'all 0.15s ease',
                     '&:hover': { opacity: 1 },
@@ -590,16 +584,18 @@ export const VehicleDocumentsPage = () => {
               </RowStack>
 
               {/* Doc Cards */}
-              {[vehicle.registration, vehicle.insurance, vehicle.inspection].map(
-                (doc, idx) => (
-                  <Box key={idx} sx={{ flex: 1, minWidth: '240px', px: '6px' }}>
-                    <DocCard
-                      doc={doc}
-                      onView={() => handleViewDoc(vehicle, doc)}
-                    />
-                  </Box>
-                )
-              )}
+              {[
+                vehicle.registration,
+                vehicle.insurance,
+                vehicle.inspection,
+              ].map((doc, idx) => (
+                <Box key={idx} sx={{ flex: 1, minWidth: '240px', px: '6px' }}>
+                  <DocCard
+                    doc={doc}
+                    onView={() => handleViewDoc(vehicle, doc)}
+                  />
+                </Box>
+              ))}
             </RowStack>
           ))}
         </Box>

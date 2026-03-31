@@ -48,12 +48,8 @@ const statusIcons: Record<DisputeStatus, React.ReactNode> = {
   'Under Review': (
     <ErrorOutlineOutlinedIcon sx={{ fontSize: 13, color: '#D97706' }} />
   ),
-  Approved: (
-    <CheckCircleOutlineIcon sx={{ fontSize: 13, color: '#059669' }} />
-  ),
-  Rejected: (
-    <CancelOutlinedIcon sx={{ fontSize: 13, color: '#EF4444' }} />
-  ),
+  Approved: <CheckCircleOutlineIcon sx={{ fontSize: 13, color: '#059669' }} />,
+  Rejected: <CancelOutlinedIcon sx={{ fontSize: 13, color: '#EF4444' }} />,
 };
 
 const issueTypeColors: Record<IssueType, { bg: string; color: string }> = {
@@ -299,9 +295,7 @@ export const DisputeViewModal = ({
         {/* ── Issue Description ────────────────────────────────────────── */}
         <Stack spacing={'8px'} sx={{ padding: '12px 20px 20px 20px' }}>
           <RowStack spacing={'6px'}>
-            <DescriptionOutlinedIcon
-              sx={{ fontSize: 15, color: '#9CA3AF' }}
-            />
+            <DescriptionOutlinedIcon sx={{ fontSize: 15, color: '#9CA3AF' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

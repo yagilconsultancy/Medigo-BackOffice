@@ -284,14 +284,14 @@ export const HomePage = () => {
             </AppCardparent>
           </Grid>
         </Grid>
-        <Grid container spacing={'20px'} alignItems={"stretch"}>
+        <Grid container spacing={'20px'} alignItems={'stretch'}>
           <Grid
             size={{
               sm: 12,
               lg: 6,
             }}
             sx={{
-              height: 'auto'
+              height: 'auto',
             }}
           >
             <AppCardparent>
@@ -312,7 +312,7 @@ export const HomePage = () => {
               lg: 6,
             }}
             sx={{
-              height: 'auto'
+              height: 'auto',
             }}
           >
             <AppCardparent>

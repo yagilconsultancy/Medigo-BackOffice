@@ -170,9 +170,7 @@ export const DocumentViewModal = ({
                 border: '0.46px solid #BBF7D0',
               }}
             >
-              <CheckCircleOutlineIcon
-                sx={{ fontSize: 8, color: '#059669' }}
-              />
+              <CheckCircleOutlineIcon sx={{ fontSize: 8, color: '#059669' }} />
               <Typography
                 sx={{
                   fontFamily: 'Inter, sans-serif',
@@ -277,9 +275,7 @@ export const DocumentViewModal = ({
                 '&:hover': { opacity: 0.8 },
               }}
             >
-              <DownloadOutlinedIcon
-                sx={{ fontSize: 12, color: '#2F6FED' }}
-              />
+              <DownloadOutlinedIcon sx={{ fontSize: 12, color: '#2F6FED' }} />
               <Typography
                 sx={{
                   fontFamily: 'Inter, sans-serif',

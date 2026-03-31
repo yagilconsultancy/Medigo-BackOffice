@@ -49,8 +49,9 @@ export const SuspendDriverModal = ({
   onClose,
   driver,
 }: SuspendDriverModalProps) => {
-  const [selectedReason, setSelectedReason] =
-    useState<SuspensionReason | null>(null);
+  const [selectedReason, setSelectedReason] = useState<SuspensionReason | null>(
+    null
+  );
   const [notes, setNotes] = useState('');
   const [timing, setTiming] = useState<SuspensionTiming>('immediately');
   const [snackbar, setSnackbar] = useState<{
@@ -133,9 +134,7 @@ export const SuspendDriverModal = ({
                 justifyContent: 'center',
               }}
             >
-              <ShieldOutlinedIcon
-                sx={{ fontSize: 20, color: '#EF4444' }}
-              />
+              <ShieldOutlinedIcon sx={{ fontSize: 20, color: '#EF4444' }} />
             </Box>
             <Stack spacing={0}>
               <Typography
@@ -376,8 +375,7 @@ export const SuspendDriverModal = ({
                   flex: 1,
                   padding: '12px 14px',
                   borderRadius: '10px',
-                  background:
-                    timing === 'immediately' ? '#F2F5FE' : '#F7F9FB',
+                  background: timing === 'immediately' ? '#F2F5FE' : '#F7F9FB',
                   border: `1px solid ${timing === 'immediately' ? '#2F6FED' : '#E5E7EB'}`,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
@@ -414,8 +412,7 @@ export const SuspendDriverModal = ({
                   flex: 1,
                   padding: '12px 14px',
                   borderRadius: '10px',
-                  background:
-                    timing === 'after_trip' ? '#F2F5FE' : '#F7F9FB',
+                  background: timing === 'after_trip' ? '#F2F5FE' : '#F7F9FB',
                   border: `1px solid ${timing === 'after_trip' ? '#2F6FED' : '#E5E7EB'}`,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
@@ -495,14 +492,10 @@ export const SuspendDriverModal = ({
               background: canConfirm ? '#EF4444' : '#D1D5DB',
               cursor: canConfirm ? 'pointer' : 'default',
               transition: 'all 0.15s ease',
-              '&:hover': canConfirm
-                ? { background: '#DC2626' }
-                : undefined,
+              '&:hover': canConfirm ? { background: '#DC2626' } : undefined,
             }}
           >
-            <ShieldOutlinedIcon
-              sx={{ fontSize: 14, color: '#FFFFFF' }}
-            />
+            <ShieldOutlinedIcon sx={{ fontSize: 14, color: '#FFFFFF' }} />
             <Typography
               sx={{
                 fontFamily: 'Inter, sans-serif',

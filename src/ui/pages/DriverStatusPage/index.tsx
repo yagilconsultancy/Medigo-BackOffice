@@ -6,10 +6,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import {
-  DashboardTitleAndDesc,
-  RowStack,
-} from '../../modules/components';
+import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
 import {
   ReviewSuspensionsModal,
   ReviewApplicationsModal,
@@ -153,9 +150,7 @@ export const DriverStatusPage = () => {
       value: activeDrivers.length.toString(),
       label: 'Active Drivers',
       valueColor: '#059669',
-      icon: (
-        <CheckCircleOutlineIcon sx={{ fontSize: 19, color: '#059669' }} />
-      ),
+      icon: <CheckCircleOutlineIcon sx={{ fontSize: 19, color: '#059669' }} />,
       iconBg: '#ECFDF5',
       iconBorder: '#BBF7D0',
     },
@@ -171,9 +166,7 @@ export const DriverStatusPage = () => {
       value: pendingDrivers.length.toString(),
       label: 'Pending Approval',
       valueColor: '#D97706',
-      icon: (
-        <AccessTimeOutlinedIcon sx={{ fontSize: 19, color: '#D97706' }} />
-      ),
+      icon: <AccessTimeOutlinedIcon sx={{ fontSize: 19, color: '#D97706' }} />,
       iconBg: '#FFFBEB',
       iconBorder: '#FDE68A',
     },
@@ -262,9 +255,7 @@ export const DriverStatusPage = () => {
             }}
           >
             <RowStack spacing={'10px'}>
-              <CheckCircleOutlineIcon
-                sx={{ fontSize: 16, color: '#059669' }}
-              />
+              <CheckCircleOutlineIcon sx={{ fontSize: 16, color: '#059669' }} />
               <Typography
                 sx={{
                   fontFamily: 'Inter, sans-serif',
@@ -572,9 +563,7 @@ export const DriverStatusPage = () => {
             }}
           >
             <RowStack spacing={'10px'}>
-              <AccessTimeOutlinedIcon
-                sx={{ fontSize: 16, color: '#D97706' }}
-              />
+              <AccessTimeOutlinedIcon sx={{ fontSize: 16, color: '#D97706' }} />
               <Typography
                 sx={{
                   fontFamily: 'Inter, sans-serif',

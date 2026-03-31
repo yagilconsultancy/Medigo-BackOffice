@@ -59,7 +59,7 @@ const activityLogs: Record<string, ActivityEntry[]> = {
   'IS-001': [
     {
       id: '1',
-      text: 'Rider reports that her scheduled driver didn\'t arrive for booking BK-20491 on Mar 9 at 9:00 AM. She missed her 10:00am appointment to oncology department. Responded to St. Martin General Hospital, this is impacting her trust and confidence that the driver has been unreliable.',
+      text: "Rider reports that her scheduled driver didn't arrive for booking BK-20491 on Mar 9 at 9:00 AM. She missed her 10:00am appointment to oncology department. Responded to St. Martin General Hospital, this is impacting her trust and confidence that the driver has been unreliable.",
       by: 'Helen Moore',
       time: 'Mar 9 at 9:45 AM',
       type: 'user',
@@ -523,9 +523,7 @@ export const IssueDetailModal = ({
                 '&:hover': { opacity: 0.85 },
               }}
             >
-              <FindInPageOutlinedIcon
-                sx={{ fontSize: 14, color: '#6366F1' }}
-              />
+              <FindInPageOutlinedIcon sx={{ fontSize: 14, color: '#6366F1' }} />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
@@ -591,9 +589,7 @@ export const IssueDetailModal = ({
                 '&:hover': { opacity: 0.85 },
               }}
             >
-              <ReplayOutlinedIcon
-                sx={{ fontSize: 14, color: '#D97706' }}
-              />
+              <ReplayOutlinedIcon sx={{ fontSize: 14, color: '#D97706' }} />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,

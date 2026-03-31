@@ -72,10 +72,7 @@ export const EarningDetailModal = ({
             borderBottom: '0.67px solid #F0F4F8',
           }}
         >
-          <RowStack
-            justifyContent={'space-between'}
-            alignItems={'flex-start'}
-          >
+          <RowStack justifyContent={'space-between'} alignItems={'flex-start'}>
             <RowStack spacing={'16px'}>
               {/* Avatar */}
               <Box
@@ -139,8 +136,7 @@ export const EarningDetailModal = ({
                         fontFamily: (theme) => theme.typography.fontFamily,
                         fontWeight: 600,
                         fontSize: pxToRem(11),
-                        color:
-                          data.status === 'Active' ? '#059669' : '#EF4444',
+                        color: data.status === 'Active' ? '#059669' : '#EF4444',
                       }}
                     >
                       {data.status}

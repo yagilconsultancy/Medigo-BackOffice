@@ -529,9 +529,7 @@ export const EditVehicleDrawer = ({
               {/* Section 3: Fleet & Driver Assignment */}
               <SectionCard
                 icon={
-                  <GroupsOutlinedIcon
-                    sx={{ fontSize: 16, color: '#D97706' }}
-                  />
+                  <GroupsOutlinedIcon sx={{ fontSize: 16, color: '#D97706' }} />
                 }
                 iconBg="#FFFBEB"
                 title="Fleet & Driver Assignment"
@@ -694,9 +692,7 @@ export const EditVehicleDrawer = ({
               {/* Section 5: Status & Operational Info */}
               <SectionCard
                 icon={
-                  <TuneOutlinedIcon
-                    sx={{ fontSize: 16, color: '#EF4444' }}
-                  />
+                  <TuneOutlinedIcon sx={{ fontSize: 16, color: '#EF4444' }} />
                 }
                 iconBg="#FEF2F2"
                 title="Status & Operational Info"
@@ -825,9 +821,7 @@ export const EditVehicleDrawer = ({
                   sx={{
                     height: 40,
                     padding: '0 20px',
-                    background: isValid
-                      ? '#2F6FED'
-                      : 'rgba(47, 111, 237, 0.5)',
+                    background: isValid ? '#2F6FED' : 'rgba(47, 111, 237, 0.5)',
                     borderRadius: '10px',
                     textTransform: 'none',
                     fontFamily: (theme) => theme.typography.fontFamily,
@@ -1077,9 +1071,7 @@ const FileUploadZone = ({
       >
         {file ? (
           <>
-            <CheckCircleOutlineIcon
-              sx={{ fontSize: 18, color: '#2F6FED' }}
-            />
+            <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
@@ -1111,9 +1103,7 @@ const FileUploadZone = ({
           </>
         ) : (
           <>
-            <CloudUploadOutlinedIcon
-              sx={{ fontSize: 20, color: '#9CA3AF' }}
-            />
+            <CloudUploadOutlinedIcon sx={{ fontSize: 20, color: '#9CA3AF' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

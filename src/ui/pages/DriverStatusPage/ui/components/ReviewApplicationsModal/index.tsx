@@ -173,9 +173,7 @@ export const ReviewApplicationsModal = ({
                 justifyContent: 'center',
               }}
             >
-              <ErrorOutlineIcon
-                sx={{ fontSize: 18, color: '#D97706' }}
-              />
+              <ErrorOutlineIcon sx={{ fontSize: 18, color: '#D97706' }} />
             </Box>
             <Stack spacing={'1px'}>
               <Typography
@@ -251,9 +249,7 @@ export const ReviewApplicationsModal = ({
                   justifyContent: 'center',
                 }}
               >
-                <TaskAltOutlinedIcon
-                  sx={{ fontSize: 26, color: '#059669' }}
-                />
+                <TaskAltOutlinedIcon sx={{ fontSize: 26, color: '#059669' }} />
               </Box>
               <Typography
                 sx={{
@@ -365,56 +361,42 @@ const ApplicationCard = ({
 }) => {
   const infoRows = [
     {
-      icon: (
-        <PhoneOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
-      ),
+      icon: <PhoneOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />,
       label: 'PHONE',
       value: driver.phone,
       valueColor: '#374151',
     },
     {
       icon: (
-        <CalendarTodayOutlinedIcon
-          sx={{ fontSize: 13, color: '#9CA3AF' }}
-        />
+        <CalendarTodayOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
       ),
       label: 'SUBMITTED',
       value: driver.submittedDate,
       valueColor: '#374151',
     },
     {
-      icon: (
-        <BadgeOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
-      ),
+      icon: <BadgeOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />,
       label: 'LICENSE',
       value: driver.license,
       valueColor: '#374151',
     },
     {
       icon: (
-        <DirectionsCarOutlinedIcon
-          sx={{ fontSize: 13, color: '#9CA3AF' }}
-        />
+        <DirectionsCarOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
       ),
       label: 'VEHICLE',
       value: driver.vehicle,
       valueColor: '#374151',
     },
     {
-      icon: (
-        <WorkOutlineOutlinedIcon
-          sx={{ fontSize: 13, color: '#9CA3AF' }}
-        />
-      ),
+      icon: <WorkOutlineOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />,
       label: 'EXPERIENCE',
       value: driver.experience,
       valueColor: '#374151',
     },
     {
       icon: (
-        <VerifiedUserOutlinedIcon
-          sx={{ fontSize: 13, color: '#9CA3AF' }}
-        />
+        <VerifiedUserOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
       ),
       label: 'BG CHECK',
       value: driver.bgCheck,
@@ -655,9 +637,7 @@ const ApplicationCard = ({
                   borderRadius: '8px',
                   background: requestInfoText.trim() ? '#2F6FED' : '#D1D5DB',
                   cursor: requestInfoText.trim() ? 'pointer' : 'default',
-                  '&:hover': requestInfoText.trim()
-                    ? { opacity: 0.9 }
-                    : {},
+                  '&:hover': requestInfoText.trim() ? { opacity: 0.9 } : {},
                 }}
               >
                 <Typography
@@ -695,9 +675,7 @@ const ApplicationCard = ({
               '&:hover': { opacity: 0.8 },
             }}
           >
-            <CheckCircleOutlineIcon
-              sx={{ fontSize: 13, color: '#059669' }}
-            />
+            <CheckCircleOutlineIcon sx={{ fontSize: 13, color: '#059669' }} />
             <Typography
               sx={{
                 fontFamily: 'Inter, sans-serif',
@@ -764,9 +742,7 @@ const ApplicationCard = ({
               '&:hover': { opacity: 0.8 },
             }}
           >
-            <CancelOutlinedIcon
-              sx={{ fontSize: 13, color: '#EF4444' }}
-            />
+            <CancelOutlinedIcon sx={{ fontSize: 13, color: '#EF4444' }} />
             <Typography
               sx={{
                 fontFamily: 'Inter, sans-serif',

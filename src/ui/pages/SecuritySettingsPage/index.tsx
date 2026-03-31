@@ -123,33 +123,25 @@ const statCards = [
   {
     value: '8/8',
     label: '2FA Enabled',
-    icon: (
-      <VerifiedUserOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />
-    ),
+    icon: <VerifiedUserOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
     iconBg: '#ECFDF5',
   },
   {
     value: 'Strict',
     label: 'Password Policy',
-    icon: (
-      <GppGoodOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-    ),
+    icon: <GppGoodOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
     iconBg: '#EBF2FF',
   },
   {
     value: '4h',
     label: 'Session Timeout',
-    icon: (
-      <TimerOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />
-    ),
+    icon: <TimerOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
     iconBg: '#EEF2FF',
   },
   {
     value: '14',
     label: 'Threats Blocked',
-    icon: (
-      <ShieldOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
-    ),
+    icon: <ShieldOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
     iconBg: '#FFFBEB',
   },
 ];
@@ -308,9 +300,7 @@ export const SecuritySettingsPage = () => {
             <Stack sx={{ padding: '20px 24px 24px' }} spacing={'0px'}>
               {authSettings.map((setting, index) => (
                 <Box key={setting.id}>
-                  {index > 0 && (
-                    <Divider sx={{ borderColor: '#F0F4F8' }} />
-                  )}
+                  {index > 0 && <Divider sx={{ borderColor: '#F0F4F8' }} />}
                   <RowStack
                     justifyContent={'space-between'}
                     sx={{ padding: '16px 0' }}
@@ -349,8 +339,7 @@ export const SecuritySettingsPage = () => {
                       >
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 500,
                             fontSize: pxToRem(11.5),
                             color: setting.isOn ? '#10B981' : '#9CA3AF',
@@ -406,17 +395,17 @@ export const SecuritySettingsPage = () => {
                         fontWeight: 600,
                         fontSize: pxToRem(12.5),
                         color: (theme) => theme.color.deepBlue,
-                        lineHeight: '19px'
+                        lineHeight: '19px',
                       }}
                     >
                       Session Timeout (hours)
                     </Typography>
-                    <AppTextField 
+                    <AppTextField
                       type="number"
                       value={sessionTimeout}
                       onChange={(e) => setSessionTimeout(e.target.value)}
-                     sx={{
-                        width: "100%",
+                      sx={{
+                        width: '100%',
                         // padding: '10px 14px',
                         borderRadius: '10px',
                         border: '0.67px solid #E8ECF0',
@@ -437,7 +426,7 @@ export const SecuritySettingsPage = () => {
                         fontWeight: 400,
                         fontSize: pxToRem(11.5),
                         color: '#9CA3AF',
-                        lineHeight: '17.25px'
+                        lineHeight: '17.25px',
                       }}
                     >
                       Admin sessions expire after this period of inactivity
@@ -454,17 +443,17 @@ export const SecuritySettingsPage = () => {
                         fontWeight: 600,
                         fontSize: pxToRem(12.5),
                         color: (theme) => theme.color.deepBlue,
-                        lineHeight: '19px'
+                        lineHeight: '19px',
                       }}
                     >
                       Max Failed Login Attempts
                     </Typography>
-                    <AppTextField 
+                    <AppTextField
                       type="number"
                       value={maxAttempts}
                       onChange={(e) => setMaxAttempts(e.target.value)}
-                     sx={{
-                        width: "100%",
+                      sx={{
+                        width: '100%',
                         // padding: '10px 14px',
                         borderRadius: '10px',
                         border: '0.67px solid #E8ECF0',
@@ -485,7 +474,7 @@ export const SecuritySettingsPage = () => {
                         fontWeight: 400,
                         fontSize: pxToRem(11.5),
                         color: '#9CA3AF',
-                        lineHeight: '17.25px'
+                        lineHeight: '17.25px',
                       }}
                     >
                       Account locks after this many failed login attempts
@@ -522,9 +511,7 @@ export const SecuritySettingsPage = () => {
                 <Stack spacing={'0px'} sx={{ flex: 1 }}>
                   {passwordPolicyRows.map((row, index) => (
                     <Box key={row.label}>
-                      {index > 0 && (
-                        <Divider sx={{ borderColor: '#F0F4F8' }} />
-                      )}
+                      {index > 0 && <Divider sx={{ borderColor: '#F0F4F8' }} />}
                       <RowStack
                         justifyContent={'space-between'}
                         sx={{
@@ -535,8 +522,7 @@ export const SecuritySettingsPage = () => {
                       >
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 400,
                             fontSize: pxToRem(13),
                             color: '#374151',
@@ -546,8 +532,7 @@ export const SecuritySettingsPage = () => {
                         </Typography>
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 600,
                             fontSize: pxToRem(13),
                             color: '#2F6FED',

@@ -73,9 +73,7 @@ export const RefundDetailModal = ({
           }}
         >
           <RowStack spacing={'12px'}>
-            <WarningAmberOutlinedIcon
-              sx={{ fontSize: 22, color: '#D97706' }}
-            />
+            <WarningAmberOutlinedIcon sx={{ fontSize: 22, color: '#D97706' }} />
             <Stack spacing={'2px'}>
               <Typography
                 sx={{
@@ -137,7 +135,10 @@ export const RefundDetailModal = ({
               Refund Amount
             </Typography>
 
-            <RowStack justifyContent={'space-between'} alignItems={'flex-start'}>
+            <RowStack
+              justifyContent={'space-between'}
+              alignItems={'flex-start'}
+            >
               <Stack spacing={'4px'}>
                 <Typography
                   sx={{
@@ -407,9 +408,7 @@ export const RefundDetailModal = ({
                   '&:hover': { opacity: 0.85 },
                 }}
               >
-                <CancelOutlinedIcon
-                  sx={{ fontSize: 16, color: '#EF4444' }}
-                />
+                <CancelOutlinedIcon sx={{ fontSize: 16, color: '#EF4444' }} />
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,

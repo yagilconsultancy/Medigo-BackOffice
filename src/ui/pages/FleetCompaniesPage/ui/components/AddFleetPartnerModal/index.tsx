@@ -121,9 +121,7 @@ export const AddFleetPartnerModal = ({
             value={form.companyName}
             onChange={handleChange('companyName')}
             icon={
-              <BusinessOutlinedIcon
-                sx={{ fontSize: 13, color: '#9CA3AF' }}
-              />
+              <BusinessOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
             }
           />
           <FormField
@@ -131,22 +129,14 @@ export const AddFleetPartnerModal = ({
             placeholder="e.g. John Smith"
             value={form.contactPerson}
             onChange={handleChange('contactPerson')}
-            icon={
-              <PersonOutlineIcon
-                sx={{ fontSize: 13, color: '#9CA3AF' }}
-              />
-            }
+            icon={<PersonOutlineIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />}
           />
           <FormField
             label="Email Address"
             placeholder="e.g. contact@company.com"
             value={form.email}
             onChange={handleChange('email')}
-            icon={
-              <EmailOutlinedIcon
-                sx={{ fontSize: 13, color: '#9CA3AF' }}
-              />
-            }
+            icon={<EmailOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />}
           />
           <FormField
             label="City / State *"
@@ -154,9 +144,7 @@ export const AddFleetPartnerModal = ({
             value={form.city}
             onChange={handleChange('city')}
             icon={
-              <LocationOnOutlinedIcon
-                sx={{ fontSize: 13, color: '#9CA3AF' }}
-              />
+              <LocationOnOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
             }
           />
           <RowStack spacing={'12px'} alignItems="flex-start">
@@ -180,9 +168,7 @@ export const AddFleetPartnerModal = ({
                 value={form.drivers}
                 onChange={handleChange('drivers')}
                 icon={
-                  <GroupOutlinedIcon
-                    sx={{ fontSize: 13, color: '#9CA3AF' }}
-                  />
+                  <GroupOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
                 }
               />
             </Box>

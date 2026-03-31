@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { Grid, IconButton, Stack, Typography } from '@mui/material';
+import { Grid, IconButton, Stack, Typography, alpha } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
-import MoreVertOutlinedIcon from '@mui/icons-material/MoreVertOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppButton,
@@ -161,7 +161,7 @@ export const FleetCompaniesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompany, setSelectedCompany] =
     useState<FleetCompanyRow | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [modalOpen, setDrawerOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -330,9 +330,20 @@ export const FleetCompaniesPage = () => {
       flex: 0.3,
       minWidth: 50,
       sortable: false,
-      renderCell: () => (
-        <IconButton size="small" sx={{ color: '#9CA3AF' }}>
-          <MoreVertOutlinedIcon sx={{ fontSize: 16 }} />
+      renderCell: (params) => (
+        <IconButton
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleRowClick(params.row);
+          }}
+          sx={{
+            background: alpha('#2F6FED', 0.1),
+            color: '#2F6FED',
+            '&:hover': { background: alpha('#2F6FED', 0.18) },
+          }}
+        >
+          <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
         </IconButton>
       ),
     },
@@ -423,7 +434,7 @@ export const FleetCompaniesPage = () => {
 
       {/* View Company Drawer */}
       <FleetCompanyDrawer
-        open={drawerOpen}
+        open={modalOpen}
         onClose={() => setDrawerOpen(false)}
         company={selectedCompany}
         onStatusChange={handleStatusChange}

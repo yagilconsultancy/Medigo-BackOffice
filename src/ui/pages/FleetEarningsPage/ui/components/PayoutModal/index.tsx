@@ -217,9 +217,7 @@ export const PayoutModal = ({
                 '&:hover': { opacity: 0.9 },
               }}
             >
-              <CheckOutlinedIcon
-                sx={{ fontSize: 14, color: '#FFFFFF' }}
-              />
+              <CheckOutlinedIcon sx={{ fontSize: 14, color: '#FFFFFF' }} />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,

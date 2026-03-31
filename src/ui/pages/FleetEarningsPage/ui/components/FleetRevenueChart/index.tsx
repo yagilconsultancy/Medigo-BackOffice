@@ -226,9 +226,7 @@ export const FleetRevenueChart = () => {
       }}
     >
       {/* Header */}
-      <RowStack
-        sx={{ justifyContent: 'space-between', marginBottom: '4px' }}
-      >
+      <RowStack sx={{ justifyContent: 'space-between', marginBottom: '4px' }}>
         <RowStack spacing={'8px'}>
           <Typography
             sx={{
@@ -265,7 +263,10 @@ export const FleetRevenueChart = () => {
       </Typography>
 
       {/* Legend */}
-      <RowStack spacing={'16px'} sx={{ marginBottom: '16px', flexWrap: 'wrap' }}>
+      <RowStack
+        spacing={'16px'}
+        sx={{ marginBottom: '16px', flexWrap: 'wrap' }}
+      >
         {fleetConfig.map((fleet) => (
           <RowStack key={fleet.key} spacing={'6px'}>
             <Box
@@ -376,16 +377,8 @@ export const FleetRevenueChart = () => {
                 x2="0"
                 y2="1"
               >
-                <stop
-                  offset="5%"
-                  stopColor={fleet.color}
-                  stopOpacity={0.18}
-                />
-                <stop
-                  offset="95%"
-                  stopColor={fleet.color}
-                  stopOpacity={0}
-                />
+                <stop offset="5%" stopColor={fleet.color} stopOpacity={0.18} />
+                <stop offset="95%" stopColor={fleet.color} stopOpacity={0} />
               </linearGradient>
             ))}
           </defs>

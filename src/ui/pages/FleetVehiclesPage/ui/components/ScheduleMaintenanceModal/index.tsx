@@ -1,11 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import {
-  Box,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, IconButton, Stack, TextField, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
@@ -255,9 +249,7 @@ export const ScheduleMaintenanceModal = ({
               alignItems: 'center',
               justifyContent: 'center',
               height: '41px',
-              background: isFormValid
-                ? '#2F6FED'
-                : 'rgba(47, 111, 237, 0.5)',
+              background: isFormValid ? '#2F6FED' : 'rgba(47, 111, 237, 0.5)',
               borderRadius: '10px',
               cursor: isFormValid ? 'pointer' : 'default',
               transition: 'all 0.15s ease',

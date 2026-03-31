@@ -1,17 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { alpha, Box, Chip, Grid, IconButton, Stack, Typography } from '@mui/material';
+import {
+  alpha,
+  Box,
+  Chip,
+  Grid,
+  IconButton,
+  Stack,
+  Typography,
+} from '@mui/material';
 import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import {
-  DashboardTitleAndDesc,
-  RowStack,
-} from '../../modules/components';
+import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
 import { pxToRem } from '../../../common';
 import {
   IssueStatCard,
@@ -51,12 +56,8 @@ const statusIcons: Record<DisputeStatus, React.ReactNode> = {
   'Under Review': (
     <ErrorOutlineOutlinedIcon sx={{ fontSize: 13, color: '#D97706' }} />
   ),
-  Approved: (
-    <CheckCircleOutlineIcon sx={{ fontSize: 13, color: '#059669' }} />
-  ),
-  Rejected: (
-    <CancelOutlinedIcon sx={{ fontSize: 13, color: '#EF4444' }} />
-  ),
+  Approved: <CheckCircleOutlineIcon sx={{ fontSize: 13, color: '#059669' }} />,
+  Rejected: <CancelOutlinedIcon sx={{ fontSize: 13, color: '#EF4444' }} />,
 };
 
 const issueTypeColors: Record<IssueType, { bg: string; color: string }> = {
@@ -210,8 +211,7 @@ export const TripIssueResolutionPage = () => {
                     <RowStack spacing={'8px'}>
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 700,
                           fontSize: pxToRem(13.5),
                           color: '#111827',
@@ -237,9 +237,7 @@ export const TripIssueResolutionPage = () => {
 
                       {/* Status Chip */}
                       <Chip
-                        icon={
-                          statusIcons[dispute.status] as React.ReactElement
-                        }
+                        icon={statusIcons[dispute.status] as React.ReactElement}
                         label={dispute.status}
                         size="small"
                         sx={{
@@ -262,8 +260,7 @@ export const TripIssueResolutionPage = () => {
                     {/* Row 2: User details */}
                     <Typography
                       sx={{
-                        fontFamily: (theme) =>
-                          theme.typography.fontFamily,
+                        fontFamily: (theme) => theme.typography.fontFamily,
                         fontWeight: 400,
                         fontSize: pxToRem(13),
                         color: '#6B7280',
@@ -272,8 +269,7 @@ export const TripIssueResolutionPage = () => {
                       <Typography
                         component="span"
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 700,
                           fontSize: pxToRem(13),
                           color: '#374151',
@@ -285,8 +281,7 @@ export const TripIssueResolutionPage = () => {
                       <Typography
                         component="span"
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 700,
                           fontSize: pxToRem(13),
                           color: '#374151',
@@ -298,8 +293,7 @@ export const TripIssueResolutionPage = () => {
                       <Typography
                         component="span"
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 700,
                           fontSize: pxToRem(13),
                           color: '#374151',
@@ -312,8 +306,7 @@ export const TripIssueResolutionPage = () => {
                     {/* Row 3: Date */}
                     <Typography
                       sx={{
-                        fontFamily: (theme) =>
-                          theme.typography.fontFamily,
+                        fontFamily: (theme) => theme.typography.fontFamily,
                         fontWeight: 400,
                         fontSize: pxToRem(12),
                         color: '#9CA3AF',

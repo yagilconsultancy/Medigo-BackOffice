@@ -200,7 +200,11 @@ export const RideTypeCard = ({
       {/* Pricing Row */}
       <RowStack
         divider={
-          <Divider orientation="vertical" flexItem sx={{ borderColor: '#F0F4F8' }} />
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{ borderColor: '#F0F4F8' }}
+          />
         }
         sx={{
           borderTop: '0.67px solid #F0F4F8',

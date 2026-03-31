@@ -1,7 +1,7 @@
-import { Player } from "@lottiefiles/react-lottie-player";
-import { Stack, Typography } from "@mui/material";
-import React from "react";
-import { pxToRem } from "../../../../common";
+import { Player } from '@lottiefiles/react-lottie-player';
+import { Stack, Typography } from '@mui/material';
+import React from 'react';
+import { pxToRem } from '../../../../common';
 
 export type EmptyStateProps = {
   emptyState?: React.ReactNode;
@@ -11,17 +11,17 @@ export type EmptyStateProps = {
 
 export const EmptyState = ({
   emptyState,
-  animationSrc = "https://lottie.host/4b03149f-0a35-4d5e-bf54-0b906915ff84/tSLey7MBpp.json",
+  animationSrc = 'https://lottie.host/4b03149f-0a35-4d5e-bf54-0b906915ff84/tSLey7MBpp.json',
   showAnimation = true,
 }: EmptyStateProps) => {
   return (
     <Stack
       spacing={3}
       sx={{
-        alignItems: "center",
-        justifyContent: "center",
-        maxWidth: "100%",
-        height: "100%",
+        alignItems: 'center',
+        justifyContent: 'center',
+        maxWidth: '100%',
+        height: '100%',
         py: 4,
       }}
     >
@@ -32,10 +32,10 @@ export const EmptyState = ({
           src={animationSrc}
           speed={1.5}
           style={{
-            height: "200px",
-            width: "200px",
-            maxWidth: "100%",
-            maxHeight: "100%",
+            height: '200px',
+            width: '200px',
+            maxWidth: '100%',
+            maxHeight: '100%',
           }}
         />
       )}
@@ -45,10 +45,10 @@ export const EmptyState = ({
       ) : (
         <Typography
           sx={{
-            color: "text.primary",
+            color: 'text.primary',
             fontSize: pxToRem(12),
             fontWeight: 300,
-            textAlign: "center",
+            textAlign: 'center',
           }}
         >
           No data to display

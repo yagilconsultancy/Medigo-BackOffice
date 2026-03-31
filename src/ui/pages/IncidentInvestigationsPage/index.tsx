@@ -78,8 +78,7 @@ const casesData: CaseRow[] = [
     openedDate: 'Mar 8, 2026',
     daysAgo: '1d ago',
     progress: 40,
-    description:
-      'Interviewing rider witness. GPS data review pending.',
+    description: 'Interviewing rider witness. GPS data review pending.',
   },
   {
     id: '2',
@@ -166,8 +165,7 @@ const casesData: CaseRow[] = [
     openedDate: 'Feb 18, 2026',
     daysAgo: '19d ago',
     progress: 80,
-    description:
-      'Investigation complete. Disciplinary action under review.',
+    description: 'Investigation complete. Disciplinary action under review.',
   },
   {
     id: '8',
@@ -240,33 +238,25 @@ export const IncidentInvestigationsPage = () => {
     {
       value: '11',
       label: 'Active Investigations',
-      icon: (
-        <SearchOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-      ),
+      icon: <SearchOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
       iconBg: '#EBF2FF',
     },
     {
       value: '8',
       label: 'Assigned',
-      icon: (
-        <PersonOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />
-      ),
+      icon: <PersonOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
     {
       value: '3',
       label: 'Unassigned',
-      icon: (
-        <PersonOffOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
-      ),
+      icon: <PersonOffOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
       iconBg: '#FEF2F2',
     },
     {
       value: '4.2d',
       label: 'Avg. Duration',
-      icon: (
-        <TimerOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
-      ),
+      icon: <TimerOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
       iconBg: '#FFFBEB',
     },
   ];
@@ -612,8 +602,7 @@ export const IncidentInvestigationsPage = () => {
                       {/* Details Row */}
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 400,
                           fontSize: pxToRem(12.5),
                           color: '#9CA3AF',
@@ -624,8 +613,7 @@ export const IncidentInvestigationsPage = () => {
                         <Typography
                           component="span"
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 600,
                             fontSize: pxToRem(12.5),
                             color: '#374151',
@@ -643,8 +631,7 @@ export const IncidentInvestigationsPage = () => {
                         <Typography
                           component="span"
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 600,
                             fontSize: pxToRem(12.5),
                             color: isUnassigned ? '#EF4444' : '#374151',
@@ -662,8 +649,7 @@ export const IncidentInvestigationsPage = () => {
                         <Typography
                           component="span"
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 400,
                             fontSize: pxToRem(12),
                             color: '#B3B9C2',
@@ -692,8 +678,7 @@ export const IncidentInvestigationsPage = () => {
                         </Box>
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 500,
                             fontSize: pxToRem(11.5),
                             color: '#6B7280',

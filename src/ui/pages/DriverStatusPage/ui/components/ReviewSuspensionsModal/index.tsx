@@ -49,8 +49,7 @@ const suspendedDriversData: SuspendedDriverInfo[] = [
     reason: 'Safety Policy Violation',
     since: 'Mar 5, 2026',
     suspendedBy: 'Admin · Sarah O.',
-    notes:
-      'Reported for aggressive driving by two passengers on Mar 4.',
+    notes: 'Reported for aggressive driving by two passengers on Mar 4.',
   },
   {
     id: '2',
@@ -62,8 +61,7 @@ const suspendedDriversData: SuspendedDriverInfo[] = [
     reason: 'Document Non-Compliance',
     since: 'Feb 28, 2026',
     suspendedBy: 'System · Auto-flag',
-    notes:
-      'Vehicle insurance expired Feb 20 and was not renewed in time.',
+    notes: 'Vehicle insurance expired Feb 20 and was not renewed in time.',
   },
 ];
 
@@ -132,9 +130,7 @@ export const ReviewSuspensionsModal = ({
                 justifyContent: 'center',
               }}
             >
-              <ShieldOutlinedIcon
-                sx={{ fontSize: 18, color: '#EF4444' }}
-              />
+              <ShieldOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
             </Box>
             <Stack spacing={'1px'}>
               <Typography
@@ -210,9 +206,7 @@ export const ReviewSuspensionsModal = ({
                   justifyContent: 'center',
                 }}
               >
-                <TaskAltOutlinedIcon
-                  sx={{ fontSize: 26, color: '#059669' }}
-                />
+                <TaskAltOutlinedIcon sx={{ fontSize: 26, color: '#059669' }} />
               </Box>
               <Typography
                 sx={{
@@ -315,9 +309,7 @@ const SuspendedDriverCard = ({
   const infoRows = [
     {
       icon: (
-        <ReportProblemOutlinedIcon
-          sx={{ fontSize: 13, color: '#9CA3AF' }}
-        />
+        <ReportProblemOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
       ),
       label: 'REASON',
       value: driver.reason,
@@ -325,28 +317,20 @@ const SuspendedDriverCard = ({
     },
     {
       icon: (
-        <CalendarTodayOutlinedIcon
-          sx={{ fontSize: 13, color: '#9CA3AF' }}
-        />
+        <CalendarTodayOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
       ),
       label: 'SINCE',
       value: driver.since,
       valueColor: '#374151',
     },
     {
-      icon: (
-        <PersonOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
-      ),
+      icon: <PersonOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />,
       label: 'SUSPENDED BY',
       value: driver.suspendedBy,
       valueColor: '#374151',
     },
     {
-      icon: (
-        <ApartmentOutlinedIcon
-          sx={{ fontSize: 13, color: '#9CA3AF' }}
-        />
-      ),
+      icon: <ApartmentOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />,
       label: 'FLEET',
       value: driver.fleet,
       valueColor: '#374151',
@@ -527,9 +511,7 @@ const SuspendedDriverCard = ({
               '&:hover': { opacity: 0.8 },
             }}
           >
-            <CheckCircleOutlineIcon
-              sx={{ fontSize: 13, color: '#059669' }}
-            />
+            <CheckCircleOutlineIcon sx={{ fontSize: 13, color: '#059669' }} />
             <Typography
               sx={{
                 fontFamily: 'Inter, sans-serif',
@@ -559,9 +541,7 @@ const SuspendedDriverCard = ({
               '&:hover': { opacity: 0.8 },
             }}
           >
-            <BlockOutlinedIcon
-              sx={{ fontSize: 13, color: '#374151' }}
-            />
+            <BlockOutlinedIcon sx={{ fontSize: 13, color: '#374151' }} />
             <Typography
               sx={{
                 fontFamily: 'Inter, sans-serif',

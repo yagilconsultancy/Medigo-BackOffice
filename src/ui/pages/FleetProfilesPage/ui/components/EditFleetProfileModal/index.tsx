@@ -55,19 +55,15 @@ export const EditFleetProfileModal = ({
   }, [profile]);
 
   const handleChange = useCallback(
-    (field: keyof typeof form) =>
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        setForm((prev) => ({ ...prev, [field]: e.target.value }));
-      },
-    []
-  );
-
-  const toggleDocument = useCallback(
-    (key: keyof typeof documents) => {
-      setDocuments((prev) => ({ ...prev, [key]: !prev[key] }));
+    (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setForm((prev) => ({ ...prev, [field]: e.target.value }));
     },
     []
   );
+
+  const toggleDocument = useCallback((key: keyof typeof documents) => {
+    setDocuments((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   const isFormValid = useMemo(
     () =>
@@ -157,9 +153,7 @@ export const EditFleetProfileModal = ({
             value={form.companyName}
             onChange={handleChange('companyName')}
             icon={
-              <BusinessOutlinedIcon
-                sx={{ fontSize: 13, color: '#9CA3AF' }}
-              />
+              <BusinessOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
             }
           />
           <FormField
@@ -167,33 +161,21 @@ export const EditFleetProfileModal = ({
             placeholder="e.g. Ryan MacDougall"
             value={form.contactPerson}
             onChange={handleChange('contactPerson')}
-            icon={
-              <PersonOutlineIcon
-                sx={{ fontSize: 13, color: '#9CA3AF' }}
-              />
-            }
+            icon={<PersonOutlineIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />}
           />
           <FormField
             label="Email"
             placeholder="e.g. ryan@medride.ca"
             value={form.email}
             onChange={handleChange('email')}
-            icon={
-              <EmailOutlinedIcon
-                sx={{ fontSize: 13, color: '#9CA3AF' }}
-              />
-            }
+            icon={<EmailOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />}
           />
           <FormField
             label="Phone"
             placeholder="e.g. +1 416 555 0101"
             value={form.phone}
             onChange={handleChange('phone')}
-            icon={
-              <PhoneOutlinedIcon
-                sx={{ fontSize: 13, color: '#9CA3AF' }}
-              />
-            }
+            icon={<PhoneOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />}
           />
           <FormField
             label="City / State"
@@ -201,9 +183,7 @@ export const EditFleetProfileModal = ({
             value={form.city}
             onChange={handleChange('city')}
             icon={
-              <LocationOnOutlinedIcon
-                sx={{ fontSize: 13, color: '#9CA3AF' }}
-              />
+              <LocationOnOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
             }
           />
 
@@ -401,9 +381,7 @@ const DocumentCheckbox = ({
         flexShrink: 0,
       }}
     >
-      {checked && (
-        <CheckIcon sx={{ fontSize: 10, color: '#FFFFFF' }} />
-      )}
+      {checked && <CheckIcon sx={{ fontSize: 10, color: '#FFFFFF' }} />}
     </Box>
     <Typography
       sx={{

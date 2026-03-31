@@ -253,8 +253,7 @@ export const FleetApplicationsPage = () => {
                   fontFamily: (theme) => theme.typography.fontFamily,
                   fontWeight: 600,
                   fontSize: pxToRem(12.5),
-                  color:
-                    activeTab === tab.status ? '#FFFFFF' : '#6B7280',
+                  color: activeTab === tab.status ? '#FFFFFF' : '#6B7280',
                   background:
                     activeTab === tab.status ? '#2F6FED' : 'transparent',
                   border: `0.67px solid ${activeTab === tab.status ? '#2F6FED' : '#E8ECF0'}`,
@@ -293,9 +292,7 @@ export const FleetApplicationsPage = () => {
               onClick={() => handleCardClick(application)}
               onApprove={() => openActionModal('approve', application)}
               onReject={() => openActionModal('reject', application)}
-              onRequestDocs={() =>
-                openActionModal('request-docs', application)
-              }
+              onRequestDocs={() => openActionModal('request-docs', application)}
             />
           ))}
 

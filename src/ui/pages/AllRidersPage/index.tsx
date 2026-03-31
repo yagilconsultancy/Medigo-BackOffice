@@ -1,14 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import {
-  Box,
-  Grid,
-  IconButton,
-  Stack,
-  Typography,
-  alpha,
-} from '@mui/material';
+import { Box, Grid, IconButton, Stack, Typography, alpha } from '@mui/material';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
@@ -214,9 +207,7 @@ export const AllRidersPage = () => {
       value: String(statusCounts.active),
       label: 'Active',
       valueColor: '#10B981',
-      icon: (
-        <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#10B981' }} />
-      ),
+      icon: <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#10B981' }} />,
       iconBg: '#ECFDF5',
     },
     {

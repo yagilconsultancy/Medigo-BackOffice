@@ -39,7 +39,11 @@ const statusConfig: Record<
   Pending: { color: '#D97706', bg: '#FFFBEB', dotColor: '#F59E0B' },
   Approved: { color: '#059669', bg: '#ECFDF5', dotColor: '#10B981' },
   Rejected: { color: '#EF4444', bg: '#FEF2F2', dotColor: '#EF4444' },
-  'More Info Required': { color: '#2F6FED', bg: '#EBF2FF', dotColor: '#2F6FED' },
+  'More Info Required': {
+    color: '#2F6FED',
+    bg: '#EBF2FF',
+    dotColor: '#2F6FED',
+  },
 };
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -91,9 +95,7 @@ export const ApplicationCard = ({
               flexShrink: 0,
             }}
           >
-            <DescriptionOutlinedIcon
-              sx={{ fontSize: 18, color: '#2F6FED' }}
-            />
+            <DescriptionOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
           </Box>
           <Stack spacing={'2px'}>
             <RowStack spacing={'10px'} alignItems="center">
@@ -213,9 +215,7 @@ export const ApplicationCard = ({
         <RowStack spacing={'4px'}>
           <ActionIcon
             icon={
-              <VisibilityOutlinedIcon
-                sx={{ fontSize: 15, color: '#9CA3AF' }}
-              />
+              <VisibilityOutlinedIcon sx={{ fontSize: 15, color: '#9CA3AF' }} />
             }
             onClick={onClick}
           />
@@ -235,9 +235,7 @@ export const ApplicationCard = ({
           {application.status !== 'Rejected' && (
             <ActionIcon
               icon={
-                <CancelOutlinedIcon
-                  sx={{ fontSize: 15, color: '#9CA3AF' }}
-                />
+                <CancelOutlinedIcon sx={{ fontSize: 15, color: '#9CA3AF' }} />
               }
               onClick={(e) => {
                 e.stopPropagation();
@@ -303,9 +301,7 @@ export const ApplicationCard = ({
               padding: '5px 10px',
             }}
           >
-            <DescriptionOutlinedIcon
-              sx={{ fontSize: 12, color: '#2F6FED' }}
-            />
+            <DescriptionOutlinedIcon sx={{ fontSize: 12, color: '#2F6FED' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

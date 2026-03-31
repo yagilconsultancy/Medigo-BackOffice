@@ -342,9 +342,7 @@ export const AllDriversPage = () => {
       label: 'Available Now',
       valueColor: '#10B981',
       iconBg: '#ECFDF5',
-      icon: (
-        <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#10B981' }} />
-      ),
+      icon: <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#10B981' }} />,
     },
     {
       value: '62',

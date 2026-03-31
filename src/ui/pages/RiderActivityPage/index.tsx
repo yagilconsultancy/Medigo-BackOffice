@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Avatar,
-  Box,
-  LinearProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, LinearProgress, Stack, Typography } from '@mui/material';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined';
 import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined';
@@ -15,10 +9,7 @@ import TrendingDownOutlinedIcon from '@mui/icons-material/TrendingDownOutlined';
 import TrendingFlatOutlinedIcon from '@mui/icons-material/TrendingFlatOutlined';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import {
-  DashboardTitleAndDesc,
-  RowStack,
-} from '../../modules/components';
+import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
 import { pxToRem } from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────

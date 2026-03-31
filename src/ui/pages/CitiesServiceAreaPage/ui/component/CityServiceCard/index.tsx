@@ -21,13 +21,7 @@ type CityServiceCardProps = {
 
 // ─── Stat Mini Card ─────────────────────────────────────────────────────────
 
-const StatMiniCard = ({
-  value,
-  label,
-}: {
-  value: string;
-  label: string;
-}) => (
+const StatMiniCard = ({ value, label }: { value: string; label: string }) => (
   <Stack
     alignItems={'center'}
     justifyContent={'center'}
@@ -85,16 +79,11 @@ export const CityServiceCard = ({
         border: '0.67px solid #F0F4F8',
         borderRadius: '16px',
         padding: '20px',
-        boxShadow: isActive
-          ? '0px 1px 4px 0px rgba(0, 0, 0, 0.06)'
-          : 'none',
+        boxShadow: isActive ? '0px 1px 4px 0px rgba(0, 0, 0, 0.06)' : 'none',
       }}
     >
       {/* Top Row: City Info + Controls */}
-      <RowStack
-        justifyContent={'space-between'}
-        sx={{ width: '100%' }}
-      >
+      <RowStack justifyContent={'space-between'} sx={{ width: '100%' }}>
         {/* City Info */}
         <RowStack spacing={'12px'}>
           <Box
@@ -109,9 +98,7 @@ export const CityServiceCard = ({
               flexShrink: 0,
             }}
           >
-            <LocationOnOutlinedIcon
-              sx={{ fontSize: 20, color: '#2F6FED' }}
-            />
+            <LocationOnOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
           </Box>
           <Stack spacing={'2px'}>
             <Typography

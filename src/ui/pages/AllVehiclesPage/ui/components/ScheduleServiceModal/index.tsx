@@ -79,7 +79,7 @@ export const ScheduleServiceModal = ({
       open={open}
       setOpen={() => onClose()}
       label="schedule-service-modal"
-      padding='0px'
+      padding="0px"
       sx={{
         '& .MuiDialog-paper': {
           width: '460px',
@@ -89,7 +89,7 @@ export const ScheduleServiceModal = ({
         },
       }}
     >
-      <Stack 
+      <Stack
         spacing={'20px'}
         sx={{
           padding: '24px',
@@ -162,9 +162,7 @@ export const ScheduleServiceModal = ({
             padding: '10px 12px',
           }}
         >
-          <WarningAmberOutlinedIcon
-            sx={{ fontSize: 14, color: '#D97706' }}
-          />
+          <WarningAmberOutlinedIcon sx={{ fontSize: 14, color: '#D97706' }} />
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
@@ -354,9 +352,7 @@ export const ScheduleServiceModal = ({
               alignItems: 'center',
               justifyContent: 'center',
               height: '41px',
-              background: isFormValid
-                ? '#2F6FED'
-                : 'rgba(47, 111, 237, 0.5)',
+              background: isFormValid ? '#2F6FED' : 'rgba(47, 111, 237, 0.5)',
               borderRadius: '10px',
               cursor: isFormValid ? 'pointer' : 'default',
               transition: 'all 0.15s ease',

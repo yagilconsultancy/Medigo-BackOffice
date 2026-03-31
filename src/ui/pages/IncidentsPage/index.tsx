@@ -63,15 +63,13 @@ const categoryColors: Record<
   },
 };
 
-const priorityColors: Record<
-  IncidentPriority,
-  { color: string; bg: string }
-> = {
-  Low: { color: '#22C55E', bg: '#F0FDF4' },
-  Medium: { color: '#D97706', bg: '#FFFBEB' },
-  High: { color: '#EF4444', bg: '#FEF2F2' },
-  Critical: { color: '#DB2777', bg: '#FDF2F8' },
-};
+const priorityColors: Record<IncidentPriority, { color: string; bg: string }> =
+  {
+    Low: { color: '#22C55E', bg: '#F0FDF4' },
+    Medium: { color: '#D97706', bg: '#FFFBEB' },
+    High: { color: '#EF4444', bg: '#FEF2F2' },
+    Critical: { color: '#DB2777', bg: '#FDF2F8' },
+  };
 
 const statusColors: Record<IncidentStatus, { color: string; bg: string }> = {
   'Under Investigation': { color: '#D97706', bg: '#FFFBEB' },
@@ -101,7 +99,7 @@ const incidentsData: IncidentRow[] = [
     priority: 'High',
     status: 'Disciplinary Action',
     subject: 'Gordon MacPherson',
-    filedBy: 'Ryan O\'Brien',
+    filedBy: "Ryan O'Brien",
     filerRole: 'Driver',
     date: 'Mar 6, 2026',
   },
@@ -122,8 +120,8 @@ const incidentsData: IncidentRow[] = [
     category: 'Driver Complaint',
     priority: 'Low',
     status: 'Resolved',
-    subject: 'Ryan O\'Brien',
-    filedBy: 'Margaret O\'Brien',
+    subject: "Ryan O'Brien",
+    filedBy: "Margaret O'Brien",
     filerRole: 'Rider',
     date: 'Mar 3, 2026',
   },
@@ -544,8 +542,7 @@ export const IncidentsPage = () => {
                         {/* Bottom line: Details */}
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 400,
                             fontSize: pxToRem(13),
                             color: '#374151',

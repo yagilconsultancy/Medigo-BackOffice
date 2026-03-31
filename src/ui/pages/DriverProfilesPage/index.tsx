@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Avatar,
-  Box,
-  Grid,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Grid, Stack, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
@@ -15,10 +9,7 @@ import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined';
 import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import {
-  DashboardTitleAndDesc,
-  RowStack,
-} from '../../modules/components';
+import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
 import { SuspendDriverModal } from './ui/components';
 import { pxToRem } from '../../../common';
 import { useRouter } from 'next/navigation';
@@ -139,7 +130,11 @@ const driversData: DriverProfile[] = [
     license: 'DL-IL-883265',
     rating: 4.7,
     trips: 218,
-    capabilities: ['Wheelchair Assistance', 'Medical Escort', 'Stretcher Transport'],
+    capabilities: [
+      'Wheelchair Assistance',
+      'Medical Escort',
+      'Stretcher Transport',
+    ],
     headerTint: 'rgba(16, 185, 129, 0.05)',
   },
   {
@@ -356,9 +351,7 @@ const DriverCard = ({
             gap: '16px',
           }}
         >
-          <ApartmentOutlinedIcon
-            sx={{ fontSize: 16, color: '#9CA3AF' }}
-          />
+          <ApartmentOutlinedIcon sx={{ fontSize: 16, color: '#9CA3AF' }} />
           <Stack spacing={0} sx={{ flex: 1 }}>
             <Typography
               sx={{
@@ -393,9 +386,7 @@ const DriverCard = ({
             }}
           />
 
-          <DirectionsCarOutlinedIcon
-            sx={{ fontSize: 16, color: '#9CA3AF' }}
-          />
+          <DirectionsCarOutlinedIcon sx={{ fontSize: 16, color: '#9CA3AF' }} />
           <Stack spacing={0} sx={{ flex: 1 }}>
             <Typography
               sx={{
@@ -602,9 +593,7 @@ const DriverCard = ({
               '&:hover': { opacity: 0.8 },
             }}
           >
-            <DescriptionOutlinedIcon
-              sx={{ fontSize: 13, color: '#374151' }}
-            />
+            <DescriptionOutlinedIcon sx={{ fontSize: 13, color: '#374151' }} />
             <Typography
               sx={{
                 fontFamily: 'Inter, sans-serif',

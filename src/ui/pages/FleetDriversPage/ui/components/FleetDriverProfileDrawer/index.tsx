@@ -1,4 +1,13 @@
-import { Avatar, Box, Chip, Drawer, IconButton, Rating, Stack, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Chip,
+  Drawer,
+  IconButton,
+  Rating,
+  Stack,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import StarIcon from '@mui/icons-material/Star';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -153,9 +162,7 @@ export const FleetDriverProfileDrawer = ({
           <RowStack spacing={'8px'} sx={{ marginTop: '12px' }}>
             <Chip
               icon={
-                <StarIcon
-                  sx={{ fontSize: 11, color: '#FCD34D !important' }}
-                />
+                <StarIcon sx={{ fontSize: 11, color: '#FCD34D !important' }} />
               }
               label={driver.rating.toFixed(1)}
               size="small"
@@ -279,17 +286,13 @@ export const FleetDriverProfileDrawer = ({
             <SectionLabel>CONTACT</SectionLabel>
             <InfoPill
               icon={
-                <PhoneOutlinedIcon
-                  sx={{ fontSize: 14, color: '#9CA3AF' }}
-                />
+                <PhoneOutlinedIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />
               }
               value={driver.phone}
             />
             <InfoPill
               icon={
-                <EmailOutlinedIcon
-                  sx={{ fontSize: 14, color: '#9CA3AF' }}
-                />
+                <EmailOutlinedIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />
               }
               value={driver.email}
             />
@@ -403,9 +406,7 @@ export const FleetDriverProfileDrawer = ({
               '&:hover': { opacity: 0.85 },
             }}
           >
-            <ChatBubbleOutlineIcon
-              sx={{ fontSize: 13, color: '#2F6FED' }}
-            />
+            <ChatBubbleOutlineIcon sx={{ fontSize: 13, color: '#2F6FED' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
@@ -434,9 +435,7 @@ export const FleetDriverProfileDrawer = ({
               '&:hover': { opacity: 0.85 },
             }}
           >
-            <PersonRemoveOutlinedIcon
-              sx={{ fontSize: 13, color: '#DC2626' }}
-            />
+            <PersonRemoveOutlinedIcon sx={{ fontSize: 13, color: '#DC2626' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

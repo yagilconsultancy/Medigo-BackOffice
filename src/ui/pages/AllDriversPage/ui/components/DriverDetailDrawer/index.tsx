@@ -109,7 +109,7 @@ const mockTrips: TripRecord[] = [
     status: 'Completed',
     rider: 'Robert Davis',
     pickup: '789 Pine Street, Queens, NY',
-    dropoff: 'St. Luke\'s Hospital, Manhattan',
+    dropoff: "St. Luke's Hospital, Manhattan",
     date: 'Mar 8',
   },
   {
@@ -148,45 +148,35 @@ const mockDocs: DocRecord[] = [
     status: 'Verified',
     statusColor: '#059669',
     statusBg: '#ECFDF5',
-    icon: (
-      <DescriptionOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />
-    ),
+    icon: <DescriptionOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />,
   },
   {
     name: 'Background Check',
     status: 'Verified',
     statusColor: '#059669',
     statusBg: '#ECFDF5',
-    icon: (
-      <VerifiedOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />
-    ),
+    icon: <VerifiedOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />,
   },
   {
     name: 'Vehicle Insurance',
     status: 'Valid',
     statusColor: '#059669',
     statusBg: '#ECFDF5',
-    icon: (
-      <GppGoodOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />
-    ),
+    icon: <GppGoodOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />,
   },
   {
     name: 'Medical Transport Cert.',
     status: 'Verified',
     statusColor: '#059669',
     statusBg: '#ECFDF5',
-    icon: (
-      <LocalHospitalOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />
-    ),
+    icon: <LocalHospitalOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />,
   },
   {
     name: 'Platform Agreement',
     status: 'Signed',
     statusColor: '#059669',
     statusBg: '#ECFDF5',
-    icon: (
-      <HandshakeOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />
-    ),
+    icon: <HandshakeOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />,
   },
 ];
 
@@ -287,245 +277,245 @@ export const DriverDetailDrawer = ({
 
   return (
     <>
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
-      sx={{
-        '& .MuiDrawer-paper': {
-          width: '500px',
-          boxShadow: '-4px 0px 48px rgba(0, 0, 0, 0.14)',
-          border: 'none',
-        },
-      }}
-    >
-      <Stack sx={{ height: '100%', overflow: 'auto' }}>
-        {/* ─── Header Section ──────────────────────────────────────── */}
-        <Stack
-          sx={{
-            padding: '24px',
-            borderBottom: '1px solid #E8ECF0',
-            position: 'relative',
-          }}
-        >
-          {/* Close Button */}
-          <IconButton
-            onClick={onClose}
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={onClose}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: '500px',
+            boxShadow: '-4px 0px 48px rgba(0, 0, 0, 0.14)',
+            border: 'none',
+          },
+        }}
+      >
+        <Stack sx={{ height: '100%', overflow: 'auto' }}>
+          {/* ─── Header Section ──────────────────────────────────────── */}
+          <Stack
             sx={{
-              position: 'absolute',
-              top: 16,
-              right: 16,
-              width: 32,
-              height: 32,
-              borderRadius: '8px',
-              background: '#F3F4F6',
-              '&:hover': { background: '#E5E7EB' },
+              padding: '24px',
+              borderBottom: '1px solid #E8ECF0',
+              position: 'relative',
             }}
           >
-            <CloseIcon sx={{ fontSize: 16, color: '#6B7280' }} />
-          </IconButton>
-
-          {/* Avatar + Name + ID */}
-          <RowStack spacing={'16px'}>
-            <Avatar
-              src={driver.avatar || undefined}
-              alt={driver.name}
+            {/* Close Button */}
+            <IconButton
+              onClick={onClose}
               sx={{
-                width: 56,
-                height: 56,
-                fontSize: pxToRem(18),
-                fontWeight: 700,
-                background: '#EBF2FF',
-                color: '#2F6FED',
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                width: 32,
+                height: 32,
+                borderRadius: '8px',
+                background: '#F3F4F6',
+                '&:hover': { background: '#E5E7EB' },
               }}
             >
-              {initials}
-            </Avatar>
-            <Stack spacing={0}>
-              <Typography
+              <CloseIcon sx={{ fontSize: 16, color: '#6B7280' }} />
+            </IconButton>
+
+            {/* Avatar + Name + ID */}
+            <RowStack spacing={'16px'}>
+              <Avatar
+                src={driver.avatar || undefined}
+                alt={driver.name}
                 sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
+                  width: 56,
+                  height: 56,
+                  fontSize: pxToRem(18),
                   fontWeight: 700,
-                  fontSize: pxToRem(17),
-                  lineHeight: '1.4em',
-                  color: '#111827',
-                }}
-              >
-                {driver.name}
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(12),
-                  lineHeight: '1.5em',
-                  color: '#9CA3AF',
-                }}
-              >
-                {driver.driverId} · Joined {driver.joinedDate}
-              </Typography>
-            </Stack>
-          </RowStack>
-
-          {/* Summary Bar */}
-          <RowStack
-            sx={{
-              marginTop: '16px',
-              background: '#F7F9FB',
-              borderRadius: '14px',
-              padding: '12px 16px',
-              justifyContent: 'space-between',
-            }}
-          >
-            <Stack spacing={0} alignItems={'center'}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(9),
-                  letterSpacing: '0.08em',
-                  color: '#9CA3AF',
-                  textTransform: 'uppercase',
-                }}
-              >
-                FLEET
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(12.5),
-                  color: '#374151',
-                }}
-              >
-                {driver.fleet}
-              </Typography>
-            </Stack>
-            <Box
-              sx={{
-                width: '1px',
-                height: '28px',
-                background: '#E8ECF0',
-              }}
-            />
-            <Stack spacing={0} alignItems={'center'}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(9),
-                  letterSpacing: '0.08em',
-                  color: '#9CA3AF',
-                  textTransform: 'uppercase',
-                }}
-              >
-                VEHICLE
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(12.5),
-                  color: '#374151',
-                }}
-              >
-                {driver.vehicle}
-              </Typography>
-            </Stack>
-            <Box
-              sx={{
-                width: '1px',
-                height: '28px',
-                background: '#E8ECF0',
-              }}
-            />
-            <Chip
-              icon={statusConfig.icon as React.ReactElement}
-              label={driver.status}
-              size="small"
-              sx={{
-                background: statusConfig.bg,
-                color: statusConfig.color,
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 600,
-                fontSize: pxToRem(11.5),
-                height: '26px',
-                borderRadius: '100px',
-                '& .MuiChip-icon': { marginLeft: '6px' },
-              }}
-            />
-          </RowStack>
-        </Stack>
-
-        {/* ─── Tab Bar ─────────────────────────────────────────────── */}
-        <Box sx={{ borderBottom: '1px solid #E8ECF0' }}>
-          <Tabs
-            value={activeTab}
-            onChange={(_, newValue) => setActiveTab(newValue)}
-            sx={{
-              minHeight: '44px',
-              '& .MuiTabs-indicator': {
-                backgroundColor: '#2F6FED',
-                height: '2px',
-              },
-              '& .MuiTab-root': {
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 600,
-                fontSize: pxToRem(13),
-                textTransform: 'none',
-                color: '#9CA3AF',
-                minHeight: '44px',
-                padding: '12px 16px',
-                '&.Mui-selected': {
+                  background: '#EBF2FF',
                   color: '#2F6FED',
+                }}
+              >
+                {initials}
+              </Avatar>
+              <Stack spacing={0}>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 700,
+                    fontSize: pxToRem(17),
+                    lineHeight: '1.4em',
+                    color: '#111827',
+                  }}
+                >
+                  {driver.name}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 400,
+                    fontSize: pxToRem(12),
+                    lineHeight: '1.5em',
+                    color: '#9CA3AF',
+                  }}
+                >
+                  {driver.driverId} · Joined {driver.joinedDate}
+                </Typography>
+              </Stack>
+            </RowStack>
+
+            {/* Summary Bar */}
+            <RowStack
+              sx={{
+                marginTop: '16px',
+                background: '#F7F9FB',
+                borderRadius: '14px',
+                padding: '12px 16px',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Stack spacing={0} alignItems={'center'}>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(9),
+                    letterSpacing: '0.08em',
+                    color: '#9CA3AF',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  FLEET
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(12.5),
+                    color: '#374151',
+                  }}
+                >
+                  {driver.fleet}
+                </Typography>
+              </Stack>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '28px',
+                  background: '#E8ECF0',
+                }}
+              />
+              <Stack spacing={0} alignItems={'center'}>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(9),
+                    letterSpacing: '0.08em',
+                    color: '#9CA3AF',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  VEHICLE
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(12.5),
+                    color: '#374151',
+                  }}
+                >
+                  {driver.vehicle}
+                </Typography>
+              </Stack>
+              <Box
+                sx={{
+                  width: '1px',
+                  height: '28px',
+                  background: '#E8ECF0',
+                }}
+              />
+              <Chip
+                icon={statusConfig.icon as React.ReactElement}
+                label={driver.status}
+                size="small"
+                sx={{
+                  background: statusConfig.bg,
+                  color: statusConfig.color,
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 600,
+                  fontSize: pxToRem(11.5),
+                  height: '26px',
+                  borderRadius: '100px',
+                  '& .MuiChip-icon': { marginLeft: '6px' },
+                }}
+              />
+            </RowStack>
+          </Stack>
+
+          {/* ─── Tab Bar ─────────────────────────────────────────────── */}
+          <Box sx={{ borderBottom: '1px solid #E8ECF0' }}>
+            <Tabs
+              value={activeTab}
+              onChange={(_, newValue) => setActiveTab(newValue)}
+              sx={{
+                minHeight: '44px',
+                '& .MuiTabs-indicator': {
+                  backgroundColor: '#2F6FED',
+                  height: '2px',
                 },
-              },
-            }}
-          >
-            <Tab label="Driver Info" />
-            <Tab label="Documents" />
-            <Tab label="Trips" />
-            <Tab label="Ratings" />
-          </Tabs>
-        </Box>
-
-        {/* ─── Tab Panels ──────────────────────────────────────────── */}
-        <Box sx={{ flex: 1, overflow: 'auto', padding: '24px' }}>
-          {/* Tab 0: Driver Info */}
-          {activeTab === 0 && (
-            <DriverInfoTab
-              driver={driver}
-              showFleetForm={showFleetForm}
-              showVehicleForm={showVehicleForm}
-              selectedFleet={selectedFleet}
-              selectedVehicle={selectedVehicle}
-              onToggleFleetForm={() => {
-                setShowFleetForm(!showFleetForm);
-                setShowVehicleForm(false);
+                '& .MuiTab-root': {
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 600,
+                  fontSize: pxToRem(13),
+                  textTransform: 'none',
+                  color: '#9CA3AF',
+                  minHeight: '44px',
+                  padding: '12px 16px',
+                  '&.Mui-selected': {
+                    color: '#2F6FED',
+                  },
+                },
               }}
-              onToggleVehicleForm={() => {
-                setShowVehicleForm(!showVehicleForm);
-                setShowFleetForm(false);
-              }}
-              onFleetChange={setSelectedFleet}
-              onVehicleChange={setSelectedVehicle}
-              onSaveFleet={handleSaveFleet}
-              onReassignVehicle={handleReassignVehicle}
-              onSuspend={handleSuspend}
-            />
-          )}
+            >
+              <Tab label="Driver Info" />
+              <Tab label="Documents" />
+              <Tab label="Trips" />
+              <Tab label="Ratings" />
+            </Tabs>
+          </Box>
 
-          {/* Tab 1: Documents */}
-          {activeTab === 1 && <DocumentsTab />}
+          {/* ─── Tab Panels ──────────────────────────────────────────── */}
+          <Box sx={{ flex: 1, overflow: 'auto', padding: '24px' }}>
+            {/* Tab 0: Driver Info */}
+            {activeTab === 0 && (
+              <DriverInfoTab
+                driver={driver}
+                showFleetForm={showFleetForm}
+                showVehicleForm={showVehicleForm}
+                selectedFleet={selectedFleet}
+                selectedVehicle={selectedVehicle}
+                onToggleFleetForm={() => {
+                  setShowFleetForm(!showFleetForm);
+                  setShowVehicleForm(false);
+                }}
+                onToggleVehicleForm={() => {
+                  setShowVehicleForm(!showVehicleForm);
+                  setShowFleetForm(false);
+                }}
+                onFleetChange={setSelectedFleet}
+                onVehicleChange={setSelectedVehicle}
+                onSaveFleet={handleSaveFleet}
+                onReassignVehicle={handleReassignVehicle}
+                onSuspend={handleSuspend}
+              />
+            )}
 
-          {/* Tab 2: Trips */}
-          {activeTab === 2 && <TripsTab driver={driver} />}
+            {/* Tab 1: Documents */}
+            {activeTab === 1 && <DocumentsTab />}
 
-          {/* Tab 3: Ratings */}
-          {activeTab === 3 && <RatingsTab driver={driver} />}
-        </Box>
-      </Stack>
-    </Drawer>
+            {/* Tab 2: Trips */}
+            {activeTab === 2 && <TripsTab driver={driver} />}
+
+            {/* Tab 3: Ratings */}
+            {activeTab === 3 && <RatingsTab driver={driver} />}
+          </Box>
+        </Stack>
+      </Drawer>
 
       <AppNotificationSnackbar
         open={snackbar.open}
@@ -605,9 +595,7 @@ const DriverInfoTab = ({
         <InfoCard
           label="DOCS STATUS"
           value={driver.docsStatus}
-          valueColor={
-            driver.docsStatus === 'Complete' ? '#059669' : '#D97706'
-          }
+          valueColor={driver.docsStatus === 'Complete' ? '#059669' : '#D97706'}
         />
       </Box>
     </Stack>
@@ -644,9 +632,7 @@ const DriverInfoTab = ({
 
       {/* Change Fleet Assignment */}
       <ActionButton
-        icon={
-          <SwapHorizIcon sx={{ fontSize: 16, color: '#6B7280' }} />
-        }
+        icon={<SwapHorizIcon sx={{ fontSize: 16, color: '#6B7280' }} />}
         label="Change Fleet Assignment"
         onClick={onToggleFleetForm}
         variant="default"
@@ -667,9 +653,7 @@ const DriverInfoTab = ({
       {/* Reassign Vehicle */}
       <ActionButton
         icon={
-          <DirectionsCarOutlinedIcon
-            sx={{ fontSize: 16, color: '#6B7280' }}
-          />
+          <DirectionsCarOutlinedIcon sx={{ fontSize: 16, color: '#6B7280' }} />
         }
         label="Reassign Vehicle"
         onClick={onToggleVehicleForm}
@@ -690,9 +674,7 @@ const DriverInfoTab = ({
 
       {/* Suspend Driver */}
       <ActionButton
-        icon={
-          <BlockOutlinedIcon sx={{ fontSize: 16, color: '#EF4444' }} />
-        }
+        icon={<BlockOutlinedIcon sx={{ fontSize: 16, color: '#EF4444' }} />}
         label="Suspend Driver"
         onClick={onSuspend}
         variant="danger"
@@ -843,9 +825,7 @@ const TripsTab = ({ driver }: { driver: AllDriverRow }) => (
 
         {/* Pickup */}
         <RowStack spacing={'8px'}>
-          <FiberManualRecordIcon
-            sx={{ fontSize: 8, color: '#9CA3AF' }}
-          />
+          <FiberManualRecordIcon sx={{ fontSize: 8, color: '#9CA3AF' }} />
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
@@ -860,9 +840,7 @@ const TripsTab = ({ driver }: { driver: AllDriverRow }) => (
 
         {/* Dropoff */}
         <RowStack spacing={'8px'}>
-          <FiberManualRecordIcon
-            sx={{ fontSize: 8, color: '#2F6FED' }}
-          />
+          <FiberManualRecordIcon sx={{ fontSize: 8, color: '#2F6FED' }} />
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,

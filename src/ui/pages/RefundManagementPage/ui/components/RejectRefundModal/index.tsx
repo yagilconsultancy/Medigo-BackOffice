@@ -59,10 +59,7 @@ export const RejectRefundModal = ({
             borderBottom: '0.67px solid #FECACA',
           }}
         >
-          <RowStack
-            justifyContent={'space-between'}
-            alignItems={'flex-start'}
-          >
+          <RowStack justifyContent={'space-between'} alignItems={'flex-start'}>
             <RowStack spacing={'12px'}>
               <CancelOutlinedIcon sx={{ fontSize: 24, color: '#EF4444' }} />
               <Stack spacing={'2px'}>
@@ -156,10 +153,7 @@ export const RejectRefundModal = ({
               }}
             >
               Decision Note
-              <Typography
-                component="span"
-                sx={{ color: '#EF4444', ml: '2px' }}
-              >
+              <Typography component="span" sx={{ color: '#EF4444', ml: '2px' }}>
                 *
               </Typography>
             </Typography>

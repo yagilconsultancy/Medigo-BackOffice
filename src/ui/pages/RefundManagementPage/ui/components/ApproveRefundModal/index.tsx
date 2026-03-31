@@ -60,14 +60,9 @@ export const ApproveRefundModal = ({
             borderBottom: '0.67px solid #D1FAE5',
           }}
         >
-          <RowStack
-            justifyContent={'space-between'}
-            alignItems={'flex-start'}
-          >
+          <RowStack justifyContent={'space-between'} alignItems={'flex-start'}>
             <RowStack spacing={'12px'}>
-              <CheckCircleOutlineIcon
-                sx={{ fontSize: 24, color: '#059669' }}
-              />
+              <CheckCircleOutlineIcon sx={{ fontSize: 24, color: '#059669' }} />
               <Stack spacing={'2px'}>
                 <Typography
                   sx={{
@@ -159,10 +154,7 @@ export const ApproveRefundModal = ({
               }}
             >
               Decision Note
-              <Typography
-                component="span"
-                sx={{ color: '#EF4444', ml: '2px' }}
-              >
+              <Typography component="span" sx={{ color: '#EF4444', ml: '2px' }}>
                 *
               </Typography>
             </Typography>
@@ -214,8 +206,7 @@ export const ApproveRefundModal = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   borderRadius: '10px',
-                  background:
-                    refundType === 'full' ? '#ECFDF5' : '#F7F9FB',
+                  background: refundType === 'full' ? '#ECFDF5' : '#F7F9FB',
                   border:
                     refundType === 'full'
                       ? '0.667px solid #059669'
@@ -229,8 +220,7 @@ export const ApproveRefundModal = ({
                     fontFamily: (theme) => theme.typography.fontFamily,
                     fontWeight: 600,
                     fontSize: pxToRem(13),
-                    color:
-                      refundType === 'full' ? '#059669' : '#6B7280',
+                    color: refundType === 'full' ? '#059669' : '#6B7280',
                   }}
                 >
                   Full Refund ({data.amount})
@@ -245,8 +235,7 @@ export const ApproveRefundModal = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   borderRadius: '10px',
-                  background:
-                    refundType === 'partial' ? '#ECFDF5' : '#F7F9FB',
+                  background: refundType === 'partial' ? '#ECFDF5' : '#F7F9FB',
                   border:
                     refundType === 'partial'
                       ? '0.667px solid #059669'
@@ -260,8 +249,7 @@ export const ApproveRefundModal = ({
                     fontFamily: (theme) => theme.typography.fontFamily,
                     fontWeight: 600,
                     fontSize: pxToRem(13),
-                    color:
-                      refundType === 'partial' ? '#059669' : '#6B7280',
+                    color: refundType === 'partial' ? '#059669' : '#6B7280',
                   }}
                 >
                   Partial Refund

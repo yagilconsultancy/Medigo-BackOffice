@@ -134,8 +134,7 @@ const roles: RoleData[] = [
   {
     id: 'finance-admin',
     roleName: 'Finance Admin',
-    description:
-      'Access to payments, invoices, billing, and financial reports',
+    description: 'Access to payments, invoices, billing, and financial reports',
     count: 3,
     activeColor: '#6366F1',
     iconBg: '#EEF2FF',
@@ -180,9 +179,7 @@ const roles: RoleData[] = [
     activeColor: '#F59E0B',
     iconBg: '#FFFBEB',
     headerBg: '#FFFBEB',
-    icon: (
-      <SupportAgentOutlinedIcon sx={{ fontSize: 18, color: '#F59E0B' }} />
-    ),
+    icon: <SupportAgentOutlinedIcon sx={{ fontSize: 18, color: '#F59E0B' }} />,
     iconColor: '#F59E0B',
     admins: [
       {
@@ -277,9 +274,7 @@ export const RolesPermissionsPage = () => {
               cursor: 'pointer',
               background: mainTab === 'roles' ? '#2F6FED' : '#FFFFFF',
               border:
-                mainTab === 'roles'
-                  ? 'none'
-                  : '1px solid rgba(0, 0, 0, 0.05)',
+                mainTab === 'roles' ? 'none' : '1px solid rgba(0, 0, 0, 0.05)',
               transition: 'all 0.2s ease',
             }}
           >

@@ -1,14 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import {
-  Box,
-  Chip,
-  Grid,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Grid, IconButton, Stack, Typography } from '@mui/material';
 import GavelOutlinedIcon from '@mui/icons-material/GavelOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
@@ -263,9 +256,7 @@ export const DisciplinaryActionsPage = () => {
     {
       value: '1',
       label: 'Reinstated',
-      icon: (
-        <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#059669' }} />
-      ),
+      icon: <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
   ];
@@ -625,8 +616,7 @@ export const DisciplinaryActionsPage = () => {
                       {/* Details Row */}
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 400,
                           fontSize: pxToRem(12.5),
                           color: '#9CA3AF',
@@ -636,8 +626,7 @@ export const DisciplinaryActionsPage = () => {
                         <Typography
                           component="span"
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 600,
                             fontSize: pxToRem(12.5),
                             color: '#374151',
@@ -656,8 +645,7 @@ export const DisciplinaryActionsPage = () => {
                         <Typography
                           component="span"
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 500,
                             fontSize: pxToRem(12.5),
                             color: '#374151',
@@ -678,8 +666,7 @@ export const DisciplinaryActionsPage = () => {
                       <RowStack spacing={'16px'}>
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 400,
                             fontSize: pxToRem(12),
                             color: '#9CA3AF',
@@ -706,8 +693,7 @@ export const DisciplinaryActionsPage = () => {
                         </Typography>
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 400,
                             fontSize: pxToRem(12),
                             color: '#9CA3AF',
@@ -812,8 +798,7 @@ export const DisciplinaryActionsPage = () => {
                         background:
                           currentPage === p ? '#2F6FED' : 'transparent',
                         '&:hover': {
-                          background:
-                            currentPage === p ? '#2F6FED' : '#F7F9FB',
+                          background: currentPage === p ? '#2F6FED' : '#F7F9FB',
                         },
                       }}
                     >

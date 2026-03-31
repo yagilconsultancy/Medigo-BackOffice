@@ -69,7 +69,13 @@ const yearlyChartData = [
 const tabConfigs: Record<
   PeriodTab,
   {
-    stats: { icon: React.ReactNode; iconBg: string; value: string; label: string; subtext: string }[];
+    stats: {
+      icon: React.ReactNode;
+      iconBg: string;
+      value: string;
+      label: string;
+      subtext: string;
+    }[];
     chartTitle: string;
     chartSubtitle: string;
     growthRate: string;
@@ -82,7 +88,9 @@ const tabConfigs: Record<
   Daily: {
     stats: [
       {
-        icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+        icon: (
+          <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
+        ),
         iconBg: '#EBF2FF',
         value: '$118,400',
         label: 'Total Revenue',
@@ -96,14 +104,18 @@ const tabConfigs: Record<
         subtext: 'Per period',
       },
       {
-        icon: <CalendarTodayOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />,
+        icon: (
+          <CalendarTodayOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />
+        ),
         iconBg: '#ECFDF5',
         value: 'Friday',
         label: 'Peak Period',
         subtext: 'Highest revenue',
       },
       {
-        icon: <TrendingUpOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
+        icon: (
+          <TrendingUpOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />
+        ),
         iconBg: '#FFFBEB',
         value: '+12.4%',
         label: 'Growth Rate',
@@ -121,7 +133,9 @@ const tabConfigs: Record<
   Monthly: {
     stats: [
       {
-        icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+        icon: (
+          <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
+        ),
         iconBg: '#EBF2FF',
         value: '$284,720',
         label: 'Total Revenue',
@@ -135,14 +149,18 @@ const tabConfigs: Record<
         subtext: 'Per period',
       },
       {
-        icon: <CalendarTodayOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />,
+        icon: (
+          <CalendarTodayOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />
+        ),
         iconBg: '#ECFDF5',
         value: 'March',
         label: 'Peak Period',
         subtext: 'Highest revenue',
       },
       {
-        icon: <TrendingUpOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
+        icon: (
+          <TrendingUpOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />
+        ),
         iconBg: '#FFFBEB',
         value: '+18.4%',
         label: 'Growth Rate',
@@ -160,7 +178,9 @@ const tabConfigs: Record<
   Yearly: {
     stats: [
       {
-        icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+        icon: (
+          <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
+        ),
         iconBg: '#EBF2FF',
         value: '$1,740,000',
         label: 'Total Revenue',
@@ -174,14 +194,18 @@ const tabConfigs: Record<
         subtext: 'Per period',
       },
       {
-        icon: <CalendarTodayOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />,
+        icon: (
+          <CalendarTodayOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />
+        ),
         iconBg: '#ECFDF5',
         value: '2025',
         label: 'Peak Period',
         subtext: 'Highest revenue',
       },
       {
-        icon: <TrendingUpOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
+        icon: (
+          <TrendingUpOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />
+        ),
         iconBg: '#FFFBEB',
         value: '+26.1%',
         label: 'Growth Rate',
@@ -201,31 +225,122 @@ const tabConfigs: Record<
 // ─── Revenue by Ride Type ───────────────────────────────────────────────────
 
 const rideTypes = [
-  { label: 'Standard Medical', revenue: '$128,400', percent: '45%', trips: '2840 trips', color: '#2F6FED', progress: 45 },
-  { label: 'Wheelchair Accessible', revenue: '$74,320', percent: '26%', trips: '982 trips', color: '#6366F1', progress: 26 },
-  { label: 'Assisted Ride', revenue: '$51,040', percent: '18%', trips: '724 trips', color: '#10B981', progress: 18 },
-  { label: 'Stretcher Transport', revenue: '$28,640', percent: '10%', trips: '214 trips', color: '#F59E0B', progress: 10 },
-  { label: 'Other', revenue: '$2,960', percent: '1%', trips: '61 trips', color: '#EC4899', progress: 1 },
+  {
+    label: 'Standard Medical',
+    revenue: '$128,400',
+    percent: '45%',
+    trips: '2840 trips',
+    color: '#2F6FED',
+    progress: 45,
+  },
+  {
+    label: 'Wheelchair Accessible',
+    revenue: '$74,320',
+    percent: '26%',
+    trips: '982 trips',
+    color: '#6366F1',
+    progress: 26,
+  },
+  {
+    label: 'Assisted Ride',
+    revenue: '$51,040',
+    percent: '18%',
+    trips: '724 trips',
+    color: '#10B981',
+    progress: 18,
+  },
+  {
+    label: 'Stretcher Transport',
+    revenue: '$28,640',
+    percent: '10%',
+    trips: '214 trips',
+    color: '#F59E0B',
+    progress: 10,
+  },
+  {
+    label: 'Other',
+    revenue: '$2,960',
+    percent: '1%',
+    trips: '61 trips',
+    color: '#EC4899',
+    progress: 1,
+  },
 ];
 
 // ─── Revenue by City ────────────────────────────────────────────────────────
 
 const cities = [
-  { rank: 1, city: 'New York, NY', trips: '1840 trips', revenue: '$84,210', growth: '+22%' },
-  { rank: 2, city: 'Los Angeles, CA', trips: '1120 trips', revenue: '$48,640', growth: '+18%' },
-  { rank: 3, city: 'Chicago, IL', trips: '740 trips', revenue: '$31,820', growth: '+14%' },
-  { rank: 4, city: 'Houston, TX', trips: '580 trips', revenue: '$24,580', growth: '+11%' },
-  { rank: 5, city: 'Miami, FL', trips: '420 trips', revenue: '$18,090', growth: '+9%' },
+  {
+    rank: 1,
+    city: 'New York, NY',
+    trips: '1840 trips',
+    revenue: '$84,210',
+    growth: '+22%',
+  },
+  {
+    rank: 2,
+    city: 'Los Angeles, CA',
+    trips: '1120 trips',
+    revenue: '$48,640',
+    growth: '+18%',
+  },
+  {
+    rank: 3,
+    city: 'Chicago, IL',
+    trips: '740 trips',
+    revenue: '$31,820',
+    growth: '+14%',
+  },
+  {
+    rank: 4,
+    city: 'Houston, TX',
+    trips: '580 trips',
+    revenue: '$24,580',
+    growth: '+11%',
+  },
+  {
+    rank: 5,
+    city: 'Miami, FL',
+    trips: '420 trips',
+    revenue: '$18,090',
+    growth: '+9%',
+  },
 ];
 
 // ─── Revenue Distribution ───────────────────────────────────────────────────
 
 const distribution = [
-  { label: 'Gross Revenue', amount: '$284,720', color: '#2F6FED', progress: 100 },
-  { label: 'Platform Commission (20%)', amount: '$56,944', color: '#6366F1', progress: 20 },
-  { label: 'Driver Payouts (50%)', amount: '$142,360', color: '#10B981', progress: 50 },
-  { label: 'Fleet Payouts (25%)', amount: '$71,180', color: '#F59E0B', progress: 25 },
-  { label: 'Refunds Issued', amount: '-$3,840', color: '#EF4444', progress: 1.3, isNegative: true },
+  {
+    label: 'Gross Revenue',
+    amount: '$284,720',
+    color: '#2F6FED',
+    progress: 100,
+  },
+  {
+    label: 'Platform Commission (20%)',
+    amount: '$56,944',
+    color: '#6366F1',
+    progress: 20,
+  },
+  {
+    label: 'Driver Payouts (50%)',
+    amount: '$142,360',
+    color: '#10B981',
+    progress: 50,
+  },
+  {
+    label: 'Fleet Payouts (25%)',
+    amount: '$71,180',
+    color: '#F59E0B',
+    progress: 25,
+  },
+  {
+    label: 'Refunds Issued',
+    amount: '-$3,840',
+    color: '#EF4444',
+    progress: 1.3,
+    isNegative: true,
+  },
 ];
 
 // ─── Custom Tooltip ─────────────────────────────────────────────────────────
@@ -382,9 +497,7 @@ export const RevenueDashboardPage = () => {
                       background: '#ECFDF5',
                     }}
                   >
-                    <ArrowUpwardIcon
-                      sx={{ fontSize: 11, color: '#059669' }}
-                    />
+                    <ArrowUpwardIcon sx={{ fontSize: 11, color: '#059669' }} />
                   </Box>
                 </RowStack>
                 <Stack spacing={'4px'}>

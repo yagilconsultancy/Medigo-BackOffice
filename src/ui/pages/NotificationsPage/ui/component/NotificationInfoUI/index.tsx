@@ -87,14 +87,14 @@ export const NotificationInfoUI = ({
             <RowStack spacing={1}>
               <TaskAltOutlinedIcon
                 sx={{
-                  color: "#10B981",
+                  color: '#10B981',
                   width: '14px',
                   height: '14px',
                 }}
               />
               <Typography
                 sx={{
-                  color: "#10B981",
+                  color: '#10B981',
                   fontFamily: (theme) => theme.typography.fontFamily,
                   fontSize: pxToRem(12),
                   fontWeight: 600,

@@ -43,7 +43,9 @@ export const VehicleDocumentsModal = ({
       detail: vehicle.registration,
     },
     {
-      icon: <VerifiedUserOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />,
+      icon: (
+        <VerifiedUserOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
+      ),
       title: 'Safety Inspection',
       status: 'Valid',
       detail: 'Mar 1, 2026 · Passed',

@@ -439,9 +439,7 @@ export const RideHistoryModal = ({
 
                 {/* Row 3: Driver */}
                 <RowStack spacing={'6px'}>
-                  <PersonOutlinedIcon
-                    sx={{ fontSize: 10, color: '#9CA3AF' }}
-                  />
+                  <PersonOutlinedIcon sx={{ fontSize: 10, color: '#9CA3AF' }} />
                   <Typography
                     sx={{
                       fontFamily: (theme) => theme.typography.fontFamily,

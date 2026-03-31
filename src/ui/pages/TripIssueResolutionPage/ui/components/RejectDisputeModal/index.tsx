@@ -68,9 +68,7 @@ export const RejectDisputeModal = ({
                 flexShrink: 0,
               }}
             >
-              <CancelOutlinedIcon
-                sx={{ fontSize: 18, color: '#EF4444' }}
-              />
+              <CancelOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
             </Box>
             <Stack spacing={'2px'}>
               <Typography

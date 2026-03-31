@@ -25,7 +25,13 @@ import { pxToRem } from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-export type IssueType = 'Support Ticket' | 'Complaint' | 'Refund Request' | 'No-show' | 'Billing Dispute' | 'Service Complaint';
+export type IssueType =
+  | 'Support Ticket'
+  | 'Complaint'
+  | 'Refund Request'
+  | 'No-show'
+  | 'Billing Dispute'
+  | 'Service Complaint';
 export type Severity = 'High' | 'Medium' | 'Low';
 export type IssueStatus = 'Open' | 'Under Review' | 'Resolved';
 
@@ -158,9 +164,7 @@ export const RiderIssuesPage = () => {
       value: String(reviewCount),
       label: 'Under Review',
       valueColor: '#6366F1',
-      icon: (
-        <FindInPageOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />
-      ),
+      icon: <FindInPageOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
       iconBg: '#EEF2FF',
     },
     {
@@ -438,9 +442,7 @@ export const RiderIssuesPage = () => {
             Resolved: 'marked as Resolved',
             Open: 'reopened',
           };
-          setSnackbarMessage(
-            `${issue.id} has been ${statusLabels[newStatus]}`
-          );
+          setSnackbarMessage(`${issue.id} has been ${statusLabels[newStatus]}`);
           setSnackbarOpen(true);
         }}
       />

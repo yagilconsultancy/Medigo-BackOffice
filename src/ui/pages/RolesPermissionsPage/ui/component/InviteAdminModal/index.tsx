@@ -29,10 +29,30 @@ type InviteAdminFormValues = {
 // ─── Roles ──────────────────────────────────────────────────────────────────
 
 const roleOptions = [
-  { label: 'Super Admin', color: '#2F6FED', borderColor: '#2F6FED', bg: '#EBF2FF' },
-  { label: 'Operations Admin', color: '#10B981', borderColor: '#10B981', bg: '#ECFDF5' },
-  { label: 'Finance Admin', color: '#6366F1', borderColor: '#6366F1', bg: '#EEF2FF' },
-  { label: 'Support Admin', color: '#F59E0B', borderColor: '#F59E0B', bg: '#FFFBEB' },
+  {
+    label: 'Super Admin',
+    color: '#2F6FED',
+    borderColor: '#2F6FED',
+    bg: '#EBF2FF',
+  },
+  {
+    label: 'Operations Admin',
+    color: '#10B981',
+    borderColor: '#10B981',
+    bg: '#ECFDF5',
+  },
+  {
+    label: 'Finance Admin',
+    color: '#6366F1',
+    borderColor: '#6366F1',
+    bg: '#EEF2FF',
+  },
+  {
+    label: 'Support Admin',
+    color: '#F59E0B',
+    borderColor: '#F59E0B',
+    bg: '#FFFBEB',
+  },
 ];
 
 // ─── Validation ─────────────────────────────────────────────────────────────

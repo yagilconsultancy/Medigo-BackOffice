@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Divider,
-  Grid,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
@@ -73,7 +67,7 @@ const notificationsData: RiderNotificationRow[] = [
     title: 'We Miss You! Book & Save 10%',
     category: 'Promotion',
     description:
-      'It\'s been a while since your last ride. Book now and get 10% off your next trip with code WELCOME10.',
+      "It's been a while since your last ride. Book now and get 10% off your next trip with code WELCOME10.",
     recipients: 'Inactive Riders (30+ days)',
     sentTo: 94,
     timestamp: 'Mar 3, 2026 · 12:00 PM',
@@ -84,7 +78,7 @@ const notificationsData: RiderNotificationRow[] = [
     title: 'New Wheelchair-Accessible Vehicles',
     category: 'Announcement',
     description:
-      'We\'ve added 12 new WAV-equipped vehicles to our fleet. Book a wheelchair-accessible ride directly from the app.',
+      "We've added 12 new WAV-equipped vehicles to our fleet. Book a wheelchair-accessible ride directly from the app.",
     recipients: 'All Riders',
     sentTo: 1248,
     timestamp: 'Feb 28, 2026 · 09:00 AM',
@@ -101,9 +95,7 @@ export const RiderNotificationsPage = () => {
     {
       value: '1,342',
       label: 'Total Sent',
-      icon: (
-        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-      ),
+      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
       iconBg: '#EBF2FF',
     },
     {
@@ -115,9 +107,7 @@ export const RiderNotificationsPage = () => {
     {
       value: '9',
       label: 'Promotions',
-      icon: (
-        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
-      ),
+      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
       iconBg: '#FFFBEB',
     },
   ];

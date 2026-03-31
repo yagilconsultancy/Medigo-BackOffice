@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Avatar,
-  Box,
-  Grid,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Grid, Stack, Typography } from '@mui/material';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
@@ -14,10 +8,7 @@ import LocalHospitalOutlinedIcon from '@mui/icons-material/LocalHospitalOutlined
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import PaymentOutlinedIcon from '@mui/icons-material/PaymentOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import {
-  DashboardTitleAndDesc,
-  RowStack,
-} from '../../modules/components';
+import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
 import { pxToRem } from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -320,7 +311,8 @@ const RiderCard = ({ rider }: { rider: RiderProfile }) => {
               sx={{
                 padding: '2px 12px',
                 borderRadius: '100px',
-                background: rider.paymentColor === '#EF4444' ? '#FEF2F2' : '#EEF3FF',
+                background:
+                  rider.paymentColor === '#EF4444' ? '#FEF2F2' : '#EEF3FF',
                 border: `0.67px solid ${rider.paymentColor === '#EF4444' ? '#FECACA' : '#C7D7F9'}`,
               }}
             >

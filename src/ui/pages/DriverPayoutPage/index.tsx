@@ -215,7 +215,17 @@ const donutData = [
 
 // ─── Custom Tooltip ─────────────────────────────────────────────────────────
 
-const CustomPieTooltip = ({ active, payload }: { active?: boolean; payload?: { name: string; value: number; payload: { amount: string; color: string } }[] }) => {
+const CustomPieTooltip = ({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: {
+    name: string;
+    value: number;
+    payload: { amount: string; color: string };
+  }[];
+}) => {
   if (!active || !payload?.length) return null;
   const d = payload[0];
   return (
@@ -445,8 +455,7 @@ export const DriverPayoutPage = () => {
       d.name.toLowerCase().includes(q) ||
       d.fleet.toLowerCase().includes(q) ||
       d.driverId.toLowerCase().includes(q);
-    const matchesFleet =
-      filters.fleet === 'All' || d.fleet === filters.fleet;
+    const matchesFleet = filters.fleet === 'All' || d.fleet === filters.fleet;
     const matchesStatus =
       filters.status === 'All' || d.status === filters.status;
     return matchesSearch && matchesFleet && matchesStatus;
@@ -637,8 +646,7 @@ export const DriverPayoutPage = () => {
           sx={{
             padding: '3px 10px',
             borderRadius: '100px',
-            background:
-              params.row.status === 'Active' ? '#F0FDF7' : '#FEF2F2',
+            background: params.row.status === 'Active' ? '#F0FDF7' : '#FEF2F2',
           }}
         >
           <Box
@@ -655,8 +663,7 @@ export const DriverPayoutPage = () => {
               fontFamily: (theme) => theme.typography.fontFamily,
               fontWeight: 600,
               fontSize: pxToRem(11.5),
-              color:
-                params.row.status === 'Active' ? '#059669' : '#EF4444',
+              color: params.row.status === 'Active' ? '#059669' : '#EF4444',
             }}
           >
             {params.row.status}
@@ -878,8 +885,7 @@ export const DriverPayoutPage = () => {
                     <RowStack justifyContent={'space-between'}>
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 700,
                           fontSize: pxToRem(13.5),
                           color: '#111827',
@@ -905,8 +911,7 @@ export const DriverPayoutPage = () => {
                         />
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 600,
                             fontSize: pxToRem(11),
                             color: ps.statusColor,
@@ -918,8 +923,7 @@ export const DriverPayoutPage = () => {
                     </RowStack>
                     <Typography
                       sx={{
-                        fontFamily: (theme) =>
-                          theme.typography.fontFamily,
+                        fontFamily: (theme) => theme.typography.fontFamily,
                         fontWeight: 400,
                         fontSize: pxToRem(11.5),
                         color: '#9CA3AF',
@@ -929,8 +933,7 @@ export const DriverPayoutPage = () => {
                     </Typography>
                     <Typography
                       sx={{
-                        fontFamily: (theme) =>
-                          theme.typography.fontFamily,
+                        fontFamily: (theme) => theme.typography.fontFamily,
                         fontWeight: 700,
                         fontSize: pxToRem(17),
                         color: ps.amountColor,
@@ -997,8 +1000,7 @@ export const DriverPayoutPage = () => {
                         </Box>
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 400,
                             fontSize: pxToRem(11.5),
                             color: '#9CA3AF',
@@ -1009,8 +1011,7 @@ export const DriverPayoutPage = () => {
                       </RowStack>
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 700,
                           fontSize: pxToRem(22),
                           color: '#111827',
@@ -1021,8 +1022,7 @@ export const DriverPayoutPage = () => {
                       </Typography>
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 400,
                           fontSize: pxToRem(11),
                           color: '#9CA3AF',
@@ -1121,9 +1121,9 @@ export const DriverPayoutPage = () => {
                   spacing={'24px'}
                   justifyContent={'space-between'}
                   flexWrap={'wrap'}
-                  width={"100%"}
+                  width={'100%'}
                   sx={{
-                    padding: '42px'
+                    padding: '42px',
                   }}
                 >
                   {donutData.map((d) => (
@@ -1140,8 +1140,7 @@ export const DriverPayoutPage = () => {
                         />
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 400,
                             fontSize: pxToRem(12),
                             color: '#6B7280',
@@ -1152,8 +1151,7 @@ export const DriverPayoutPage = () => {
                       </RowStack>
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 700,
                           fontSize: pxToRem(16),
                           color: '#111827',
@@ -1163,8 +1161,7 @@ export const DriverPayoutPage = () => {
                       </Typography>
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 400,
                           fontSize: pxToRem(11.5),
                           color: '#9CA3AF',

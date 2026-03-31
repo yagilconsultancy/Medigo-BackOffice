@@ -48,7 +48,6 @@ export type AppDataGridProps<T extends GridRow> = Omit<
   | 'paginationModel'
   | 'rowCount'
   | 'paginationMode'
-  | 'hideFooter'
 > & {
   columns: GridColSpec<T>[];
   /** If provided, the grid will fetch data from the server */
@@ -67,6 +66,8 @@ export type AppDataGridProps<T extends GridRow> = Omit<
   disableAutoPagination?: boolean;
   /** Useful for manual server-side pagination */
   isFetchingData?: boolean;
+  /** When true, the pagination footer will be hidden. Defaults to false */
+  hidePagination?: boolean;
   permissionErrorState?: React.ReactNode;
   emptyState?: React.ReactNode;
 };
@@ -82,6 +83,7 @@ export const GridTable = <T extends GridRow>({
   slots,
   disableAutoPagination,
   isFetchingData,
+  hidePagination,
   onPaginationModelChange,
   checkboxSelection,
   pageSizeOptions = [5, 10, 15, 25, 50, 100],
@@ -230,6 +232,7 @@ export const GridTable = <T extends GridRow>({
         ...sx,
       }}
       {...moreGridProps}
+      hideFooter={hidePagination}
       paginationMode="server"
       onPaginationModelChange={(newPaginationModel, details) => {
         onPaginationModelChange?.(newPaginationModel, details);

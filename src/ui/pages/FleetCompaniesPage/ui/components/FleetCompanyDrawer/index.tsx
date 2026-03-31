@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
-import { Box, Drawer, IconButton, Stack, Typography } from '@mui/material';
+import { Box, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { RowStack } from '../../../../../modules/components';
+import { AppModal, RowStack } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import { FleetCompanyStatus } from '../FleetStatusChip';
 
@@ -46,11 +46,7 @@ const statusButtonConfig: Record<
   },
 };
 
-const statusOptions: FleetCompanyStatus[] = [
-  'Active',
-  'Suspended',
-  'Pending',
-];
+const statusOptions: FleetCompanyStatus[] = ['Active', 'Suspended', 'Pending'];
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -75,25 +71,29 @@ export const FleetCompanyDrawer = ({
   if (!company) return null;
 
   return (
-    <Drawer
-      anchor="right"
+    <AppModal
       open={open}
-      onClose={onClose}
+      setOpen={() => onClose()}
+      label="fleet-company-modal"
+      padding="0px"
       sx={{
-        '& .MuiDrawer-paper': {
-          width: '420px',
-          boxShadow:
-            '-24px 0px 80px 0px rgba(0, 0, 0, 0.1), -1px 0px 0px 0px rgba(229, 231, 235, 1)',
-          border: 'none',
+        '& .MuiDialog-paper': {
+          width: '520px',
+          maxHeight: '90vh',
+          borderRadius: '16px',
+          boxShadow: '0px 24px 64px 0px rgba(0, 0, 0, 0.14)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         },
       }}
     >
-      <Stack sx={{ height: '100%' }}>
+      <Stack>
         {/* Header */}
         <RowStack
           justifyContent="space-between"
           sx={{
-            padding: '20px 28px',
+            padding: '20px 24px',
             borderBottom: '0.67px solid #F0F2F5',
           }}
         >
@@ -163,7 +163,7 @@ export const FleetCompanyDrawer = ({
         {/* Stats Row */}
         <RowStack
           sx={{
-            padding: '20px 28px',
+            padding: '20px 24px',
             borderBottom: '0.67px solid #F0F2F5',
           }}
         >
@@ -181,7 +181,9 @@ export const FleetCompanyDrawer = ({
         </RowStack>
 
         {/* Contact Section */}
-        <Stack sx={{ padding: '24px 28px', borderBottom: '0.67px solid #F0F2F5' }}>
+        <Stack
+          sx={{ padding: '24px 24px', borderBottom: '0.67px solid #F0F2F5' }}
+        >
           <SectionLabel>CONTACT</SectionLabel>
           <Stack sx={{ marginTop: '14px' }}>
             <ContactRow label="Contact Person" value={company.contactPerson} />
@@ -195,17 +197,11 @@ export const FleetCompanyDrawer = ({
           </Stack>
         </Stack>
 
-        {/* Divider */}
-        <Box
-          sx={{
-            height: '1px',
-            background: '#F0F2F5',
-            margin: '0 28px',
-          }}
-        />
-
         {/* Status Section */}
-        <Stack spacing={'14px'} sx={{ padding: '16px 28px' }}>
+        <Stack
+          spacing={'14px'}
+          sx={{ padding: '16px 24px', borderBottom: '0.67px solid #F0F2F5' }}
+        >
           <SectionLabel>STATUS</SectionLabel>
           <RowStack spacing={'8px'}>
             {statusOptions.map((status) => {
@@ -247,17 +243,8 @@ export const FleetCompanyDrawer = ({
           </RowStack>
         </Stack>
 
-        {/* Divider */}
-        <Box
-          sx={{
-            height: '1px',
-            background: '#F0F2F5',
-            margin: '0 28px',
-          }}
-        />
-
         {/* Footer Buttons */}
-        <Stack spacing={'8px'} sx={{ padding: '24px 28px' }}>
+        <Stack spacing={'8px'} sx={{ padding: '20px 24px' }}>
           <Box
             onClick={() => {
               onClose();
@@ -319,7 +306,7 @@ export const FleetCompanyDrawer = ({
           </Box>
         </Stack>
       </Stack>
-    </Drawer>
+    </AppModal>
   );
 };
 

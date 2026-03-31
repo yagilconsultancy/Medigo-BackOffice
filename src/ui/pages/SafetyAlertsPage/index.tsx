@@ -47,10 +47,7 @@ type AlertRow = {
 
 // ─── Color Maps ─────────────────────────────────────────────────────────────
 
-const severityColors: Record<
-  AlertSeverity,
-  { color: string; bg: string }
-> = {
+const severityColors: Record<AlertSeverity, { color: string; bg: string }> = {
   High: { color: '#DC2626', bg: '#FEF2F2' },
   Medium: { color: '#D97706', bg: '#FFFBEB' },
   Low: { color: '#CA8A04', bg: '#FEFCE8' },
@@ -257,25 +254,19 @@ export const SafetyAlertsPage = () => {
     {
       value: '4',
       label: 'Route Deviations',
-      icon: (
-        <AltRouteOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
-      ),
+      icon: <AltRouteOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
       iconBg: '#FFFBEB',
     },
     {
       value: '6',
       label: 'Running Late',
-      icon: (
-        <ScheduleOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-      ),
+      icon: <ScheduleOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
       iconBg: '#EEF2FF',
     },
     {
       value: '28',
       label: 'Resolved Today',
-      icon: (
-        <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />
-      ),
+      icon: <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
   ];

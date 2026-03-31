@@ -65,26 +65,20 @@ const statCards = [
     value: '184',
     label: 'Total Tickets',
     icon: (
-      <ConfirmationNumberOutlinedIcon
-        sx={{ fontSize: 18, color: '#2F6FED' }}
-      />
+      <ConfirmationNumberOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
     ),
     iconBg: '#EBF2FF',
   },
   {
     value: '42',
     label: 'Open',
-    icon: (
-      <ErrorOutlineOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
-    ),
+    icon: <ErrorOutlineOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
     iconBg: '#FFFBEB',
   },
   {
     value: '128',
     label: 'Resolved',
-    icon: (
-      <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#10B981' }} />
-    ),
+    icon: <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#10B981' }} />,
     iconBg: '#ECFDF5',
   },
   {
@@ -508,9 +502,7 @@ export const SupportTicketPage = () => {
                       padding: '6px 14px',
                       borderRadius: '10px',
                       background: isActive ? '#2F6FED' : 'transparent',
-                      border: isActive
-                        ? 'none'
-                        : '0.67px solid #E5E7EB',
+                      border: isActive ? 'none' : '0.67px solid #E5E7EB',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                       '&:hover': { opacity: 0.85 },
@@ -518,8 +510,7 @@ export const SupportTicketPage = () => {
                   >
                     <Typography
                       sx={{
-                        fontFamily: (theme) =>
-                          theme.typography.fontFamily,
+                        fontFamily: (theme) => theme.typography.fontFamily,
                         fontWeight: 600,
                         fontSize: pxToRem(13),
                         color: isActive ? '#FFFFFF' : '#6B7280',
@@ -538,8 +529,7 @@ export const SupportTicketPage = () => {
                     >
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 600,
                           fontSize: pxToRem(11),
                           color: isActive ? '#FFFFFF' : '#6B7280',

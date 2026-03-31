@@ -126,17 +126,13 @@ export const StatementsPage = () => {
     {
       value: '18',
       label: 'Statements Available',
-      icon: (
-        <DescriptionOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-      ),
+      icon: <DescriptionOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
       iconBg: '#EBF2FF',
     },
     {
       value: '$536,840',
       label: 'Total Billed (YTD)',
-      icon: (
-        <AttachMoneyOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />
-      ),
+      icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
     {
@@ -173,9 +169,7 @@ export const StatementsPage = () => {
               flexShrink: 0,
             }}
           >
-            <DescriptionOutlinedIcon
-              sx={{ fontSize: 16, color: '#2F6FED' }}
-            />
+            <DescriptionOutlinedIcon sx={{ fontSize: 16, color: '#2F6FED' }} />
           </Box>
           <Typography
             sx={{
@@ -289,10 +283,7 @@ export const StatementsPage = () => {
       minWidth: 160,
       sortable: false,
       renderCell: (params) => (
-        <ImageAttachment
-          text="Download PDF"
-          imageUrl={params.row.fileUri}
-        >
+        <ImageAttachment text="Download PDF" imageUrl={params.row.fileUri}>
           <RowStack
             spacing={'6px'}
             sx={{
@@ -303,9 +294,7 @@ export const StatementsPage = () => {
               '&:hover': { opacity: 0.9 },
             }}
           >
-            <FileDownloadOutlinedIcon
-              sx={{ fontSize: 15, color: '#FFFFFF' }}
-            />
+            <FileDownloadOutlinedIcon sx={{ fontSize: 15, color: '#FFFFFF' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

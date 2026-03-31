@@ -33,8 +33,7 @@ const actionConfig: Record<
   },
   'request-docs': {
     title: 'Request Documents',
-    message:
-      'This will request additional documents from the applicant.',
+    message: 'This will request additional documents from the applicant.',
     confirmBg: '#F7F9FB',
     confirmColor: '#374151',
     confirmBorder: '#E8ECF0',

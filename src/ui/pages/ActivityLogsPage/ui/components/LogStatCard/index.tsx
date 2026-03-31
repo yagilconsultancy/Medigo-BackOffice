@@ -14,7 +14,12 @@ type LogStatCardProps = {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export const LogStatCard = ({ icon, iconBg, value, label }: LogStatCardProps) => {
+export const LogStatCard = ({
+  icon,
+  iconBg,
+  value,
+  label,
+}: LogStatCardProps) => {
   return (
     <Stack
       spacing={'12px'}

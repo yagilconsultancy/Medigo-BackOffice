@@ -33,10 +33,7 @@ import {
 import { GridColSpec } from '../../modules/components/GridTable';
 import { FilterSection } from '../../modules/components/AppFilterPopover';
 import { pxToRem } from '../../../common';
-import {
-  EarningDetailModal,
-  ConfirmPayoutModal,
-} from './ui/components';
+import { EarningDetailModal, ConfirmPayoutModal } from './ui/components';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -550,8 +547,7 @@ export const CaregiverPayoutPage = () => {
             fontFamily: (theme) => theme.typography.fontFamily,
             fontWeight: 600,
             fontSize: pxToRem(11.5),
-            color:
-              params.row.status === 'Active' ? '#059669' : '#EF4444',
+            color: params.row.status === 'Active' ? '#059669' : '#EF4444',
           }}
         >
           {params.row.status}
@@ -792,10 +788,7 @@ export const CaregiverPayoutPage = () => {
               {/* Legend */}
               <Stack spacing={'6px'}>
                 {donutData.map((d) => (
-                  <RowStack
-                    key={d.name}
-                    justifyContent={'space-between'}
-                  >
+                  <RowStack key={d.name} justifyContent={'space-between'}>
                     <RowStack spacing={'8px'}>
                       <Box
                         sx={{
@@ -906,8 +899,7 @@ export const CaregiverPayoutPage = () => {
                       <RowStack spacing={'16px'}>
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 400,
                             fontSize: pxToRem(12),
                             color: '#9CA3AF',
@@ -918,8 +910,7 @@ export const CaregiverPayoutPage = () => {
                         </Typography>
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 600,
                             fontSize: pxToRem(12),
                             color: '#EF4444',
@@ -930,8 +921,7 @@ export const CaregiverPayoutPage = () => {
                         </Typography>
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 700,
                             fontSize: pxToRem(14),
                             color: '#10B981',

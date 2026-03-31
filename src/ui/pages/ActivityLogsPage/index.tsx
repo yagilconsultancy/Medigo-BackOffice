@@ -34,7 +34,9 @@ import { LogStatCard, LogEntryRow, LogEntry } from './ui/components';
 
 const statCards = [
   {
-    icon: <FormatListBulletedOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+    icon: (
+      <FormatListBulletedOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
+    ),
     iconBg: '#EBF2FF',
     value: '8,412',
     label: 'Total Logs',
@@ -70,7 +72,9 @@ const logEntries: LogEntry[] = [
     categoryColor: '#EF4444',
     description: 'John Carter \u00b7 Lena Fischer \u2192 Super Admin',
     date: 'Mar 9, 2026 \u00b7 02:14 PM',
-    icon: <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
+    icon: (
+      <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
+    ),
     iconBg: '#FEF2F2',
   },
   {
@@ -101,7 +105,8 @@ const logEntries: LogEntry[] = [
     category: 'Finance',
     categoryBg: '#ECFDF5',
     categoryColor: '#059669',
-    description: 'Priya Sharma \u00b7 INV-9020 \u00b7 MedRide Express \u00b7 $9,840',
+    description:
+      'Priya Sharma \u00b7 INV-9020 \u00b7 MedRide Express \u00b7 $9,840',
     date: 'Mar 9, 2026 \u00b7 09:30 AM',
     icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
     iconBg: '#ECFDF5',
@@ -112,7 +117,8 @@ const logEntries: LogEntry[] = [
     category: 'Support',
     categoryBg: '#EBF2FF',
     categoryColor: '#2F6FED',
-    description: 'Sandra Lee \u00b7 TKT-8799 \u00b7 Anna Kim vs Gordon MacPherson',
+    description:
+      'Sandra Lee \u00b7 TKT-8799 \u00b7 Anna Kim vs Gordon MacPherson',
     date: 'Mar 8, 2026 \u00b7 05:12 PM',
     icon: <SupportAgentOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
     iconBg: '#EBF2FF',
@@ -136,7 +142,9 @@ const logEntries: LogEntry[] = [
     categoryColor: '#EF4444',
     description: 'John Carter \u00b7 Sandra Lee: Support \u2192 Finance Admin',
     date: 'Mar 8, 2026 \u00b7 02:10 PM',
-    icon: <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
+    icon: (
+      <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
+    ),
     iconBg: '#FEF2F2',
   },
   {
@@ -158,7 +166,9 @@ const logEntries: LogEntry[] = [
     categoryColor: '#8B5CF6',
     description: 'Angela Brooks \u00b7 Subject: New Payout Policy',
     date: 'Mar 7, 2026 \u00b7 09:28 AM',
-    icon: <NotificationsNoneOutlinedIcon sx={{ fontSize: 18, color: '#8B5CF6' }} />,
+    icon: (
+      <NotificationsNoneOutlinedIcon sx={{ fontSize: 18, color: '#8B5CF6' }} />
+    ),
     iconBg: '#F5F3FF',
   },
   {

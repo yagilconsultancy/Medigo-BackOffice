@@ -98,17 +98,20 @@ const statusConfig: Record<
   Active: {
     color: '#059669',
     bg: '#ECFDF5',
-    gradient: 'linear-gradient(135deg, rgba(47, 111, 237, 1) 0%, rgba(47, 111, 237, 0.33) 100%)',
+    gradient:
+      'linear-gradient(135deg, rgba(47, 111, 237, 1) 0%, rgba(47, 111, 237, 0.33) 100%)',
   },
   Inactive: {
     color: '#6B7280',
     bg: '#F3F4F6',
-    gradient: 'linear-gradient(135deg, rgba(107, 114, 128, 1) 0%, rgba(107, 114, 128, 0.33) 100%)',
+    gradient:
+      'linear-gradient(135deg, rgba(107, 114, 128, 1) 0%, rgba(107, 114, 128, 0.33) 100%)',
   },
   Suspended: {
     color: '#EF4444',
     bg: '#FEF2F2',
-    gradient: 'linear-gradient(135deg, rgba(239, 68, 68, 1) 0%, rgba(239, 68, 68, 0.33) 100%)',
+    gradient:
+      'linear-gradient(135deg, rgba(239, 68, 68, 1) 0%, rgba(239, 68, 68, 0.33) 100%)',
   },
 };
 
@@ -397,9 +400,7 @@ export const RiderDetailModal = ({
                     justifyContent: 'center',
                   }}
                 >
-                  <PersonOutlinedIcon
-                    sx={{ fontSize: 32, color: '#9CA3AF' }}
-                  />
+                  <PersonOutlinedIcon sx={{ fontSize: 32, color: '#9CA3AF' }} />
                 </Box>
               </Box>
             </Box>
@@ -451,7 +452,10 @@ export const RiderDetailModal = ({
             </RowStack>
 
             {/* Stat Cards Row */}
-            <RowStack spacing={'12px'} sx={{ px: '32px', pt: '8px', width: '100%' }}>
+            <RowStack
+              spacing={'12px'}
+              sx={{ px: '32px', pt: '8px', width: '100%' }}
+            >
               <StatCard
                 icon={
                   <DirectionsCarOutlinedIcon
@@ -488,9 +492,7 @@ export const RiderDetailModal = ({
             <Stack spacing={'12px'}>
               <SectionHeader
                 icon={
-                  <PersonOutlinedIcon
-                    sx={{ fontSize: 13, color: '#2F6FED' }}
-                  />
+                  <PersonOutlinedIcon sx={{ fontSize: 13, color: '#2F6FED' }} />
                 }
                 label="Personal Information"
               />
@@ -530,9 +532,7 @@ export const RiderDetailModal = ({
                   icon={<ConfirmationNumberOutlinedIcon sx={iconSx} />}
                   label="Support Tickets"
                   value={
-                    rider.tickets === '—'
-                      ? '0 open'
-                      : `${rider.tickets} open`
+                    rider.tickets === '—' ? '0 open' : `${rider.tickets} open`
                   }
                 />
               </Box>
@@ -557,9 +557,7 @@ export const RiderDetailModal = ({
                   padding: '12px 16px',
                 }}
               >
-                <VerifiedOutlinedIcon
-                  sx={{ fontSize: 14, color: '#9CA3AF' }}
-                />
+                <VerifiedOutlinedIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,
@@ -592,9 +590,7 @@ export const RiderDetailModal = ({
                   padding: '12px 16px',
                 }}
               >
-                <PersonOutlinedIcon
-                  sx={{ fontSize: 14, color: '#9CA3AF' }}
-                />
+                <PersonOutlinedIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,
@@ -660,9 +656,7 @@ export const RiderDetailModal = ({
                     '&:hover': { opacity: 0.85 },
                   }}
                 >
-                  <BlockOutlinedIcon
-                    sx={{ fontSize: 14, color: '#EF4444' }}
-                  />
+                  <BlockOutlinedIcon sx={{ fontSize: 14, color: '#EF4444' }} />
                   <Typography
                     sx={{
                       fontFamily: (theme) => theme.typography.fontFamily,
@@ -692,9 +686,7 @@ export const RiderDetailModal = ({
                   '&:hover': { opacity: 0.9 },
                 }}
               >
-                <HistoryOutlinedIcon
-                  sx={{ fontSize: 14, color: '#FFFFFF' }}
-                />
+                <HistoryOutlinedIcon sx={{ fontSize: 14, color: '#FFFFFF' }} />
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,

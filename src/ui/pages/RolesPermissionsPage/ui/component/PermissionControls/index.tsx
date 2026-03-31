@@ -78,9 +78,7 @@ const permissionGroups: PermissionGroup[] = [
   },
   {
     name: 'Service',
-    modules: [
-      { key: 'support_center', label: 'Support Center' },
-    ],
+    modules: [{ key: 'support_center', label: 'Support Center' }],
   },
   {
     name: 'Administration',
@@ -141,8 +139,7 @@ const permissionRoles: PermissionRoleConfig[] = [
   {
     id: 'finance-admin',
     roleName: 'Finance Admin',
-    description:
-      'Access to payments, invoices, billing, and financial reports',
+    description: 'Access to payments, invoices, billing, and financial reports',
     icon: (
       <AccountBalanceOutlinedIcon sx={{ fontSize: 14, color: '#6366F1' }} />
     ),
@@ -161,9 +158,7 @@ const permissionRoles: PermissionRoleConfig[] = [
     roleName: 'Support Admin',
     description:
       'Handles support tickets, rider/driver issues, and safety cases',
-    icon: (
-      <SupportAgentOutlinedIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
-    ),
+    icon: <SupportAgentOutlinedIcon sx={{ fontSize: 14, color: '#F59E0B' }} />,
     activeColor: '#F59E0B',
     iconBg: '#FFFBEB',
     headerBg: '#FFFBEB',
@@ -234,9 +229,7 @@ const ModuleRow = ({
         borderRadius: '14px',
         cursor: isLocked ? 'default' : 'pointer',
         background: isEnabled ? '#F7FBFF' : '#FAFBFC',
-        border: isEnabled
-          ? '0.67px solid #DDEEFF'
-          : '0.67px solid #F0F4F8',
+        border: isEnabled ? '0.67px solid #DDEEFF' : '0.67px solid #F0F4F8',
         transition: 'all 0.15s ease',
         ...(!isLocked && {
           '&:hover': {

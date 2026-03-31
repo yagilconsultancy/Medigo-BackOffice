@@ -59,14 +59,18 @@ const statusChipConfig: Record<
     color: '#6B7280',
     bg: '#F3F4F6',
     icon: (
-      <AccessTimeIcon sx={{ fontSize: pxToRem(11), color: '#6B7280 !important' }} />
+      <AccessTimeIcon
+        sx={{ fontSize: pxToRem(11), color: '#6B7280 !important' }}
+      />
     ),
   },
   Suspended: {
     color: '#EF4444',
     bg: '#FEF2F2',
     icon: (
-      <AccessTimeIcon sx={{ fontSize: pxToRem(11), color: '#EF4444 !important' }} />
+      <AccessTimeIcon
+        sx={{ fontSize: pxToRem(11), color: '#EF4444 !important' }}
+      />
     ),
   },
 };
@@ -278,9 +282,7 @@ export const FleetDriversPage = () => {
 
   const handleStatusChange = useCallback(
     (driver: FleetDriverRow, newStatus: DriverStatus) => {
-      setSnackbarMessage(
-        `${driver.name} status updated to ${newStatus}`
-      );
+      setSnackbarMessage(`${driver.name} status updated to ${newStatus}`);
       setSnackbarOpen(true);
       setSelectedDriver({ ...driver, status: newStatus });
     },
@@ -300,32 +302,32 @@ export const FleetDriversPage = () => {
             ? `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`
             : nameParts[0].charAt(0);
         return (
-        <RowStack spacing={'10px'}>
-          <Avatar
-            src={params.row.avatar || undefined}
-            alt={params.row.name}
-            sx={{
-              width: 32,
-              height: 32,
-              fontSize: pxToRem(11),
-              fontWeight: 600,
-              background: '#EBF2FF',
-              color: '#2F6FED',
-            }}
-          >
-            {initials}
-          </Avatar>
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 600,
-              fontSize: pxToRem(13),
-              color: '#111827',
-            }}
-          >
-            {params.row.name}
-          </Typography>
-        </RowStack>
+          <RowStack spacing={'10px'}>
+            <Avatar
+              src={params.row.avatar || undefined}
+              alt={params.row.name}
+              sx={{
+                width: 32,
+                height: 32,
+                fontSize: pxToRem(11),
+                fontWeight: 600,
+                background: '#EBF2FF',
+                color: '#2F6FED',
+              }}
+            >
+              {initials}
+            </Avatar>
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 600,
+                fontSize: pxToRem(13),
+                color: '#111827',
+              }}
+            >
+              {params.row.name}
+            </Typography>
+          </RowStack>
         );
       },
     },
@@ -391,12 +393,8 @@ export const FleetDriversPage = () => {
             max={1}
             readOnly
             size="small"
-            icon={
-              <StarIcon sx={{ fontSize: 14, color: '#FCD34D' }} />
-            }
-            emptyIcon={
-              <StarIcon sx={{ fontSize: 14, color: '#E5E7EB' }} />
-            }
+            icon={<StarIcon sx={{ fontSize: 14, color: '#FCD34D' }} />}
+            emptyIcon={<StarIcon sx={{ fontSize: 14, color: '#E5E7EB' }} />}
           />
           <Typography
             sx={{
@@ -498,8 +496,7 @@ export const FleetDriversPage = () => {
                 fontFamily: (theme) => theme.typography.fontFamily,
                 fontWeight: 600,
                 fontSize: pxToRem(12),
-                color:
-                  activeFleetFilter === filter ? '#FFFFFF' : '#6B7280',
+                color: activeFleetFilter === filter ? '#FFFFFF' : '#6B7280',
                 background:
                   activeFleetFilter === filter ? '#2F6FED' : 'transparent',
                 border: `0.67px solid ${activeFleetFilter === filter ? '#2F6FED' : '#E8ECF0'}`,
@@ -533,7 +530,12 @@ export const FleetDriversPage = () => {
         >
           <RowStack justifyContent={'space-between'} width={'100%'}>
             <RowStack spacing={'8px'}>
-              <PeopleOutlineIcon sx={{ fontSize: 20, color: (theme) => theme.palette.primary.main }} />
+              <PeopleOutlineIcon
+                sx={{
+                  fontSize: 20,
+                  color: (theme) => theme.palette.primary.main,
+                }}
+              />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,

@@ -18,11 +18,7 @@ import {
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
-import {
-  FleetRevenueChart,
-  PayoutModal,
-  EarningsRow,
-} from './ui/components';
+import { FleetRevenueChart, PayoutModal, EarningsRow } from './ui/components';
 import { pxToRem } from '../../../common';
 
 // ─── Sample Data ────────────────────────────────────────────────────────────
@@ -106,9 +102,7 @@ const earningsData: EarningsRow[] = [
 
 export const FleetEarningsPage = () => {
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
-  const [selectedFleet, setSelectedFleet] = useState<EarningsRow | null>(
-    null
-  );
+  const [selectedFleet, setSelectedFleet] = useState<EarningsRow | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
@@ -308,7 +302,7 @@ export const FleetEarningsPage = () => {
             justifyContent: 'center',
             height: '30px',
             padding: '0 14px',
-            background: alpha("#2F6FED", .1),
+            background: alpha('#2F6FED', 0.1),
             border: '0.67px solid #2F6FED',
             borderRadius: '8px',
             cursor: 'pointer',
@@ -357,9 +351,7 @@ export const FleetEarningsPage = () => {
               '&:hover': { opacity: 0.85 },
             }}
           >
-            <FileDownloadOutlinedIcon
-              sx={{ fontSize: 14, color: '#374151' }}
-            />
+            <FileDownloadOutlinedIcon sx={{ fontSize: 14, color: '#374151' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

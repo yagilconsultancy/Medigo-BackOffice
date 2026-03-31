@@ -15,7 +15,10 @@ import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import EventOutlinedIcon from '@mui/icons-material/EventOutlined';
 import { RowStack } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
-import type { VehicleCategory, VehicleStatus } from '../../../../AllVehiclesPage';
+import type {
+  VehicleCategory,
+  VehicleStatus,
+} from '../../../../AllVehiclesPage';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -71,7 +74,9 @@ export const VehicleProfileCard = ({
 
   const statCards = [
     {
-      icon: <PersonOutlineOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />,
+      icon: (
+        <PersonOutlineOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
+      ),
       label: 'ASSIGNED DRIVER',
       value: vehicle.driver,
     },
@@ -138,7 +143,9 @@ export const VehicleProfileCard = ({
               flexShrink: 0,
             }}
           >
-            <DirectionsCarOutlinedIcon sx={{ fontSize: 22, color: '#2F6FED' }} />
+            <DirectionsCarOutlinedIcon
+              sx={{ fontSize: 22, color: '#2F6FED' }}
+            />
           </Box>
 
           {/* Vehicle Name + ID/Plate + Category */}

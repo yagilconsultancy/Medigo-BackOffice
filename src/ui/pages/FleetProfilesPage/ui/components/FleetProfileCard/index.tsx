@@ -65,9 +65,7 @@ export const FleetProfileCard = ({
   const metrics = [
     {
       icon: (
-        <DirectionsCarOutlinedIcon
-          sx={{ fontSize: 14, color: '#6366F1' }}
-        />
+        <DirectionsCarOutlinedIcon sx={{ fontSize: 14, color: '#6366F1' }} />
       ),
       iconBg: '#EEF2FF',
       label: 'Fleet Vehicles',
@@ -80,9 +78,7 @@ export const FleetProfileCard = ({
       value: String(profile.drivers),
     },
     {
-      icon: (
-        <AttachMoneyOutlinedIcon sx={{ fontSize: 14, color: '#2F6FED' }} />
-      ),
+      icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 14, color: '#2F6FED' }} />,
       iconBg: '#EBF2FF',
       label: 'Total Revenue',
       value: profile.revenue,
@@ -344,27 +340,21 @@ export const FleetProfileCard = ({
           <Stack spacing={'12px'} sx={{ marginTop: '14px' }}>
             <ContactRow
               icon={
-                <PersonOutlineIcon
-                  sx={{ fontSize: 13, color: '#9CA3AF' }}
-                />
+                <PersonOutlineIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
               }
               label="Contact Person"
               value={profile.contactPerson}
             />
             <ContactRow
               icon={
-                <EmailOutlinedIcon
-                  sx={{ fontSize: 13, color: '#9CA3AF' }}
-                />
+                <EmailOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
               }
               label="Email"
               value={profile.contactEmail}
             />
             <ContactRow
               icon={
-                <PhoneOutlinedIcon
-                  sx={{ fontSize: 13, color: '#9CA3AF' }}
-                />
+                <PhoneOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
               }
               label="Phone"
               value={profile.contactPhone}
@@ -492,9 +482,7 @@ const DocumentChip = ({
         flexShrink: 0,
       }}
     >
-      {checked && (
-        <CheckIcon sx={{ fontSize: 10, color: '#FFFFFF' }} />
-      )}
+      {checked && <CheckIcon sx={{ fontSize: 10, color: '#FFFFFF' }} />}
     </Box>
     <Typography
       sx={{

@@ -50,7 +50,9 @@ export const VehicleDetailDrawer = ({
 
   const detailRows = [
     {
-      icon: <PersonOutlineOutlinedIcon sx={{ fontSize: 11, color: '#9CA3AF' }} />,
+      icon: (
+        <PersonOutlineOutlinedIcon sx={{ fontSize: 11, color: '#9CA3AF' }} />
+      ),
       label: 'Assigned Driver',
       value: vehicle.driver,
     },
@@ -60,7 +62,11 @@ export const VehicleDetailDrawer = ({
       value: vehicle.fleet,
     },
     {
-      icon: <ConfirmationNumberOutlinedIcon sx={{ fontSize: 11, color: '#9CA3AF' }} />,
+      icon: (
+        <ConfirmationNumberOutlinedIcon
+          sx={{ fontSize: 11, color: '#9CA3AF' }}
+        />
+      ),
       label: 'Plate',
       value: vehicle.plate,
     },
@@ -70,7 +76,9 @@ export const VehicleDetailDrawer = ({
       value: vehicle.vin,
     },
     {
-      icon: <VerifiedUserOutlinedIcon sx={{ fontSize: 11, color: '#9CA3AF' }} />,
+      icon: (
+        <VerifiedUserOutlinedIcon sx={{ fontSize: 11, color: '#9CA3AF' }} />
+      ),
       label: 'Insurance',
       value: vehicle.insurance,
     },
@@ -109,10 +117,7 @@ export const VehicleDetailDrawer = ({
     >
       <Stack>
         {/* Close Button */}
-        <RowStack
-          justifyContent={'flex-end'}
-          sx={{ padding: '16px 20px 0' }}
-        >
+        <RowStack justifyContent={'flex-end'} sx={{ padding: '16px 20px 0' }}>
           <IconButton
             onClick={onClose}
             sx={{
@@ -260,7 +265,9 @@ export const VehicleDetailDrawer = ({
           {/* Stat Boxes */}
           <RowStack sx={{ marginTop: '16px', gap: '12px', width: '100%' }}>
             <StatBox
-              icon={<SpeedOutlinedIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />}
+              icon={
+                <SpeedOutlinedIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />
+              }
               value={vehicle.mileage}
               label="Mileage"
             />
@@ -274,7 +281,9 @@ export const VehicleDetailDrawer = ({
               label="Capacity"
             />
             <StatBox
-              icon={<BuildOutlinedIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />}
+              icon={
+                <BuildOutlinedIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />
+              }
               value={vehicle.lastService}
               label="Last Service"
             />
@@ -317,10 +326,7 @@ export const VehicleDetailDrawer = ({
         </Stack>
 
         {/* Footer Buttons */}
-        <RowStack
-          spacing={'12px'}
-          sx={{ padding: '0 24px 20px' }}
-        >
+        <RowStack spacing={'12px'} sx={{ padding: '0 24px 20px' }}>
           <Box
             onClick={onEditVehicle}
             sx={{

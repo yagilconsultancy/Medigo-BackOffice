@@ -68,11 +68,13 @@ export const EditDriverDrawer = ({
       setFullName(driver.name);
       setPhone(driver.phone);
       setEmail(driver.email);
-      setFleet(driver.fleet === 'MediGo Direct' ? 'Independent (MediGo Direct)' : driver.fleet);
-      setTripStatus(driver.status === 'Suspended' ? 'Off Duty' : driver.status);
-      setAccountStatus(
-        driver.status === 'Suspended' ? 'Suspended' : 'Active'
+      setFleet(
+        driver.fleet === 'MediGo Direct'
+          ? 'Independent (MediGo Direct)'
+          : driver.fleet
       );
+      setTripStatus(driver.status === 'Suspended' ? 'Off Duty' : driver.status);
+      setAccountStatus(driver.status === 'Suspended' ? 'Suspended' : 'Active');
       setDocumentStatus(driver.docsStatus);
       setAvatarPreview(driver.avatar || '');
     }
@@ -546,9 +548,7 @@ export const EditDriverDrawer = ({
               '&:hover': { opacity: 0.9 },
             }}
           >
-            <SaveOutlinedIcon
-              sx={{ fontSize: 14, color: '#FFFFFF' }}
-            />
+            <SaveOutlinedIcon sx={{ fontSize: 14, color: '#FFFFFF' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

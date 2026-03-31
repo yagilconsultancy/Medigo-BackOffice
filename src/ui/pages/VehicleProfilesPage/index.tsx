@@ -7,10 +7,7 @@ import {
   DashboardTitleAndDesc,
   AppSearchField,
 } from '../../modules/components';
-import {
-  VehicleProfileCard,
-  VehicleDocumentsModal,
-} from './ui/components';
+import { VehicleProfileCard, VehicleDocumentsModal } from './ui/components';
 import type { VehicleProfileCardData } from './ui/components/VehicleProfileCard';
 
 // ─── Mock Data ──────────────────────────────────────────────────────────────

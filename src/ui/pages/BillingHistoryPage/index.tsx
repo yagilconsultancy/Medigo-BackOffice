@@ -246,17 +246,13 @@ export const BillingHistoryPage = () => {
     {
       value: '1,094',
       label: 'Settled',
-      icon: (
-        <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />
-      ),
+      icon: <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
     {
       value: '74',
       label: 'Partial / Pending',
-      icon: (
-        <ScheduleOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
-      ),
+      icon: <ScheduleOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
       iconBg: '#FFFBEB',
     },
     {

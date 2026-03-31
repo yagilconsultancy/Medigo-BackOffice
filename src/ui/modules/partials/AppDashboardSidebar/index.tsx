@@ -87,9 +87,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: settingsIcon,
         text: 'Service Management',
-        dropdown: [
-          { text: 'Service Provider', link: '/services/providers' },
-        ],
+        dropdown: [{ text: 'Service Provider', link: '/services/providers' }],
       },
       {
         icon: riderManagementIcon,
@@ -129,7 +127,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
           { text: 'Pricing Dashboard', link: '/pricing' },
           { text: 'Fare Configuration', link: '/pricing/fares' },
           { text: 'Surcharges', link: '/pricing/surcharges' },
-          { text: 'Recurring & Packages', link: '/pricing/packages' },
+          { text: 'Recurring & Packages', link: '/pricing/recurring' },
           { text: 'Pricing Configuration', link: '/pricing/configuration' },
           { text: 'Pricing Logs', link: '/pricing/logs' },
           { text: 'Commission Settings', link: '/pricing/commissions' },

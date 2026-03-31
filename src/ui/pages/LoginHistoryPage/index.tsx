@@ -50,25 +50,19 @@ const statCards = [
   {
     value: '618',
     label: 'Successful',
-    icon: (
-      <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#059669' }} />
-    ),
+    icon: <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#059669' }} />,
     iconBg: '#ECFDF5',
   },
   {
     value: '6',
     label: 'Failed Attempts',
-    icon: (
-      <ErrorOutlineOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
-    ),
+    icon: <ErrorOutlineOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
     iconBg: '#FEF2F2',
   },
   {
     value: '9',
     label: 'Unique Locations',
-    icon: (
-      <LocationOnOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />
-    ),
+    icon: <LocationOnOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
     iconBg: '#EEF2FF',
   },
 ];
@@ -339,9 +333,7 @@ export const LoginHistoryPage = () => {
             {params.row.location}
           </Typography>
           {params.row.isSuspicious && (
-            <WarningAmberOutlinedIcon
-              sx={{ fontSize: 14, color: '#EF4444' }}
-            />
+            <WarningAmberOutlinedIcon sx={{ fontSize: 14, color: '#EF4444' }} />
           )}
         </RowStack>
       ),
@@ -376,7 +368,9 @@ export const LoginHistoryPage = () => {
             sx={{
               padding: '4px 12px',
               borderRadius: '100px',
-              background: isSuccess ? alpha('#059669', .1) : alpha('#EF4444', .1),
+              background: isSuccess
+                ? alpha('#059669', 0.1)
+                : alpha('#EF4444', 0.1),
             }}
           >
             <Typography
@@ -495,9 +489,7 @@ export const LoginHistoryPage = () => {
             border: '0.67px solid #FECACA',
           }}
         >
-          <WarningAmberOutlinedIcon
-            sx={{ fontSize: 18, color: '#EF4444' }}
-          />
+          <WarningAmberOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
           <Typography
             sx={{
               fontFamily: (theme) => theme.typography.fontFamily,
@@ -506,7 +498,7 @@ export const LoginHistoryPage = () => {
               color: '#EF4444',
             }}
           >
-            2 suspicious login attempts detected {"  "}
+            2 suspicious login attempts detected {'  '}
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
@@ -514,9 +506,10 @@ export const LoginHistoryPage = () => {
                 fontSize: pxToRem(13),
                 color: '#6B7280',
               }}
-              component={"span"}
-          >from unrecognized overseas
-            IPs. Review and consider enabling geo-blocking.
+              component={'span'}
+            >
+              from unrecognized overseas IPs. Review and consider enabling
+              geo-blocking.
             </Typography>
           </Typography>
         </RowStack>
@@ -555,9 +548,7 @@ export const LoginHistoryPage = () => {
                       padding: '6px 14px',
                       borderRadius: '10px',
                       background: isActive ? '#2F6FED' : 'transparent',
-                      border: isActive
-                        ? 'none'
-                        : '0.67px solid #E5E7EB',
+                      border: isActive ? 'none' : '0.67px solid #E5E7EB',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                       '&:hover': { opacity: 0.85 },
@@ -565,8 +556,7 @@ export const LoginHistoryPage = () => {
                   >
                     <Typography
                       sx={{
-                        fontFamily: (theme) =>
-                          theme.typography.fontFamily,
+                        fontFamily: (theme) => theme.typography.fontFamily,
                         fontWeight: 600,
                         fontSize: pxToRem(13),
                         color: isActive ? '#FFFFFF' : '#6B7280',
@@ -585,8 +575,7 @@ export const LoginHistoryPage = () => {
                     >
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 600,
                           fontSize: pxToRem(11),
                           color: isActive ? '#FFFFFF' : '#6B7280',

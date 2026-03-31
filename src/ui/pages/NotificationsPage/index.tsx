@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Divider,
-  Grid,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
@@ -66,9 +60,7 @@ const categoryIcons: Record<NotificationCategory, React.ReactNode> = {
     <SettingsOutlinedIcon sx={{ width: 18, height: 18, color: '#059669' }} />
   ),
   'System Alert': (
-    <SettingsOutlinedIcon
-      sx={{ width: 18, height: 18, color: '#EA580C' }}
-    />
+    <SettingsOutlinedIcon sx={{ width: 18, height: 18, color: '#EA580C' }} />
   ),
 };
 
@@ -152,9 +144,7 @@ export const NotificationsPage = () => {
     {
       value: '42',
       label: 'Total Sent',
-      icon: (
-        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
-      ),
+      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
       iconBg: '#FEF3C7',
     },
     {
@@ -172,9 +162,7 @@ export const NotificationsPage = () => {
     {
       value: '2',
       label: 'System Alerts',
-      icon: (
-        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />
-      ),
+      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />,
       iconBg: '#FFF7ED',
     },
   ];

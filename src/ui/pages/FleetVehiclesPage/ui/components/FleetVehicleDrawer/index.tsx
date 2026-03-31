@@ -52,10 +52,7 @@ type FleetVehicleDrawerProps = {
   open: boolean;
   onClose: () => void;
   vehicle: FleetVehicleRow | null;
-  onStatusChange?: (
-    vehicle: FleetVehicleRow,
-    newStatus: VehicleStatus
-  ) => void;
+  onStatusChange?: (vehicle: FleetVehicleRow, newStatus: VehicleStatus) => void;
   onScheduleMaintenance?: () => void;
 };
 
@@ -162,7 +159,13 @@ export const FleetVehicleDrawer = ({
             <MiniStatBox label="STATUS" value={vehicle.status} />
             <MiniStatBox
               label="CATEGORY"
-              value={vehicle.category === 'Standard Ride' ? 'Standard' : vehicle.category === 'Wheelchair Accessible' ? 'WAV' : 'Assisted'}
+              value={
+                vehicle.category === 'Standard Ride'
+                  ? 'Standard'
+                  : vehicle.category === 'Wheelchair Accessible'
+                    ? 'WAV'
+                    : 'Assisted'
+              }
             />
             <MiniStatBox label="MILEAGE" value={vehicle.mileage} />
           </RowStack>
@@ -227,9 +230,7 @@ export const FleetVehicleDrawer = ({
             />
             <DetailRow
               icon={
-                <BusinessOutlinedIcon
-                  sx={{ fontSize: 13, color: '#9CA3AF' }}
-                />
+                <BusinessOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
               }
               label="Fleet Network"
               value={vehicle.fleet}
@@ -353,13 +354,7 @@ const SectionLabel = ({ children }: { children: string }) => (
   </Typography>
 );
 
-const MiniStatBox = ({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) => (
+const MiniStatBox = ({ label, value }: { label: string; value: string }) => (
   <Stack
     sx={{
       flex: 1,

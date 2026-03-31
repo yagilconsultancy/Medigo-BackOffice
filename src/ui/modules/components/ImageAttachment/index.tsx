@@ -1,9 +1,9 @@
-import AttachFileIcon from "@mui/icons-material/AttachFile";
-import { Box, Typography } from "@mui/material";
-import { Document, Page, PDFDownloadLink } from "@react-pdf/renderer";
-import { ReactNode } from "react";
-import { RowStack } from "../RowStack";
-import { pxToRem } from "../../../../common";
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import { Box, Typography } from '@mui/material';
+import { Document, Page, PDFDownloadLink } from '@react-pdf/renderer';
+import { ReactNode } from 'react';
+import { RowStack } from '../RowStack';
+import { pxToRem } from '../../../../common';
 
 type ImageAttachmentProps = {
   text: string;
@@ -11,9 +11,14 @@ type ImageAttachmentProps = {
   children?: ReactNode;
 };
 
-const isPdf = (url?: string) => typeof url === "string" && url.toLowerCase().endsWith(".pdf");
+const isPdf = (url?: string) =>
+  typeof url === 'string' && url.toLowerCase().endsWith('.pdf');
 
-export function ImageAttachment({ text, imageUrl, children }: ImageAttachmentProps) {
+export function ImageAttachment({
+  text,
+  imageUrl,
+  children,
+}: ImageAttachmentProps) {
   const handleImageDownload = async () => {
     if (!imageUrl) return;
 
@@ -22,9 +27,9 @@ export function ImageAttachment({ text, imageUrl, children }: ImageAttachmentPro
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
 
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = imageUrl.split("/").pop() ?? "attachment";
+      link.download = imageUrl.split('/').pop() ?? 'attachment';
 
       document.body.appendChild(link);
       link.click();
@@ -32,7 +37,7 @@ export function ImageAttachment({ text, imageUrl, children }: ImageAttachmentPro
 
       URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      console.error("Failed to download image", err);
+      console.error('Failed to download image', err);
     }
   };
 
@@ -44,27 +49,30 @@ export function ImageAttachment({ text, imageUrl, children }: ImageAttachmentPro
             <Page size="A4" />
           </Document>
         }
-        fileName={imageUrl?.split("/").pop() ?? "document.pdf"}
-        style={{ textDecoration: "none" }}
+        fileName={imageUrl?.split('/').pop() ?? 'document.pdf'}
+        style={{ textDecoration: 'none' }}
       >
         {({ loading }) =>
           children ? (
-            <Box sx={{ cursor: "pointer" }}>{children}</Box>
+            <Box sx={{ cursor: 'pointer' }}>{children}</Box>
           ) : (
-            <RowStack spacing={1} sx={{ cursor: "pointer", alignItems: "center" }}>
-              <AttachFileIcon sx={{ color: "text.primary" }} />
+            <RowStack
+              spacing={1}
+              sx={{ cursor: 'pointer', alignItems: 'center' }}
+            >
+              <AttachFileIcon sx={{ color: 'text.primary' }} />
 
               <Typography
                 sx={{
-                  color: "primary.main",
+                  color: 'primary.main',
                   fontWeight: 500,
                   fontSize: pxToRem(16),
-                  lineHeight: "24px",
+                  lineHeight: '24px',
                   fontFamily: (theme) => theme.typography.fontFamily,
-                  textDecoration: "underline",
+                  textDecoration: 'underline',
                 }}
               >
-                {loading ? "Preparing PDF..." : text}
+                {loading ? 'Preparing PDF...' : text}
               </Typography>
             </RowStack>
           )
@@ -75,7 +83,10 @@ export function ImageAttachment({ text, imageUrl, children }: ImageAttachmentPro
 
   if (children) {
     return (
-      <Box sx={{ cursor: imageUrl ? "pointer" : "default" }} onClick={handleImageDownload}>
+      <Box
+        sx={{ cursor: imageUrl ? 'pointer' : 'default' }}
+        onClick={handleImageDownload}
+      >
         {children}
       </Box>
     );
@@ -85,20 +96,20 @@ export function ImageAttachment({ text, imageUrl, children }: ImageAttachmentPro
     <RowStack
       spacing={1}
       sx={{
-        cursor: imageUrl ? "pointer" : "default",
-        alignItems: "center",
+        cursor: imageUrl ? 'pointer' : 'default',
+        alignItems: 'center',
       }}
       onClick={handleImageDownload}
     >
-      <AttachFileIcon sx={{ color: "text.primary" }} />
+      <AttachFileIcon sx={{ color: 'text.primary' }} />
       <Typography
         sx={{
-          color: "primary.main",
+          color: 'primary.main',
           fontWeight: 500,
           fontSize: pxToRem(16),
-          lineHeight: "24px",
+          lineHeight: '24px',
           fontFamily: (theme) => theme.typography.fontFamily,
-          textDecoration: imageUrl ? "underline" : "none",
+          textDecoration: imageUrl ? 'underline' : 'none',
         }}
       >
         {text}

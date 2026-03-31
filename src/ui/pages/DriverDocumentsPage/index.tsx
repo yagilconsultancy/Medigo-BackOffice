@@ -445,7 +445,11 @@ export const DriverDocumentsPage = () => {
     let expired = 0;
     let missing = 0;
     driversData.forEach((d) => {
-      const statuses = [d.license.status, d.insurance.status, d.certification.status];
+      const statuses = [
+        d.license.status,
+        d.insurance.status,
+        d.certification.status,
+      ];
       const allValid = statuses.every((s) => s === 'Valid');
       if (allValid) valid++;
       if (statuses.includes('Expiring Soon')) expiring++;
@@ -488,7 +492,12 @@ export const DriverDocumentsPage = () => {
     { label: 'Missing', count: filterCounts.missing, status: 'Missing' },
   ];
 
-  const columnHeaders = ['DRIVER', 'DRIVER LICENSE', 'INSURANCE', 'CERTIFICATION'];
+  const columnHeaders = [
+    'DRIVER',
+    'DRIVER LICENSE',
+    'INSURANCE',
+    'CERTIFICATION',
+  ];
 
   return (
     <AppDashboardLayout>
@@ -534,9 +543,7 @@ export const DriverDocumentsPage = () => {
               return (
                 <Box
                   key={chip.status}
-                  onClick={() =>
-                    setActiveFilter(isActive ? null : chip.status)
-                  }
+                  onClick={() => setActiveFilter(isActive ? null : chip.status)}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -547,9 +554,7 @@ export const DriverDocumentsPage = () => {
                     border: `1px solid ${config.borderColor}`,
                     cursor: 'pointer',
                     opacity: isActive ? 1 : 0.85,
-                    outline: isActive
-                      ? `2px solid ${config.color}`
-                      : 'none',
+                    outline: isActive ? `2px solid ${config.color}` : 'none',
                     outlineOffset: '1px',
                     transition: 'all 0.15s ease',
                     '&:hover': { opacity: 1 },
@@ -661,7 +666,10 @@ export const DriverDocumentsPage = () => {
                 {/* Doc Cards */}
                 {[driver.license, driver.insurance, driver.certification].map(
                   (doc, idx) => (
-                    <Box key={idx} sx={{ flex: 1, minWidth: '240px', px: '6px' }}>
+                    <Box
+                      key={idx}
+                      sx={{ flex: 1, minWidth: '240px', px: '6px' }}
+                    >
                       <DocCard
                         doc={doc}
                         onView={() => handleViewDoc(driver, doc)}
@@ -744,9 +752,7 @@ const DocCard = ({
             color: '#9CA3AF',
           }}
         >
-          {isMissing
-            ? 'No document on file'
-            : `Expires ${doc.expiry}`}
+          {isMissing ? 'No document on file' : `Expires ${doc.expiry}`}
         </Typography>
       </Stack>
 

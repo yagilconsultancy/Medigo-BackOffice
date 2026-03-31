@@ -1,14 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Chip,
-  Grid,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Grid, IconButton, Stack, Typography } from '@mui/material';
 import LoopOutlinedIcon from '@mui/icons-material/LoopOutlined';
 import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -711,9 +704,7 @@ export const RefundManagementPage = () => {
                         padding: '6px 14px',
                         borderRadius: '10px',
                         background: isActive ? '#2F6FED' : 'transparent',
-                        border: isActive
-                          ? 'none'
-                          : '0.67px solid #E5E7EB',
+                        border: isActive ? 'none' : '0.67px solid #E5E7EB',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease',
                         '&:hover': { opacity: 0.85 },
@@ -721,8 +712,7 @@ export const RefundManagementPage = () => {
                     >
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 600,
                           fontSize: pxToRem(13),
                           color: isActive ? '#FFFFFF' : '#6B7280',
@@ -741,8 +731,7 @@ export const RefundManagementPage = () => {
                       >
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 600,
                             fontSize: pxToRem(11),
                             color: isActive ? '#FFFFFF' : '#6B7280',

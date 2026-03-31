@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Divider,
-  Grid,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
@@ -112,7 +106,7 @@ const notificationsData: DriverNotificationRow[] = [
     title: 'February Top Driver Bonus',
     category: 'Bonus',
     description:
-      'Congratulations! You\'ve qualified for the February Top Driver Bonus. An additional $150 CAD has been added to your next payout.',
+      "Congratulations! You've qualified for the February Top Driver Bonus. An additional $150 CAD has been added to your next payout.",
     recipients: 'Top 20 Drivers',
     sentTo: 20,
     timestamp: 'Mar 1, 2026 · 08:00 AM',
@@ -151,25 +145,19 @@ export const DriverNotificationsPage = () => {
     {
       value: '862',
       label: 'Total Sent',
-      icon: (
-        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-      ),
+      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
       iconBg: '#EBF2FF',
     },
     {
       value: '14',
       label: 'Surge Alerts',
-      icon: (
-        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
-      ),
+      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
       iconBg: '#FEF2F2',
     },
     {
       value: '12',
       label: 'Payout Notices',
-      icon: (
-        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />
-      ),
+      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
   ];

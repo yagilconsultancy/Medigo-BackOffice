@@ -13,7 +13,11 @@ type IssueStatCardProps = {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export const IssueStatCard = ({ value, label, valueColor }: IssueStatCardProps) => {
+export const IssueStatCard = ({
+  value,
+  label,
+  valueColor,
+}: IssueStatCardProps) => {
   return (
     <Stack
       sx={{

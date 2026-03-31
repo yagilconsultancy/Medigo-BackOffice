@@ -4,14 +4,12 @@ import { pxToRem } from '../../../../../../common';
 
 export type FleetCompanyStatus = 'Active' | 'Suspended' | 'Pending';
 
-const statusConfig: Record<
-  FleetCompanyStatus,
-  { color: string; bg: string }
-> = {
-  Active: { color: '#059669', bg: '#ECFDF5' },
-  Suspended: { color: '#EF4444', bg: '#FEF2F2' },
-  Pending: { color: '#D97706', bg: '#FFFBEB' },
-};
+const statusConfig: Record<FleetCompanyStatus, { color: string; bg: string }> =
+  {
+    Active: { color: '#059669', bg: '#ECFDF5' },
+    Suspended: { color: '#EF4444', bg: '#FEF2F2' },
+    Pending: { color: '#D97706', bg: '#FFFBEB' },
+  };
 
 type FleetStatusChipProps = {
   status: FleetCompanyStatus;

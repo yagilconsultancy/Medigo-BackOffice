@@ -5,10 +5,7 @@ import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import {
-  DashboardTitleAndDesc,
-  RowStack,
-} from '../../modules/components';
+import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
 import { pxToRem } from '../../../common';
 import { ContactStatCard } from './ui/components';
 
@@ -31,27 +28,25 @@ type ContactLogRow = {
 
 // ─── Color Maps ─────────────────────────────────────────────────────────────
 
-const channelConfig: Record<
-  Channel,
-  { color: string; icon: React.ReactNode }
-> = {
-  'Phone Call': {
-    color: '#2F6FED',
-    icon: <PhoneOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
-  },
-  'Live Chat': {
-    color: '#7C3AED',
-    icon: (
-      <ChatBubbleOutlineOutlinedIcon
-        sx={{ fontSize: 18, color: '#7C3AED' }}
-      />
-    ),
-  },
-  Email: {
-    color: '#EA580C',
-    icon: <EmailOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />,
-  },
-};
+const channelConfig: Record<Channel, { color: string; icon: React.ReactNode }> =
+  {
+    'Phone Call': {
+      color: '#2F6FED',
+      icon: <PhoneOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
+    },
+    'Live Chat': {
+      color: '#7C3AED',
+      icon: (
+        <ChatBubbleOutlineOutlinedIcon
+          sx={{ fontSize: 18, color: '#7C3AED' }}
+        />
+      ),
+    },
+    Email: {
+      color: '#EA580C',
+      icon: <EmailOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />,
+    },
+  };
 
 const roleColors: Record<Role, { bg: string; color: string }> = {
   Rider: { bg: '#EBF2FF', color: '#2F6FED' },
@@ -203,8 +198,7 @@ export const ContactLogsPage = () => {
                     <RowStack spacing={'8px'}>
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 700,
                           fontSize: pxToRem(13.5),
                           color: '#111827',
@@ -247,8 +241,7 @@ export const ContactLogsPage = () => {
                     {/* Row 2: Subject */}
                     <Typography
                       sx={{
-                        fontFamily: (theme) =>
-                          theme.typography.fontFamily,
+                        fontFamily: (theme) => theme.typography.fontFamily,
                         fontWeight: 400,
                         fontSize: pxToRem(13),
                         color: '#374151',
@@ -260,8 +253,7 @@ export const ContactLogsPage = () => {
                     {/* Row 3: Agent + Duration + Outcome */}
                     <Typography
                       sx={{
-                        fontFamily: (theme) =>
-                          theme.typography.fontFamily,
+                        fontFamily: (theme) => theme.typography.fontFamily,
                         fontWeight: 400,
                         fontSize: pxToRem(12),
                         color: '#9CA3AF',
@@ -270,8 +262,7 @@ export const ContactLogsPage = () => {
                       <Typography
                         component="span"
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 500,
                           fontSize: pxToRem(12),
                           color: '#6B7280',
@@ -302,8 +293,7 @@ export const ContactLogsPage = () => {
                       <Typography
                         component="span"
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 500,
                           fontSize: pxToRem(12),
                           color: '#6B7280',

@@ -42,9 +42,7 @@ export const AppFilterPopover = ({
           height: 38,
           padding: '0 16px',
           background: isActive ? '#EFF5FF' : '#F7F9FB',
-          border: isActive
-            ? '0.667px solid #2F6FED'
-            : '0.67px solid #E8ECF0',
+          border: isActive ? '0.667px solid #2F6FED' : '0.67px solid #E8ECF0',
           borderRadius: '14px',
           cursor: 'pointer',
           '&:hover': { opacity: 0.85 },

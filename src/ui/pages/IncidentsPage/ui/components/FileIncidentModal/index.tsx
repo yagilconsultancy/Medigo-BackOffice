@@ -48,11 +48,7 @@ const initialValues: IncidentFormValues = {
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
-const incidentTypeOptions = [
-  'Driver Complaint',
-  'Rider Complaint',
-  'Accident',
-];
+const incidentTypeOptions = ['Driver Complaint', 'Rider Complaint', 'Accident'];
 
 // ─── Label Component ────────────────────────────────────────────────────────
 

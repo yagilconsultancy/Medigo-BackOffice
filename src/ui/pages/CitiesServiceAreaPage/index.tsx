@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Divider,
-  Grid,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
@@ -126,33 +120,25 @@ export const CitiesServiceAreaPage = () => {
     {
       value: String(activeCities),
       label: 'Active Cities',
-      icon: (
-        <LocationOnOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-      ),
+      icon: <LocationOnOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
       iconBg: '#EBF2FF',
     },
     {
       value: String(totalZones),
       label: 'Total Zones',
-      icon: (
-        <GridViewOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />
-      ),
+      icon: <GridViewOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
       iconBg: '#EEF2FF',
     },
     {
       value: String(activeCities),
       label: 'Cities Online',
-      icon: (
-        <WifiOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />
-      ),
+      icon: <WifiOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
     {
       value: String(inactiveCities),
       label: 'Inactive Cities',
-      icon: (
-        <WifiOffOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
-      ),
+      icon: <WifiOffOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
       iconBg: '#FEF2F2',
     },
   ];
@@ -248,17 +234,16 @@ export const CitiesServiceAreaPage = () => {
         </Grid>
 
         <Stack
-         sx={{
-          background: (theme) => theme.palette.background.default,
-          padding: '24px',
-          borderRadius: '14px'
-         }}
-         spacing={3}
-         divider={<Divider />}
+          sx={{
+            background: (theme) => theme.palette.background.default,
+            padding: '24px',
+            borderRadius: '14px',
+          }}
+          spacing={3}
+          divider={<Divider />}
         >
           {/* Operating Cities Header */}
-          <Stack 
-          spacing={'4px'}>
+          <Stack spacing={'4px'}>
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

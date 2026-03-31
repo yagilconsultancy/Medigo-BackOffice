@@ -69,9 +69,7 @@ export const ApproveDisputeModal = ({
                 flexShrink: 0,
               }}
             >
-              <CheckCircleOutlineIcon
-                sx={{ fontSize: 18, color: '#059669' }}
-              />
+              <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#059669' }} />
             </Box>
             <Stack spacing={'2px'}>
               <Typography

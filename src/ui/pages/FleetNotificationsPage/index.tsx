@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  Divider,
-  Grid,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
@@ -146,9 +140,7 @@ export const FleetNotificationsPage = () => {
     {
       value: '24',
       label: 'Total Sent',
-      icon: (
-        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />
-      ),
+      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />,
       iconBg: '#FFF7ED',
     },
     {
@@ -166,9 +158,7 @@ export const FleetNotificationsPage = () => {
     {
       value: '24',
       label: 'Delivered',
-      icon: (
-        <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />
-      ),
+      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
   ];

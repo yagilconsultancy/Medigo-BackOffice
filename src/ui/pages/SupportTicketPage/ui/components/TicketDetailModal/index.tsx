@@ -1,7 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { alpha, Box, Chip, IconButton, Stack, TextField, Typography } from '@mui/material';
+import {
+  alpha,
+  Box,
+  Chip,
+  IconButton,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -413,9 +421,7 @@ export const TicketDetailModal = ({
               '&:hover': { opacity: 0.9 },
             }}
           >
-            <CheckCircleOutlineIcon
-              sx={{ fontSize: 16, color: '#FFFFFF' }}
-            />
+            <CheckCircleOutlineIcon sx={{ fontSize: 16, color: '#FFFFFF' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

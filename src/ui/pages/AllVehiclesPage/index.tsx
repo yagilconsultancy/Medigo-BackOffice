@@ -356,7 +356,9 @@ export const AllVehiclesPage = () => {
       value: String(statusCounts.total),
       label: 'Total Vehicles',
       valueColor: '#2F6FED',
-      icon: <DirectionsCarOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
+      icon: (
+        <DirectionsCarOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
+      ),
       iconBg: '#EBF2FF',
     },
     {
@@ -370,7 +372,9 @@ export const AllVehiclesPage = () => {
       value: String(statusCounts.maintenance),
       label: 'Maintenance',
       valueColor: '#D97706',
-      icon: <ErrorOutlineOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
+      icon: (
+        <ErrorOutlineOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
+      ),
       iconBg: '#FFFBEB',
     },
     {
@@ -516,8 +520,7 @@ export const AllVehiclesPage = () => {
             fontFamily: (theme) => theme.typography.fontFamily,
             fontWeight: 500,
             fontSize: pxToRem(13),
-            color:
-              params.row.driver === 'Unassigned' ? '#D97706' : '#111827',
+            color: params.row.driver === 'Unassigned' ? '#D97706' : '#111827',
           }}
         >
           {params.row.driver}
@@ -660,7 +663,9 @@ export const AllVehiclesPage = () => {
           />
           <AppButton
             onClick={() => setAddDrawerOpen(true)}
-            startIcon={<AddOutlinedIcon sx={{ fontSize: 16, color: '#FFFFFF' }} />}
+            startIcon={
+              <AddOutlinedIcon sx={{ fontSize: 16, color: '#FFFFFF' }} />
+            }
           >
             Add Vehicle
           </AppButton>
@@ -758,12 +763,9 @@ export const AllVehiclesPage = () => {
                 fontFamily: (theme) => theme.typography.fontFamily,
                 fontWeight: 600,
                 fontSize: pxToRem(12),
-                color:
-                  activeCategoryFilter === filter ? '#FFFFFF' : '#6B7280',
+                color: activeCategoryFilter === filter ? '#FFFFFF' : '#6B7280',
                 background:
-                  activeCategoryFilter === filter
-                    ? '#2F6FED'
-                    : 'transparent',
+                  activeCategoryFilter === filter ? '#2F6FED' : 'transparent',
                 border: `0.67px solid ${activeCategoryFilter === filter ? '#2F6FED' : '#E8ECF0'}`,
                 borderRadius: '20px',
                 padding: '6px 14px',

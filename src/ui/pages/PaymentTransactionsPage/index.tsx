@@ -1,7 +1,16 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Box, Chip, Dialog, Grid, IconButton, LinearProgress, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Dialog,
+  Grid,
+  IconButton,
+  LinearProgress,
+  Stack,
+  Typography,
+} from '@mui/material';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined';
 import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
@@ -318,9 +327,7 @@ export const PaymentTransactionsPage = () => {
     const pending = transactionsData.filter(
       (t) => t.status === 'Pending'
     ).length;
-    const failed = transactionsData.filter(
-      (t) => t.status === 'Failed'
-    ).length;
+    const failed = transactionsData.filter((t) => t.status === 'Failed').length;
     return {
       All: transactionsData.length,
       Settled: settled,
@@ -765,9 +772,7 @@ export const PaymentTransactionsPage = () => {
                         padding: '6px 14px',
                         borderRadius: '10px',
                         background: isActive ? '#2F6FED' : 'transparent',
-                        border: isActive
-                          ? 'none'
-                          : '0.67px solid #E5E7EB',
+                        border: isActive ? 'none' : '0.67px solid #E5E7EB',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease',
                         '&:hover': { opacity: 0.85 },
@@ -879,9 +884,7 @@ const TransactionDetailModal = ({
               justifyContent: 'center',
             }}
           >
-            <ReceiptLongOutlinedIcon
-              sx={{ fontSize: 18, color: '#2F6FED' }}
-            />
+            <ReceiptLongOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
           </Box>
           <Stack spacing={'1px'}>
             <Typography
@@ -1115,10 +1118,7 @@ const TransactionDetailModal = ({
               />
             </Stack>
 
-            <Stack
-              justifyContent={'space-between'}
-              sx={{ gap: '18px' }}
-            >
+            <Stack justifyContent={'space-between'} sx={{ gap: '18px' }}>
               <Stack spacing={'2px'}>
                 <Typography
                   sx={{

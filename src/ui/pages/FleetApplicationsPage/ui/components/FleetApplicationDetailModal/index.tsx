@@ -11,10 +11,7 @@ import { FleetApplicationRow, ApplicationStatus } from '../ApplicationCard';
 
 // ─── Status Badge Config ────────────────────────────────────────────────────
 
-const statusConfig: Record<
-  ApplicationStatus,
-  { color: string; bg: string }
-> = {
+const statusConfig: Record<ApplicationStatus, { color: string; bg: string }> = {
   Pending: { color: '#D97706', bg: '#FFFBEB' },
   Approved: { color: '#059669', bg: '#ECFDF5' },
   Rejected: { color: '#EF4444', bg: '#FEF2F2' },
@@ -182,17 +179,23 @@ export const FleetApplicationDetailModal = ({
           <SectionLabel>CONTACT INFORMATION</SectionLabel>
           <Stack spacing={'12px'}>
             <ContactRow
-              icon={<PersonOutlineIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />}
+              icon={
+                <PersonOutlineIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
+              }
               label="Contact Person"
               value={application.contactPerson}
             />
             <ContactRow
-              icon={<EmailOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />}
+              icon={
+                <EmailOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
+              }
               label="Email Address"
               value={application.contactEmail}
             />
             <ContactRow
-              icon={<PhoneOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />}
+              icon={
+                <PhoneOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
+              }
               label="Phone Number"
               value={application.contactPhone}
             />

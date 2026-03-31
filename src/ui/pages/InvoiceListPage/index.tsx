@@ -219,27 +219,21 @@ export const InvoiceListPage = () => {
       value: '1,248',
       label: 'Total Invoices',
       valueColor: '#111827',
-      icon: (
-        <ReceiptOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-      ),
+      icon: <ReceiptOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
       iconBg: '#EBF2FF',
     },
     {
       value: '1,094',
       label: 'Paid',
       valueColor: '#111827',
-      icon: (
-        <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />
-      ),
+      icon: <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
     {
       value: '118',
       label: 'Pending',
       valueColor: '#111827',
-      icon: (
-        <ScheduleOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
-      ),
+      icon: <ScheduleOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
       iconBg: '#FFFBEB',
     },
     {
@@ -410,9 +404,7 @@ export const InvoiceListPage = () => {
                 '&:hover': { background: '#F7F9FB' },
               }}
             >
-              <VisibilityOutlinedIcon
-                sx={{ fontSize: 14, color: '#374151' }}
-              />
+              <VisibilityOutlinedIcon sx={{ fontSize: 14, color: '#374151' }} />
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
@@ -426,10 +418,7 @@ export const InvoiceListPage = () => {
               </Typography>
             </RowStack>
           </ImagePdfViewer>
-          <ImageAttachment
-            text="PDF"
-            imageUrl={params.row.fileUri}
-          >
+          <ImageAttachment text="PDF" imageUrl={params.row.fileUri}>
             <RowStack
               spacing={'4px'}
               sx={{
@@ -556,7 +545,7 @@ export const InvoiceListPage = () => {
             fontWeight: 500,
             fontSize: pxToRem(16),
             color: (theme) => theme.color.deepBlue,
-            lineHeight: '27px'
+            lineHeight: '27px',
           }}
         >
           Generated Invoices
@@ -576,67 +565,67 @@ export const InvoiceListPage = () => {
             {/* Table Title + Search */}
             <RowStack justifyContent={'space-between'} width={'100%'}>
               <RowStack spacing={'8px'}>
-              {tabFilters.map((tab) => {
-                const isActive = activeTab === tab;
-                return (
-                  <Box
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '6px 14px',
-                      borderRadius: '16px',
-                      border: `0.67px solid ${isActive ? '#2F6FED' : '#E5E7EB'}`,
-                      background: isActive ? '#2F6FED' : 'transparent',
-                      cursor: 'pointer',
-                      userSelect: 'none',
-                      transition: 'all 0.15s ease',
-                      '&:hover': {
-                        background: isActive ? '#2F6FED' : '#F7F9FB',
-                      },
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 600,
-                        fontSize: pxToRem(12),
-                        color: isActive ? '#FFFFFF' : '#6B7280',
-                        lineHeight: '18px',
-                      }}
-                    >
-                      {tab}
-                    </Typography>
+                {tabFilters.map((tab) => {
+                  const isActive = activeTab === tab;
+                  return (
                     <Box
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
                       sx={{
-                        background: isActive
-                          ? 'rgba(255, 255, 255, 0.26)'
-                          : 'rgba(204, 194, 194, 0.26)',
-                        borderRadius: '10px',
-                        padding: '1px 8px',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
+                        gap: '6px',
+                        padding: '6px 14px',
+                        borderRadius: '16px',
+                        border: `0.67px solid ${isActive ? '#2F6FED' : '#E5E7EB'}`,
+                        background: isActive ? '#2F6FED' : 'transparent',
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        transition: 'all 0.15s ease',
+                        '&:hover': {
+                          background: isActive ? '#2F6FED' : '#F7F9FB',
+                        },
                       }}
                     >
                       <Typography
                         sx={{
                           fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 600,
-                          fontSize: pxToRem(11),
+                          fontSize: pxToRem(12),
                           color: isActive ? '#FFFFFF' : '#6B7280',
-                          lineHeight: '16px',
+                          lineHeight: '18px',
                         }}
                       >
-                        {tabCounts[tab as keyof typeof tabCounts]}
+                        {tab}
                       </Typography>
+                      <Box
+                        sx={{
+                          background: isActive
+                            ? 'rgba(255, 255, 255, 0.26)'
+                            : 'rgba(204, 194, 194, 0.26)',
+                          borderRadius: '10px',
+                          padding: '1px 8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 600,
+                            fontSize: pxToRem(11),
+                            color: isActive ? '#FFFFFF' : '#6B7280',
+                            lineHeight: '16px',
+                          }}
+                        >
+                          {tabCounts[tab as keyof typeof tabCounts]}
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
-                );
-              })}
-            </RowStack>
+                  );
+                })}
+              </RowStack>
               <AppSearchField
                 name="search"
                 placeholder="Search invoices..."

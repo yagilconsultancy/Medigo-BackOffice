@@ -1,12 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Box,
-  InputAdornment,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, InputAdornment, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Formik, Form } from 'formik';
@@ -88,10 +83,7 @@ const FieldLabel = ({
   >
     {label}
     {required && (
-      <Typography
-        component="span"
-        sx={{ color: '#EF4444', ml: '2px' }}
-      >
+      <Typography component="span" sx={{ color: '#EF4444', ml: '2px' }}>
         *
       </Typography>
     )}
@@ -105,8 +97,9 @@ export const GenerateInvoiceModal = ({
   onClose,
   onSubmit,
 }: GenerateInvoiceModalProps) => {
-  const [rideTypeAnchorEl, setRideTypeAnchorEl] =
-    useState<null | HTMLElement>(null);
+  const [rideTypeAnchorEl, setRideTypeAnchorEl] = useState<null | HTMLElement>(
+    null
+  );
 
   return (
     <AppModal
@@ -233,8 +226,7 @@ export const GenerateInvoiceModal = ({
                     >
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 400,
                           fontSize: pxToRem(13),
                           color: values.rideType

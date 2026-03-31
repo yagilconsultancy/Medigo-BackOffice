@@ -39,8 +39,7 @@ const initialRideTypes: RideTypeData[] = [
   {
     id: '1',
     name: 'MediGo Standard Ambulatory Ride',
-    description:
-      'Regular car for ambulatory patients — most common ride type',
+    description: 'Regular car for ambulatory patients — most common ride type',
     isActive: true,
     baseFare: 8.0,
     perKm: 1.8,

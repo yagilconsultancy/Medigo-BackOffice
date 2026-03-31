@@ -1,2 +1,2 @@
-export * from "./NotificationInfoUI"
-export * from "./SendNotificationModal"
+export * from './NotificationInfoUI';
+export * from './SendNotificationModal';
