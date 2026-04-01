@@ -4,3 +4,7 @@ export * from './EditDriverDrawer';
 export * from './DriverProfileCard';
 export * from './SuspendDriverModal';
 export * from './EditDriverModal';
+export * from './CaregiverProfileCard';
+export * from './EditCaregiverDrawer';
+export * from './ViewCaregiverDrawer';
+export * from './AddCaregiverDrawer';

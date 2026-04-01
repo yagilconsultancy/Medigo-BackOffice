@@ -35,7 +35,9 @@ import {
 import { AppDropdownMenu } from '../../modules/components/AppDropdownMenu';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { pxToRem } from '../../../common';
-import { DriverViewDrawer, DriverViewData, AddDriverDrawer, EditDriverDrawer, EditDriverData, DriverProfileCard, DriverProfileCardData, SuspendDriverModal, EditDriverModal } from './ui/components';
+import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import { DriverViewDrawer, DriverViewData, AddDriverDrawer, EditDriverDrawer, EditDriverData, DriverProfileCard, DriverProfileCardData, SuspendDriverModal, EditDriverModal, CaregiverProfileCard, CaregiverProfileCardData, ViewCaregiverDrawer, CaregiverViewData, AddCaregiverDrawer, EditCaregiverDrawer, EditCaregiverDrawerData } from './ui/components';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -66,6 +68,25 @@ type DriverRow = {
   capabilities: string[];
 };
 
+type CaregiverStatus = 'Available' | 'On Assignment' | 'Suspended';
+
+type CaregiverRow = {
+  id: string;
+  caregiverId: string;
+  name: string;
+  avatar: string;
+  specialty: string;
+  certifications: string;
+  capabilities: string[];
+  status: CaregiverStatus;
+  rating: number;
+  assignments: number;
+  location: string;
+  joinedDate: string;
+  phone: string;
+  email: string;
+};
+
 // ─── Status Config ──────────────────────────────────────────────────────────
 
 const statusConfig: Record<
@@ -74,6 +95,15 @@ const statusConfig: Record<
 > = {
   Available: { color: '#166534', bg: '#EDFAF4', border: '#BBF7D0' },
   'On Trip': { color: '#3730A3', bg: '#EEF2FF', border: '#C7D2FE' },
+  Suspended: { color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
+};
+
+const caregiverStatusConfig: Record<
+  CaregiverStatus,
+  { color: string; bg: string; border: string }
+> = {
+  Available: { color: '#166534', bg: '#EDFAF4', border: '#BBF7D0' },
+  'On Assignment': { color: '#3730A3', bg: '#EEF2FF', border: '#C7D2FE' },
   Suspended: { color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
 };
 
@@ -249,6 +279,96 @@ const driversData: DriverRow[] = [
   },
 ];
 
+// ─── Caregiver Stat Cards ────────────────────────────────────────────────────
+
+const caregiverStatCards: StatCardProps[] = [
+  {
+    icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+    iconBg: '#EBF2FF',
+    value: '124',
+    label: 'Total Caregivers',
+  },
+  {
+    icon: <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#10B981' }} />,
+    iconBg: '#ECFDF5',
+    value: '41',
+    label: 'Available Now',
+  },
+  {
+    icon: <AssignmentIndOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
+    iconBg: '#EEF2FF',
+    value: '28',
+    label: 'On Assignment',
+  },
+  {
+    icon: <StarIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
+    iconBg: '#FFFBEB',
+    value: '4.8',
+    label: 'Avg. Rating',
+  },
+];
+
+// ─── Caregiver Mock Data ─────────────────────────────────────────────────────
+
+const caregiversData: CaregiverRow[] = [
+  {
+    id: '1', caregiverId: 'CG-001', name: 'Emma Thompson', avatar: '',
+    specialty: 'Personal Support Worker', certifications: 'PSW, First Aid, Dementia Care',
+    capabilities: ['Dementia Care', 'Mobility Assistance'], status: 'Available',
+    rating: 4.9, assignments: 342, location: 'Toronto, ON',
+    joinedDate: 'Jan 2023', phone: '+1 (416) 555-0101', email: 'e.thompson@medigo.com',
+  },
+  {
+    id: '2', caregiverId: 'CG-002', name: 'Michael Brooks', avatar: '',
+    specialty: 'Registered Nurse', certifications: 'RN, CPR, Wound Care',
+    capabilities: ['Palliative Care', 'Mobility Assistance'], status: 'On Assignment',
+    rating: 4.8, assignments: 289, location: 'Vancouver, BC',
+    joinedDate: 'Feb 2023', phone: '+1 (604) 555-0202', email: 'm.brooks@medigo.com',
+  },
+  {
+    id: '3', caregiverId: 'CG-003', name: 'Lisa Chen', avatar: '',
+    specialty: 'Home Health Aide', certifications: 'HHA, First Aid',
+    capabilities: ['Dementia Care'], status: 'Available',
+    rating: 4.7, assignments: 256, location: 'Montreal, QC',
+    joinedDate: 'Mar 2023', phone: '+1 (514) 555-0303', email: 'l.chen@medigo.com',
+  },
+  {
+    id: '4', caregiverId: 'CG-004', name: 'James Rodriguez', avatar: '',
+    specialty: 'Certified Nursing Assistant', certifications: 'CNA, CPR, Medication Admin',
+    capabilities: ['Medical Escort', 'Mobility Assistance'], status: 'On Assignment',
+    rating: 4.8, assignments: 231, location: 'Calgary, AB',
+    joinedDate: 'Apr 2023', phone: '+1 (403) 555-0404', email: 'j.rodriguez@medigo.com',
+  },
+  {
+    id: '5', caregiverId: 'CG-005', name: 'Sarah Mitchell', avatar: '',
+    specialty: 'Personal Support Worker', certifications: 'PSW, Dementia Care, First Aid',
+    capabilities: ['Dementia Care', 'Palliative Care'], status: 'Available',
+    rating: 4.6, assignments: 198, location: 'Ottawa, ON',
+    joinedDate: 'May 2023', phone: '+1 (613) 555-0505', email: 's.mitchell@medigo.com',
+  },
+  {
+    id: '6', caregiverId: 'CG-006', name: 'David Park', avatar: '',
+    specialty: 'Occupational Therapist', certifications: 'OT, Rehab Specialist',
+    capabilities: ['Mobility Assistance'], status: 'Available',
+    rating: 4.9, assignments: 175, location: 'Toronto, ON',
+    joinedDate: 'Jun 2023', phone: '+1 (416) 555-0606', email: 'd.park@medigo.com',
+  },
+  {
+    id: '7', caregiverId: 'CG-007', name: 'Rachel Green', avatar: '',
+    specialty: 'Registered Nurse', certifications: 'RN, Palliative Care, IV Therapy',
+    capabilities: ['Palliative Care', 'Medical Escort'], status: 'Suspended',
+    rating: 4.5, assignments: 163, location: 'Edmonton, AB',
+    joinedDate: 'Jul 2023', phone: '+1 (780) 555-0707', email: 'r.green@medigo.com',
+  },
+  {
+    id: '8', caregiverId: 'CG-008', name: 'Kevin Wu', avatar: '',
+    specialty: 'Home Health Aide', certifications: 'HHA, CPR, Mobility Assist',
+    capabilities: ['Mobility Assistance', 'Dementia Care'], status: 'On Assignment',
+    rating: 4.7, assignments: 142, location: 'Winnipeg, MB',
+    joinedDate: 'Aug 2023', phone: '+1 (204) 555-0808', email: 'k.wu@medigo.com',
+  },
+];
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const ServiceProviderPage = () => {
@@ -271,11 +391,21 @@ export const ServiceProviderPage = () => {
   const [editDriverOpen, setEditDriverOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<EditDriverData | null>(null);
 
-  // Modal state
+  // Modal state (drivers)
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [suspendDriver, setSuspendDriver] = useState<DriverProfileCardData | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editModalDriver, setEditModalDriver] = useState<DriverProfileCardData | null>(null);
+
+  // Caregiver state
+  const [caregiverDrawerOpen, setCaregiverDrawerOpen] = useState(false);
+  const [selectedCaregiver, setSelectedCaregiver] = useState<CaregiverRow | null>(null);
+  const [addCaregiverOpen, setAddCaregiverOpen] = useState(false);
+  const [editCaregiverOpen, setEditCaregiverOpen] = useState(false);
+  const [editCaregiverData, setEditCaregiverData] = useState<EditCaregiverDrawerData | null>(null);
+
+  // Caregiver search
+  const [caregiverSearchQuery, setCaregiverSearchQuery] = useState('');
 
   const filteredDrivers = useMemo(() => {
     if (!searchQuery.trim()) return driversData;
@@ -288,6 +418,18 @@ export const ServiceProviderPage = () => {
         d.driverId.toLowerCase().includes(query)
     );
   }, [searchQuery]);
+
+  const filteredCaregivers = useMemo(() => {
+    if (!caregiverSearchQuery.trim()) return caregiversData;
+    const query = caregiverSearchQuery.toLowerCase();
+    return caregiversData.filter(
+      (c) =>
+        c.name.toLowerCase().includes(query) ||
+        c.specialty.toLowerCase().includes(query) ||
+        c.certifications.toLowerCase().includes(query) ||
+        c.caregiverId.toLowerCase().includes(query)
+    );
+  }, [caregiverSearchQuery]);
 
   // ─── Table Columns ──────────────────────────────────────────────────────
 
@@ -395,10 +537,11 @@ export const ServiceProviderPage = () => {
       flex: 0.8,
       minWidth: 120,
       renderCell: (params) => {
-        const config = statusConfig[params.value as DriverStatus];
+        const status = params.row.status as DriverStatus;
+        const config = statusConfig[status] ?? statusConfig['Available'];
         return (
           <Chip
-            label={params.value as string}
+            label={status}
             size="small"
             sx={{
               background: config.bg,
@@ -468,10 +611,11 @@ export const ServiceProviderPage = () => {
       flex: 0.6,
       minWidth: 90,
       renderCell: (params) => {
-        const config = docsConfig[params.value as DocsStatus];
+        const docs = params.row.docs as DocsStatus;
+        const config = docsConfig[docs] ?? docsConfig['Complete'];
         return (
           <Chip
-            label={params.value as string}
+            label={docs}
             size="small"
             sx={{
               background: config.bg,
@@ -531,6 +675,240 @@ export const ServiceProviderPage = () => {
     },
   ];
 
+  // ─── Caregiver Table Columns ─────────────────────────────────────────────
+
+  const caregiverColumns: GridColSpec<CaregiverRow>[] = [
+    {
+      field: 'name',
+      headerName: 'Caregiver',
+      flex: 1.2,
+      minWidth: 180,
+      renderCell: (params) => {
+        const nameParts = params.row.name.split(' ');
+        const initials =
+          nameParts.length > 1
+            ? `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`
+            : nameParts[0].charAt(0);
+        return (
+          <RowStack spacing={'10px'}>
+            <Avatar
+              src={params.row.avatar || undefined}
+              alt={params.row.name}
+              sx={{
+                width: 32,
+                height: 32,
+                fontSize: pxToRem(11),
+                fontWeight: 600,
+                background: '#ECFDF5',
+                color: '#059669',
+              }}
+            >
+              {initials}
+            </Avatar>
+            <Stack spacing={0}>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 600,
+                  fontSize: pxToRem(13),
+                  color: '#111827',
+                  lineHeight: '1.4em',
+                }}
+              >
+                {params.row.name}
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 400,
+                  fontSize: pxToRem(11),
+                  color: '#9CA3AF',
+                  lineHeight: '1.4em',
+                }}
+              >
+                {params.row.caregiverId}
+              </Typography>
+            </Stack>
+          </RowStack>
+        );
+      },
+    },
+    {
+      field: 'specialty',
+      headerName: 'Specialty',
+      flex: 1,
+      minWidth: 130,
+      renderCell: (params) => (
+        <Typography
+          sx={{
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 400,
+            fontSize: pxToRem(13),
+            color: '#374151',
+          }}
+        >
+          {params.row.specialty}
+        </Typography>
+      ),
+    },
+    {
+      field: 'certifications',
+      headerName: 'Certifications',
+      flex: 1.2,
+      minWidth: 170,
+      renderCell: (params) => (
+        <Typography
+          sx={{
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 400,
+            fontSize: pxToRem(12.5),
+            color: '#6B7280',
+          }}
+        >
+          {params.row.certifications}
+        </Typography>
+      ),
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+      flex: 0.8,
+      minWidth: 120,
+      renderCell: (params) => {
+        const status = params.row.status as CaregiverStatus;
+        const config =
+          caregiverStatusConfig[status] ?? caregiverStatusConfig['Available'];
+        return (
+          <Chip
+            label={status}
+            size="small"
+            sx={{
+              background: config.bg,
+              color: config.color,
+              border: `0.67px solid ${config.border}`,
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 600,
+              fontSize: pxToRem(11.5),
+              height: '26px',
+              borderRadius: '100px',
+            }}
+          />
+        );
+      },
+    },
+    {
+      field: 'rating',
+      headerName: 'Rating',
+      flex: 0.5,
+      minWidth: 70,
+      renderCell: (params) => (
+        <RowStack spacing={'4px'}>
+          <Rating
+            value={1}
+            max={1}
+            readOnly
+            size="small"
+            icon={<StarIcon sx={{ fontSize: 14, color: '#F59E0B' }} />}
+            emptyIcon={<StarIcon sx={{ fontSize: 14, color: '#E5E7EB' }} />}
+          />
+          <Typography
+            sx={{
+              fontFamily: (theme) => theme.typography.fontFamily,
+              fontWeight: 600,
+              fontSize: pxToRem(13),
+              color: '#374151',
+            }}
+          >
+            {(params.value as number).toFixed(1)}
+          </Typography>
+        </RowStack>
+      ),
+    },
+    {
+      field: 'assignments',
+      headerName: 'Assignments',
+      flex: 0.6,
+      minWidth: 100,
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => (
+        <Typography
+          sx={{
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 500,
+            fontSize: pxToRem(13),
+            color: '#374151',
+          }}
+        >
+          {params.value as number}
+        </Typography>
+      ),
+    },
+    {
+      field: 'location',
+      headerName: 'Location',
+      flex: 0.9,
+      minWidth: 130,
+      renderCell: (params) => (
+        <RowStack spacing={'4px'}>
+          <PlaceOutlinedIcon sx={{ fontSize: 12, color: '#6B7280' }} />
+          <Typography
+            sx={{
+              fontFamily: (theme) => theme.typography.fontFamily,
+              fontWeight: 400,
+              fontSize: pxToRem(12.5),
+              color: '#6B7280',
+            }}
+          >
+            {params.row.location}
+          </Typography>
+        </RowStack>
+      ),
+    },
+    {
+      field: 'actions' as string,
+      headerName: 'Actions',
+      flex: 0.5,
+      minWidth: 80,
+      sortable: false,
+      renderCell: (params) => (
+        <RowStack spacing={'4px'}>
+          <IconButton
+            size="small"
+            onClick={() => {
+              setSelectedCaregiver(params.row);
+              setCaregiverDrawerOpen(true);
+            }}
+            sx={{
+              width: 30,
+              height: 30,
+              color: '#2F6FED',
+              background: alpha('#2F6FED', 0.1),
+              '&:hover': { background: alpha('#2F6FED', 0.18) },
+            }}
+          >
+            <VisibilityOutlinedIcon sx={{ fontSize: 17 }} />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={() => {
+              setEditCaregiverData(params.row);
+              setEditCaregiverOpen(true);
+            }}
+            sx={{
+              width: 30,
+              height: 30,
+              color: '#6B7280',
+              '&:hover': { color: '#374151', background: '#F3F4F6' },
+            }}
+          >
+            <EditOutlinedIcon sx={{ fontSize: 17 }} />
+          </IconButton>
+        </RowStack>
+      ),
+    },
+  ];
+
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
@@ -540,7 +918,10 @@ export const ServiceProviderPage = () => {
         <RowStack justifyContent={'space-between'}>
           <DashboardTitleAndDesc
             title="Service Provider"
-            desc="Manage your driver roster, documents, fleet assignments, and status"
+            desc={providerType === 'Drivers'
+              ? 'Manage your driver roster, documents, fleet assignments, and status'
+              : 'Manage your caregiver roster, documents, fleet assignments, and status'
+            }
           />
           <Box>
             <Box
@@ -622,8 +1003,8 @@ export const ServiceProviderPage = () => {
             },
           }}
         >
-          <Tab label="All Drivers" />
-          <Tab label="Driver Profile" />
+          <Tab label={providerType === 'Drivers' ? 'All Drivers' : 'All Caregivers'} />
+          <Tab label={providerType === 'Drivers' ? 'Driver Profile' : 'Caregivers Profile'} />
         </Tabs>
 
         {/* Content */}
@@ -728,29 +1109,104 @@ export const ServiceProviderPage = () => {
               </Grid>
             </Stack>
           )
-        ) : (
-          // Caregivers — empty state
-          <Stack
-            alignItems={'center'}
-            justifyContent={'center'}
-            sx={{
-              background: '#FFFFFF',
-              border: '0.67px solid #F0F4F8',
-              borderRadius: '16px',
-              padding: '60px 20px',
-              boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.06)',
-            }}
-          >
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 500,
-                fontSize: pxToRem(16),
-                color: '#9CA3AF',
-              }}
+        ) : activeTab === 0 ? (
+          // All Caregivers tab
+          <Stack spacing={'24px'}>
+            <RowStack justifyContent={'space-between'}>
+              <DashboardTitleAndDesc title="All Caregivers" desc="" />
+              <AppButton
+                startIcon={<AddIcon />}
+                onClick={() => setAddCaregiverOpen(true)}
+                sx={{
+                  height: '40px',
+                  borderRadius: '14px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: pxToRem(13),
+                  padding: '0 20px',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Add New Caregiver
+              </AppButton>
+            </RowStack>
+
+            {/* Stat Cards */}
+            <Grid container spacing={'16px'}>
+              {caregiverStatCards.map((card, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <StatCard {...card} />
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Caregiver Table */}
+            <AppGridtable
+              columns={caregiverColumns}
+              data={filteredCaregivers}
+              initialPageSize={8}
+              sx={{ height: 'auto', width: '100%' }}
             >
-              Caregiver management coming soon
-            </Typography>
+              <RowStack justifyContent={'space-between'} width={'100%'}>
+                <Stack spacing={'2px'}>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 500,
+                      fontSize: pxToRem(18),
+                      color: '#111827',
+                      lineHeight: '1.5em',
+                    }}
+                  >
+                    Caregiver Roster
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(13),
+                      color: '#6B7280',
+                      lineHeight: '1.5em',
+                    }}
+                  >
+                    {filteredCaregivers.length} registered caregivers — specialty and certifications shown
+                  </Typography>
+                </Stack>
+                <AppSearchField
+                  name="caregiverSearch"
+                  placeholder="Search caregivers..."
+                  value={caregiverSearchQuery}
+                  onChange={(e) => setCaregiverSearchQuery(e.target.value)}
+                  boxProps={{ sx: { width: '240px' } }}
+                />
+              </RowStack>
+            </AppGridtable>
+          </Stack>
+        ) : (
+          // Caregivers Profile tab — card grid
+          <Stack spacing={'24px'}>
+            <DashboardTitleAndDesc title="Caregiver Profiles" desc="" />
+            <Grid container spacing={'20px'}>
+              {caregiversData.map((caregiver, index) => (
+                <Grid key={caregiver.id} size={{ xs: 12, md: 6 }}>
+                  <CaregiverProfileCard
+                    caregiver={caregiver}
+                    colorIndex={index}
+                    onEdit={() => {
+                      setEditCaregiverData(caregiver);
+                      setEditCaregiverOpen(true);
+                    }}
+                    onDocuments={() => {
+                      router.push('/drivers/documents');
+                    }}
+                    onViewDetails={() => {
+                      setSelectedCaregiver(caregiver as unknown as CaregiverRow);
+                      setCaregiverDrawerOpen(true);
+                    }}
+                  />
+                </Grid>
+              ))}
+            </Grid>
           </Stack>
         )}
       </Stack>
@@ -787,6 +1243,26 @@ export const ServiceProviderPage = () => {
         open={editModalOpen}
         setOpen={setEditModalOpen}
         driver={editModalDriver}
+      />
+
+      {/* Add Caregiver Drawer */}
+      <AddCaregiverDrawer
+        open={addCaregiverOpen}
+        onClose={() => setAddCaregiverOpen(false)}
+      />
+
+      {/* Caregiver Detail Drawer */}
+      <ViewCaregiverDrawer
+        open={caregiverDrawerOpen}
+        onClose={() => setCaregiverDrawerOpen(false)}
+        caregiver={selectedCaregiver}
+      />
+
+      {/* Edit Caregiver Drawer */}
+      <EditCaregiverDrawer
+        open={editCaregiverOpen}
+        onClose={() => setEditCaregiverOpen(false)}
+        caregiver={editCaregiverData}
       />
     </AppDashboardLayout>
   );
