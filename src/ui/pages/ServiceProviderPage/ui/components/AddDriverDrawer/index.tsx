@@ -444,12 +444,9 @@ const FileUploadField = ({
           </IconButton>
         </RowStack>
       ) : (
-        <Stack
-          onClick={() => inputRef.current?.click()}
-          alignItems={'center'}
-          justifyContent={'center'}
-          spacing={'6px'}
-          sx={{
+        <AppButton
+         onClick={() => inputRef.current?.click()}
+         sx={{
             height: '80px',
             padding: '0 14px',
             borderRadius: '10px',
@@ -458,6 +455,21 @@ const FileUploadField = ({
             cursor: 'pointer',
             transition: 'all 0.2s ease',
             '&:hover': { borderColor: '#2F6FED', background: '#F7F9FF' },
+          }}
+        >
+          <Stack
+          alignItems={'center'}
+          justifyContent={'center'}
+          spacing={'6px'}
+          sx={{
+            // height: '80px',
+            // padding: '0 14px',
+            // borderRadius: '10px',
+            // border: '1px dashed #D1D5DB',
+            // background: '#FAFBFC',
+            cursor: 'pointer',
+            // transition: 'all 0.2s ease',
+            // '&:hover': { borderColor: '#2F6FED', background: '#F7F9FF' },
           }}
         >
           <CloudUploadOutlinedIcon sx={{ fontSize: 20, color: '#9CA3AF' }} />
@@ -472,6 +484,8 @@ const FileUploadField = ({
             Click to upload PDF or image
           </Typography>
         </Stack>
+        </AppButton>
+        
       )}
       <VisuallyHiddenInput
         ref={inputRef}

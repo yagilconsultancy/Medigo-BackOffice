@@ -34,7 +34,7 @@ import {
 import { AppDropdownMenu } from '../../modules/components/AppDropdownMenu';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { pxToRem } from '../../../common';
-import { DriverViewDrawer, DriverViewData, AddDriverDrawer, EditDriverDrawer, EditDriverData } from './ui/components';
+import { DriverViewDrawer, DriverViewData, AddDriverDrawer, EditDriverDrawer, EditDriverData, DriverProfileCard, DriverProfileCardData } from './ui/components';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -694,28 +694,22 @@ export const ServiceProviderPage = () => {
               </AppGridtable>
             </Stack>
           ) : (
-            // Driver Profile tab — placeholder
-            <Stack
-              alignItems={'center'}
-              justifyContent={'center'}
-              sx={{
-                background: '#FFFFFF',
-                border: '0.67px solid #F0F4F8',
-                borderRadius: '16px',
-                padding: '60px 20px',
-                boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.06)',
-              }}
-            >
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 500,
-                  fontSize: pxToRem(16),
-                  color: '#9CA3AF',
-                }}
-              >
-                Driver profiles coming soon
-              </Typography>
+            // Driver Profile tab — card grid
+            <Stack spacing={'24px'}>
+              <DashboardTitleAndDesc title="Driver Profiles" desc="" />
+              <Grid container spacing={'20px'}>
+                {driversData.map((driver) => (
+                  <Grid key={driver.id} size={{ xs: 12, md: 6 }}>
+                    <DriverProfileCard
+                      driver={driver}
+                      onEdit={() => {
+                        setEditingDriver(driver);
+                        setEditDriverOpen(true);
+                      }}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
             </Stack>
           )
         ) : (
