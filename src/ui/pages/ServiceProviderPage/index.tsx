@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   alpha,
   Avatar,
@@ -34,7 +35,7 @@ import {
 import { AppDropdownMenu } from '../../modules/components/AppDropdownMenu';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { pxToRem } from '../../../common';
-import { DriverViewDrawer, DriverViewData, AddDriverDrawer, EditDriverDrawer, EditDriverData, DriverProfileCard, DriverProfileCardData } from './ui/components';
+import { DriverViewDrawer, DriverViewData, AddDriverDrawer, EditDriverDrawer, EditDriverData, DriverProfileCard, DriverProfileCardData, SuspendDriverModal, EditDriverModal } from './ui/components';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -251,6 +252,8 @@ const driversData: DriverRow[] = [
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const ServiceProviderPage = () => {
+  const router = useRouter();
+
   // Dropdown state
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [providerType, setProviderType] = useState('Drivers');
@@ -267,6 +270,12 @@ export const ServiceProviderPage = () => {
   const [addDriverOpen, setAddDriverOpen] = useState(false);
   const [editDriverOpen, setEditDriverOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<EditDriverData | null>(null);
+
+  // Modal state
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [suspendDriver, setSuspendDriver] = useState<DriverProfileCardData | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editModalDriver, setEditModalDriver] = useState<DriverProfileCardData | null>(null);
 
   const filteredDrivers = useMemo(() => {
     if (!searchQuery.trim()) return driversData;
@@ -703,8 +712,15 @@ export const ServiceProviderPage = () => {
                     <DriverProfileCard
                       driver={driver}
                       onEdit={() => {
-                        setEditingDriver(driver);
-                        setEditDriverOpen(true);
+                        setEditModalDriver(driver);
+                        setEditModalOpen(true);
+                      }}
+                      onDocuments={() => {
+                        router.push('/drivers/documents');
+                      }}
+                      onSuspend={() => {
+                        setSuspendDriver(driver);
+                        setSuspendModalOpen(true);
                       }}
                     />
                   </Grid>
@@ -757,6 +773,20 @@ export const ServiceProviderPage = () => {
         open={editDriverOpen}
         onClose={() => setEditDriverOpen(false)}
         driver={editingDriver}
+      />
+
+      {/* Suspend Driver Modal */}
+      <SuspendDriverModal
+        open={suspendModalOpen}
+        setOpen={setSuspendModalOpen}
+        driver={suspendDriver}
+      />
+
+      {/* Edit Driver Modal */}
+      <EditDriverModal
+        open={editModalOpen}
+        setOpen={setEditModalOpen}
+        driver={editModalDriver}
       />
     </AppDashboardLayout>
   );

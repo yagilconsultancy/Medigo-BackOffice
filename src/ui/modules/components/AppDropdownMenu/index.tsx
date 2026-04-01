@@ -7,6 +7,7 @@ export type AppDropdownMenuProps = MenuProps & {
   selectedOption?: string;
   onOptionSelected?: (option: string, optionIndex: number) => void;
   minWidth?: string;
+  matchAnchorWidth?: boolean;
 };
 
 export const AppDropdownMenu = ({
@@ -17,14 +18,22 @@ export const AppDropdownMenu = ({
   children,
   sx,
   minWidth = '140px',
+  anchorEl,
+  matchAnchorWidth = true,
   ...rest
 }: AppDropdownMenuProps) => {
+  const anchorWidth =
+    matchAnchorWidth && anchorEl
+      ? (anchorEl as HTMLElement).clientWidth
+      : undefined;
+
   return (
     <Menu
       anchorOrigin={{
         vertical: 'top',
         horizontal: 'right',
       }}
+      anchorEl={anchorEl}
       {...rest}
       sx={{
         ...sx,
@@ -35,7 +44,7 @@ export const AppDropdownMenu = ({
             background: '#FFFFFF',
             boxShadow:
               '0px 14px 22px -9px rgba(16, 25, 40, 0.14), 0px 0px 3px -1px rgba(16, 25, 40, 0.04)',
-            minWidth,
+            minWidth: anchorWidth || minWidth,
             borderRadius: '4px',
 
             '& .MuiMenu-list': {

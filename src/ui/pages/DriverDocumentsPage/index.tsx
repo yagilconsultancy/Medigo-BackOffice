@@ -10,7 +10,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { RowStack, CustomBreadCrumbs } from '../../modules/components';
+import { RowStack, CustomBreadCrumbs, DashboardTitleAndDesc } from '../../modules/components';
 import { DocumentViewModal } from './ui/components';
 import { pxToRem } from '../../../common';
 
@@ -505,36 +505,17 @@ export const DriverDocumentsPage = () => {
         {/* Breadcrumb */}
         <CustomBreadCrumbs
           breadcrumbsData={[
-            { text: 'Driver Profiles', href: '/drivers/profiles' },
+            { text: 'Driver Profiles', href: '/services/providers' },
             { text: 'Driver Documents', href: '/drivers/documents' },
           ]}
         />
 
         {/* Page Title + Filter Chips */}
         <RowStack justifyContent={'space-between'} alignItems={'flex-start'}>
-          <Stack spacing={'4px'}>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 500,
-                fontSize: pxToRem(24),
-                color: '#111827',
-              }}
-            >
-              Driver Documents
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
-                fontSize: pxToRem(14),
-                color: '#6B7280',
-              }}
-            >
-              Driver license, insurance, and certifications — manage and take
-              action per document
-            </Typography>
-          </Stack>
+          <DashboardTitleAndDesc
+            title="Driver Documents"
+            desc="Driver license, insurance, and certifications — manage and take action per document"
+          />
 
           <RowStack spacing={'10px'}>
             {filterChips.map((chip) => {
