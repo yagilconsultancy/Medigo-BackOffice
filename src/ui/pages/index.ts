@@ -63,4 +63,5 @@ export * from './PricingLogsPage';
 export * from './RecurringPackagesPage';
 export * from './CommissionSettingsPage';
 export * from './CancellationPolicyPage';
+export * from './FareConfigurationPage';
 export * from './ServiceProviderPage';
