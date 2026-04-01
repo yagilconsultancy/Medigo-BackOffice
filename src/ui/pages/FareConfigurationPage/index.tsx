@@ -13,6 +13,7 @@ import {
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppGridtable,
@@ -27,14 +28,33 @@ import { pxToRem } from '../../../common';
 
 type TableRow = { id: string; [key: string]: string };
 
+type SurchargeSection = {
+  id: string;
+  label: string;
+  title: string;
+  subtitle: string;
+  columns: string[];
+  rows: string[][];
+};
+
 type FareTab = {
   label: string;
   title: string;
   desc: string;
   footnote?: string;
   vendorTerms?: string[];
-  columnType: 'rate' | 'route' | 'commission';
+  warningNote?: string;
+  columnType:
+    | 'rate'
+    | 'route'
+    | 'commission'
+    | 'stdRoute'
+    | 'toll'
+    | 'discount'
+    | 'rules';
+  rateLabels?: { setting?: string; description?: string };
   data: TableRow[];
+  sections?: SurchargeSection[];
 };
 
 type VehicleConfig = {
@@ -54,224 +74,128 @@ const vehicleTypeStyles: Record<string, { color: string; bg: string }> = {
 // ─── Standard Vehicle Data ──────────────────────────────────────────────────
 
 const standardBasePricing: TableRow[] = [
+  { id: '1', setting: 'Base Fare (≤10 km)', value: '12.00', unit: '$', description: 'Flat fee for trips up to 10 km' },
+  { id: '2', setting: 'Base Fare (>10 km)', value: '12.00', unit: '$', description: 'Base fee before per km charges apply' },
+  { id: '3', setting: 'Additional Distance Rate', value: '0.75', unit: '$/km', description: 'Charged per km after first 10 km' },
+  { id: '4', setting: 'Surcharge Fee', value: '0.06', unit: '$', description: 'Fixed surcharge applied to every trip' },
+  { id: '5', setting: 'Insurance & Payment Fee', value: '1.50', unit: '$', description: 'Covers insurance and payment processing' },
+  { id: '6', setting: 'Free Wait Time', value: '10', unit: 'mins', description: 'Complimentary wait time per trip' },
+  { id: '7', setting: 'Wait Time Rate (After Free)', value: '0.50', unit: '$/min', description: 'Charged after free wait time expires' },
+  { id: '8', setting: 'Maximum Surcharge Cap', value: '18.00', unit: '$', description: 'Max total surcharge allowed per trip' },
+];
+
+const standardDistanceRules: TableRow[] = [
+  { id: '1', setting: 'Base Distance Limit', value: '10', unit: 'km', description: 'Distance covered by base fare' },
+  { id: '2', setting: 'Additional Distance Rate', value: '0.75', unit: '$/km', description: 'Applied after base distance' },
+];
+
+const standardRoutePricing: TableRow[] = [
+  { id: '1', route: 'Milton Local', distance: 'Under 10 km', baseFare: '$12.00', avgWaitCharge: '$1.00 (2 min)', typicalTotal: '$14.56' },
+  { id: '2', route: 'Milton to Georgetown', distance: '18 km', baseFare: '$18.00', avgWaitCharge: '$2.50 (5 min)', typicalTotal: '$22.06' },
+  { id: '3', route: 'Milton to Oakville', distance: '26 km', baseFare: '$24.00', avgWaitCharge: '$10.00 (20 min)', typicalTotal: '$35.56' },
+  { id: '4', route: 'Milton to Burlington', distance: '32 km', baseFare: '$28.50', avgWaitCharge: '$10.00 (20 min)', typicalTotal: '$40.06' },
+  { id: '5', route: 'Milton to Brampton', distance: '38 km', baseFare: '$33.00', avgWaitCharge: '$10.00 (20 min)', typicalTotal: '$44.56' },
+  { id: '6', route: 'Milton to Mississauga', distance: '45 km', baseFare: '$38.25', avgWaitCharge: '$17.50 (35 min)', typicalTotal: '$57.31' },
+];
+
+const standardSurcharges: SurchargeSection[] = [
   {
-    id: '1',
-    setting: 'Base Fare (≤10 km)',
-    value: '12.00',
-    unit: '$',
-    description: 'Flat fee for trips up to 10 km',
+    id: 'weather',
+    label: 'A',
+    title: 'Weather',
+    subtitle: 'Surcharges triggered by weather conditions',
+    columns: ['Condition', 'Surcharge', 'Trigger'],
+    rows: [
+      ['Light snow / freezing rain', '$3.00', 'Advisory'],
+      ['Heavy snow / storm', '$5.00', 'Storm warning'],
+      ['Post-storm', '$3.00', 'Within 24 hrs'],
+    ],
   },
   {
-    id: '2',
-    setting: 'Base Fare (>10 km)',
-    value: '12.00',
-    unit: '$',
-    description: 'Base fee before per km charges apply',
+    id: 'rushHour',
+    label: 'B',
+    title: 'Rush Hour',
+    subtitle: 'Peak demand periods on weekdays',
+    columns: ['Period', 'Days', 'Surcharge'],
+    rows: [
+      ['7:00 am – 9:00 am', 'Mon–Fri', '$4.00'],
+      ['4:00 pm – 6:30 pm', 'Mon–Thu', '$4.00'],
+      ['Friday 4:00 pm – 7:00 pm', 'Friday', '$5.00'],
+    ],
   },
   {
-    id: '3',
-    setting: 'Additional Distance Rate',
-    value: '0.75',
-    unit: '$/km',
-    description: 'Charged per km after first 10 km',
+    id: 'weekendHolidays',
+    label: 'C',
+    title: 'Weekend & Holidays',
+    subtitle: 'Statutory and weekend premiums',
+    columns: ['Day', 'Surcharge'],
+    rows: [
+      ['Saturday', '$3.00'],
+      ['Sunday', '$4.00'],
+      ['Ontario Public Holidays', '$5.00'],
+    ],
   },
   {
-    id: '4',
-    setting: 'Surcharge Fee',
-    value: '0.06',
-    unit: '$',
-    description: 'Fixed surcharge applied to every trip',
+    id: 'timeBased',
+    label: 'D',
+    title: 'Time-Based',
+    subtitle: 'Overnight and off-peak hour premiums',
+    columns: ['Time Period', 'Surcharge'],
+    rows: [
+      ['Early Morning (5:00–6:59 am)', '$5.00'],
+      ['Late Night (9:00–11:59 pm)', '$4.00'],
+      ['Overnight (12:00–4:59 am)', '$8.00'],
+    ],
   },
-  {
-    id: '5',
-    setting: 'Insurance & Payment Fee',
-    value: '1.50',
-    unit: '$',
-    description: 'Covers insurance and payment processing',
-  },
-  {
-    id: '6',
-    setting: 'Free Wait Time',
-    value: '10',
-    unit: 'mins',
-    description: 'Complimentary wait time per trip',
-  },
-  {
-    id: '7',
-    setting: 'Wait Time Rate (After Free)',
-    value: '0.50',
-    unit: '$/min',
-    description: 'Charged after free wait time expires',
-  },
-  {
-    id: '8',
-    setting: 'Maximum Surcharge Cap',
-    value: '18.00',
-    unit: '$',
-    description: 'Max total surcharge allowed per trip',
-  },
+];
+
+const standardTollCharges: TableRow[] = [
+  { id: '1', route: 'Milton to Oakville', surcharge: '$8.00', estimatedToll: '$4.50–$7.00' },
+  { id: '2', route: 'Milton to Brampton', surcharge: '$9.00', estimatedToll: '$5.00–$8.00' },
+  { id: '3', route: 'Milton to Mississauga', surcharge: '$10.00', estimatedToll: '$6.00–$9.00' },
+];
+
+const standardDiscounts: TableRow[] = [
+  { id: '1', route: 'Milton to Georgetown', standardRate: '$22.06', dialysisRate: '$18.00', monthlyPackage: '$195.00', savings: '21 trips saved' },
+  { id: '2', route: 'Milton to Oakville', standardRate: '$35.56', dialysisRate: '$28.00', monthlyPackage: '$300.00', savings: '36 trips saved' },
+  { id: '3', route: 'Milton to Burlington', standardRate: '$40.06', dialysisRate: '$32.00', monthlyPackage: '$345.00', savings: '39 trips saved' },
+  { id: '4', route: 'Milton to Mississauga', standardRate: '$57.31', dialysisRate: '$45.00', monthlyPackage: '$490.00', savings: '50 trips saved' },
+];
+
+const standardRulesCaps: TableRow[] = [
+  { id: '1', rule: 'Maximum Surcharge Cap', value: '$18.00', valueType: 'text' },
+  { id: '2', rule: 'Surcharge Stacking', value: 'Enabled', valueType: 'greenBadge' },
+  { id: '3', rule: 'Applies Per Trip', value: 'Yes', valueType: 'blueBadge' },
 ];
 
 // ─── Wheelchair (WAV) Data ──────────────────────────────────────────────────
 
 const wavRateComponents: TableRow[] = [
-  {
-    id: '1',
-    setting: 'Base Fare (under 10 km)',
-    value: '22.00',
-    unit: '$',
-    description: 'Flat — WAV overhead vs $12 ambulatory',
-  },
-  {
-    id: '2',
-    setting: 'Per km (beyond 10 km)',
-    value: '1.10',
-    unit: '$/km',
-    description: 'Higher — van fuel and maintenance',
-  },
-  {
-    id: '3',
-    setting: 'Accessibility Fee (every trip)',
-    value: '15.00',
-    unit: '$',
-    description: 'Ramp/lift, securement, training',
-  },
-  {
-    id: '4',
-    setting: 'Minimum Fare Protection',
-    value: '45.00',
-    unit: '$',
-    description: 'Base + access fee floor on every trip',
-  },
-  {
-    id: '5',
-    setting: 'Surcharge',
-    value: '0.06',
-    unit: '$',
-    description: 'Same as all services',
-  },
-  {
-    id: '6',
-    setting: 'Insurance & Gateway',
-    value: '1.50',
-    unit: '$',
-    description: 'Same as all services',
-  },
-  {
-    id: '7',
-    setting: 'Wait Time (first 10 min free)',
-    value: '0.80',
-    unit: '$/min',
-    description: 'Higher — WAV loading takes longer',
-  },
+  { id: '1', setting: 'Base Fare (under 10 km)', value: '22.00', unit: '$', description: 'Flat — WAV overhead vs $12 ambulatory' },
+  { id: '2', setting: 'Per km (beyond 10 km)', value: '1.10', unit: '$/km', description: 'Higher — van fuel and maintenance' },
+  { id: '3', setting: 'Accessibility Fee (every trip)', value: '15.00', unit: '$', description: 'Ramp/lift, securement, training' },
+  { id: '4', setting: 'Minimum Fare Protection', value: '45.00', unit: '$', description: 'Base + access fee floor on every trip' },
+  { id: '5', setting: 'Surcharge', value: '0.06', unit: '$', description: 'Same as all services' },
+  { id: '6', setting: 'Insurance & Gateway', value: '1.50', unit: '$', description: 'Same as all services' },
+  { id: '7', setting: 'Wait Time (first 10 min free)', value: '0.80', unit: '$/min', description: 'Higher — WAV loading takes longer' },
 ];
 
 const wavFaresByRoute: TableRow[] = [
-  {
-    id: '1',
-    route: 'Milton Local (8 km)',
-    baseAccess: '$37.00',
-    minProtected: '$45.80 applied',
-    wait: '$8.00',
-    otherFees: '$1.56',
-    total: '$54.56',
-  },
-  {
-    id: '2',
-    route: 'Milton to Georgetown (15 km)',
-    baseAccess: '$45.80',
-    minProtected: '$45.80 (above min)',
-    wait: '$8.00',
-    otherFees: '$1.56',
-    total: '$55.36',
-  },
-  {
-    id: '3',
-    route: 'Milton to Oakville (29 km)',
-    baseAccess: '$54.60',
-    minProtected: '$54.60 (above min)',
-    wait: '$16.00',
-    otherFees: '$1.56',
-    total: '$72.16',
-  },
-  {
-    id: '4',
-    route: 'Milton to Burlington (32 km)',
-    baseAccess: '$61.20',
-    minProtected: '$61.20 (above min)',
-    wait: '$16.00',
-    otherFees: '$1.56',
-    total: '$78.76',
-  },
-  {
-    id: '5',
-    route: 'Milton to Brampton (38 km)',
-    baseAccess: '$67.80',
-    minProtected: '$67.80 (above min)',
-    wait: '$16.00',
-    otherFees: '$1.56',
-    total: '$85.36',
-  },
-  {
-    id: '6',
-    route: 'Milton to Mississauga (45 km)',
-    baseAccess: '$75.50',
-    minProtected: '$75.50 (above min)',
-    wait: '$28.00',
-    otherFees: '$1.56',
-    total: '$105.06',
-  },
+  { id: '1', route: 'Milton Local (8 km)', baseAccess: '$37.00', minProtected: '$45.80 applied', wait: '$8.00', otherFees: '$1.56', total: '$54.56' },
+  { id: '2', route: 'Milton to Georgetown (15 km)', baseAccess: '$45.80', minProtected: '$45.80 (above min)', wait: '$8.00', otherFees: '$1.56', total: '$55.36' },
+  { id: '3', route: 'Milton to Oakville (29 km)', baseAccess: '$54.60', minProtected: '$54.60 (above min)', wait: '$16.00', otherFees: '$1.56', total: '$72.16' },
+  { id: '4', route: 'Milton to Burlington (32 km)', baseAccess: '$61.20', minProtected: '$61.20 (above min)', wait: '$16.00', otherFees: '$1.56', total: '$78.76' },
+  { id: '5', route: 'Milton to Brampton (38 km)', baseAccess: '$67.80', minProtected: '$67.80 (above min)', wait: '$16.00', otherFees: '$1.56', total: '$85.36' },
+  { id: '6', route: 'Milton to Mississauga (45 km)', baseAccess: '$75.50', minProtected: '$75.50 (above min)', wait: '$28.00', otherFees: '$1.56', total: '$105.06' },
 ];
 
 const wavPlatformCommission: TableRow[] = [
-  {
-    id: '1',
-    route: 'Milton Local',
-    totalFare: '$54.56',
-    medigo18: '$9.82',
-    vendor82: '$44.74',
-    vendorNetEst: '~$29.00',
-  },
-  {
-    id: '2',
-    route: 'Milton to Georgetown',
-    totalFare: '$55.36',
-    medigo18: '$9.96',
-    vendor82: '$45.40',
-    vendorNetEst: '~$29.00',
-  },
-  {
-    id: '3',
-    route: 'Milton to Oakville',
-    totalFare: '$72.16',
-    medigo18: '$12.99',
-    vendor82: '$59.17',
-    vendorNetEst: '~$38.00',
-  },
-  {
-    id: '4',
-    route: 'Milton to Burlington',
-    totalFare: '$78.76',
-    medigo18: '$14.18',
-    vendor82: '$64.58',
-    vendorNetEst: '~$42.00',
-  },
-  {
-    id: '5',
-    route: 'Milton to Brampton',
-    totalFare: '$85.36',
-    medigo18: '$15.36',
-    vendor82: '$70.00',
-    vendorNetEst: '~$46.00',
-  },
-  {
-    id: '6',
-    route: 'Milton to Mississauga',
-    totalFare: '$105.06',
-    medigo18: '$18.91',
-    vendor82: '$86.15',
-    vendorNetEst: '~$56.00',
-  },
+  { id: '1', route: 'Milton Local', totalFare: '$54.56', medigo18: '$9.82', vendor82: '$44.74', vendorNetEst: '~$29.00' },
+  { id: '2', route: 'Milton to Georgetown', totalFare: '$55.36', medigo18: '$9.96', vendor82: '$45.40', vendorNetEst: '~$29.00' },
+  { id: '3', route: 'Milton to Oakville', totalFare: '$72.16', medigo18: '$12.99', vendor82: '$59.17', vendorNetEst: '~$38.00' },
+  { id: '4', route: 'Milton to Burlington', totalFare: '$78.76', medigo18: '$14.18', vendor82: '$64.58', vendorNetEst: '~$42.00' },
+  { id: '5', route: 'Milton to Brampton', totalFare: '$85.36', medigo18: '$15.36', vendor82: '$70.00', vendorNetEst: '~$46.00' },
+  { id: '6', route: 'Milton to Mississauga', totalFare: '$105.06', medigo18: '$18.91', vendor82: '$86.15', vendorNetEst: '~$56.00' },
 ];
 
 const wavVendorTerms = [
@@ -300,44 +224,48 @@ const vehicleConfigs: Record<string, VehicleConfig> = {
       {
         label: 'Distance Rules',
         title: 'Distance Rules',
-        desc: 'Distance-based fare calculation rules',
+        desc: 'Distance thresholds and per-km rates',
         columnType: 'rate',
-        data: [],
+        rateLabels: { setting: 'Rule' },
+        data: standardDistanceRules,
       },
       {
         label: 'Route Pricing',
         title: 'Route Pricing',
-        desc: 'Route-specific fare configurations',
-        columnType: 'route',
-        data: [],
+        desc: 'Estimated fares for common Milton-area routes',
+        columnType: 'stdRoute',
+        data: standardRoutePricing,
       },
       {
         label: 'Surcharges',
         title: 'Surcharges',
-        desc: 'Additional surcharge configurations',
+        desc: 'Additional fees applied based on weather, time, and demand',
         columnType: 'rate',
+        sections: standardSurcharges,
         data: [],
       },
       {
         label: 'Toll Charges',
         title: 'Toll Charges',
-        desc: 'Toll charge configurations',
-        columnType: 'rate',
-        data: [],
+        desc: 'Surcharges applied to routes using tolled highways (Hwy 407)',
+        columnType: 'toll',
+        warningNote:
+          'Note: Driver must confirm 407 usage before trip begins. Surcharge is automatically added when confirmed.',
+        data: standardTollCharges,
       },
       {
         label: 'Discounts (Dialysis)',
-        title: 'Discounts (Dialysis)',
-        desc: 'Dialysis-related discount configurations',
-        columnType: 'rate',
-        data: [],
+        title: 'Discounts — Dialysis',
+        desc: 'Reduced rates and monthly packages for dialysis patients',
+        columnType: 'discount',
+        data: standardDiscounts,
       },
       {
         label: 'Rules & Caps',
         title: 'Rules & Caps',
-        desc: 'Fare rules and cap configurations',
-        columnType: 'rate',
-        data: [],
+        desc: 'Global surcharge limits and stacking rules',
+        columnType: 'rules',
+        data: standardRulesCaps,
       },
     ],
   },
@@ -398,6 +326,75 @@ const vehicleConfigs: Record<string, VehicleConfig> = {
   },
 };
 
+// ─── Surcharges Cell Renderer ───────────────────────────────────────────────
+
+const renderSurchargeCell = (
+  colName: string,
+  value: string,
+  accentColor: string
+) => {
+  if (colName === 'Surcharge') {
+    return (
+      <Typography
+        sx={{
+          fontFamily: 'Inter, sans-serif',
+          fontWeight: 700,
+          fontSize: pxToRem(13),
+          color: '#10B981',
+        }}
+      >
+        {value}
+      </Typography>
+    );
+  }
+  if (colName === 'Trigger') {
+    return (
+      <Chip
+        label={value}
+        size="small"
+        sx={{
+          background: '#F0FDF4',
+          color: '#16A34A',
+          fontFamily: 'Inter, sans-serif',
+          fontWeight: 600,
+          fontSize: pxToRem(11.5),
+          height: '24px',
+          borderRadius: '100px',
+        }}
+      />
+    );
+  }
+  if (colName === 'Days') {
+    return (
+      <Chip
+        label={value}
+        size="small"
+        sx={{
+          background: '#EBF2FF',
+          color: accentColor,
+          fontFamily: 'Inter, sans-serif',
+          fontWeight: 600,
+          fontSize: pxToRem(11.5),
+          height: '24px',
+          borderRadius: '100px',
+        }}
+      />
+    );
+  }
+  return (
+    <Typography
+      sx={{
+        fontFamily: 'Inter, sans-serif',
+        fontWeight: 600,
+        fontSize: pxToRem(13),
+        color: '#111827',
+      }}
+    >
+      {value}
+    </Typography>
+  );
+};
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const FareConfigurationPage = () => {
@@ -411,6 +408,7 @@ export const FareConfigurationPage = () => {
     vehicleConfigs[vehicleType] || vehicleConfigs['Standard Vehicle'];
   const safeTab = Math.min(activeTab, config.tabs.length - 1);
   const currentTab = config.tabs[safeTab];
+  const isStandard = vehicleType === 'Standard Vehicle';
 
   const emptyState = (
     <Stack
@@ -445,23 +443,21 @@ export const FareConfigurationPage = () => {
 
   // ─── Column Definitions ────────────────────────────────────────────────────
 
-  const isStandard = vehicleType === 'Standard Vehicle';
+  const settingLabel =
+    currentTab.rateLabels?.setting ||
+    (isStandard ? 'Setting' : 'Rate Item');
+  const descLabel =
+    currentTab.rateLabels?.description ||
+    (isStandard ? 'Description' : 'Notes');
 
   const rateColumns: GridColSpec<TableRow>[] = [
     {
       field: 'setting',
-      headerName: isStandard ? 'Setting' : 'Rate Item',
+      headerName: settingLabel,
       flex: 1.2,
       minWidth: 200,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 600,
-            fontSize: pxToRem(13.5),
-            color: '#111827',
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#111827' }}>
           {params.row.setting}
         </Typography>
       ),
@@ -472,14 +468,7 @@ export const FareConfigurationPage = () => {
       flex: 0.6,
       minWidth: 100,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 600,
-            fontSize: pxToRem(13.5),
-            color: currentStyle.color,
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: currentStyle.color }}>
           {params.row.value}
         </Typography>
       ),
@@ -493,32 +482,17 @@ export const FareConfigurationPage = () => {
         <Chip
           label={params.row.unit}
           size="small"
-          sx={{
-            background: currentStyle.bg,
-            color: currentStyle.color,
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 700,
-            fontSize: pxToRem(11),
-            height: '22px',
-            borderRadius: '100px',
-          }}
+          sx={{ background: currentStyle.bg, color: currentStyle.color, fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: pxToRem(11), height: '22px', borderRadius: '100px' }}
         />
       ),
     },
     {
       field: 'description',
-      headerName: isStandard ? 'Description' : 'Notes',
+      headerName: descLabel,
       flex: 1.8,
       minWidth: 260,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 400,
-            fontSize: pxToRem(13),
-            color: '#6B7280',
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 400, fontSize: pxToRem(13), color: '#6B7280' }}>
           {params.row.description}
         </Typography>
       ),
@@ -530,17 +504,69 @@ export const FareConfigurationPage = () => {
       minWidth: 50,
       sortable: false,
       renderCell: () => (
-        <IconButton
-          size="small"
-          sx={{
-            width: 30,
-            height: 30,
-            color: '#9CA3AF',
-            '&:hover': { color: '#374151', background: '#F3F4F6' },
-          }}
-        >
+        <IconButton size="small" sx={{ width: 30, height: 30, color: '#9CA3AF', '&:hover': { color: '#374151', background: '#F3F4F6' } }}>
           <EditOutlinedIcon sx={{ fontSize: 16 }} />
         </IconButton>
+      ),
+    },
+  ];
+
+  const stdRouteColumns: GridColSpec<TableRow>[] = [
+    {
+      field: 'route',
+      headerName: 'Route',
+      flex: 1.2,
+      minWidth: 180,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13), color: '#111827' }}>
+          {params.row.route}
+        </Typography>
+      ),
+    },
+    {
+      field: 'distance',
+      headerName: 'Distance',
+      flex: 0.7,
+      minWidth: 100,
+      renderCell: (params) => (
+        <Chip
+          label={params.row.distance}
+          size="small"
+          sx={{ background: '#F1F5F9', color: '#475569', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: pxToRem(11.5), height: '24px', borderRadius: '100px' }}
+        />
+      ),
+    },
+    {
+      field: 'baseFare',
+      headerName: 'Base Fare',
+      flex: 0.6,
+      minWidth: 90,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13), color: '#2F6FED' }}>
+          {params.row.baseFare}
+        </Typography>
+      ),
+    },
+    {
+      field: 'avgWaitCharge',
+      headerName: 'Avg Wait Charge',
+      flex: 0.8,
+      minWidth: 130,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 400, fontSize: pxToRem(13), color: '#374151' }}>
+          {params.row.avgWaitCharge}
+        </Typography>
+      ),
+    },
+    {
+      field: 'typicalTotal',
+      headerName: 'Typical Total',
+      flex: 0.6,
+      minWidth: 100,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 700, fontSize: pxToRem(13), color: '#111827' }}>
+          {params.row.typicalTotal}
+        </Typography>
       ),
     },
   ];
@@ -552,14 +578,7 @@ export const FareConfigurationPage = () => {
       flex: 1.3,
       minWidth: 200,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 600,
-            fontSize: pxToRem(13.5),
-            color: '#111827',
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#111827' }}>
           {params.row.route}
         </Typography>
       ),
@@ -570,14 +589,7 @@ export const FareConfigurationPage = () => {
       flex: 0.7,
       minWidth: 110,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 600,
-            fontSize: pxToRem(13.5),
-            color: currentStyle.color,
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: currentStyle.color }}>
           {params.row.baseAccess}
         </Typography>
       ),
@@ -588,14 +600,7 @@ export const FareConfigurationPage = () => {
       flex: 0.9,
       minWidth: 140,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 400,
-            fontSize: pxToRem(13),
-            color: '#374151',
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 400, fontSize: pxToRem(13), color: '#374151' }}>
           {params.row.minProtected}
         </Typography>
       ),
@@ -606,14 +611,7 @@ export const FareConfigurationPage = () => {
       flex: 0.5,
       minWidth: 80,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 500,
-            fontSize: pxToRem(13),
-            color: '#374151',
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 500, fontSize: pxToRem(13), color: '#374151' }}>
           {params.row.wait}
         </Typography>
       ),
@@ -624,14 +622,7 @@ export const FareConfigurationPage = () => {
       flex: 0.6,
       minWidth: 90,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 400,
-            fontSize: pxToRem(13),
-            color: '#9CA3AF',
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 400, fontSize: pxToRem(13), color: '#9CA3AF' }}>
           {params.row.otherFees}
         </Typography>
       ),
@@ -642,17 +633,144 @@ export const FareConfigurationPage = () => {
       flex: 0.6,
       minWidth: 90,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 700,
-            fontSize: pxToRem(13.5),
-            color: '#111827',
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 700, fontSize: pxToRem(13.5), color: '#111827' }}>
           {params.row.total}
         </Typography>
       ),
+    },
+  ];
+
+  const tollColumns: GridColSpec<TableRow>[] = [
+    {
+      field: 'route',
+      headerName: 'Route',
+      flex: 1.2,
+      minWidth: 200,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13), color: '#111827' }}>
+          {params.row.route}
+        </Typography>
+      ),
+    },
+    {
+      field: 'surcharge',
+      headerName: 'Surcharge',
+      flex: 0.7,
+      minWidth: 100,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 700, fontSize: pxToRem(13), color: '#2F6FED' }}>
+          {params.row.surcharge}
+        </Typography>
+      ),
+    },
+    {
+      field: 'estimatedToll',
+      headerName: 'Estimated Toll',
+      flex: 0.8,
+      minWidth: 120,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 400, fontSize: pxToRem(13), color: '#374151' }}>
+          {params.row.estimatedToll}
+        </Typography>
+      ),
+    },
+  ];
+
+  const discountColumns: GridColSpec<TableRow>[] = [
+    {
+      field: 'route',
+      headerName: 'Route',
+      flex: 1.2,
+      minWidth: 180,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13), color: '#111827' }}>
+          {params.row.route}
+        </Typography>
+      ),
+    },
+    {
+      field: 'standardRate',
+      headerName: 'Standard Rate',
+      flex: 0.7,
+      minWidth: 100,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 400, fontSize: pxToRem(12), color: '#9CA3AF', textDecoration: 'line-through' }}>
+          {params.row.standardRate}
+        </Typography>
+      ),
+    },
+    {
+      field: 'dialysisRate',
+      headerName: 'Dialysis Rate',
+      flex: 0.7,
+      minWidth: 100,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 700, fontSize: pxToRem(13), color: '#2F6FED' }}>
+          {params.row.dialysisRate}
+        </Typography>
+      ),
+    },
+    {
+      field: 'monthlyPackage',
+      headerName: 'Monthly Package',
+      flex: 0.8,
+      minWidth: 120,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 700, fontSize: pxToRem(13), color: '#111827' }}>
+          {params.row.monthlyPackage}
+        </Typography>
+      ),
+    },
+    {
+      field: 'savings',
+      headerName: 'Savings',
+      flex: 0.7,
+      minWidth: 110,
+      renderCell: (params) => (
+        <Chip
+          label={params.row.savings}
+          size="small"
+          sx={{ background: '#ECFDF5', color: '#059669', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: pxToRem(11.5), height: '24px', borderRadius: '100px' }}
+        />
+      ),
+    },
+  ];
+
+  const rulesColumns: GridColSpec<TableRow>[] = [
+    {
+      field: 'rule',
+      headerName: 'Rule',
+      flex: 1.5,
+      minWidth: 250,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13), color: '#111827' }}>
+          {params.row.rule}
+        </Typography>
+      ),
+    },
+    {
+      field: 'value',
+      headerName: 'Value',
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => {
+        const vt = params.row.valueType;
+        if (vt === 'greenBadge') {
+          return (
+            <Chip label={params.row.value} size="small" sx={{ background: '#ECFDF5', color: '#059669', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: pxToRem(12), height: '26px', borderRadius: '100px' }} />
+          );
+        }
+        if (vt === 'blueBadge') {
+          return (
+            <Chip label={params.row.value} size="small" sx={{ background: '#EBF2FF', color: '#2F6FED', fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: pxToRem(12), height: '26px', borderRadius: '100px' }} />
+          );
+        }
+        return (
+          <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 700, fontSize: pxToRem(13), color: '#111827' }}>
+            {params.row.value}
+          </Typography>
+        );
+      },
     },
   ];
 
@@ -663,14 +781,7 @@ export const FareConfigurationPage = () => {
       flex: 1.2,
       minWidth: 180,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 600,
-            fontSize: pxToRem(13.5),
-            color: '#111827',
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#111827' }}>
           {params.row.route}
         </Typography>
       ),
@@ -681,14 +792,7 @@ export const FareConfigurationPage = () => {
       flex: 0.7,
       minWidth: 100,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 600,
-            fontSize: pxToRem(13.5),
-            color: '#111827',
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#111827' }}>
           {params.row.totalFare}
         </Typography>
       ),
@@ -699,14 +803,7 @@ export const FareConfigurationPage = () => {
       flex: 0.7,
       minWidth: 100,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 600,
-            fontSize: pxToRem(13.5),
-            color: '#EF4444',
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#EF4444' }}>
           {params.row.medigo18}
         </Typography>
       ),
@@ -717,14 +814,7 @@ export const FareConfigurationPage = () => {
       flex: 0.7,
       minWidth: 100,
       renderCell: (params) => (
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 600,
-            fontSize: pxToRem(13.5),
-            color: currentStyle.color,
-          }}
-        >
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: currentStyle.color }}>
           {params.row.vendor82}
         </Typography>
       ),
@@ -738,15 +828,7 @@ export const FareConfigurationPage = () => {
         <Chip
           label={params.row.vendorNetEst}
           size="small"
-          sx={{
-            background: '#ECFDF5',
-            color: '#059669',
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 600,
-            fontSize: pxToRem(11.5),
-            height: '24px',
-            borderRadius: '100px',
-          }}
+          sx={{ background: '#ECFDF5', color: '#059669', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: pxToRem(11.5), height: '24px', borderRadius: '100px' }}
         />
       ),
     },
@@ -754,11 +836,105 @@ export const FareConfigurationPage = () => {
 
   const columnMap: Record<string, GridColSpec<TableRow>[]> = {
     rate: rateColumns,
+    stdRoute: stdRouteColumns,
     route: routeColumns,
+    toll: tollColumns,
+    discount: discountColumns,
+    rules: rulesColumns,
     commission: commissionColumns,
   };
 
   const columns = columnMap[currentTab.columnType] || rateColumns;
+  const hasSections = !!currentTab.sections;
+
+  // ─── Surcharges Sections Render ────────────────────────────────────────────
+
+  const renderSurchargeSections = () => (
+    <Box sx={{ padding: '20px 24px' }}>
+      <Stack spacing={'3px'} sx={{ mb: '20px' }}>
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 700, fontSize: pxToRem(16), color: '#111827' }}>
+          {currentTab.title}
+        </Typography>
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 400, fontSize: pxToRem(13), color: '#6B7280' }}>
+          {currentTab.desc}
+        </Typography>
+      </Stack>
+
+      <Stack spacing="16px">
+        {currentTab.sections!.map((section) => (
+          <Box key={section.id}>
+            {/* Section Header */}
+            <Box
+              sx={{
+                background: '#F7F9FB',
+                padding: '10px 16px',
+                borderRadius: '8px 8px 0 0',
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 700,
+                  fontSize: pxToRem(12),
+                  color: '#374151',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {section.label} &middot; {section.title} &middot;{' '}
+                {section.subtitle}
+              </Typography>
+            </Box>
+
+            {/* Table Header */}
+            <RowStack
+              sx={{
+                padding: '10px 16px',
+                background: '#F7F9FB',
+                borderBottom: '1px solid #F0F4F8',
+              }}
+            >
+              {section.columns.map((col) => (
+                <Box key={col} sx={{ flex: 1 }}>
+                  <Typography
+                    sx={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      fontSize: pxToRem(12),
+                      color: '#6B7280',
+                    }}
+                  >
+                    {col}
+                  </Typography>
+                </Box>
+              ))}
+            </RowStack>
+
+            {/* Data Rows */}
+            {section.rows.map((row, ri) => (
+              <RowStack
+                key={ri}
+                sx={{
+                  padding: '12px 16px',
+                  borderBottom: '1px solid #F7F9FB',
+                }}
+              >
+                {row.map((cellValue, ci) => (
+                  <Box key={ci} sx={{ flex: 1 }}>
+                    {renderSurchargeCell(
+                      section.columns[ci],
+                      cellValue,
+                      currentStyle.color
+                    )}
+                  </Box>
+                ))}
+              </RowStack>
+            ))}
+          </Box>
+        ))}
+      </Stack>
+    </Box>
+  );
 
   return (
     <AppDashboardLayout>
@@ -839,11 +1015,7 @@ export const FareConfigurationPage = () => {
           }}
         >
           {/* Filter Tabs */}
-          <Box
-            sx={{
-              borderBottom: '0.67px solid #F0F4F8',
-            }}
-          >
+          <Box sx={{ borderBottom: '0.67px solid #F0F4F8' }}>
             <Tabs
               value={safeTab}
               onChange={(_, newValue) => setActiveTab(newValue)}
@@ -863,7 +1035,7 @@ export const FareConfigurationPage = () => {
                   minHeight: '36px',
                   padding: '6px 16px',
                   borderRadius: '16px',
-                  background: 'transparent',
+                  background: '#F3F4F6',
                   transition: 'all 0.2s ease',
                   '&.Mui-selected': {
                     fontWeight: 600,
@@ -881,47 +1053,78 @@ export const FareConfigurationPage = () => {
 
           {/* Table Content */}
           <Box>
-            <AppGridtable
-              columns={columns}
-              data={currentTab.data}
-              initialPageSize={10}
-              hidePagination
-              disableRowClick
-              emptyState={emptyState}
-              sx={{
-                height: 'auto',
-                width: '100%',
-                border: 'none',
-                boxShadow: 'none',
-                '& .MuiDataGrid-root': {
+            {hasSections ? (
+              renderSurchargeSections()
+            ) : (
+              <AppGridtable
+                columns={columns}
+                data={currentTab.data}
+                initialPageSize={10}
+                hidePagination
+                disableRowClick
+                emptyState={emptyState}
+                sx={{
+                  height: 'auto',
+                  width: '100%',
                   border: 'none',
-                },
+                  boxShadow: 'none',
+                  '& .MuiDataGrid-root': { border: 'none' },
+                }}
+              >
+                <Stack spacing={'3px'}>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 700,
+                      fontSize: pxToRem(16),
+                      color: '#111827',
+                    }}
+                  >
+                    {currentTab.title}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(13),
+                      color: '#6B7280',
+                    }}
+                  >
+                    {currentTab.desc}
+                  </Typography>
+                </Stack>
+              </AppGridtable>
+            )}
+          </Box>
+
+          {/* Warning Note (Toll Charges) */}
+          {currentTab.warningNote && currentTab.data.length > 0 && (
+            <Box
+              sx={{
+                margin: '0 24px 20px',
+                padding: '12px 16px',
+                background: '#FFFBEB',
+                border: '0.67px solid #FDE68A',
+                borderRadius: '14px',
               }}
             >
-              <Stack spacing={'3px'}>
+              <RowStack spacing="10px" alignItems="flex-start">
+                <WarningAmberRoundedIcon
+                  sx={{ fontSize: 16, color: '#92400E', mt: '1px' }}
+                />
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,
                     fontWeight: 700,
-                    fontSize: pxToRem(16),
-                    color: '#111827',
+                    fontSize: pxToRem(12.5),
+                    color: '#92400E',
                   }}
                 >
-                  {currentTab.title}
+                  {currentTab.warningNote}
                 </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(13),
-                    color: '#6B7280',
-                  }}
-                >
-                  {currentTab.desc}
-                </Typography>
-              </Stack>
-            </AppGridtable>
-          </Box>
+              </RowStack>
+            </Box>
+          )}
 
           {/* Footnote */}
           {currentTab.footnote && currentTab.data.length > 0 && (
