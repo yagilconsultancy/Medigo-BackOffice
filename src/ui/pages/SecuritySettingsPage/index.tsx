@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { Formik, Form, FormikHelpers } from 'formik';
 import {
   Box,
   Divider,
@@ -17,11 +18,20 @@ import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppButton,
-  AppTextField,
   DashboardTitleAndDesc,
+  FormikAppTextField,
   RowStack,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  SecurityKPIs,
+  UpdateSecuritySettingsRequest,
+  formatTotalNumber,
+  pxToRem,
+  useGetSecurityKpi,
+  useGetSecurityData,
+  useResolvedApiQuery,
+} from '../../../common';
+import { useSecurityApi } from '../../../common/hooks/api';
 
 // ─── iOS Switch ─────────────────────────────────────────────────────────────
 
@@ -61,517 +71,603 @@ const IOSSwitch = styled(Switch)(() => ({
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type ToggleSetting = {
-  id: string;
-  name: string;
-  description: string;
-  status: 'Enabled' | 'Active' | 'Always On' | 'Off';
-  isOn: boolean;
-  locked?: boolean;
-};
+interface SecurityFormValues {
+  two_factor_enabled: boolean;
+  ip_geo_blocking_enabled: boolean;
+  ip_whitelist_enabled: boolean;
+  audit_logging_enabled: boolean;
+  session_timeout_hours: string;
+  max_failed_login_attempts: string;
+  min_password_length: string;
+  require_uppercase: boolean;
+  require_lowercase: boolean;
+  require_numbers: boolean;
+  require_special_chars: boolean;
+}
 
-type PolicyRow = {
-  label: string;
-  value: string;
-};
+// ─── Auth Settings Config ───────────────────────────────────────────────────
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const initialAuthSettings: ToggleSetting[] = [
+const authSettingsConfig = [
   {
-    id: '1',
+    field: 'two_factor_enabled' as const,
     name: 'Two-Factor Authentication (2FA)',
     description: 'Require all admins to use 2FA on every login',
-    status: 'Enabled',
-    isOn: true,
+    enabledLabel: 'Enabled',
   },
   {
-    id: '2',
+    field: 'ip_geo_blocking_enabled' as const,
     name: 'IP Geo-Blocking',
     description: 'Block login attempts from non-Canadian IP addresses',
-    status: 'Active',
-    isOn: true,
+    enabledLabel: 'Active',
   },
   {
-    id: '3',
+    field: 'ip_whitelist_enabled' as const,
     name: 'IP Whitelist (Allowlist)',
     description: 'Only allow logins from pre-approved IP addresses',
-    status: 'Off',
-    isOn: false,
+    enabledLabel: 'Enabled',
   },
   {
-    id: '4',
+    field: 'audit_logging_enabled' as const,
     name: 'Audit Logging',
     description: 'Record all admin actions in the activity log',
-    status: 'Always On',
-    isOn: true,
+    enabledLabel: 'Always On',
     locked: true,
   },
 ];
 
-const passwordPolicyRows: PolicyRow[] = [
-  { label: 'Minimum password length', value: '12 characters' },
-  { label: 'Require uppercase letters', value: 'Required' },
-  { label: 'Require special characters', value: 'Required' },
-  { label: 'Password expiry', value: '90 days' },
-  { label: 'Password history', value: 'Last 5' },
+// ─── Password Policy Config ─────────────────────────────────────────────────
+
+const passwordPolicyConfig = [
+  { field: 'require_uppercase' as const, label: 'Require uppercase letters' },
+  {
+    field: 'require_special_chars' as const,
+    label: 'Require special characters',
+  },
+  { field: 'require_numbers' as const, label: 'Require numbers' },
+  { field: 'require_lowercase' as const, label: 'Require lowercase letters' },
 ];
 
-// ─── Stat Card Data ─────────────────────────────────────────────────────────
+// ─── Stat Card Config ────────────────────────────────────────────────────────
 
-const statCards = [
+const statCardConfig = [
   {
-    value: '8/8',
     label: '2FA Enabled',
     icon: <VerifiedUserOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
     iconBg: '#ECFDF5',
+    getValue: (kpi?: SecurityKPIs) =>
+      kpi?.two_fa_enabled_count != null && kpi?.total_admin_count != null
+        ? `${kpi.two_fa_enabled_count}/${kpi.total_admin_count}`
+        : '0/0',
   },
   {
-    value: 'Strict',
     label: 'Password Policy',
     icon: <GppGoodOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
     iconBg: '#EBF2FF',
+    getValue: (kpi?: SecurityKPIs) => kpi?.password_policy ?? 'N/A',
   },
   {
-    value: '4h',
     label: 'Session Timeout',
     icon: <TimerOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
     iconBg: '#EEF2FF',
+    getValue: (kpi?: SecurityKPIs) =>
+      kpi?.session_timeout_hours != null
+        ? `${kpi.session_timeout_hours}h`
+        : '0h',
   },
   {
-    value: '14',
     label: 'Threats Blocked',
     icon: <ShieldOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
     iconBg: '#FFFBEB',
+    getValue: (kpi?: SecurityKPIs) =>
+      `${formatTotalNumber(kpi?.threats_blocked)}`,
   },
 ];
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const SecuritySettingsPage = () => {
-  const [authSettings, setAuthSettings] =
-    useState<ToggleSetting[]>(initialAuthSettings);
-  const [sessionTimeout, setSessionTimeout] = useState('4');
-  const [maxAttempts, setMaxAttempts] = useState('5');
+  const { updateSecuritySettings } = useSecurityApi();
+  const { data: securityKpi } = useResolvedApiQuery(useGetSecurityKpi, null);
+  const { data: securityData } = useResolvedApiQuery(useGetSecurityData, null);
 
-  const handleToggle = (id: string) => {
-    setAuthSettings((prev) =>
-      prev.map((s) => {
-        if (s.id === id && !s.locked) {
-          const newIsOn = !s.isOn;
-          return {
-            ...s,
-            isOn: newIsOn,
-            status: newIsOn
-              ? s.status === 'Off'
-                ? 'Enabled'
-                : s.status
-              : 'Off',
-          };
-        }
-        return s;
-      })
-    );
+  const kpiData = useMemo<SecurityKPIs | undefined>(() => {
+    return securityKpi ? securityKpi : undefined;
+  }, [securityKpi]);
+
+  const statCards = statCardConfig.map((card) => ({
+    ...card,
+    value: card.getValue(kpiData),
+  }));
+
+  const initialValues: SecurityFormValues = useMemo(() => {
+    return {
+      two_factor_enabled: securityData?.two_factor_enabled ?? false,
+      ip_geo_blocking_enabled: securityData?.ip_geo_blocking_enabled ?? false,
+      ip_whitelist_enabled: securityData?.ip_whitelist_enabled ?? false,
+      audit_logging_enabled: securityData?.audit_logging_enabled ?? true,
+      session_timeout_hours:
+        securityData?.session_timeout_hours?.toString() ?? '',
+      max_failed_login_attempts: '5',
+      min_password_length:
+        securityData?.min_password_length?.toString() ?? '',
+      require_uppercase: securityData?.require_uppercase ?? false,
+      require_lowercase: securityData?.require_lowercase ?? false,
+      require_numbers: securityData?.require_numbers ?? false,
+      require_special_chars: securityData?.require_special_chars ?? false,
+    };
+  }, [securityData]);
+
+  const textFieldSx = {
+    width: '100%',
+    borderRadius: '10px',
+    border: '0.67px solid #E8ECF0',
+    background: '#F7F9FB',
+    fontFamily: 'Inter, sans-serif',
+    fontWeight: 500,
+    fontSize: pxToRem(13),
+    color: '#6366F1',
+    outline: 'none',
+    '&:focus': {
+      borderColor: '#2F6FED',
+    },
+  };
+
+  const handleSubmit = async (
+    values: SecurityFormValues,
+    { setSubmitting }: FormikHelpers<SecurityFormValues>
+  ) => {
+    const payload: UpdateSecuritySettingsRequest = {
+      two_factor_enabled: values.two_factor_enabled,
+      ip_geo_blocking_enabled: values.ip_geo_blocking_enabled,
+      ip_whitelist_enabled: values.ip_whitelist_enabled,
+      audit_logging_enabled: values.audit_logging_enabled,
+      session_timeout_hours: Number(values.session_timeout_hours),
+      min_password_length: Number(values.min_password_length),
+      require_uppercase: values.require_uppercase,
+      require_lowercase: values.require_lowercase,
+      require_numbers: values.require_numbers,
+      require_special_chars: values.require_special_chars,
+    };
+
+    setSubmitting(true);
+    await updateSecuritySettings(payload);
+    setSubmitting(false);
   };
 
   return (
     <AppDashboardLayout>
-      <Stack spacing={'24px'}>
-        {/* Header */}
-        <RowStack justifyContent={'space-between'}>
-          <DashboardTitleAndDesc
-            title="Security Settings"
-            desc="Configure authentication policies, session controls, and platform security rules"
-          />
-          <AppButton
-            variant="contained"
-            sx={{
-              background: '#2F6FED',
-              color: '#FFFFFF',
-              borderRadius: '14px',
-              padding: '8px 20px',
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: pxToRem(13),
-              fontFamily: (theme) => theme.typography.fontFamily,
-              height: 40,
-              boxShadow: 'none',
-              whiteSpace: 'nowrap',
-              '&:hover': {
-                background: '#2558C9',
-                boxShadow: 'none',
-              },
-            }}
-          >
-            Save Changes
-          </AppButton>
-        </RowStack>
+      <Formik<SecurityFormValues>
+        initialValues={initialValues}
+        enableReinitialize
+        onSubmit={handleSubmit}
+      >
+        {({ values, dirty, isSubmitting, setFieldValue }) => {
+          const hasEmptyTextFields =
+            !values.session_timeout_hours ||
+            !values.max_failed_login_attempts ||
+            !values.min_password_length;
 
-        {/* Stat Cards */}
-        <Grid container spacing={'12px'}>
-          {statCards.map((card, index) => (
-            <Grid key={index} size={{ xs: 6, lg: 3 }}>
-              <Stack
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #F0F4F8',
-                  borderRadius: '16px',
-                  padding: '16px 20px',
-                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '10px',
-                    background: card.iconBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '12px',
-                  }}
-                >
-                  {card.icon}
-                </Box>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 700,
-                    fontSize: pxToRem(24),
-                    lineHeight: '1.3em',
-                    color: '#111827',
-                  }}
-                >
-                  {card.value}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 500,
-                    fontSize: pxToRem(12.5),
-                    lineHeight: '1.5em',
-                    color: '#6B7280',
-                    marginTop: '2px',
-                  }}
-                >
-                  {card.label}
-                </Typography>
-              </Stack>
-            </Grid>
-          ))}
-        </Grid>
+          const isSaveDisabled = !dirty || isSubmitting || hasEmptyTextFields;
 
-        {/* Settings Sections */}
-        <Stack spacing={'24px'}>
-          {/* Authentication Section */}
-          <Stack
-            sx={{
-              background: '#FFFFFF',
-              border: '0.67px solid #F0F4F8',
-              borderRadius: '16px',
-              boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-              overflow: 'hidden',
-            }}
-          >
-            <Stack spacing={'4px'} sx={{ padding: '24px 24px 0' }}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(16),
-                  color: '#111827',
-                }}
-              >
-                Authentication
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(13),
-                  color: '#6B7280',
-                }}
-              >
-                Login and verification settings for admin accounts
-              </Typography>
-            </Stack>
-
-            <Stack sx={{ padding: '20px 24px 24px' }} spacing={'0px'}>
-              {authSettings.map((setting, index) => (
-                <Box key={setting.id}>
-                  {index > 0 && <Divider sx={{ borderColor: '#F0F4F8' }} />}
-                  <RowStack
-                    justifyContent={'space-between'}
-                    sx={{ padding: '16px 0' }}
+          return (
+            <Form>
+              <Stack spacing={'24px'}>
+                {/* Header */}
+                <RowStack justifyContent={'space-between'}>
+                  <DashboardTitleAndDesc
+                    title="Security Settings"
+                    desc="Configure authentication policies, session controls, and platform security rules"
+                  />
+                  <AppButton
+                    type="submit"
+                    variant="contained"
+                    disabled={isSaveDisabled}
+                    isLoading={isSubmitting}
+                    sx={{
+                      background: '#2F6FED',
+                      color: '#FFFFFF',
+                      borderRadius: '14px',
+                      padding: '8px 20px',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      fontSize: pxToRem(13),
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      height: 40,
+                      boxShadow: 'none',
+                      whiteSpace: 'nowrap',
+                      '&:hover': {
+                        background: '#2558C9',
+                        boxShadow: 'none',
+                      },
+                      '&.Mui-disabled': {
+                        background: '#93B4F5',
+                        color: '#FFFFFF',
+                      },
+                    }}
                   >
-                    <Stack spacing={'4px'} sx={{ flex: 1 }}>
+                    Save Changes
+                  </AppButton>
+                </RowStack>
+
+                {/* Stat Cards */}
+                <Grid container spacing={'12px'}>
+                  {statCards.map((card, index) => (
+                    <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                      <Stack
+                        sx={{
+                          background: '#FFFFFF',
+                          border: '0.67px solid #F0F4F8',
+                          borderRadius: '16px',
+                          padding: '16px 20px',
+                          boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: '10px',
+                            background: card.iconBg,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: '12px',
+                          }}
+                        >
+                          {card.icon}
+                        </Box>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 700,
+                            fontSize: pxToRem(24),
+                            lineHeight: '1.3em',
+                            color: '#111827',
+                          }}
+                        >
+                          {card.value}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 500,
+                            fontSize: pxToRem(12.5),
+                            lineHeight: '1.5em',
+                            color: '#6B7280',
+                            marginTop: '2px',
+                          }}
+                        >
+                          {card.label}
+                        </Typography>
+                      </Stack>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                {/* Settings Sections */}
+                <Stack spacing={'24px'}>
+                  {/* Authentication Section */}
+                  <Stack
+                    sx={{
+                      background: '#FFFFFF',
+                      border: '0.67px solid #F0F4F8',
+                      borderRadius: '16px',
+                      boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <Stack spacing={'4px'} sx={{ padding: '24px 24px 0' }}>
                       <Typography
                         sx={{
                           fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 600,
-                          fontSize: pxToRem(13.5),
+                          fontSize: pxToRem(16),
                           color: '#111827',
                         }}
                       >
-                        {setting.name}
+                        Authentication
                       </Typography>
                       <Typography
                         sx={{
                           fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 400,
-                          fontSize: pxToRem(12.5),
-                          color: '#9CA3AF',
+                          fontSize: pxToRem(13),
+                          color: '#6B7280',
                         }}
                       >
-                        {setting.description}
+                        Login and verification settings for admin accounts
                       </Typography>
                     </Stack>
-                    <RowStack spacing={'12px'}>
-                      <Box
-                        sx={{
-                          padding: '3px 10px',
-                          borderRadius: '100px',
-                          background: setting.isOn
-                            ? 'rgba(16, 185, 129, 0.09)'
-                            : 'rgba(156, 163, 175, 0.09)',
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 500,
-                            fontSize: pxToRem(11.5),
-                            color: setting.isOn ? '#10B981' : '#9CA3AF',
-                          }}
-                        >
-                          {setting.status}
-                        </Typography>
-                      </Box>
-                      <IOSSwitch
-                        checked={setting.isOn}
-                        disabled={setting.locked}
-                        onChange={() => handleToggle(setting.id)}
-                      />
-                    </RowStack>
-                  </RowStack>
-                </Box>
-              ))}
-            </Stack>
-          </Stack>
 
-          {/* Session Controls + Password Policy — side by side */}
-          <Grid container spacing={'24px'}>
-            {/* Session Controls */}
-            <Grid size={{ xs: 12, lg: 6 }}>
-              <Stack
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #F0F4F8',
-                  borderRadius: '16px',
-                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-                  padding: '24px',
-                  height: '100%',
-                }}
-                spacing={1}
-              >
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(16),
-                    color: (theme) => theme.color.deepBlue,
-                  }}
-                >
-                  Session Controls
-                </Typography>
+                    <Stack
+                      sx={{ padding: '20px 24px 24px' }}
+                      spacing={'0px'}
+                    >
+                      {authSettingsConfig.map((setting, index) => {
+                        const isOn = values[setting.field];
+                        const status = setting.locked
+                          ? setting.enabledLabel
+                          : isOn
+                            ? setting.enabledLabel
+                            : 'Off';
 
-                <Stack spacing={'20px'}>
-                  {/* Session Timeout */}
-                  <Stack spacing={'6px'}>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 600,
-                        fontSize: pxToRem(12.5),
-                        color: (theme) => theme.color.deepBlue,
-                        lineHeight: '19px',
-                      }}
-                    >
-                      Session Timeout (hours)
-                    </Typography>
-                    <AppTextField
-                      type="number"
-                      value={sessionTimeout}
-                      onChange={(e) => setSessionTimeout(e.target.value)}
-                      sx={{
-                        width: '100%',
-                        // padding: '10px 14px',
-                        borderRadius: '10px',
-                        border: '0.67px solid #E8ECF0',
-                        background: '#F7F9FB',
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500,
-                        fontSize: pxToRem(13),
-                        color: '#6366F1',
-                        outline: 'none',
-                        '&:focus': {
-                          borderColor: '#2F6FED',
-                        },
-                      }}
-                    />
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 400,
-                        fontSize: pxToRem(11.5),
-                        color: '#9CA3AF',
-                        lineHeight: '17.25px',
-                      }}
-                    >
-                      Admin sessions expire after this period of inactivity
-                    </Typography>
+                        return (
+                          <Box key={setting.field}>
+                            {index > 0 && (
+                              <Divider sx={{ borderColor: '#F0F4F8' }} />
+                            )}
+                            <RowStack
+                              justifyContent={'space-between'}
+                              sx={{ padding: '16px 0' }}
+                            >
+                              <Stack spacing={'4px'} sx={{ flex: 1 }}>
+                                <Typography
+                                  sx={{
+                                    fontFamily: (theme) =>
+                                      theme.typography.fontFamily,
+                                    fontWeight: 600,
+                                    fontSize: pxToRem(13.5),
+                                    color: '#111827',
+                                  }}
+                                >
+                                  {setting.name}
+                                </Typography>
+                                <Typography
+                                  sx={{
+                                    fontFamily: (theme) =>
+                                      theme.typography.fontFamily,
+                                    fontWeight: 400,
+                                    fontSize: pxToRem(12.5),
+                                    color: '#9CA3AF',
+                                  }}
+                                >
+                                  {setting.description}
+                                </Typography>
+                              </Stack>
+                              <RowStack spacing={'12px'}>
+                                <Box
+                                  sx={{
+                                    padding: '3px 10px',
+                                    borderRadius: '100px',
+                                    background: isOn
+                                      ? 'rgba(16, 185, 129, 0.09)'
+                                      : 'rgba(156, 163, 175, 0.09)',
+                                  }}
+                                >
+                                  <Typography
+                                    sx={{
+                                      fontFamily: (theme) =>
+                                        theme.typography.fontFamily,
+                                      fontWeight: 500,
+                                      fontSize: pxToRem(11.5),
+                                      color: isOn ? '#10B981' : '#9CA3AF',
+                                    }}
+                                  >
+                                    {status}
+                                  </Typography>
+                                </Box>
+                                <IOSSwitch
+                                  checked={isOn}
+                                  disabled={setting.locked}
+                                  onChange={() =>
+                                    setFieldValue(setting.field, !isOn)
+                                  }
+                                />
+                              </RowStack>
+                            </RowStack>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
                   </Stack>
 
-                  <Divider sx={{ borderColor: '#F0F4F8' }} />
-
-                  {/* Max Failed Login Attempts */}
-                  <Stack spacing={'6px'}>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 600,
-                        fontSize: pxToRem(12.5),
-                        color: (theme) => theme.color.deepBlue,
-                        lineHeight: '19px',
-                      }}
-                    >
-                      Max Failed Login Attempts
-                    </Typography>
-                    <AppTextField
-                      type="number"
-                      value={maxAttempts}
-                      onChange={(e) => setMaxAttempts(e.target.value)}
-                      sx={{
-                        width: '100%',
-                        // padding: '10px 14px',
-                        borderRadius: '10px',
-                        border: '0.67px solid #E8ECF0',
-                        background: '#F7F9FB',
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 500,
-                        fontSize: pxToRem(13),
-                        color: '#6366F1',
-                        outline: 'none',
-                        '&:focus': {
-                          borderColor: '#2F6FED',
-                        },
-                      }}
-                    />
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 400,
-                        fontSize: pxToRem(11.5),
-                        color: '#9CA3AF',
-                        lineHeight: '17.25px',
-                      }}
-                    >
-                      Account locks after this many failed login attempts
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </Stack>
-            </Grid>
-
-            {/* Password Policy */}
-            <Grid size={{ xs: 12, lg: 6 }}>
-              <Stack
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #F0F4F8',
-                  borderRadius: '16px',
-                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-                  padding: '24px',
-                  height: '100%',
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(16),
-                    color: '#111827',
-                    marginBottom: '20px',
-                  }}
-                >
-                  Password Policy
-                </Typography>
-
-                <Stack spacing={'0px'} sx={{ flex: 1 }}>
-                  {passwordPolicyRows.map((row, index) => (
-                    <Box key={row.label}>
-                      {index > 0 && <Divider sx={{ borderColor: '#F0F4F8' }} />}
-                      <RowStack
-                        justifyContent={'space-between'}
+                  {/* Session Controls + Password Policy — side by side */}
+                  <Grid container spacing={'24px'}>
+                    {/* Session Controls */}
+                    <Grid size={{ xs: 12, lg: 6 }}>
+                      <Stack
                         sx={{
-                          padding: '14px 16px',
-                          background: '#F7F9FB',
-                          borderRadius: '14px',
+                          background: '#FFFFFF',
+                          border: '0.67px solid #F0F4F8',
+                          borderRadius: '16px',
+                          boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                          padding: '24px',
+                          height: '100%',
                         }}
+                        spacing={1}
                       >
-                        <Typography
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 400,
-                            fontSize: pxToRem(13),
-                            color: '#374151',
-                          }}
-                        >
-                          {row.label}
-                        </Typography>
                         <Typography
                           sx={{
                             fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 600,
-                            fontSize: pxToRem(13),
-                            color: '#2F6FED',
+                            fontSize: pxToRem(16),
+                            color: (theme) => theme.color.deepBlue,
                           }}
                         >
-                          {row.value}
+                          Session Controls
                         </Typography>
-                      </RowStack>
-                    </Box>
-                  ))}
-                </Stack>
 
-                <AppButton
-                  variant="contained"
-                  sx={{
-                    background: '#2F6FED',
-                    color: '#FFFFFF',
-                    borderRadius: '14px',
-                    padding: '10px 24px',
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    fontSize: pxToRem(13),
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    boxShadow: 'none',
-                    alignSelf: 'flex-start',
-                    marginTop: '20px',
-                    '&:hover': {
-                      background: '#2558C9',
-                      boxShadow: 'none',
-                    },
-                  }}
-                >
-                  Update Policy
-                </AppButton>
+                        <Stack spacing={'20px'}>
+                          {/* Session Timeout */}
+                          <Stack spacing={'6px'}>
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 600,
+                                fontSize: pxToRem(12.5),
+                                color: (theme) => theme.color.deepBlue,
+                                lineHeight: '19px',
+                              }}
+                            >
+                              Session Timeout (hours)
+                            </Typography>
+                            <FormikAppTextField
+                              name="session_timeout_hours"
+                              type="number"
+                              sx={textFieldSx}
+                            />
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(11.5),
+                                color: '#9CA3AF',
+                                lineHeight: '17.25px',
+                              }}
+                            >
+                              Admin sessions expire after this period of
+                              inactivity
+                            </Typography>
+                          </Stack>
+
+                          <Divider sx={{ borderColor: '#F0F4F8' }} />
+
+                          {/* Max Failed Login Attempts */}
+                          <Stack spacing={'6px'}>
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 600,
+                                fontSize: pxToRem(12.5),
+                                color: (theme) => theme.color.deepBlue,
+                                lineHeight: '19px',
+                              }}
+                            >
+                              Max Failed Login Attempts
+                            </Typography>
+                            <FormikAppTextField
+                              name="max_failed_login_attempts"
+                              type="number"
+                              InputProps={{ readOnly: true }}
+                              sx={textFieldSx}
+                            />
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(11.5),
+                                color: '#9CA3AF',
+                                lineHeight: '17.25px',
+                              }}
+                            >
+                              Account locks after this many failed login
+                              attempts
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                      </Stack>
+                    </Grid>
+
+                    {/* Password Policy */}
+                    <Grid size={{ xs: 12, lg: 6 }}>
+                      <Stack
+                        sx={{
+                          background: '#FFFFFF',
+                          border: '0.67px solid #F0F4F8',
+                          borderRadius: '16px',
+                          boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                          padding: '24px',
+                          height: '100%',
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 600,
+                            fontSize: pxToRem(16),
+                            color: '#111827',
+                            marginBottom: '20px',
+                          }}
+                        >
+                          Password Policy
+                        </Typography>
+
+                        {/* Min Password Length */}
+                        <Stack spacing={'6px'} sx={{ marginBottom: '16px' }}>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(12.5),
+                              color: (theme) => theme.color.deepBlue,
+                              lineHeight: '19px',
+                            }}
+                          >
+                            Minimum Password Length
+                          </Typography>
+                          <FormikAppTextField
+                            name="min_password_length"
+                            type="number"
+                            sx={textFieldSx}
+                          />
+                        </Stack>
+
+                        {/* Password Requirement Toggles */}
+                        <Stack spacing={'0px'} sx={{ flex: 1 }}>
+                          {passwordPolicyConfig.map((policy, index) => {
+                            const isOn = values[policy.field];
+                            return (
+                              <Box key={policy.field}>
+                                {index > 0 && (
+                                  <Divider sx={{ borderColor: '#F0F4F8' }} />
+                                )}
+                                <RowStack
+                                  justifyContent={'space-between'}
+                                  sx={{
+                                    padding: '14px 16px',
+                                    background: '#F7F9FB',
+                                    borderRadius: '14px',
+                                  }}
+                                >
+                                  <Typography
+                                    sx={{
+                                      fontFamily: (theme) =>
+                                        theme.typography.fontFamily,
+                                      fontWeight: 400,
+                                      fontSize: pxToRem(13),
+                                      color: '#374151',
+                                    }}
+                                  >
+                                    {policy.label}
+                                  </Typography>
+                                  <RowStack spacing={'10px'}>
+                                    <Typography
+                                      sx={{
+                                        fontFamily: (theme) =>
+                                          theme.typography.fontFamily,
+                                        fontWeight: 600,
+                                        fontSize: pxToRem(13),
+                                        color: isOn ? '#2F6FED' : '#9CA3AF',
+                                      }}
+                                    >
+                                      {isOn ? 'Required' : 'Not Required'}
+                                    </Typography>
+                                    <IOSSwitch
+                                      checked={isOn}
+                                      onChange={() =>
+                                        setFieldValue(policy.field, !isOn)
+                                      }
+                                    />
+                                  </RowStack>
+                                </RowStack>
+                              </Box>
+                            );
+                          })}
+                        </Stack>
+                      </Stack>
+                    </Grid>
+                  </Grid>
+                </Stack>
               </Stack>
-            </Grid>
-          </Grid>
-        </Stack>
-      </Stack>
+            </Form>
+          );
+        }}
+      </Formik>
     </AppDashboardLayout>
   );
 };

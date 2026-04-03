@@ -11,10 +11,14 @@ export const ROUTES_SPEC = {
   getActivityList: `/${API_VERSION}/auth/admin/activity-logs`,
   getExportActivity: `/${API_VERSION}/auth/admin/activity-logs/export`,
   getLoginHistoryKpi: `/${API_VERSION}/auth/admin/login-history/kpis`,
+  getLoginHistory: `/${API_VERSION}/auth/admin/login-history`,
   getExportLoginHistory: `/${API_VERSION}/auth/admin/login-history/export`,
   getSecurityKpi: `/${API_VERSION}/auth/admin/security/kpis`,
   SecurityData: `/${API_VERSION}/auth/admin/security/settings`,
   getSecurityData: `/${API_VERSION}/auth/admin/security/settings`,
+  // Admin Sessions
+  getActiveSessions: `/${API_VERSION}/users/admin/sessions`,
+  revokeSession: (sessionId: string) => `/${API_VERSION}/users/admin/sessions/${sessionId}`,
 
   // Fleet Application
   getFleetApplicationsKpi: `/${API_VERSION}/users/admin/fleet/applications/kpis`,

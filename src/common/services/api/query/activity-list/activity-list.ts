@@ -14,3 +14,13 @@ export const getActivityList = async (payload: ActivityLogListPayload) => {
     },
   });
 };
+
+export const getExportActivity = async (payload: ActivityLogListPayload) => {
+  return await getApiClient().get<
+    Blob,
+    AxiosResponse<Blob>
+  >(resolveRoute(ROUTES.getExportActivity), {
+    params: { ...payload },
+    responseType: 'blob',
+  });
+};

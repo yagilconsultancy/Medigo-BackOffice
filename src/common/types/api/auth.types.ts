@@ -191,12 +191,21 @@ export interface LoginHistoryKPIs {
     unique_locations?: number;
 }
 
-export interface LoginHistoryListResponse {
+export interface LoginHistoryListPayload {
+    status: "all" | "success" | "failed";
+    search:  string;
+    page: number;
+    page_size: number;
+}
+
+export interface LoginHistoryList {
     items: LoginRecordItem[];
     total: number;
     page: number;
     page_size: number;
 }
+
+export type ApiLoginHistoryListResponse = ApiResponse<LoginHistoryList>;
 
 // ====================== COMMON TYPES ======================
 export enum UserRole {

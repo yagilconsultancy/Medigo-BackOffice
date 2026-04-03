@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { alpha, Avatar, Box, Grid, Stack, Typography } from '@mui/material';
+import dayjs from 'dayjs';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -17,7 +18,16 @@ import {
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { pxToRem } from '../../../common';
+import {
+  LoginHistoryKPIs,
+  LoginRecordItem,
+  formatTotalNumber,
+  pxToRem,
+  useGetLoginHistoryKpi,
+  useGetLoginHistory,
+  useExportLoginHistory,
+  useResolvedApiQuery,
+} from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -38,167 +48,79 @@ type LoginRow = {
   avatarBg: string;
 };
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+const avatarColors = [
+  '#2F6FED',
+  '#059669',
+  '#6366F1',
+  '#D97706',
+  '#8B5CF6',
+  '#10B981',
+  '#F59E0B',
+  '#EF4444',
+];
+
+const getInitials = (name: string): string => {
+  if (!name || name === 'Unknown') return '?';
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
+
+const getAvatarBg = (name: string, success: boolean): string => {
+  if (!name || name === 'Unknown') return '#EF4444';
+  if (!success) return '#EF4444';
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+};
+
+const mapRecordToRow = (item: LoginRecordItem): LoginRow => ({
+  id: item.id,
+  initials: getInitials(item.admin_name),
+  adminName: item.admin_name || 'Unknown',
+  email: item.admin_email,
+  ipAddress: item.ip_address,
+  device: item.device_info,
+  location: item.location || 'Unknown',
+  isSuspicious: item.is_suspicious ?? false,
+  time: dayjs(item.created_at).format('MMM D, YYYY · hh:mm A'),
+  status: item.success ? 'Success' : 'Failed',
+  avatarBg: getAvatarBg(item.admin_name, item.success),
+});
+
 // ─── Stat Cards ─────────────────────────────────────────────────────────────
 
-const statCards = [
+const statCardConfig = [
   {
-    value: '624',
+    key: 'total_logins' as const,
     label: 'Total Logins',
     icon: <LoginOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
     iconBg: '#EBF2FF',
   },
   {
-    value: '618',
+    key: 'successful' as const,
     label: 'Successful',
     icon: <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#059669' }} />,
     iconBg: '#ECFDF5',
   },
   {
-    value: '6',
+    key: 'failed_attempts' as const,
     label: 'Failed Attempts',
     icon: <ErrorOutlineOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
     iconBg: '#FEF2F2',
   },
   {
-    value: '9',
+    key: 'unique_locations' as const,
     label: 'Unique Locations',
     icon: <LocationOnOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
     iconBg: '#EEF2FF',
-  },
-];
-
-// ─── Table Data ─────────────────────────────────────────────────────────────
-
-const loginData: LoginRow[] = [
-  {
-    id: '1',
-    initials: 'JC',
-    adminName: 'John Carter',
-    email: 'john@medigo.ca',
-    ipAddress: '192.168.1.44',
-    device: 'Chrome \u00b7 macOS',
-    location: 'Toronto, ON',
-    isSuspicious: false,
-    time: 'Mar 9, 2026 \u00b7 08:05 AM',
-    status: 'Success',
-    avatarBg: '#2F6FED',
-  },
-  {
-    id: '2',
-    initials: 'AB',
-    adminName: 'Angela Brooks',
-    email: 'angela@medigo.ca',
-    ipAddress: '10.0.0.22',
-    device: 'Firefox \u00b7 Windows',
-    location: 'Ottawa, ON',
-    isSuspicious: false,
-    time: 'Mar 9, 2026 \u00b7 07:58 AM',
-    status: 'Success',
-    avatarBg: '#059669',
-  },
-  {
-    id: '3',
-    initials: 'PS',
-    adminName: 'Priya Sharma',
-    email: 'priya@medigo.ca',
-    ipAddress: '172.16.0.5',
-    device: 'Safari \u00b7 macOS',
-    location: 'Vancouver, BC',
-    isSuspicious: false,
-    time: 'Mar 8, 2026 \u00b7 11:22 PM',
-    status: 'Success',
-    avatarBg: '#6366F1',
-  },
-  {
-    id: '4',
-    initials: '?',
-    adminName: 'Unknown',
-    email: 'admin@medigo.ca',
-    ipAddress: '103.45.62.88',
-    device: 'Chrome \u00b7 Linux',
-    location: 'Lagos, NG',
-    isSuspicious: true,
-    time: 'Mar 8, 2026 \u00b7 09:14 PM',
-    status: 'Failed',
-    avatarBg: '#EF4444',
-  },
-  {
-    id: '5',
-    initials: 'MB',
-    adminName: 'Marcus Bell',
-    email: 'marcus@medigo.ca',
-    ipAddress: '192.168.0.88',
-    device: 'Edge \u00b7 Windows',
-    location: 'Calgary, AB',
-    isSuspicious: false,
-    time: 'Mar 8, 2026 \u00b7 08:47 AM',
-    status: 'Success',
-    avatarBg: '#D97706',
-  },
-  {
-    id: '6',
-    initials: 'SL',
-    adminName: 'Sandra Lee',
-    email: 'sandra@medigo.ca',
-    ipAddress: '10.0.1.14',
-    device: 'Chrome \u00b7 macOS',
-    location: 'Montr\u00e9al, QC',
-    isSuspicious: false,
-    time: 'Mar 7, 2026 \u00b7 09:02 AM',
-    status: 'Success',
-    avatarBg: '#8B5CF6',
-  },
-  {
-    id: '7',
-    initials: 'LF',
-    adminName: 'Lena Fischer',
-    email: 'lena@medigo.ca',
-    ipAddress: '192.168.2.11',
-    device: 'Safari \u00b7 iPad OS',
-    location: 'Edmonton, AB',
-    isSuspicious: false,
-    time: 'Mar 7, 2026 \u00b7 08:30 AM',
-    status: 'Success',
-    avatarBg: '#10B981',
-  },
-  {
-    id: '8',
-    initials: 'DK',
-    adminName: 'David Kim',
-    email: 'david@medigo.ca',
-    ipAddress: '10.0.2.88',
-    device: 'Chrome \u00b7 Windows',
-    location: 'Winnipeg, MB',
-    isSuspicious: false,
-    time: 'Mar 6, 2026 \u00b7 07:55 AM',
-    status: 'Success',
-    avatarBg: '#F59E0B',
-  },
-  {
-    id: '9',
-    initials: '?',
-    adminName: 'Unknown',
-    email: 'john@medigo.ca',
-    ipAddress: '88.99.44.21',
-    device: 'Firefox \u00b7 Linux',
-    location: 'Bucharest, RO',
-    isSuspicious: true,
-    time: 'Mar 5, 2026 \u00b7 02:44 AM',
-    status: 'Failed',
-    avatarBg: '#EF4444',
-  },
-  {
-    id: '10',
-    initials: 'CO',
-    adminName: 'Christine Osei',
-    email: 'c.osei@medigo.ca',
-    ipAddress: '192.168.3.72',
-    device: 'Chrome \u00b7 macOS',
-    location: 'Toronto, ON',
-    isSuspicious: false,
-    time: 'Mar 4, 2026 \u00b7 09:10 AM',
-    status: 'Success',
-    avatarBg: '#2F6FED',
   },
 ];
 
@@ -210,29 +132,80 @@ const tabs: { label: string; value: TabValue }[] = [
   { label: 'Failed', value: 'Failed' },
 ];
 
+const tabToStatus = (tab: TabValue): 'all' | 'success' | 'failed' => {
+  if (tab === 'Success') return 'success';
+  if (tab === 'Failed') return 'failed';
+  return 'all';
+};
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const LoginHistoryPage = () => {
   const [activeTab, setActiveTab] = useState<TabValue>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+  const { data: loginHistoryKpi } = useResolvedApiQuery(
+    useGetLoginHistoryKpi,
+    null
+  );
+  const { mutate: exportHistory, isPending: isExporting } =
+    useExportLoginHistory();
 
-  const tabCounts: Record<TabValue, number> = {
-    All: loginData.length,
-    Success: loginData.filter((r) => r.status === 'Success').length,
-    Failed: loginData.filter((r) => r.status === 'Failed').length,
+  const payload = useMemo(
+    () => ({
+      status: tabToStatus(activeTab),
+      search: searchQuery,
+      page: paginationModel.page + 1,
+      page_size: paginationModel.pageSize,
+    }),
+    [activeTab, searchQuery, paginationModel]
+  );
+
+  const { data: loginHistoryList } = useResolvedApiQuery(
+    useGetLoginHistory,
+    null,
+    payload
+  );
+
+  const kpiData = useMemo<LoginHistoryKPIs | undefined>(() => {
+    return loginHistoryKpi ? loginHistoryKpi : undefined;
+  }, [loginHistoryKpi]);
+
+  const loginRows = useMemo<LoginRow[]>(() => {
+    return loginHistoryList?.items?.map(mapRecordToRow) ?? [];
+  }, [loginHistoryList]);
+
+  const totalCount = loginHistoryList?.total ?? 0;
+
+  const suspiciousCount = useMemo(() => {
+    return loginRows.filter((r) => r.isSuspicious).length;
+  }, [loginRows]);
+
+  const statCards = statCardConfig.map((card) => ({
+    ...card,
+    value: `${formatTotalNumber(kpiData?.[card.key])}`,
+  }));
+
+  const handleExportHistory = () => {
+    exportHistory(payload, {
+      onSuccess: (response) => {
+        const url = window.URL.createObjectURL(response.data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `login-history-${dayjs().format('YYYY-MM-DD')}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+    });
   };
 
-  const filteredLogins = loginData.filter((r) => {
-    if (activeTab !== 'All' && r.status !== activeTab) return false;
-    const q = searchQuery.toLowerCase().trim();
-    return (
-      !q ||
-      r.adminName.toLowerCase().includes(q) ||
-      r.email.toLowerCase().includes(q) ||
-      r.ipAddress.includes(q) ||
-      r.location.toLowerCase().includes(q)
-    );
-  });
+  const handleTabChange = (tab: TabValue) => {
+    setActiveTab(tab);
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  };
 
   const columns: GridColSpec<LoginRow>[] = [
     {
@@ -401,6 +374,8 @@ export const LoginHistoryPage = () => {
           <AppButton
             variant="contained"
             startIcon={<ArrowDownwardIcon />}
+            onClick={handleExportHistory}
+            disabled={isExporting}
             sx={{
               background: '#F7F9FB',
               color: '#374151',
@@ -420,7 +395,7 @@ export const LoginHistoryPage = () => {
               },
             }}
           >
-            Export
+            {isExporting ? 'Exporting...' : 'Export'}
           </AppButton>
         </RowStack>
 
@@ -480,47 +455,93 @@ export const LoginHistoryPage = () => {
         </Grid>
 
         {/* Suspicious Alert Banner */}
-        <RowStack
-          spacing={'10px'}
-          sx={{
-            padding: '14px 20px',
-            background: '#FEF2F2',
-            borderRadius: '14px',
-            border: '0.67px solid #FECACA',
-          }}
-        >
-          <WarningAmberOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
-          <Typography
+        {suspiciousCount > 0 && (
+          <RowStack
+            spacing={'10px'}
             sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 600,
-              fontSize: pxToRem(13),
-              color: '#EF4444',
+              padding: '14px 20px',
+              background: '#FEF2F2',
+              borderRadius: '14px',
+              border: '0.67px solid #FECACA',
             }}
           >
-            2 suspicious login attempts detected {'  '}
+            <WarningAmberOutlinedIcon
+              sx={{ fontSize: 18, color: '#EF4444' }}
+            />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
+                fontWeight: 600,
                 fontSize: pxToRem(13),
-                color: '#6B7280',
+                color: '#EF4444',
               }}
-              component={'span'}
             >
-              from unrecognized overseas IPs. Review and consider enabling
-              geo-blocking.
+              {suspiciousCount} suspicious login attempt
+              {suspiciousCount > 1 ? 's' : ''} detected {'  '}
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 400,
+                  fontSize: pxToRem(13),
+                  color: '#6B7280',
+                }}
+                component={'span'}
+              >
+                from unrecognized overseas IPs. Review and consider enabling
+                geo-blocking.
+              </Typography>
             </Typography>
-          </Typography>
-        </RowStack>
+          </RowStack>
+        )}
 
         {/* Table */}
         <AppGridtable
           columns={columns}
-          data={filteredLogins}
-          initialPageSize={10}
+          data={loginRows}
+          disableAutoPagination
+          initialPageSize={paginationModel.pageSize}
           disableRowClick
           sx={{ height: 'auto', width: '100%' }}
+          emptyState={
+            <Stack alignItems="center" spacing="8px" sx={{ py: 4 }}>
+              <Box
+                sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '14px',
+                  background: '#F3F4F6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mb: '4px',
+                }}
+              >
+                <LoginOutlinedIcon sx={{ fontSize: 24, color: '#D1D5DB' }} />
+              </Box>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 600,
+                  fontSize: pxToRem(14),
+                  color: '#9CA3AF',
+                }}
+              >
+                No login records found
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 400,
+                  fontSize: pxToRem(13),
+                  color: '#D1D5DB',
+                }}
+              >
+                {searchQuery
+                  ? 'Try adjusting your search query'
+                  : 'Login records will appear here as admins sign in'}
+              </Typography>
+            </Stack>
+          }
         >
           <RowStack justifyContent={'space-between'} width={'100%'}>
             <RowStack spacing={'8px'}>
@@ -540,7 +561,7 @@ export const LoginHistoryPage = () => {
                 return (
                   <Box
                     key={tab.value}
-                    onClick={() => setActiveTab(tab.value)}
+                    onClick={() => handleTabChange(tab.value)}
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -581,7 +602,11 @@ export const LoginHistoryPage = () => {
                           color: isActive ? '#FFFFFF' : '#6B7280',
                         }}
                       >
-                        {tabCounts[tab.value]}
+                        {tab.value === 'All'
+                          ? totalCount
+                          : tab.value === 'Success'
+                            ? (kpiData?.successful ?? 0)
+                            : (kpiData?.failed_attempts ?? 0)}
                       </Typography>
                     </Box>
                   </Box>
@@ -591,9 +616,12 @@ export const LoginHistoryPage = () => {
 
             <AppSearchField
               name="search"
-              placeholder="Search admin, IP, location\u2026"
+              placeholder="Search admin, IP, location…"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPaginationModel((prev) => ({ ...prev, page: 0 }));
+              }}
               boxProps={{ sx: { width: '280px' } }}
             />
           </RowStack>

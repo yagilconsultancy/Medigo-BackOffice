@@ -34,6 +34,7 @@ import {
   pxToRem,
   useGetActivityAnalytics,
   useGetActivityList,
+  useExportActivity,
   useResolvedApiQuery,
 } from '../../../common';
 import { LogStatCard, LogEntryRow } from './ui/components';
@@ -117,6 +118,7 @@ const getCategoryStyle = (category: string) =>
 
 export const ActivityLogsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { mutate: exportLogs, isPending: isExporting } = useExportActivity();
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 7,
@@ -197,6 +199,19 @@ export const ActivityLogsPage = () => {
     },
   ];
 
+  const handleExportLogs = () => {
+    exportLogs(payload, {
+      onSuccess: (response) => {
+        const url = window.URL.createObjectURL(response.data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `activity-logs-${dayjs().format('YYYY-MM-DD')}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+    });
+  };
+
   const handlePageChange = (newPage: number) => {
     setPaginationModel((prev) => ({ ...prev, page: newPage }));
   };
@@ -217,6 +232,8 @@ export const ActivityLogsPage = () => {
           <AppButton
             variant="contained"
             startIcon={<ArrowDownwardIcon />}
+            onClick={handleExportLogs}
+            disabled={isExporting}
             sx={{
               background: '#F7F9FB',
               color: '#374151',
@@ -234,7 +251,7 @@ export const ActivityLogsPage = () => {
               },
             }}
           >
-            Export Logs
+            {isExporting ? 'Exporting...' : 'Export Logs'}
           </AppButton>
         </RowStack>
 
