@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Grid, Stack } from '@mui/material';
+import { Grid, Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppCardparent,
@@ -8,14 +8,18 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { getTodayDate } from '../../../common';
+import { getTodayDate, pxToRem } from '../../../common';
 import {
+  BookingChannelItem,
   CardComponent,
-  DriverComponent,
+  FacilityComponent,
+  FleetPartnerComponent,
   HomeChart,
-  HomeProgressBar,
   RecentActivity,
+  ServiceMetricCard,
+  TransportDistribution,
 } from './ui/components';
+import { CardTitleAndDesc } from '../../modules/components/AppCardparent/ui/components';
 import TripsIcon from './ui/assets/icons/trips.icon.svg';
 import DriversIcon from './ui/assets/icons/drivers-icon.svg';
 import PendingIcon from './ui/assets/icons/pending-icon.svg';
@@ -27,7 +31,18 @@ import StartIcon from './ui/assets/icons/start-icon.svg';
 import CompleteIcon from './ui/assets/icons/complete-icon.svg';
 import CardIcon from './ui/assets/icons/card-icon.svg';
 import NewDriverIcon from './ui/assets/icons/new-driver-icon.svg';
-import { CardTitleAndDesc } from '../../modules/components/AppCardparent/ui/components';
+import SmartphoneOutlinedIcon from '@mui/icons-material/SmartphoneOutlined';
+import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined';
+import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import RouteOutlinedIcon from '@mui/icons-material/RouteOutlined';
+import StarOutlinedIcon from '@mui/icons-material/StarOutlined';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import LocalHospitalOutlinedIcon from '@mui/icons-material/LocalHospitalOutlined';
+import HomeWorkOutlinedIcon from '@mui/icons-material/HomeWorkOutlined';
+import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
+
+// ─── Stat Card Data ─────────────────────────────────────────────────────────
 
 const cardData = [
   {
@@ -41,13 +56,13 @@ const cardData = [
     },
     bottom: {
       cardNum: '3,482',
-      cardDesc: 'Total Trips',
+      cardDesc: 'Total Bookings',
     },
   },
   {
     top: {
       icon: DriversIcon,
-      iconBg: '#EEF2FF',
+      iconBg: '#FFFBEB',
       badgeIcon: TrendingUp,
       badgeBg: '#ECFDF5',
       volumeColor: '#10B981',
@@ -55,13 +70,13 @@ const cardData = [
     },
     bottom: {
       cardNum: '148',
-      cardDesc: 'Active Drivers',
+      cardDesc: 'Active Clients',
     },
   },
   {
     top: {
       icon: PendingIcon,
-      iconBg: '#FFFBEB',
+      iconBg: '#FEF2F2',
       badgeIcon: TrendingDown,
       badgeBg: '#FEF2F2',
       volumeColor: '#EF4444',
@@ -69,7 +84,7 @@ const cardData = [
     },
     bottom: {
       cardNum: '37',
-      cardDesc: 'Pending Bookings',
+      cardDesc: 'Registered Facilities',
     },
   },
   {
@@ -88,8 +103,9 @@ const cardData = [
   },
 ];
 
+// ─── Booking Trends Data ────────────────────────────────────────────────────
+
 const tripDataByPeriod = [
-  // 7 Days
   [
     { day: 'Mon', trips: 38 },
     { day: 'Tue', trips: 55 },
@@ -99,14 +115,12 @@ const tripDataByPeriod = [
     { day: 'Sat', trips: 41 },
     { day: 'Sun', trips: 36 },
   ],
-  // 30 Days
   [
     { day: 'Week 1', trips: 245 },
     { day: 'Week 2', trips: 312 },
     { day: 'Week 3', trips: 287 },
     { day: 'Week 4', trips: 356 },
   ],
-  // 90 Days
   [
     { day: 'Jan', trips: 820 },
     { day: 'Feb', trips: 932 },
@@ -114,104 +128,251 @@ const tripDataByPeriod = [
   ],
 ];
 
-const progressDataArray = [
-  { label: 'Completed', value: 68, color: '#10B981' },
-  { label: 'Assigned', value: 14, color: '#6366F1' },
-  { label: 'In Transit', value: 11, color: '#2F6FED' },
-  { label: 'Pending', value: 7, color: '#F59E0B' },
+// ─── Transport Type Distribution Data ───────────────────────────────────────
+
+const transportData = [
+  {
+    label: 'Wheelchair Accessible',
+    trips: 1411,
+    percent: 52,
+    color: '#10B981',
+  },
+  { label: 'Stretcher Transport', trips: 975, percent: 28, color: '#6366F1' },
+  { label: 'Ambulatory', trips: 696, percent: 20, color: '#2F6FED' },
 ];
 
-const driverData = [
+// ─── Booking Channels Data ──────────────────────────────────────────────────
+
+const bookingChannelsData = [
+  {
+    icon: <SmartphoneOutlinedIcon sx={{ fontSize: 16, color: '#2B7FFF' }} />,
+    label: 'Mobile App',
+    count: 1823,
+    percent: 52,
+    color: '#2B7FFF',
+    iconBg: '#EFF6FF',
+    trendValue: '+8%',
+    trendPositive: true,
+  },
+  {
+    icon: <LanguageOutlinedIcon sx={{ fontSize: 16, color: '#AD46FF' }} />,
+    label: 'Website (Client)',
+    count: 404,
+    percent: 12,
+    color: '#AD46FF',
+    iconBg: '#FAF5FF',
+    trendValue: '+3%',
+    trendPositive: true,
+  },
+  {
+    icon: <BusinessOutlinedIcon sx={{ fontSize: 16, color: '#FE9A00' }} />,
+    label: 'Website (Facility)',
+    count: 1255,
+    percent: 36,
+    color: '#FE9A00',
+    iconBg: '#FFFBEB',
+    trendValue: '+12%',
+    trendPositive: true,
+  },
+];
+
+// ─── Service Quality Metrics Data ───────────────────────────────────────────
+
+const serviceMetrics = [
+  {
+    icon: <AccessTimeOutlinedIcon sx={{ fontSize: 18, color: '#2B7FFF' }} />,
+    iconBg: '#EFF6FF',
+    value: '12.4 min',
+    label: 'Avg. Pickup Time',
+    sublabel: 'Within 15 min window',
+  },
+  {
+    icon: <RouteOutlinedIcon sx={{ fontSize: 18, color: '#AD46FF' }} />,
+    iconBg: '#FAF5FF',
+    value: '18.2 mi',
+    label: 'Avg. Trip Distance',
+    sublabel: 'Round trip included',
+  },
+  {
+    icon: <StarOutlinedIcon sx={{ fontSize: 18, color: '#FE9A00' }} />,
+    iconBg: '#FFFBEB',
+    value: '4.8/5.0',
+    label: 'Service Rating',
+    sublabel: 'Based on 2,847 reviews',
+  },
+  {
+    icon: <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#00C950' }} />,
+    iconBg: '#F0FDF4',
+    value: '98.7%',
+    label: 'Completion Rate',
+    sublabel: 'Successfully completed',
+  },
+];
+
+// ─── Top Performing Facilities Data ─────────────────────────────────────────
+
+const facilityData = [
   {
     num: '1',
-    firstName: 'Marcus',
-    lastName: 'Johnson',
-    trips: '312',
-    value: 4.9,
-    avatarBg: '#6366F1',
+    name: 'Valley Medical Center',
+    type: 'Hospital',
+    bookings: 487,
+    acceptanceRate: 98.2,
+    iconBg: '#2B7FFF',
+    icon: <LocalHospitalOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />,
   },
   {
     num: '2',
-    firstName: 'Sarah',
-    lastName: 'Williams',
-    trips: '287',
-    value: 4.8,
-    avatarBg: '#8B5CF6',
+    name: 'Sunrise Care Home',
+    type: 'Care Home',
+    bookings: 412,
+    acceptanceRate: 96.8,
+    iconBg: '#AD46FF',
+    icon: <HomeWorkOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />,
   },
   {
     num: '3',
-    firstName: 'David',
-    lastName: 'Chen',
-    trips: '264',
-    value: 4.8,
-    avatarBg: '#F59E0B',
+    name: 'Memorial Rehabilitation Center',
+    type: 'Rehabilitation',
+    bookings: 358,
+    acceptanceRate: 95.4,
+    iconBg: '#FE9A00',
+    icon: (
+      <MedicalServicesOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />
+    ),
   },
   {
     num: '4',
-    firstName: 'Emily',
-    lastName: 'Rodriguez',
-    trips: '241',
-    value: 4.7,
-    avatarBg: '#EC4899',
+    name: 'Evergreen Senior Living',
+    type: 'Care Home',
+    bookings: 294,
+    acceptanceRate: 97,
+    iconBg: '#F6339A',
+    icon: <HomeWorkOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />,
   },
   {
     num: '5',
-    firstName: 'James',
-    lastName: 'Thompson',
-    trips: '218',
-    value: 4.7,
-    avatarBg: '#10B981',
+    name: "St. Mary's Hospital",
+    type: 'Hospital',
+    bookings: 276,
+    acceptanceRate: 94.6,
+    iconBg: '#00C950',
+    icon: <LocalHospitalOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />,
   },
 ];
+
+// ─── Top Fleet Partners Data ────────────────────────────────────────────────
+
+const fleetPartnerData = [
+  {
+    num: '1',
+    name: 'MediTransport Solutions',
+    initials: 'MT',
+    vehicles: 24,
+    trips: 1342,
+    rating: 4.9,
+    avatarBg: '#2B7FFF',
+  },
+  {
+    num: '2',
+    name: 'CarePlus Fleet Services',
+    initials: 'CP',
+    vehicles: 18,
+    trips: 1018,
+    rating: 4.8,
+    avatarBg: '#AD46FF',
+  },
+  {
+    num: '3',
+    name: 'AccessRide Transport',
+    initials: 'AR',
+    vehicles: 15,
+    trips: 897,
+    rating: 4.7,
+    avatarBg: '#FE9A00',
+  },
+  {
+    num: '4',
+    name: 'HealthWheels Inc',
+    initials: 'HW',
+    vehicles: 12,
+    trips: 284,
+    rating: 4.9,
+    avatarBg: '#F6339A',
+  },
+  {
+    num: '5',
+    name: 'SafeJourney Medical',
+    initials: 'SJ',
+    vehicles: 8,
+    trips: 141,
+    rating: 4.6,
+    avatarBg: '#00C950',
+  },
+  {
+    num: '6',
+    name: 'Okay Medical',
+    initials: 'SJ',
+    vehicles: 8,
+    trips: 141,
+    rating: 4.6,
+    avatarBg: '#00C950',
+  },
+];
+
+// ─── Recent Activity Data ───────────────────────────────────────────────────
 
 const recentData = [
   {
     icon: RequestIcon,
-    iconBg: '#EEF2FF',
-    activityTitle: 'New booking request received',
-    activityDesc: 'BK-20491 · Patient: Helen Moore',
+    iconBg: '#EFF6FF',
+    activityTitle: 'New booking from facility',
+    activityDesc: 'Sunrise Care Home \u00B7 Wheelchair transport requested',
     time: '2 min ago',
   },
   {
     icon: StartIcon,
     iconBg: '#F0FDF4',
-    activityTitle: 'Driver started trip',
-    activityDesc: 'Marcus Johnson → Memorial Hospital',
-    time: '14 min ago',
+    activityTitle: 'Client booked via mobile app',
+    activityDesc: 'Sarah Johnson \u00B7 Dialysis appointment',
+    time: '8 min ago',
   },
   {
     icon: CompleteIcon,
-    iconBg: '#ECFDF5',
+    iconBg: '#F0FDF4',
     activityTitle: 'Trip completed',
-    activityDesc: 'BK-20488 · Total: $47.50',
-    time: '28 min ago',
-  },
-  {
-    icon: CardIcon,
-    iconBg: '#FFF7ED',
-    activityTitle: 'Payment received',
-    activityDesc: 'Invoice #INV-8821 · $230.00',
-    time: '45 min ago',
+    activityDesc: 'Booking #BK-84731 \u00B7 Medi Transport Solutions',
+    time: '12 min ago',
   },
   {
     icon: NewDriverIcon,
-    iconBg: '#FDF2F8',
-    activityTitle: 'New driver onboarded',
-    activityDesc: 'Emma Davis · Vehicle: Toyota Sienna',
+    iconBg: '#FAF5FF',
+    activityTitle: 'New facility registered',
+    activityDesc: 'Memorial Rehabilitation Center',
+    time: '23 min ago',
+  },
+  {
+    icon: CardIcon,
+    iconBg: '#FFFBEB',
+    activityTitle: 'New client signup',
+    activityDesc: 'Robert Davis \u00B7 Via website',
     time: '1 hr ago',
   },
   {
-    icon: CompleteIcon,
-    iconBg: '#ECFDF5',
-    activityTitle: 'Trip completed',
-    activityDesc: 'BK-20485 · Total: $62.00',
-    time: '1.5 hrs ago',
+    icon: RequestIcon,
+    iconBg: '#EFF6FF',
+    activityTitle: 'Recurring booking scheduled',
+    activityDesc: '',
+    time: '2 hrs ago',
   },
 ];
+
+// ─── Component ──────────────────────────────────────────────────────────────
 
 export const HomePage = () => {
   const today = getTodayDate();
   const [activeTripTab, setActiveTripTab] = useState(0);
+
   return (
     <AppDashboardLayout>
       <Stack spacing={3}>
@@ -219,32 +380,25 @@ export const HomePage = () => {
           title="Analytics Dashboard"
           desc={`Overview of operations as of today, ${today}`}
         />
+
+        {/* Stat Cards */}
         <Grid container spacing={'20px'}>
           {cardData.map((card, index) => (
-            <Grid
-              size={{
-                sm: 6,
-                lg: 3,
-              }}
-              key={index}
-            >
+            <Grid size={{ sm: 6, lg: 3 }} key={index}>
               <CardComponent {...card} />
             </Grid>
           ))}
         </Grid>
+
+        {/* Booking Trends + Transport Type Distribution */}
         <Grid container spacing={'20px'}>
-          <Grid
-            size={{
-              sm: 12,
-              lg: 7,
-            }}
-          >
+          <Grid size={{ sm: 12, lg: 7 }}>
             <AppCardparent>
               <Stack spacing={'19.83px'}>
-                <RowStack width={'100%'} justifyContent={'space-between'}>
+                <RowStack width="100%" justifyContent="space-between">
                   <CardTitleAndDesc
-                    title="Trip Volume Trend"
-                    desc="Number of trips over time"
+                    title="Booking Trends"
+                    desc="Daily booking volume across all services"
                   />
                   <AppTab
                     tabs={[
@@ -263,71 +417,132 @@ export const HomePage = () => {
               </Stack>
             </AppCardparent>
           </Grid>
-          <Grid
-            size={{
-              sm: 12,
-              lg: 5,
-            }}
-          >
+          <Grid size={{ sm: 12, lg: 5 }}>
             <AppCardparent>
               <Stack spacing={'19.83px'}>
                 <CardTitleAndDesc
-                  title="Trip Volume Trend"
-                  desc="Number of trips over time"
+                  title="Transport Type Distribution"
+                  desc="Last 30 days breakdown by vehicle type"
+                />
+                <TransportDistribution
+                  data={transportData}
+                  clientPercent={64}
+                  facilityPercent={36}
+                />
+              </Stack>
+            </AppCardparent>
+          </Grid>
+        </Grid>
+
+        {/* Booking Channels + Service Quality Metrics */}
+        <Grid container spacing={'20px'}>
+          <Grid size={{ sm: 12, lg: 6 }}>
+            <AppCardparent>
+              <Stack spacing={'19.83px'}>
+                <CardTitleAndDesc
+                  title="Booking Channels"
+                  desc="How clients are booking rides"
                 />
                 <Stack spacing={'20px'}>
-                  {progressDataArray.map((progress, index) => (
-                    <HomeProgressBar {...progress} key={index} />
+                  {bookingChannelsData.map((channel) => (
+                    <BookingChannelItem key={channel.label} {...channel} />
                   ))}
                 </Stack>
               </Stack>
             </AppCardparent>
           </Grid>
-        </Grid>
-        <Grid container spacing={'20px'} alignItems={'stretch'}>
-          <Grid
-            size={{
-              sm: 12,
-              lg: 6,
-            }}
-            sx={{
-              height: 'auto',
-            }}
-          >
+          <Grid size={{ sm: 12, lg: 6 }}>
             <AppCardparent>
               <Stack spacing={'19.83px'}>
                 <CardTitleAndDesc
-                  title="Top Performing Drivers"
-                  desc="Ranked by trips completed this month"
+                  title="Service Quality Metrics"
+                  desc="Performance indicators for last 30 days"
                 />
-                {driverData.map((driver, index) => (
-                  <DriverComponent {...driver} key={index} />
-                ))}
-              </Stack>
-            </AppCardparent>
-          </Grid>
-          <Grid
-            size={{
-              sm: 12,
-              lg: 6,
-            }}
-            sx={{
-              height: 'auto',
-            }}
-          >
-            <AppCardparent>
-              <Stack spacing={'19.83px'}>
-                <CardTitleAndDesc
-                  title="Recent Activity"
-                  desc="Latest system events and updates"
-                />
-                {recentData.map((recent, index) => (
-                  <RecentActivity {...recent} key={index} />
-                ))}
+                <Grid container spacing={'16px'}>
+                  {serviceMetrics.map((metric) => (
+                    <Grid key={metric.label} size={{ xs: 6 }}>
+                      <ServiceMetricCard {...metric} />
+                    </Grid>
+                  ))}
+                </Grid>
               </Stack>
             </AppCardparent>
           </Grid>
         </Grid>
+
+        {/* Top Performing Facilities + Top Fleet Partners */}
+        <Grid container spacing={'20px'} alignItems="stretch">
+          <Grid size={{ sm: 12, lg: 6 }}>
+            <AppCardparent>
+              <Stack spacing={'19.83px'}>
+                <CardTitleAndDesc
+                  title="Top Performing Facilities"
+                  desc="Facilities ranked by booking volume and acceptance rate"
+                />
+                {facilityData.map((facility) => (
+                  <FacilityComponent key={facility.num} {...facility} />
+                ))}
+                {/* Facility type counts */}
+                <RowStack spacing={'24px'} sx={{ paddingTop: '4px' }}>
+                  {[
+                    { label: 'Hospitals', count: 12, color: '#155DFC' },
+                    { label: 'Care Homes', count: 18, color: '#9810FA' },
+                    { label: 'Rehab Centers', count: 7, color: '#E17100' },
+                  ].map((type) => (
+                    <Stack key={type.label} spacing={'2px'}>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 400,
+                          fontSize: pxToRem(12),
+                          color: '#9CA3AF',
+                        }}
+                      >
+                        {type.label}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 700,
+                          fontSize: pxToRem(20),
+                          color: type.color,
+                        }}
+                      >
+                        {type.count}
+                      </Typography>
+                    </Stack>
+                  ))}
+                </RowStack>
+              </Stack>
+            </AppCardparent>
+          </Grid>
+          <Grid size={{ sm: 12, lg: 6 }}>
+            <AppCardparent>
+              <Stack spacing={'19.83px'}>
+                <CardTitleAndDesc
+                  title="Top Fleet Partners"
+                  desc="Companies ranked by completed trips this month"
+                />
+                {fleetPartnerData.map((partner) => (
+                  <FleetPartnerComponent key={partner.num} {...partner} />
+                ))}
+              </Stack>
+            </AppCardparent>
+          </Grid>
+        </Grid>
+
+        {/* Recent Activity */}
+        <AppCardparent>
+          <Stack spacing={'19.83px'}>
+            <CardTitleAndDesc
+              title="Recent Activity"
+              desc="Latest bookings and system events"
+            />
+            {recentData.map((recent, index) => (
+              <RecentActivity key={index} {...recent} />
+            ))}
+          </Stack>
+        </AppCardparent>
       </Stack>
     </AppDashboardLayout>
   );

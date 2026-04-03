@@ -445,8 +445,8 @@ const FileUploadField = ({
         </RowStack>
       ) : (
         <AppButton
-         onClick={() => inputRef.current?.click()}
-         sx={{
+          onClick={() => inputRef.current?.click()}
+          sx={{
             height: '80px',
             padding: '0 14px',
             borderRadius: '10px',
@@ -458,34 +458,33 @@ const FileUploadField = ({
           }}
         >
           <Stack
-          alignItems={'center'}
-          justifyContent={'center'}
-          spacing={'6px'}
-          sx={{
-            // height: '80px',
-            // padding: '0 14px',
-            // borderRadius: '10px',
-            // border: '1px dashed #D1D5DB',
-            // background: '#FAFBFC',
-            cursor: 'pointer',
-            // transition: 'all 0.2s ease',
-            // '&:hover': { borderColor: '#2F6FED', background: '#F7F9FF' },
-          }}
-        >
-          <CloudUploadOutlinedIcon sx={{ fontSize: 20, color: '#9CA3AF' }} />
-          <Typography
+            alignItems={'center'}
+            justifyContent={'center'}
+            spacing={'6px'}
             sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: pxToRem(12.5),
-              color: '#9CA3AF',
+              // height: '80px',
+              // padding: '0 14px',
+              // borderRadius: '10px',
+              // border: '1px dashed #D1D5DB',
+              // background: '#FAFBFC',
+              cursor: 'pointer',
+              // transition: 'all 0.2s ease',
+              // '&:hover': { borderColor: '#2F6FED', background: '#F7F9FF' },
             }}
           >
-            Click to upload PDF or image
-          </Typography>
-        </Stack>
+            <CloudUploadOutlinedIcon sx={{ fontSize: 20, color: '#9CA3AF' }} />
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 400,
+                fontSize: pxToRem(12.5),
+                color: '#9CA3AF',
+              }}
+            >
+              Click to upload PDF or image
+            </Typography>
+          </Stack>
         </AppButton>
-        
       )}
       <VisuallyHiddenInput
         ref={inputRef}

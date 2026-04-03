@@ -37,7 +37,24 @@ import { GridColSpec } from '../../modules/components/GridTable';
 import { pxToRem } from '../../../common';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
-import { DriverViewDrawer, DriverViewData, AddDriverDrawer, EditDriverDrawer, EditDriverData, DriverProfileCard, DriverProfileCardData, SuspendDriverModal, EditDriverModal, CaregiverProfileCard, CaregiverProfileCardData, ViewCaregiverDrawer, CaregiverViewData, AddCaregiverDrawer, EditCaregiverDrawer, EditCaregiverDrawerData } from './ui/components';
+import {
+  DriverViewDrawer,
+  DriverViewData,
+  AddDriverDrawer,
+  EditDriverDrawer,
+  EditDriverData,
+  DriverProfileCard,
+  DriverProfileCardData,
+  SuspendDriverModal,
+  EditDriverModal,
+  CaregiverProfileCard,
+  CaregiverProfileCardData,
+  ViewCaregiverDrawer,
+  CaregiverViewData,
+  AddCaregiverDrawer,
+  EditCaregiverDrawer,
+  EditCaregiverDrawerData,
+} from './ui/components';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -206,75 +223,187 @@ const statCardsData: StatCardProps[] = [
 
 const driversData: DriverRow[] = [
   {
-    id: '1', driverId: 'DRV-001', name: 'Marcus Johnson', avatar: '',
-    fleet: 'MediGo Direct', vehicle: 'Toyota Sienna · 2022', plate: 'ABC-1234',
-    status: 'On Trip', rating: 4.9, trips: 312, docs: 'Complete',
-    joinedDate: 'Jan 2023', phone: '+1 (555) 201-3344', email: 'marcus.j@medigo.com',
-    dateOfBirth: '1988-03-14', memberSince: 'Jan 2023', license: 'DL-NY-448821',
-    bgCheck: 'Verified', licenseExpiry: '2027-03-14', docsStatus: 'Complete',
+    id: '1',
+    driverId: 'DRV-001',
+    name: 'Marcus Johnson',
+    avatar: '',
+    fleet: 'MediGo Direct',
+    vehicle: 'Toyota Sienna · 2022',
+    plate: 'ABC-1234',
+    status: 'On Trip',
+    rating: 4.9,
+    trips: 312,
+    docs: 'Complete',
+    joinedDate: 'Jan 2023',
+    phone: '+1 (555) 201-3344',
+    email: 'marcus.j@medigo.com',
+    dateOfBirth: '1988-03-14',
+    memberSince: 'Jan 2023',
+    license: 'DL-NY-448821',
+    bgCheck: 'Verified',
+    licenseExpiry: '2027-03-14',
+    docsStatus: 'Complete',
     capabilities: ['Wheelchair Assistance', 'Senior Assistance'],
   },
   {
-    id: '2', driverId: 'DRV-002', name: 'Sarah Williams', avatar: '',
-    fleet: 'MedRide Express', vehicle: 'Honda Odyssey · 2021', plate: 'DEF-5678',
-    status: 'Available', rating: 4.8, trips: 287, docs: 'Complete',
-    joinedDate: 'Feb 2023', phone: '+1 (555) 202-4455', email: 's.williams@medride.com',
-    dateOfBirth: '1990-07-22', memberSince: 'Feb 2023', license: 'DL-NY-559932',
-    bgCheck: 'Verified', licenseExpiry: '2026-11-08', docsStatus: 'Complete',
+    id: '2',
+    driverId: 'DRV-002',
+    name: 'Sarah Williams',
+    avatar: '',
+    fleet: 'MedRide Express',
+    vehicle: 'Honda Odyssey · 2021',
+    plate: 'DEF-5678',
+    status: 'Available',
+    rating: 4.8,
+    trips: 287,
+    docs: 'Complete',
+    joinedDate: 'Feb 2023',
+    phone: '+1 (555) 202-4455',
+    email: 's.williams@medride.com',
+    dateOfBirth: '1990-07-22',
+    memberSince: 'Feb 2023',
+    license: 'DL-NY-559932',
+    bgCheck: 'Verified',
+    licenseExpiry: '2026-11-08',
+    docsStatus: 'Complete',
     capabilities: ['Senior Assistance'],
   },
   {
-    id: '3', driverId: 'DRV-003', name: 'David Chen', avatar: '',
-    fleet: 'MediGo Direct', vehicle: 'Ford Escape · 2023', plate: 'GHI-9012',
-    status: 'Available', rating: 4.8, trips: 264, docs: 'Complete',
-    joinedDate: 'Mar 2023', phone: '+1 (555) 303-5566', email: 'd.chen@medigo.com',
-    dateOfBirth: '1985-11-30', memberSince: 'Mar 2023', license: 'DL-CA-337710',
-    bgCheck: 'Verified', licenseExpiry: '2027-05-20', docsStatus: 'Complete',
+    id: '3',
+    driverId: 'DRV-003',
+    name: 'David Chen',
+    avatar: '',
+    fleet: 'MediGo Direct',
+    vehicle: 'Ford Escape · 2023',
+    plate: 'GHI-9012',
+    status: 'Available',
+    rating: 4.8,
+    trips: 264,
+    docs: 'Complete',
+    joinedDate: 'Mar 2023',
+    phone: '+1 (555) 303-5566',
+    email: 'd.chen@medigo.com',
+    dateOfBirth: '1985-11-30',
+    memberSince: 'Mar 2023',
+    license: 'DL-CA-337710',
+    bgCheck: 'Verified',
+    licenseExpiry: '2027-05-20',
+    docsStatus: 'Complete',
     capabilities: ['Wheelchair Assistance'],
   },
   {
-    id: '4', driverId: 'DRV-004', name: 'Emily Rodriguez', avatar: '',
-    fleet: 'CareTransit Co.', vehicle: 'Chrysler Pacifica · 2020', plate: 'JKL-3456',
-    status: 'On Trip', rating: 4.7, trips: 241, docs: 'Pending',
-    joinedDate: 'Apr 2023', phone: '+1 (555) 404-7788', email: 'e.rodriguez@caretransit.com',
-    dateOfBirth: '1992-01-15', memberSince: 'Apr 2023', license: 'DL-TX-226609',
-    bgCheck: 'Verified', licenseExpiry: '2026-09-12', docsStatus: 'Pending',
+    id: '4',
+    driverId: 'DRV-004',
+    name: 'Emily Rodriguez',
+    avatar: '',
+    fleet: 'CareTransit Co.',
+    vehicle: 'Chrysler Pacifica · 2020',
+    plate: 'JKL-3456',
+    status: 'On Trip',
+    rating: 4.7,
+    trips: 241,
+    docs: 'Pending',
+    joinedDate: 'Apr 2023',
+    phone: '+1 (555) 404-7788',
+    email: 'e.rodriguez@caretransit.com',
+    dateOfBirth: '1992-01-15',
+    memberSince: 'Apr 2023',
+    license: 'DL-TX-226609',
+    bgCheck: 'Verified',
+    licenseExpiry: '2026-09-12',
+    docsStatus: 'Pending',
     capabilities: ['Senior Assistance'],
   },
   {
-    id: '5', driverId: 'DRV-005', name: 'James Thompson', avatar: '',
-    fleet: 'HealthHaul LLC', vehicle: 'Dodge Caravan · 2021', plate: 'MNO-7890',
-    status: 'On Trip', rating: 4.7, trips: 218, docs: 'Complete',
-    joinedDate: 'May 2023', phone: '+1 (555) 505-9900', email: 'j.thompson@healthhaul.com',
-    dateOfBirth: '1987-06-08', memberSince: 'May 2023', license: 'DL-FL-115508',
-    bgCheck: 'Verified', licenseExpiry: '2027-01-25', docsStatus: 'Complete',
+    id: '5',
+    driverId: 'DRV-005',
+    name: 'James Thompson',
+    avatar: '',
+    fleet: 'HealthHaul LLC',
+    vehicle: 'Dodge Caravan · 2021',
+    plate: 'MNO-7890',
+    status: 'On Trip',
+    rating: 4.7,
+    trips: 218,
+    docs: 'Complete',
+    joinedDate: 'May 2023',
+    phone: '+1 (555) 505-9900',
+    email: 'j.thompson@healthhaul.com',
+    dateOfBirth: '1987-06-08',
+    memberSince: 'May 2023',
+    license: 'DL-FL-115508',
+    bgCheck: 'Verified',
+    licenseExpiry: '2027-01-25',
+    docsStatus: 'Complete',
     capabilities: ['Wheelchair Assistance', 'Senior Assistance'],
   },
   {
-    id: '6', driverId: 'DRV-006', name: 'Anna Kim', avatar: '',
-    fleet: 'MediGo Direct', vehicle: 'Toyota Camry · 2022', plate: 'PQR-1234',
-    status: 'Available', rating: 4.6, trips: 195, docs: 'Complete',
-    joinedDate: 'Jun 2023', phone: '+1 (555) 606-1122', email: 'a.kim@medigo.com',
-    dateOfBirth: '1994-09-03', memberSince: 'Jun 2023', license: 'DL-WA-004407',
-    bgCheck: 'Verified', licenseExpiry: '2027-08-15', docsStatus: 'Complete',
+    id: '6',
+    driverId: 'DRV-006',
+    name: 'Anna Kim',
+    avatar: '',
+    fleet: 'MediGo Direct',
+    vehicle: 'Toyota Camry · 2022',
+    plate: 'PQR-1234',
+    status: 'Available',
+    rating: 4.6,
+    trips: 195,
+    docs: 'Complete',
+    joinedDate: 'Jun 2023',
+    phone: '+1 (555) 606-1122',
+    email: 'a.kim@medigo.com',
+    dateOfBirth: '1994-09-03',
+    memberSince: 'Jun 2023',
+    license: 'DL-WA-004407',
+    bgCheck: 'Verified',
+    licenseExpiry: '2027-08-15',
+    docsStatus: 'Complete',
     capabilities: ['Senior Assistance'],
   },
   {
-    id: '7', driverId: 'DRV-007', name: 'Tom Roberts', avatar: '',
-    fleet: 'SafeRide Medical', vehicle: 'Kia Sedona · 2020', plate: 'STU-5678',
-    status: 'Suspended', rating: 4.5, trips: 178, docs: 'Pending',
-    joinedDate: 'Jul 2023', phone: '+1 (555) 707-3344', email: 't.roberts@saferidemd.com',
-    dateOfBirth: '1991-12-20', memberSince: 'Jul 2023', license: 'DL-OH-993306',
-    bgCheck: 'Pending', licenseExpiry: '2026-04-10', docsStatus: 'Pending',
+    id: '7',
+    driverId: 'DRV-007',
+    name: 'Tom Roberts',
+    avatar: '',
+    fleet: 'SafeRide Medical',
+    vehicle: 'Kia Sedona · 2020',
+    plate: 'STU-5678',
+    status: 'Suspended',
+    rating: 4.5,
+    trips: 178,
+    docs: 'Pending',
+    joinedDate: 'Jul 2023',
+    phone: '+1 (555) 707-3344',
+    email: 't.roberts@saferidemd.com',
+    dateOfBirth: '1991-12-20',
+    memberSince: 'Jul 2023',
+    license: 'DL-OH-993306',
+    bgCheck: 'Pending',
+    licenseExpiry: '2026-04-10',
+    docsStatus: 'Pending',
     capabilities: [],
   },
   {
-    id: '8', driverId: 'DRV-008', name: 'Grace Miller', avatar: '',
-    fleet: 'MobiCare Transport', vehicle: 'Buick Enclave · 2021', plate: 'VWX-9012',
-    status: 'Available', rating: 4.4, trips: 156, docs: 'Complete',
-    joinedDate: 'Aug 2023', phone: '+1 (555) 808-5566', email: 'g.miller@mobicare.com',
-    dateOfBirth: '1989-04-17', memberSince: 'Aug 2023', license: 'DL-PA-882205',
-    bgCheck: 'Verified', licenseExpiry: '2027-02-28', docsStatus: 'Complete',
+    id: '8',
+    driverId: 'DRV-008',
+    name: 'Grace Miller',
+    avatar: '',
+    fleet: 'MobiCare Transport',
+    vehicle: 'Buick Enclave · 2021',
+    plate: 'VWX-9012',
+    status: 'Available',
+    rating: 4.4,
+    trips: 156,
+    docs: 'Complete',
+    joinedDate: 'Aug 2023',
+    phone: '+1 (555) 808-5566',
+    email: 'g.miller@mobicare.com',
+    dateOfBirth: '1989-04-17',
+    memberSince: 'Aug 2023',
+    license: 'DL-PA-882205',
+    bgCheck: 'Verified',
+    licenseExpiry: '2027-02-28',
+    docsStatus: 'Complete',
     capabilities: ['Wheelchair Assistance'],
   },
 ];
@@ -312,60 +441,132 @@ const caregiverStatCards: StatCardProps[] = [
 
 const caregiversData: CaregiverRow[] = [
   {
-    id: '1', caregiverId: 'CG-001', name: 'Emma Thompson', avatar: '',
-    specialty: 'Personal Support Worker', certifications: 'PSW, First Aid, Dementia Care',
-    capabilities: ['Dementia Care', 'Mobility Assistance'], status: 'Available',
-    rating: 4.9, assignments: 342, location: 'Toronto, ON',
-    joinedDate: 'Jan 2023', phone: '+1 (416) 555-0101', email: 'e.thompson@medigo.com',
+    id: '1',
+    caregiverId: 'CG-001',
+    name: 'Emma Thompson',
+    avatar: '',
+    specialty: 'Personal Support Worker',
+    certifications: 'PSW, First Aid, Dementia Care',
+    capabilities: ['Dementia Care', 'Mobility Assistance'],
+    status: 'Available',
+    rating: 4.9,
+    assignments: 342,
+    location: 'Toronto, ON',
+    joinedDate: 'Jan 2023',
+    phone: '+1 (416) 555-0101',
+    email: 'e.thompson@medigo.com',
   },
   {
-    id: '2', caregiverId: 'CG-002', name: 'Michael Brooks', avatar: '',
-    specialty: 'Registered Nurse', certifications: 'RN, CPR, Wound Care',
-    capabilities: ['Palliative Care', 'Mobility Assistance'], status: 'On Assignment',
-    rating: 4.8, assignments: 289, location: 'Vancouver, BC',
-    joinedDate: 'Feb 2023', phone: '+1 (604) 555-0202', email: 'm.brooks@medigo.com',
+    id: '2',
+    caregiverId: 'CG-002',
+    name: 'Michael Brooks',
+    avatar: '',
+    specialty: 'Registered Nurse',
+    certifications: 'RN, CPR, Wound Care',
+    capabilities: ['Palliative Care', 'Mobility Assistance'],
+    status: 'On Assignment',
+    rating: 4.8,
+    assignments: 289,
+    location: 'Vancouver, BC',
+    joinedDate: 'Feb 2023',
+    phone: '+1 (604) 555-0202',
+    email: 'm.brooks@medigo.com',
   },
   {
-    id: '3', caregiverId: 'CG-003', name: 'Lisa Chen', avatar: '',
-    specialty: 'Home Health Aide', certifications: 'HHA, First Aid',
-    capabilities: ['Dementia Care'], status: 'Available',
-    rating: 4.7, assignments: 256, location: 'Montreal, QC',
-    joinedDate: 'Mar 2023', phone: '+1 (514) 555-0303', email: 'l.chen@medigo.com',
+    id: '3',
+    caregiverId: 'CG-003',
+    name: 'Lisa Chen',
+    avatar: '',
+    specialty: 'Home Health Aide',
+    certifications: 'HHA, First Aid',
+    capabilities: ['Dementia Care'],
+    status: 'Available',
+    rating: 4.7,
+    assignments: 256,
+    location: 'Montreal, QC',
+    joinedDate: 'Mar 2023',
+    phone: '+1 (514) 555-0303',
+    email: 'l.chen@medigo.com',
   },
   {
-    id: '4', caregiverId: 'CG-004', name: 'James Rodriguez', avatar: '',
-    specialty: 'Certified Nursing Assistant', certifications: 'CNA, CPR, Medication Admin',
-    capabilities: ['Medical Escort', 'Mobility Assistance'], status: 'On Assignment',
-    rating: 4.8, assignments: 231, location: 'Calgary, AB',
-    joinedDate: 'Apr 2023', phone: '+1 (403) 555-0404', email: 'j.rodriguez@medigo.com',
+    id: '4',
+    caregiverId: 'CG-004',
+    name: 'James Rodriguez',
+    avatar: '',
+    specialty: 'Certified Nursing Assistant',
+    certifications: 'CNA, CPR, Medication Admin',
+    capabilities: ['Medical Escort', 'Mobility Assistance'],
+    status: 'On Assignment',
+    rating: 4.8,
+    assignments: 231,
+    location: 'Calgary, AB',
+    joinedDate: 'Apr 2023',
+    phone: '+1 (403) 555-0404',
+    email: 'j.rodriguez@medigo.com',
   },
   {
-    id: '5', caregiverId: 'CG-005', name: 'Sarah Mitchell', avatar: '',
-    specialty: 'Personal Support Worker', certifications: 'PSW, Dementia Care, First Aid',
-    capabilities: ['Dementia Care', 'Palliative Care'], status: 'Available',
-    rating: 4.6, assignments: 198, location: 'Ottawa, ON',
-    joinedDate: 'May 2023', phone: '+1 (613) 555-0505', email: 's.mitchell@medigo.com',
+    id: '5',
+    caregiverId: 'CG-005',
+    name: 'Sarah Mitchell',
+    avatar: '',
+    specialty: 'Personal Support Worker',
+    certifications: 'PSW, Dementia Care, First Aid',
+    capabilities: ['Dementia Care', 'Palliative Care'],
+    status: 'Available',
+    rating: 4.6,
+    assignments: 198,
+    location: 'Ottawa, ON',
+    joinedDate: 'May 2023',
+    phone: '+1 (613) 555-0505',
+    email: 's.mitchell@medigo.com',
   },
   {
-    id: '6', caregiverId: 'CG-006', name: 'David Park', avatar: '',
-    specialty: 'Occupational Therapist', certifications: 'OT, Rehab Specialist',
-    capabilities: ['Mobility Assistance'], status: 'Available',
-    rating: 4.9, assignments: 175, location: 'Toronto, ON',
-    joinedDate: 'Jun 2023', phone: '+1 (416) 555-0606', email: 'd.park@medigo.com',
+    id: '6',
+    caregiverId: 'CG-006',
+    name: 'David Park',
+    avatar: '',
+    specialty: 'Occupational Therapist',
+    certifications: 'OT, Rehab Specialist',
+    capabilities: ['Mobility Assistance'],
+    status: 'Available',
+    rating: 4.9,
+    assignments: 175,
+    location: 'Toronto, ON',
+    joinedDate: 'Jun 2023',
+    phone: '+1 (416) 555-0606',
+    email: 'd.park@medigo.com',
   },
   {
-    id: '7', caregiverId: 'CG-007', name: 'Rachel Green', avatar: '',
-    specialty: 'Registered Nurse', certifications: 'RN, Palliative Care, IV Therapy',
-    capabilities: ['Palliative Care', 'Medical Escort'], status: 'Suspended',
-    rating: 4.5, assignments: 163, location: 'Edmonton, AB',
-    joinedDate: 'Jul 2023', phone: '+1 (780) 555-0707', email: 'r.green@medigo.com',
+    id: '7',
+    caregiverId: 'CG-007',
+    name: 'Rachel Green',
+    avatar: '',
+    specialty: 'Registered Nurse',
+    certifications: 'RN, Palliative Care, IV Therapy',
+    capabilities: ['Palliative Care', 'Medical Escort'],
+    status: 'Suspended',
+    rating: 4.5,
+    assignments: 163,
+    location: 'Edmonton, AB',
+    joinedDate: 'Jul 2023',
+    phone: '+1 (780) 555-0707',
+    email: 'r.green@medigo.com',
   },
   {
-    id: '8', caregiverId: 'CG-008', name: 'Kevin Wu', avatar: '',
-    specialty: 'Home Health Aide', certifications: 'HHA, CPR, Mobility Assist',
-    capabilities: ['Mobility Assistance', 'Dementia Care'], status: 'On Assignment',
-    rating: 4.7, assignments: 142, location: 'Winnipeg, MB',
-    joinedDate: 'Aug 2023', phone: '+1 (204) 555-0808', email: 'k.wu@medigo.com',
+    id: '8',
+    caregiverId: 'CG-008',
+    name: 'Kevin Wu',
+    avatar: '',
+    specialty: 'Home Health Aide',
+    certifications: 'HHA, CPR, Mobility Assist',
+    capabilities: ['Mobility Assistance', 'Dementia Care'],
+    status: 'On Assignment',
+    rating: 4.7,
+    assignments: 142,
+    location: 'Winnipeg, MB',
+    joinedDate: 'Aug 2023',
+    phone: '+1 (204) 555-0808',
+    email: 'k.wu@medigo.com',
   },
 ];
 
@@ -389,20 +590,26 @@ export const ServiceProviderPage = () => {
   const [selectedDriver, setSelectedDriver] = useState<DriverRow | null>(null);
   const [addDriverOpen, setAddDriverOpen] = useState(false);
   const [editDriverOpen, setEditDriverOpen] = useState(false);
-  const [editingDriver, setEditingDriver] = useState<EditDriverData | null>(null);
+  const [editingDriver, setEditingDriver] = useState<EditDriverData | null>(
+    null
+  );
 
   // Modal state (drivers)
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
-  const [suspendDriver, setSuspendDriver] = useState<DriverProfileCardData | null>(null);
+  const [suspendDriver, setSuspendDriver] =
+    useState<DriverProfileCardData | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editModalDriver, setEditModalDriver] = useState<DriverProfileCardData | null>(null);
+  const [editModalDriver, setEditModalDriver] =
+    useState<DriverProfileCardData | null>(null);
 
   // Caregiver state
   const [caregiverDrawerOpen, setCaregiverDrawerOpen] = useState(false);
-  const [selectedCaregiver, setSelectedCaregiver] = useState<CaregiverRow | null>(null);
+  const [selectedCaregiver, setSelectedCaregiver] =
+    useState<CaregiverRow | null>(null);
   const [addCaregiverOpen, setAddCaregiverOpen] = useState(false);
   const [editCaregiverOpen, setEditCaregiverOpen] = useState(false);
-  const [editCaregiverData, setEditCaregiverData] = useState<EditCaregiverDrawerData | null>(null);
+  const [editCaregiverData, setEditCaregiverData] =
+    useState<EditCaregiverDrawerData | null>(null);
 
   // Caregiver search
   const [caregiverSearchQuery, setCaregiverSearchQuery] = useState('');
@@ -918,9 +1125,10 @@ export const ServiceProviderPage = () => {
         <RowStack justifyContent={'space-between'}>
           <DashboardTitleAndDesc
             title="Service Provider"
-            desc={providerType === 'Drivers'
-              ? 'Manage your driver roster, documents, fleet assignments, and status'
-              : 'Manage your caregiver roster, documents, fleet assignments, and status'
+            desc={
+              providerType === 'Drivers'
+                ? 'Manage your driver roster, documents, fleet assignments, and status'
+                : 'Manage your caregiver roster, documents, fleet assignments, and status'
             }
           />
           <Box>
@@ -1003,8 +1211,18 @@ export const ServiceProviderPage = () => {
             },
           }}
         >
-          <Tab label={providerType === 'Drivers' ? 'All Drivers' : 'All Caregivers'} />
-          <Tab label={providerType === 'Drivers' ? 'Driver Profile' : 'Caregivers Profile'} />
+          <Tab
+            label={
+              providerType === 'Drivers' ? 'All Drivers' : 'All Caregivers'
+            }
+          />
+          <Tab
+            label={
+              providerType === 'Drivers'
+                ? 'Driver Profile'
+                : 'Caregivers Profile'
+            }
+          />
         </Tabs>
 
         {/* Content */}
@@ -1169,7 +1387,8 @@ export const ServiceProviderPage = () => {
                       lineHeight: '1.5em',
                     }}
                   >
-                    {filteredCaregivers.length} registered caregivers — specialty and certifications shown
+                    {filteredCaregivers.length} registered caregivers —
+                    specialty and certifications shown
                   </Typography>
                 </Stack>
                 <AppSearchField
@@ -1200,7 +1419,9 @@ export const ServiceProviderPage = () => {
                       router.push('/drivers/documents');
                     }}
                     onViewDetails={() => {
-                      setSelectedCaregiver(caregiver as unknown as CaregiverRow);
+                      setSelectedCaregiver(
+                        caregiver as unknown as CaregiverRow
+                      );
                       setCaregiverDrawerOpen(true);
                     }}
                   />

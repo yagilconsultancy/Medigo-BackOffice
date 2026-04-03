@@ -1,5 +1,5 @@
-import { UseQueryResult } from "@tanstack/react-query";
-import { ApiResponse } from "../../../types";
+import { UseQueryResult } from '@tanstack/react-query';
+import { ApiResponse } from '../../../types';
 
 /**
  * Represents the result of a resolved API query, adapting the structure of
@@ -10,7 +10,7 @@ import { ApiResponse } from "../../../types";
  */
 export type UseResolvedApiQueryResult<Data, Error = unknown> = Omit<
   UseQueryResult<ApiResponse<Data>, Error>,
-  "data"
+  'data'
 > & {
   data: Data;
 };
@@ -37,7 +37,11 @@ export type UseResolvedApiQueryResult<Data, Error = unknown> = Omit<
  * An object containing the resolved query result, where the `data` property is the successfully
  * resolved data or the provided default value.
  */
-export const useResolvedApiQuery = <Data, Error = unknown, Args extends any[] = []>(
+export const useResolvedApiQuery = <
+  Data,
+  Error = unknown,
+  Args extends any[] = [],
+>(
   queryHook: (...args: Args) => UseQueryResult<ApiResponse<Data>, Error>,
   defaultValue: Data,
   ...args: Args
@@ -45,7 +49,8 @@ export const useResolvedApiQuery = <Data, Error = unknown, Args extends any[] = 
   const queryResult = queryHook(...args);
   const { data: apiResponse, error, ...rest } = queryResult;
 
-  const resolvedData = apiResponse && apiResponse.success ? apiResponse.data : defaultValue;
+  const resolvedData =
+    apiResponse && apiResponse.success ? apiResponse.data : defaultValue;
 
   return {
     ...rest,

@@ -398,9 +398,7 @@ export const AddCaregiverDrawer = ({
                     padding: '16px 24px',
                   }}
                 >
-                  <PersonOutlineIcon
-                    sx={{ fontSize: 15, color: '#2F6FED' }}
-                  />
+                  <PersonOutlineIcon sx={{ fontSize: 15, color: '#2F6FED' }} />
                   <Typography
                     sx={{
                       fontFamily: (theme) => theme.typography.fontFamily,

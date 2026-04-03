@@ -10,7 +10,11 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { RowStack, CustomBreadCrumbs, DashboardTitleAndDesc } from '../../modules/components';
+import {
+  RowStack,
+  CustomBreadCrumbs,
+  DashboardTitleAndDesc,
+} from '../../modules/components';
 import { DocumentViewModal } from './ui/components';
 import { pxToRem } from '../../../common';
 

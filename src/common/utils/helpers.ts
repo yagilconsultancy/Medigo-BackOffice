@@ -1,6 +1,6 @@
 import { destroyCookie } from 'nookies';
 import { statusMapping } from '../data';
-import Cookies from "js-cookie";
+import Cookies from 'js-cookie';
 
 interface ArrayType {
   text: string;
@@ -81,7 +81,7 @@ export const pxToRem = (px: number): string => {
 };
 
 export const handleLogout = () => {
-  Cookies.remove("medi_auth");
+  Cookies.remove('medi_auth');
   window.location.href = `/login`;
 };
 
@@ -139,11 +139,12 @@ export function kmToMiles(km: number): number {
 
 export function formatTotalNumber(num: number | undefined): string {
   if (num === undefined) return '0.00';
-  return num.toLocaleString('en-US', 
-  //   {
-  //   minimumFractionDigits: 2,
-  //   maximumFractionDigits: 2,
-  // }
+  return num.toLocaleString(
+    'en-US'
+    //   {
+    //   minimumFractionDigits: 2,
+    //   maximumFractionDigits: 2,
+    // }
   );
 }
 
@@ -291,17 +292,17 @@ export function timeAgo(timestamp: string): string {
 }
 
 export const setAuthToken = (token: string) => {
-  Cookies.set("medi_auth", token, {
+  Cookies.set('medi_auth', token, {
     expires: 7, // days
     secure: true, // only sent over HTTPS
-    sameSite: "strict",
+    sameSite: 'strict',
   });
 };
 
 export const getAuthToken = () => {
-  return Cookies.get("medi_auth");
+  return Cookies.get('medi_auth');
 };
 
 export const removeAuthToken = () => {
-  Cookies.remove("medi_auth");
+  Cookies.remove('medi_auth');
 };

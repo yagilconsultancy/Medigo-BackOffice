@@ -45,7 +45,7 @@ export const RecentActivity = ({
         <Stack spacing={0.3}>
           <Typography
             sx={{
-              color: 'text.primary',
+              color: '#101828',
               fontWeight: 500,
               fontFamily: (theme) => theme.typography.fontFamily,
               fontSize: pxToRem(13),
@@ -56,7 +56,7 @@ export const RecentActivity = ({
           </Typography>
           <Typography
             sx={{
-              color: 'text.secondary',
+              color: '#6A7282',
               fontWeight: 400,
               fontFamily: (theme) => theme.typography.fontFamily,
               fontSize: pxToRem(12),
@@ -69,7 +69,7 @@ export const RecentActivity = ({
       </RowStack>
       <Typography
         sx={{
-          color: '#9CA3AF',
+          color: '#99A1AF',
           fontWeight: 400,
           fontFamily: (theme) => theme.typography.fontFamily,
           fontSize: pxToRem(11),

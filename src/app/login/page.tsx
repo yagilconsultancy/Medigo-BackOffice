@@ -1,5 +1,5 @@
-import { LoginPage } from "../../ui/pages";
+import { LoginPage } from '../../ui/pages';
 
 export default function Login() {
-    return <LoginPage />
+  return <LoginPage />;
 }

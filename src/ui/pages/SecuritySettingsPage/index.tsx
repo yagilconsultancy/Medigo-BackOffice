@@ -188,8 +188,7 @@ export const SecuritySettingsPage = () => {
       session_timeout_hours:
         securityData?.session_timeout_hours?.toString() ?? '',
       max_failed_login_attempts: '5',
-      min_password_length:
-        securityData?.min_password_length?.toString() ?? '',
+      min_password_length: securityData?.min_password_length?.toString() ?? '',
       require_uppercase: securityData?.require_uppercase ?? false,
       require_lowercase: securityData?.require_lowercase ?? false,
       require_numbers: securityData?.require_numbers ?? false,
@@ -379,10 +378,7 @@ export const SecuritySettingsPage = () => {
                       </Typography>
                     </Stack>
 
-                    <Stack
-                      sx={{ padding: '20px 24px 24px' }}
-                      spacing={'0px'}
-                    >
+                    <Stack sx={{ padding: '20px 24px 24px' }} spacing={'0px'}>
                       {authSettingsConfig.map((setting, index) => {
                         const isOn = values[setting.field];
                         const status = setting.locked

@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Avatar,
-  Box,
-  Chip,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
@@ -138,10 +132,10 @@ const statusStyles: Record<string, { color: string; bg: string }> = {
 
 // ─── Capability Icons (color applied dynamically) ───────────────────────────
 
-const getCapabilityIcons = (color: string): Record<string, React.ReactNode> => ({
-  'Dementia Care': (
-    <ElderlyOutlinedIcon sx={{ fontSize: 10, color }} />
-  ),
+const getCapabilityIcons = (
+  color: string
+): Record<string, React.ReactNode> => ({
+  'Dementia Care': <ElderlyOutlinedIcon sx={{ fontSize: 10, color }} />,
   'Mobility Assistance': (
     <AccessibleOutlinedIcon sx={{ fontSize: 10, color }} />
   ),
@@ -284,10 +278,7 @@ export const CaregiverProfileCard = ({
           }}
         >
           {/* Specialty */}
-          <RowStack
-            spacing={'10px'}
-            sx={{ flex: 1, padding: '14px 16px' }}
-          >
+          <RowStack spacing={'10px'} sx={{ flex: 1, padding: '14px 16px' }}>
             <LocalHospitalOutlinedIcon
               sx={{ fontSize: 13, color: '#9CA3AF' }}
             />
@@ -329,13 +320,8 @@ export const CaregiverProfileCard = ({
           />
 
           {/* Certifications */}
-          <RowStack
-            spacing={'10px'}
-            sx={{ flex: 1, padding: '14px 16px' }}
-          >
-            <DescriptionOutlinedIcon
-              sx={{ fontSize: 13, color: '#9CA3AF' }}
-            />
+          <RowStack spacing={'10px'} sx={{ flex: 1, padding: '14px 16px' }}>
+            <DescriptionOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
             <Stack spacing={0}>
               <Typography
                 sx={{
@@ -444,7 +430,7 @@ export const CaregiverProfileCard = ({
             {caregiver.capabilities.map((cap) => (
               <Chip
                 key={cap}
-                icon={capabilityIcons[cap] as React.ReactElement || undefined}
+                icon={(capabilityIcons[cap] as React.ReactElement) || undefined}
                 label={cap}
                 size="small"
                 sx={{
@@ -547,9 +533,7 @@ export const CaregiverProfileCard = ({
               '&:hover': { background: '#F9FAFB' },
             }}
           >
-            <DescriptionOutlinedIcon
-              sx={{ fontSize: 11, color: '#374151' }}
-            />
+            <DescriptionOutlinedIcon sx={{ fontSize: 11, color: '#374151' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
@@ -577,7 +561,9 @@ export const CaregiverProfileCard = ({
               '&:hover': { opacity: 0.85 },
             }}
           >
-            <VisibilityOutlinedIcon sx={{ fontSize: 11, color: theme.chipColor }} />
+            <VisibilityOutlinedIcon
+              sx={{ fontSize: 11, color: theme.chipColor }}
+            />
             <Typography
               sx={{
                 fontFamily: (t) => t.typography.fontFamily,

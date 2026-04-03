@@ -1,5 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
-import { updateSecurityData } from "../../../../../services";
+import { useMutation } from '@tanstack/react-query';
+import { updateSecurityData } from '../../../../../services';
 
 export const useUpdateSecurityData = () => {
   return useMutation({

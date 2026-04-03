@@ -465,9 +465,7 @@ export const LoginHistoryPage = () => {
               border: '0.67px solid #FECACA',
             }}
           >
-            <WarningAmberOutlinedIcon
-              sx={{ fontSize: 18, color: '#EF4444' }}
-            />
+            <WarningAmberOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

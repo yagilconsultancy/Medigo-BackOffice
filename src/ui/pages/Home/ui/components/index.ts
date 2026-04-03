@@ -3,3 +3,8 @@ export * from './HomeChart';
 export * from './HomeLinearProgress';
 export * from './DriverComponent';
 export * from './RecentActivity';
+export * from './TransportDistribution';
+export * from './BookingChannelItem';
+export * from './ServiceMetricCard';
+export * from './FacilityComponent';
+export * from './FleetPartnerComponent';

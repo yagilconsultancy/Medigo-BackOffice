@@ -1,1 +1,1 @@
-export * from "./login-history";
+export * from './login-history';

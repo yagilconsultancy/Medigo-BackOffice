@@ -336,9 +336,7 @@ export const ViewCaregiverDrawer = ({
 
   const renderCertifications = () => (
     <SectionCard
-      icon={
-        <VerifiedOutlinedIcon sx={{ fontSize: 16, color: '#2F6FED' }} />
-      }
+      icon={<VerifiedOutlinedIcon sx={{ fontSize: 16, color: '#2F6FED' }} />}
       title="Certifications & Documents"
     >
       {/* Certification cards */}
@@ -432,9 +430,7 @@ export const ViewCaregiverDrawer = ({
               flexShrink: 0,
             }}
           >
-            <CheckCircleOutlinedIcon
-              sx={{ fontSize: 16, color: '#2F6FED' }}
-            />
+            <CheckCircleOutlinedIcon sx={{ fontSize: 16, color: '#2F6FED' }} />
           </Box>
           <Stack spacing={0}>
             <Typography
@@ -661,9 +657,7 @@ export const ViewCaregiverDrawer = ({
                 readOnly
                 size="small"
                 icon={<StarIcon sx={{ fontSize: 12, color: '#F59E0B' }} />}
-                emptyIcon={
-                  <StarIcon sx={{ fontSize: 12, color: '#E5E7EB' }} />
-                }
+                emptyIcon={<StarIcon sx={{ fontSize: 12, color: '#E5E7EB' }} />}
               />
             </RowStack>
             <Typography

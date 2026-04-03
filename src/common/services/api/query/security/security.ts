@@ -1,7 +1,11 @@
-import { AxiosResponse } from "axios";
-import { resolveRoute, ROUTES } from "../../../../constants";
-import { getApiClient } from "../../../../lib";
-import { ApiResponse, SecurityKPIs, SecuritySettingsResponse } from "../../../../types";
+import { AxiosResponse } from 'axios';
+import { resolveRoute, ROUTES } from '../../../../constants';
+import { getApiClient } from '../../../../lib';
+import {
+  ApiResponse,
+  SecurityKPIs,
+  SecuritySettingsResponse,
+} from '../../../../types';
 
 export const getSecurityKpi = async () => {
   return await getApiClient().get<

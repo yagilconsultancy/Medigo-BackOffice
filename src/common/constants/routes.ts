@@ -18,24 +18,34 @@ export const ROUTES_SPEC = {
   getSecurityData: `/${API_VERSION}/auth/admin/security/settings`,
   // Admin Sessions
   getActiveSessions: `/${API_VERSION}/users/admin/sessions`,
-  revokeSession: (sessionId: string) => `/${API_VERSION}/users/admin/sessions/${sessionId}`,
+  revokeSession: (sessionId: string) =>
+    `/${API_VERSION}/users/admin/sessions/${sessionId}`,
 
   // Fleet Application
   getFleetApplicationsKpi: `/${API_VERSION}/users/admin/fleet/applications/kpis`,
   fleetApplications: `/${API_VERSION}/users/admin/fleet/applications`,
-  getFleetApplicationId: (fleetId: string) => `/${API_VERSION}/users/admin/fleet/applications/${fleetId}`,
-  approveFleetApplication: (fleetId: string) => `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/approve`,
-  rejectFleetApplication: (fleetId: string) => `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/reject`,
-  requestInfoFleetApplication: (fleetId: string) => `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/request-info`,
-  uploadDocumentFleetApplication: (fleetId: string) => `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/`,
+  getFleetApplicationId: (fleetId: string) =>
+    `/${API_VERSION}/users/admin/fleet/applications/${fleetId}`,
+  approveFleetApplication: (fleetId: string) =>
+    `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/approve`,
+  rejectFleetApplication: (fleetId: string) =>
+    `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/reject`,
+  requestInfoFleetApplication: (fleetId: string) =>
+    `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/request-info`,
+  uploadDocumentFleetApplication: (fleetId: string) =>
+    `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/`,
 
   // Fleet Companies
   getFleetCompaniesKpi: `/${API_VERSION}/users/admin/fleet/companies/kpis`,
   fleetCompanies: `/${API_VERSION}/users/admin/fleet/companies`,
-  fleetCompanyDetail: (businessId: string) => `/${API_VERSION}/users/admin/fleet/companies/${businessId}`,
-  fleetCompanyStatus: (businessId: string) => `/${API_VERSION}/users/admin/fleet/companies/${businessId}/status`,
-  fleetCompanyDocuments: (businessId: string) => `/${API_VERSION}/users/admin/fleet/companies/${businessId}/documents`,
-  fleetCompanyDrivers: (businessId: string) => `/${API_VERSION}/users/admin/fleet/companies/${businessId}/drivers`,
+  fleetCompanyDetail: (businessId: string) =>
+    `/${API_VERSION}/users/admin/fleet/companies/${businessId}`,
+  fleetCompanyStatus: (businessId: string) =>
+    `/${API_VERSION}/users/admin/fleet/companies/${businessId}/status`,
+  fleetCompanyDocuments: (businessId: string) =>
+    `/${API_VERSION}/users/admin/fleet/companies/${businessId}/documents`,
+  fleetCompanyDrivers: (businessId: string) =>
+    `/${API_VERSION}/users/admin/fleet/companies/${businessId}/drivers`,
 
   // Fleet companies
   getFleetVehicleKpi: `/${API_VERSION}/users/admin/fleet/vehicles/kpis`,
@@ -44,14 +54,22 @@ export const ROUTES_SPEC = {
   getFleetCompisition: `/${API_VERSION}/users/admin/fleet/vehicles/categories/composition`,
   getFleetProfiles: `/${API_VERSION}/users/admin/fleet/vehicles/profiles`,
   fleetVehicles: `/${API_VERSION}/users/admin/fleet/vehicles`,
-  fleetVehicleByCategory: (categoryId: string) => `/${API_VERSION}/users/admin/fleet/vehicles/categories/${categoryId}`,
-  fleetVehiclesId: (vehicleId: string) => `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}`,
-  fleetVehicleStatus: (vehicleId: string) => `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/status`,
-  fleetVehicleAssignDriver: (vehicleId: string) => `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/assign-driver`,
-  fleetVehicleUnAssignDriver: (vehicleId: string) => `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/unassign-driver`,
-  getFleetVehicleDocuments: (vehicleId: string) => `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/document`,
-  fleetVehicleMaintenance: (vehicleId: string) => `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/maintenance`,
-  fleetReplaceVehicleDocuments: (vehicleId: string, docId: string) => `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/document/${docId}/replace`,
+  fleetVehicleByCategory: (categoryId: string) =>
+    `/${API_VERSION}/users/admin/fleet/vehicles/categories/${categoryId}`,
+  fleetVehiclesId: (vehicleId: string) =>
+    `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}`,
+  fleetVehicleStatus: (vehicleId: string) =>
+    `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/status`,
+  fleetVehicleAssignDriver: (vehicleId: string) =>
+    `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/assign-driver`,
+  fleetVehicleUnAssignDriver: (vehicleId: string) =>
+    `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/unassign-driver`,
+  getFleetVehicleDocuments: (vehicleId: string) =>
+    `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/document`,
+  fleetVehicleMaintenance: (vehicleId: string) =>
+    `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/maintenance`,
+  fleetReplaceVehicleDocuments: (vehicleId: string, docId: string) =>
+    `/${API_VERSION}/users/admin/fleet/vehicles/${vehicleId}/document/${docId}/replace`,
 
   // Fleet Earnings
   getFleetEarningsKpi: `/${API_VERSION}/users/admin/fleet/earnings/kpis`,
@@ -62,28 +80,44 @@ export const ROUTES_SPEC = {
   getDriverDocumentOverview: `/${API_VERSION}/users/admin/drivers/documents/overview`,
   getDriverStatusOverview: `/${API_VERSION}/users/admin/drivers/status/overview`,
   searchDrivers: `/${API_VERSION}/users/admin/drivers`,
-  driverDetail: (driverId: string) => `/${API_VERSION}/users/admin/drivers/${driverId}`,
-  approveDriver: (driverId: string) => `/${API_VERSION}/users/admin/drivers/${driverId}/approve`,
-  suspendDriver: (driverId: string) => `/${API_VERSION}/users/admin/drivers/${driverId}/suspend`,
-  reactivateDriver: (driverId: string) => `/${API_VERSION}/users/admin/drivers/${driverId}/reactivate`,
-  resendDriverInvite: (driverId: string) => `/${API_VERSION}/users/admin/drivers/${driverId}/resend-invite`,
-  reAssignDriver: (driverId: string) => `/${API_VERSION}/users/admin/drivers/${driverId}/reassign-fleet`,
-  getDriverDocuments: (driverId: string) => `/${API_VERSION}/users/admin/drivers/${driverId}/documents`,
-  getDriverTrips: (driverId: string) => `/${API_VERSION}/users/admin/drivers/${driverId}/trips`,
-  getDriverRatings: (driverId: string) => `/${API_VERSION}/users/admin/drivers/${driverId}/ratings`,
+  driverDetail: (driverId: string) =>
+    `/${API_VERSION}/users/admin/drivers/${driverId}`,
+  approveDriver: (driverId: string) =>
+    `/${API_VERSION}/users/admin/drivers/${driverId}/approve`,
+  suspendDriver: (driverId: string) =>
+    `/${API_VERSION}/users/admin/drivers/${driverId}/suspend`,
+  reactivateDriver: (driverId: string) =>
+    `/${API_VERSION}/users/admin/drivers/${driverId}/reactivate`,
+  resendDriverInvite: (driverId: string) =>
+    `/${API_VERSION}/users/admin/drivers/${driverId}/resend-invite`,
+  reAssignDriver: (driverId: string) =>
+    `/${API_VERSION}/users/admin/drivers/${driverId}/reassign-fleet`,
+  getDriverDocuments: (driverId: string) =>
+    `/${API_VERSION}/users/admin/drivers/${driverId}/documents`,
+  getDriverTrips: (driverId: string) =>
+    `/${API_VERSION}/users/admin/drivers/${driverId}/trips`,
+  getDriverRatings: (driverId: string) =>
+    `/${API_VERSION}/users/admin/drivers/${driverId}/ratings`,
 
   // Rider Management
   getRidersProfiles: `/${API_VERSION}/users/admin/riders/profiles`,
   getRidersActivity: `/${API_VERSION}/users/admin/riders/activity`,
   ridersIssues: `/${API_VERSION}/users/admin/riders/issues`,
-  ridersIssuesDetail: (issueId: string) => `/${API_VERSION}/users/admin/riders/issues/${issueId}`,
-  ridersIssuesStatus: (issueId: string) => `/${API_VERSION}/users/admin/riders/issues/${issueId}/status`,
-  ridersIssuesNotes: (issueId: string) => `/${API_VERSION}/users/admin/riders/issues/${issueId}/notes`,
+  ridersIssuesDetail: (issueId: string) =>
+    `/${API_VERSION}/users/admin/riders/issues/${issueId}`,
+  ridersIssuesStatus: (issueId: string) =>
+    `/${API_VERSION}/users/admin/riders/issues/${issueId}/status`,
+  ridersIssuesNotes: (issueId: string) =>
+    `/${API_VERSION}/users/admin/riders/issues/${issueId}/notes`,
   searchRiders: `/${API_VERSION}/users/admin/riders`,
-  riderDetail: (riderId: string) => `/${API_VERSION}/users/admin/riders/${riderId}`,
-  suspendRider: (riderId: string) => `/${API_VERSION}/users/admin/riders/${riderId}/suspend`,
-  reinstateRider: (riderId: string) => `/${API_VERSION}/users/admin/riders/${riderId}/riders`,
-  riderRides: (riderId: string) => `/${API_VERSION}/users/admin/riders/${riderId}/rides`,
+  riderDetail: (riderId: string) =>
+    `/${API_VERSION}/users/admin/riders/${riderId}`,
+  suspendRider: (riderId: string) =>
+    `/${API_VERSION}/users/admin/riders/${riderId}/suspend`,
+  reinstateRider: (riderId: string) =>
+    `/${API_VERSION}/users/admin/riders/${riderId}/riders`,
+  riderRides: (riderId: string) =>
+    `/${API_VERSION}/users/admin/riders/${riderId}/rides`,
 
   // Admin Broadcasts
   getSystemKpis: `/${API_VERSION}/notifications/admin/broadcasts/system/kpis`,
@@ -105,14 +139,15 @@ export const ROUTES_SPEC = {
   // Admin Support Center
   getSupportKpis: `/${API_VERSION}/notifications/admin/support/kpis`,
   listSupportTickets: `/${API_VERSION}/notifications/admin/support/tickets`,
-  reopenTicket: (ticketId: string) => `/${API_VERSION}/notifications/admin/support/tickets/${ticketId}/open`,
-  resolveTicket: (ticketId: string) => `/${API_VERSION}/notifications/admin/support/tickets/${ticketId}/resolve`,
+  reopenTicket: (ticketId: string) =>
+    `/${API_VERSION}/notifications/admin/support/tickets/${ticketId}/open`,
+  resolveTicket: (ticketId: string) =>
+    `/${API_VERSION}/notifications/admin/support/tickets/${ticketId}/resolve`,
 
   // Admin Contact Logs
   getContactKpis: `/${API_VERSION}/notifications/admin/contact-logs/kpis`,
   listContactLogs: `/${API_VERSION}/notifications/admin/contact-logs`,
   createContactLog: `/${API_VERSION}/notifications/admin/contact-logs`,
-
 } as const;
 
 export const ROUTES = Object.fromEntries(

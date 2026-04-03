@@ -65,4 +65,4 @@ export * from './CommissionSettingsPage';
 export * from './CancellationPolicyPage';
 export * from './FareConfigurationPage';
 export * from './ServiceProviderPage';
-export * from "./LoginPage"
+export * from './LoginPage';

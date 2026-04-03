@@ -1,1 +1,1 @@
-export * from "./useUpdateSecurityData";
+export * from './useUpdateSecurityData';

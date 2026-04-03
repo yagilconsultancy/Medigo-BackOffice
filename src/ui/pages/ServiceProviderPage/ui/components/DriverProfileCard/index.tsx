@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Avatar,
-  Box,
-  Chip,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
@@ -189,13 +183,8 @@ export const DriverProfileCard = ({
           }}
         >
           {/* Fleet Company */}
-          <RowStack
-            spacing={'10px'}
-            sx={{ flex: 1, padding: '14px 16px' }}
-          >
-            <BusinessOutlinedIcon
-              sx={{ fontSize: 13, color: '#9CA3AF' }}
-            />
+          <RowStack spacing={'10px'} sx={{ flex: 1, padding: '14px 16px' }}>
+            <BusinessOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
             <Stack spacing={0}>
               <Typography
                 sx={{
@@ -234,10 +223,7 @@ export const DriverProfileCard = ({
           />
 
           {/* Vehicle */}
-          <RowStack
-            spacing={'10px'}
-            sx={{ flex: 1, padding: '14px 16px' }}
-          >
+          <RowStack spacing={'10px'} sx={{ flex: 1, padding: '14px 16px' }}>
             <DirectionsCarOutlinedIcon
               sx={{ fontSize: 13, color: '#9CA3AF' }}
             />
@@ -348,7 +334,7 @@ export const DriverProfileCard = ({
             {driver.capabilities.map((cap) => (
               <Chip
                 key={cap}
-                icon={capabilityIcons[cap] as React.ReactElement || undefined}
+                icon={(capabilityIcons[cap] as React.ReactElement) || undefined}
                 label={cap}
                 size="small"
                 sx={{
@@ -453,9 +439,7 @@ export const DriverProfileCard = ({
               '&:hover': { background: '#F9FAFB' },
             }}
           >
-            <DescriptionOutlinedIcon
-              sx={{ fontSize: 11, color: '#374151' }}
-            />
+            <DescriptionOutlinedIcon sx={{ fontSize: 11, color: '#374151' }} />
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,

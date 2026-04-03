@@ -1,10 +1,12 @@
-import { AxiosResponse } from "axios";
-import { resolveRoute, ROUTES } from "../../../../constants";
-import { getApiClient } from "../../../../lib";
-import { ActivityLogListPayload, ApiActivityLogListResponse } from "../../../../types";
+import { AxiosResponse } from 'axios';
+import { resolveRoute, ROUTES } from '../../../../constants';
+import { getApiClient } from '../../../../lib';
+import {
+  ActivityLogListPayload,
+  ApiActivityLogListResponse,
+} from '../../../../types';
 
 export const getActivityList = async (payload: ActivityLogListPayload) => {
-
   return await getApiClient().get<
     ApiActivityLogListResponse,
     AxiosResponse<ApiActivityLogListResponse>
@@ -16,11 +18,11 @@ export const getActivityList = async (payload: ActivityLogListPayload) => {
 };
 
 export const getExportActivity = async (payload: ActivityLogListPayload) => {
-  return await getApiClient().get<
-    Blob,
-    AxiosResponse<Blob>
-  >(resolveRoute(ROUTES.getExportActivity), {
-    params: { ...payload },
-    responseType: 'blob',
-  });
+  return await getApiClient().get<Blob, AxiosResponse<Blob>>(
+    resolveRoute(ROUTES.getExportActivity),
+    {
+      params: { ...payload },
+      responseType: 'blob',
+    }
+  );
 };

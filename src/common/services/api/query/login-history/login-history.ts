@@ -1,7 +1,12 @@
-import { AxiosResponse } from "axios";
-import { resolveRoute, ROUTES } from "../../../../constants";
-import { getApiClient } from "../../../../lib";
-import { ApiLoginHistoryListResponse, ApiResponse, LoginHistoryKPIs, LoginHistoryListPayload } from "../../../../types";
+import { AxiosResponse } from 'axios';
+import { resolveRoute, ROUTES } from '../../../../constants';
+import { getApiClient } from '../../../../lib';
+import {
+  ApiLoginHistoryListResponse,
+  ApiResponse,
+  LoginHistoryKPIs,
+  LoginHistoryListPayload,
+} from '../../../../types';
 
 export const getLoginHistoryKpi = async () => {
   return await getApiClient().get<
@@ -19,12 +24,14 @@ export const getLoginHistory = async (payload: LoginHistoryListPayload) => {
   });
 };
 
-export const getExportLoginHistory = async (payload: LoginHistoryListPayload) => {
-  return await getApiClient().get<
-    Blob,
-    AxiosResponse<Blob>
-  >(resolveRoute(ROUTES.getExportLoginHistory), {
-    params: { ...payload },
-    responseType: 'blob',
-  });
+export const getExportLoginHistory = async (
+  payload: LoginHistoryListPayload
+) => {
+  return await getApiClient().get<Blob, AxiosResponse<Blob>>(
+    resolveRoute(ROUTES.getExportLoginHistory),
+    {
+      params: { ...payload },
+      responseType: 'blob',
+    }
+  );
 };

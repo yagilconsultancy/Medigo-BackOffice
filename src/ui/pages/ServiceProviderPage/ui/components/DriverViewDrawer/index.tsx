@@ -61,7 +61,10 @@ export type DriverViewDrawerProps = {
 
 // ─── Status Badge Config ────────────────────────────────────────────────────
 
-const statusBadgeConfig: Record<string, { color: string; bg: string; border: string }> = {
+const statusBadgeConfig: Record<
+  string,
+  { color: string; bg: string; border: string }
+> = {
   Available: { color: '#166534', bg: '#EDFAF4', border: '#BBF7D0' },
   'On Trip': { color: '#3730A3', bg: '#EEF2FF', border: '#C7D2FE' },
   Suspended: { color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
@@ -253,11 +256,7 @@ const DocumentRow = ({ name, status }: { name: string; status: string }) => (
 
 // ─── Reusable Trip Card ─────────────────────────────────────────────────────
 
-const TripCard = ({
-  trip,
-}: {
-  trip: (typeof tripsData)[number];
-}) => (
+const TripCard = ({ trip }: { trip: (typeof tripsData)[number] }) => (
   <Stack
     spacing={'8px'}
     sx={{
@@ -386,7 +385,9 @@ export const DriverViewDrawer = ({
   driver,
 }: DriverViewDrawerProps) => {
   const [activeTab, setActiveTab] = useState(0);
-  const [expandedAction, setExpandedAction] = useState<'fleet' | 'vehicle' | null>(null);
+  const [expandedAction, setExpandedAction] = useState<
+    'fleet' | 'vehicle' | null
+  >(null);
   const [selectedFleet, setSelectedFleet] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [isSuspended, setIsSuspended] = useState(false);
@@ -399,7 +400,8 @@ export const DriverViewDrawer = ({
       ? `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`
       : nameParts[0].charAt(0);
 
-  const badge = statusBadgeConfig[driver.status] || statusBadgeConfig['Available'];
+  const badge =
+    statusBadgeConfig[driver.status] || statusBadgeConfig['Available'];
 
   return (
     <Drawer
@@ -616,8 +618,14 @@ export const DriverViewDrawer = ({
               >
                 <ReadOnlyField label="Phone" value={driver.phone} />
                 <ReadOnlyField label="Email" value={driver.email} />
-                <ReadOnlyField label="Date of Birth" value={driver.dateOfBirth} />
-                <ReadOnlyField label="Member Since" value={driver.memberSince} />
+                <ReadOnlyField
+                  label="Date of Birth"
+                  value={driver.dateOfBirth}
+                />
+                <ReadOnlyField
+                  label="Member Since"
+                  value={driver.memberSince}
+                />
               </Box>
             </Stack>
 
@@ -633,7 +641,10 @@ export const DriverViewDrawer = ({
               >
                 <ReadOnlyField label="License" value={driver.license} />
                 <ReadOnlyField label="BG Check" value={driver.bgCheck} />
-                <ReadOnlyField label="License Expiry" value={driver.licenseExpiry} />
+                <ReadOnlyField
+                  label="License Expiry"
+                  value={driver.licenseExpiry}
+                />
                 <ReadOnlyField label="Docs Status" value={driver.docsStatus} />
               </Box>
             </Stack>
@@ -710,7 +721,9 @@ export const DriverViewDrawer = ({
                         fontWeight: 400,
                         fontSize: pxToRem(13),
                         color: '#374151',
-                        '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          border: 'none',
+                        },
                         '& .MuiSelect-icon': { color: '#9CA3AF', fontSize: 18 },
                       }}
                       MenuProps={{
@@ -723,9 +736,7 @@ export const DriverViewDrawer = ({
                           },
                         },
                       }}
-                      renderValue={(value) =>
-                        value || driver.fleet
-                      }
+                      renderValue={(value) => value || driver.fleet}
                     >
                       {fleetOptions.map((fleet) => (
                         <MenuItem
@@ -856,7 +867,9 @@ export const DriverViewDrawer = ({
                         fontWeight: 400,
                         fontSize: pxToRem(13),
                         color: '#374151',
-                        '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          border: 'none',
+                        },
                         '& .MuiSelect-icon': { color: '#9CA3AF', fontSize: 18 },
                       }}
                       MenuProps={{
@@ -869,9 +882,7 @@ export const DriverViewDrawer = ({
                           },
                         },
                       }}
-                      renderValue={(value) =>
-                        value || driver.vehicle
-                      }
+                      renderValue={(value) => value || driver.vehicle}
                     >
                       {vehicleOptions.map((vehicle) => (
                         <MenuItem
@@ -1002,7 +1013,11 @@ export const DriverViewDrawer = ({
             <SectionLabel text="Document Status" />
             <Stack spacing={'10px'}>
               {documentsData.map((doc) => (
-                <DocumentRow key={doc.name} name={doc.name} status={doc.status} />
+                <DocumentRow
+                  key={doc.name}
+                  name={doc.name}
+                  status={doc.status}
+                />
               ))}
             </Stack>
           </Stack>
@@ -1070,9 +1085,7 @@ export const DriverViewDrawer = ({
                     readOnly
                     precision={0.1}
                     size="small"
-                    icon={
-                      <StarIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
-                    }
+                    icon={<StarIcon sx={{ fontSize: 14, color: '#F59E0B' }} />}
                     emptyIcon={
                       <StarIcon sx={{ fontSize: 14, color: '#E5E7EB' }} />
                     }

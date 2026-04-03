@@ -3,13 +3,7 @@
 import { useRef, useState, useMemo } from 'react';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import {
-  Avatar,
-  Box,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
@@ -327,8 +321,7 @@ export const EditDriverModal = ({
                         />
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 600,
                             fontSize: pxToRem(12.5),
                             lineHeight: '1.5em',
@@ -340,8 +333,7 @@ export const EditDriverModal = ({
                       </Box>
                       <Typography
                         sx={{
-                          fontFamily: (theme) =>
-                            theme.typography.fontFamily,
+                          fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 400,
                           fontSize: pxToRem(11),
                           lineHeight: '1.5em',

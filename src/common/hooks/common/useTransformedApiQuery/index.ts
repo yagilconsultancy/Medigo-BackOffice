@@ -1,6 +1,6 @@
-import { UseQueryResult } from "@tanstack/react-query";
-import { ApiQueryHook } from "../../../types";
-import { useResolvedApiQuery } from "../useResolvedApiQuery";
+import { UseQueryResult } from '@tanstack/react-query';
+import { ApiQueryHook } from '../../../types';
+import { useResolvedApiQuery } from '../useResolvedApiQuery';
 
 /**
  * Represents a transformed API query result.
@@ -13,7 +13,7 @@ import { useResolvedApiQuery } from "../useResolvedApiQuery";
  */
 export type TransformedApiQuery<View, Error = unknown> = Omit<
   UseQueryResult<unknown, Error>,
-  "data"
+  'data'
 > & { data: View };
 
 /**
@@ -32,7 +32,11 @@ export function useTransformedApiQuery<
   Raw,
   View,
   Error = unknown,
-  QueryHook extends ApiQueryHook<Raw, any[], Error> = ApiQueryHook<Raw, any[], Error>,
+  QueryHook extends ApiQueryHook<Raw, any[], Error> = ApiQueryHook<
+    Raw,
+    any[],
+    Error
+  >,
 >(options: {
   queryHook: QueryHook;
   hookArgs: Parameters<QueryHook>;
@@ -42,9 +46,13 @@ export function useTransformedApiQuery<
   const { queryHook, hookArgs, transform, defaultValue } = options;
 
   const raw = queryHook(...hookArgs);
-  const unwrapped = useResolvedApiQuery<Raw, Error>(() => raw, undefined as unknown as Raw);
+  const unwrapped = useResolvedApiQuery<Raw, Error>(
+    () => raw,
+    undefined as unknown as Raw
+  );
 
-  const data = unwrapped.data != null ? transform(unwrapped.data) : defaultValue;
+  const data =
+    unwrapped.data != null ? transform(unwrapped.data) : defaultValue;
 
   return { ...unwrapped, data };
 }

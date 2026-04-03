@@ -13,7 +13,11 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import { pxToRem } from '../../../../../../common';
-import { AppButton, AppModal, RowStack } from '../../../../../modules/components';
+import {
+  AppButton,
+  AppModal,
+  RowStack,
+} from '../../../../../modules/components';
 import { DriverProfileCardData } from '../DriverProfileCard';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -275,9 +279,7 @@ export const SuspendDriverModal = ({
                             cursor: 'pointer',
                             transition: 'all 0.15s ease',
                             '&:hover': {
-                              borderColor: isSelected
-                                ? '#2F6FED'
-                                : '#D1D5DB',
+                              borderColor: isSelected ? '#2F6FED' : '#D1D5DB',
                             },
                           }}
                         >
@@ -363,9 +365,7 @@ export const SuspendDriverModal = ({
                       return (
                         <Box
                           key={option.value}
-                          onClick={() =>
-                            setFieldValue('timing', option.value)
-                          }
+                          onClick={() => setFieldValue('timing', option.value)}
                           sx={{
                             flex: 1,
                             padding: '13px 17px',
@@ -375,9 +375,7 @@ export const SuspendDriverModal = ({
                             cursor: 'pointer',
                             transition: 'all 0.15s ease',
                             '&:hover': {
-                              borderColor: isSelected
-                                ? '#2F6FED'
-                                : '#D1D5DB',
+                              borderColor: isSelected ? '#2F6FED' : '#D1D5DB',
                             },
                           }}
                         >

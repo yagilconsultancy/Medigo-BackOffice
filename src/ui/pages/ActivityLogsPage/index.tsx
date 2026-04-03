@@ -123,9 +123,9 @@ export const ActivityLogsPage = () => {
     page: 0,
     pageSize: 7,
   });
-  const [severityChange] = useState<
-    'all' | 'info' | 'warning' | 'critical'
-  >('all');
+  const [severityChange] = useState<'all' | 'info' | 'warning' | 'critical'>(
+    'all'
+  );
 
   const currentPage = useMemo<number>(() => {
     return paginationModel.page + 1;

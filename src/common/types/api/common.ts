@@ -4,33 +4,33 @@ import { UseQueryResult } from '@tanstack/react-query';
  * A success response from the API.
  */
 export interface ApiSuccessResponse<T = any> {
-    success: boolean;
-    message?: string | null;
-    data: T | null;
+  success: boolean;
+  message?: string | null;
+  data: T | null;
 }
 
 /**
  * A paginated response data structure for API responses.
  */
 export interface ApiPaginatedResponseData<T> {
-    success: boolean;
-    data: T[];
-    total: number;
-    page: number;
-    limit: number;
-    total_pages: number;
+  success: boolean;
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
 }
 
 export interface HTTPValidationError {
-    detail?: ValidationError[];
+  detail?: ValidationError[];
 }
 
 export interface ValidationError {
-    loc: (string | number)[];
-    msg: string;
-    type: string;
-    input?: any;
-    ctx?: Record<string, any>;
+  loc: (string | number)[];
+  msg: string;
+  type: string;
+  input?: any;
+  ctx?: Record<string, any>;
 }
 
 /**
@@ -45,7 +45,6 @@ export type ApiErrorResponse = {
  * A response from the API.
  */
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
-
 
 /**
  * A payload for a paginated API request.
