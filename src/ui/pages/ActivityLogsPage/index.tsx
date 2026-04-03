@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Divider, Grid, Stack, Typography } from '@mui/material';
+import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
+import dayjs from 'dayjs';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import FormatListBulletedOutlinedIcon from '@mui/icons-material/FormatListBulletedOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -15,199 +16,114 @@ import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
-import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
 import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   DashboardTitleAndDesc,
   RowStack,
   AppButton,
   AppSearchField,
-  FilterSection,
 } from '../../modules/components';
-import { ActivityLogKPIs, formatTotalNumber, pxToRem, useGetActivityAnalytics, useGetActivityList, useResolvedApiQuery } from '../../../common';
-import { LogStatCard, LogEntryRow, LogEntry } from './ui/components';
+import { CustomPagination } from '../../modules/components/GridTable/ui/components/DataGridPagination/ui/components/CustomPagination';
+import {
+  ActivityLogKPIs,
+  ActivityLogItem,
+  formatTotalNumber,
+  pxToRem,
+  useGetActivityAnalytics,
+  useGetActivityList,
+  useResolvedApiQuery,
+} from '../../../common';
+import { LogStatCard, LogEntryRow } from './ui/components';
 
-// ─── Log Entry Data ─────────────────────────────────────────────────────────
+// ─── Category Style Map ──────────────────────────────────────────────────────
 
-const logEntries: LogEntry[] = [
+const categoryStyleMap: Record<
+  string,
   {
-    id: 'LOG-9210',
-    action: 'Changed admin role assignment',
-    category: 'Admin',
-    categoryBg: '#FEF2F2',
-    categoryColor: '#EF4444',
-    description: 'John Carter \u00b7 Lena Fischer \u2192 Super Admin',
-    date: 'Mar 9, 2026 \u00b7 02:14 PM',
+    color: string;
+    bg: string;
+    icon: React.ReactNode;
+  }
+> = {
+  Admin: {
+    color: '#EF4444',
+    bg: '#FEF2F2',
     icon: (
       <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
     ),
-    iconBg: '#FEF2F2',
   },
-  {
-    id: 'LOG-9209',
-    action: 'Approved fleet application',
-    category: 'Fleet',
-    categoryBg: '#FFF7ED',
-    categoryColor: '#EA580C',
-    description: 'Angela Brooks \u00b7 APP-2403 \u00b7 PrimePath Medical',
-    date: 'Mar 9, 2026 \u00b7 10:42 AM',
+  Fleet: {
+    color: '#EA580C',
+    bg: '#FFF7ED',
     icon: <LocalShippingOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />,
-    iconBg: '#FFF7ED',
   },
-  {
-    id: 'LOG-9208',
-    action: 'Suspended driver account',
-    category: 'Driver',
-    categoryBg: '#EEF2FF',
-    categoryColor: '#6366F1',
-    description: 'Angela Brooks \u00b7 Ryan O\u2019Brien \u00b7 DRV-0218',
-    date: 'Mar 9, 2026 \u00b7 09:55 AM',
+  Driver: {
+    color: '#6366F1',
+    bg: '#EEF2FF',
     icon: <PersonOffOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
-    iconBg: '#EEF2FF',
   },
-  {
-    id: 'LOG-9207',
-    action: 'Generated fleet invoice',
-    category: 'Finance',
-    categoryBg: '#ECFDF5',
-    categoryColor: '#059669',
-    description:
-      'Priya Sharma \u00b7 INV-9020 \u00b7 MedRide Express \u00b7 $9,840',
-    date: 'Mar 9, 2026 \u00b7 09:30 AM',
+  Finance: {
+    color: '#059669',
+    bg: '#ECFDF5',
     icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
-    iconBg: '#ECFDF5',
   },
-  {
-    id: 'LOG-9206',
-    action: 'Resolved support ticket',
-    category: 'Support',
-    categoryBg: '#EBF2FF',
-    categoryColor: '#2F6FED',
-    description:
-      'Sandra Lee \u00b7 TKT-8799 \u00b7 Anna Kim vs Gordon MacPherson',
-    date: 'Mar 8, 2026 \u00b7 05:12 PM',
+  Support: {
+    color: '#2F6FED',
+    bg: '#EBF2FF',
     icon: <SupportAgentOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
   },
-  {
-    id: 'LOG-9205',
-    action: 'Updated pricing configuration',
-    category: 'Settings',
-    categoryBg: '#FFFBEB',
-    categoryColor: '#D97706',
-    description: 'Marcus Bell \u00b7 Base fare changed: $7.50 \u2192 $8.00',
-    date: 'Mar 8, 2026 \u00b7 03:44 PM',
+  Settings: {
+    color: '#D97706',
+    bg: '#FFFBEB',
     icon: <TuneOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
-    iconBg: '#FFFBEB',
   },
-  {
-    id: 'LOG-9204',
-    action: 'Changed user role',
-    category: 'Admin',
-    categoryBg: '#FEF2F2',
-    categoryColor: '#EF4444',
-    description: 'John Carter \u00b7 Sandra Lee: Support \u2192 Finance Admin',
-    date: 'Mar 8, 2026 \u00b7 02:10 PM',
-    icon: (
-      <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
-    ),
-    iconBg: '#FEF2F2',
-  },
-  {
-    id: 'LOG-9203',
-    action: 'Dispatched driver manually',
-    category: 'Dispatch',
-    categoryBg: '#F0FDF4',
-    categoryColor: '#22C55E',
-    description: 'David Kim \u00b7 Liam MacDonald \u2192 Booking BK-20491',
-    date: 'Mar 8, 2026 \u00b7 11:30 AM',
+  Dispatch: {
+    color: '#22C55E',
+    bg: '#F0FDF4',
     icon: <SendOutlinedIcon sx={{ fontSize: 18, color: '#22C55E' }} />,
-    iconBg: '#F0FDF4',
   },
-  {
-    id: 'LOG-9202',
-    action: 'Sent notification to all drivers',
-    category: 'Notification',
-    categoryBg: '#F5F3FF',
-    categoryColor: '#8B5CF6',
-    description: 'Angela Brooks \u00b7 Subject: New Payout Policy',
-    date: 'Mar 7, 2026 \u00b7 09:28 AM',
+  Notification: {
+    color: '#8B5CF6',
+    bg: '#F5F3FF',
     icon: (
       <NotificationsNoneOutlinedIcon sx={{ fontSize: 18, color: '#8B5CF6' }} />
     ),
-    iconBg: '#F5F3FF',
   },
-  {
-    id: 'LOG-9201',
-    action: 'Exported payment report',
-    category: 'Finance',
-    categoryBg: '#ECFDF5',
-    categoryColor: '#059669',
-    description: 'Priya Sharma \u00b7 February 2026 \u00b7 PDF',
-    date: 'Mar 6, 2026 \u00b7 04:00 PM',
-    icon: <PictureAsPdfOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
-    iconBg: '#ECFDF5',
-  },
-  {
-    id: 'LOG-9200',
-    action: 'Escalated incident to investigation',
-    category: 'Safety',
-    categoryBg: '#FFF7ED',
-    categoryColor: '#EA580C',
-    description: 'Sandra Lee \u00b7 INC-4401 \u00b7 Liam MacDonald',
-    date: 'Mar 6, 2026 \u00b7 02:15 PM',
+  Safety: {
+    color: '#EA580C',
+    bg: '#FFF7ED',
     icon: <ReportProblemOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />,
-    iconBg: '#FFF7ED',
   },
-  {
-    id: 'LOG-9199',
-    action: 'Cancelled booking on behalf of rider',
-    category: 'Booking',
-    categoryBg: '#EBF2FF',
-    categoryColor: '#2F6FED',
-    description: 'Marcus Bell \u00b7 BK-20480 \u00b7 Dorothy MacLeod',
-    date: 'Mar 5, 2026 \u00b7 10:00 AM',
+  Booking: {
+    color: '#2F6FED',
+    bg: '#EBF2FF',
     icon: <EventBusyOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
   },
-];
+};
 
-// ─── Filter Sections ────────────────────────────────────────────────────────
+const defaultCategoryStyle = {
+  color: '#6B7280',
+  bg: '#F3F4F6',
+  icon: <DescriptionOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />,
+};
 
-const filterSections: FilterSection[] = [
-  {
-    label: 'Category',
-    key: 'category',
-    options: [
-      'All',
-      'Admin',
-      'Fleet',
-      'Driver',
-      'Finance',
-      'Support',
-      'Settings',
-      'Dispatch',
-      'Notification',
-      'Safety',
-      'Booking',
-    ],
-  },
-];
+const getCategoryStyle = (category: string) =>
+  categoryStyleMap[category] || defaultCategoryStyle;
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const ActivityLogsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<Record<string, string>>({
-    category: 'All',
-  });
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 7,
   });
-  const [severityChange, setSeverityChange] = useState<"all" | "info" | "warning" | "critical">("all")
+  const [severityChange] = useState<
+    'all' | 'info' | 'warning' | 'critical'
+  >('all');
 
   const currentPage = useMemo<number>(() => {
     return paginationModel.page + 1;
@@ -216,64 +132,78 @@ export const ActivityLogsPage = () => {
   const itemsPerPage = useMemo<number>(() => {
     return paginationModel.pageSize || 5;
   }, [paginationModel.pageSize]);
+
   const payload = useMemo(() => {
     return {
       severity: severityChange,
       search: searchQuery,
       page: currentPage,
-      page_size: itemsPerPage
-    }
-  }, [severityChange, searchQuery, currentPage, itemsPerPage])
-  const { data: activityKpi } = useResolvedApiQuery(useGetActivityAnalytics, null)
-  const { data: activityLists } = useResolvedApiQuery(useGetActivityList, null, payload)
+      page_size: itemsPerPage,
+    };
+  }, [severityChange, searchQuery, currentPage, itemsPerPage]);
 
-  const filteredLogs = useMemo(() => {
-    return logEntries.filter((log) => {
-      const matchesSearch =
-        !searchQuery ||
-        log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        log.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        log.id.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesCategory =
-        filters.category === 'All' || log.category === filters.category;
-
-      return matchesSearch && matchesCategory;
-    });
-  }, [searchQuery, filters]);
+  const { data: activityKpi } = useResolvedApiQuery(
+    useGetActivityAnalytics,
+    null
+  );
+  const { data: activityLists, isLoading } = useResolvedApiQuery(
+    useGetActivityList,
+    null,
+    payload
+  );
 
   const activityKpiData = useMemo<ActivityLogKPIs | undefined>(() => {
     return activityKpi ? activityKpi : undefined;
   }, [activityKpi]);
 
+  const logItems = useMemo<ActivityLogItem[]>(() => {
+    return activityLists?.items ?? [];
+  }, [activityLists]);
+
+  const totalCount = activityLists?.total ?? 0;
+
   const statCards = [
     {
       icon: (
-        <FormatListBulletedOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
+        <FormatListBulletedOutlinedIcon
+          sx={{ fontSize: 20, color: '#2F6FED' }}
+        />
       ),
       iconBg: '#EBF2FF',
-      value: `${formatTotalNumber(activityKpiData.total_logs)}`,
+      value: `${formatTotalNumber(activityKpiData?.total_logs)}`,
       label: 'Total Logs',
     },
     {
       icon: <InfoOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
       iconBg: '#EBF2FF',
-      value: `${formatTotalNumber(activityKpiData.info)}`,
+      value: `${formatTotalNumber(activityKpiData?.info)}`,
       label: 'Info',
     },
     {
-      icon: <WarningAmberOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />,
+      icon: (
+        <WarningAmberOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />
+      ),
       iconBg: '#FFFBEB',
-      value: `${formatTotalNumber(activityKpiData.warnings)}`,
+      value: `${formatTotalNumber(activityKpiData?.warnings)}`,
       label: 'Warnings',
     },
     {
-      icon: <ErrorOutlineOutlinedIcon sx={{ fontSize: 20, color: '#EF4444' }} />,
+      icon: (
+        <ErrorOutlineOutlinedIcon sx={{ fontSize: 20, color: '#EF4444' }} />
+      ),
       iconBg: '#FEF2F2',
-      value: `${formatTotalNumber(activityKpiData.critical)}`,
+      value: `${formatTotalNumber(activityKpiData?.critical)}`,
       label: 'Critical',
     },
   ];
+
+  const handlePageChange = (newPage: number) => {
+    setPaginationModel((prev) => ({ ...prev, page: newPage }));
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPaginationModel({ page: 0, pageSize: newPageSize });
+  };
 
   return (
     <AppDashboardLayout>
@@ -366,19 +296,14 @@ export const ActivityLogsPage = () => {
               <AppSearchField
                 placeholder="Search logs..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPaginationModel((prev) => ({ ...prev, page: 0 }));
+                }}
                 boxProps={{
                   sx: { width: 240 },
                 }}
               />
-              {/* <AppFilterPopover
-                sections={filterSections}
-                filters={filters}
-                onFilterChange={(key, value) =>
-                  setFilters((prev) => ({ ...prev, [key]: value }))
-                }
-                onReset={() => setFilters({ category: 'All' })}
-              /> */}
             </RowStack>
           </RowStack>
 
@@ -386,10 +311,89 @@ export const ActivityLogsPage = () => {
 
           {/* Log Entries */}
           <Stack>
-            {filteredLogs.map((log) => (
-              <LogEntryRow key={log.id} {...log} />
-            ))}
+            {!isLoading && logItems.length === 0 ? (
+              <Stack
+                alignItems="center"
+                justifyContent="center"
+                spacing="8px"
+                sx={{ padding: '60px 24px' }}
+              >
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '14px',
+                    background: '#F3F4F6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mb: '4px',
+                  }}
+                >
+                  <FormatListBulletedOutlinedIcon
+                    sx={{ fontSize: 24, color: '#D1D5DB' }}
+                  />
+                </Box>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(14),
+                    color: '#9CA3AF',
+                  }}
+                >
+                  No activity logs found
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 400,
+                    fontSize: pxToRem(13),
+                    color: '#D1D5DB',
+                  }}
+                >
+                  {searchQuery
+                    ? 'Try adjusting your search query'
+                    : 'Activity logs will appear here as actions are performed'}
+                </Typography>
+              </Stack>
+            ) : (
+              logItems.map((item) => {
+                const style = getCategoryStyle(item.category);
+                return (
+                  <LogEntryRow
+                    key={item.id}
+                    id={item.id}
+                    action={item.action_title}
+                    category={item.category}
+                    categoryBg={style.bg}
+                    categoryColor={style.color}
+                    description={
+                      item.admin_name
+                        ? `${item.admin_name} · ${item.action_description}`
+                        : item.action_description
+                    }
+                    date={dayjs(item.created_at).format(
+                      'MMM D, YYYY · hh:mm A'
+                    )}
+                    icon={style.icon}
+                    iconBg={style.bg}
+                  />
+                );
+              })
+            )}
           </Stack>
+
+          {/* Pagination */}
+          {totalCount > 0 && (
+            <CustomPagination
+              count={totalCount}
+              page={paginationModel.page}
+              pageSize={paginationModel.pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          )}
         </Stack>
       </Stack>
     </AppDashboardLayout>

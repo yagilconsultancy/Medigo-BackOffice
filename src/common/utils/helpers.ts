@@ -138,7 +138,7 @@ export function kmToMiles(km: number): number {
 }
 
 export function formatTotalNumber(num: number | undefined): string {
-  // if (num === undefined) return '0.00';
+  if (num === undefined) return '0.00';
   return num.toLocaleString('en-US', 
   //   {
   //   minimumFractionDigits: 2,
