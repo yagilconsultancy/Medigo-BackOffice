@@ -1,12 +1,12 @@
 import axios, { AxiosInstance } from 'axios';
 import { parseCookies } from 'nookies';
-import { handleLogout } from '../utils';
+import { getAuthToken, handleLogout } from '../utils';
 
 let apiClient: AxiosInstance | null = null;
 
 const cookie = parseCookies();
 
-const isLoginRoute = (route?: string) => route && route.includes('/sign-in');
+const isLoginRoute = (route?: string) => route && route.includes('/login');
 
 export const getApiClient = () => {
   if (apiClient) {
@@ -66,7 +66,8 @@ export const getApiClient = () => {
       return config;
     }
 
-    const token = cookie['ff_sid'];
+    // const token = cookie['medi_auth'];
+    const token = getAuthToken();
     // console.log("token", token)
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

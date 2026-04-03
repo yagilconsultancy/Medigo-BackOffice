@@ -1,5 +1,6 @@
 import { destroyCookie } from 'nookies';
 import { statusMapping } from '../data';
+import Cookies from "js-cookie";
 
 interface ArrayType {
   text: string;
@@ -80,15 +81,8 @@ export const pxToRem = (px: number): string => {
 };
 
 export const handleLogout = () => {
-  const isProd = process.env.NODE_ENV === 'production';
-
-  const baseUrl = isProd
-    ? process.env['NEXT_PUBLIC_MAIN_APP_URL']!
-    : process.env['NEXT_PUBLIC_DEV_MAIN_APP_URL']!;
-
-  destroyCookie(null, 'ff_sid');
-
-  window.location.href = `${baseUrl}/sign-in`;
+  Cookies.remove("medi_auth");
+  window.location.href = `/login`;
 };
 
 export function toDate(datePart: string, timePart: string): Date {
@@ -144,11 +138,13 @@ export function kmToMiles(km: number): number {
 }
 
 export function formatTotalNumber(num: number | undefined): string {
-  if (num === undefined) return '0.00';
-  return num.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  // if (num === undefined) return '0.00';
+  return num.toLocaleString('en-US', 
+  //   {
+  //   minimumFractionDigits: 2,
+  //   maximumFractionDigits: 2,
+  // }
+  );
 }
 
 export const getTodayDate = (date: Date = new Date()) => {
@@ -263,15 +259,6 @@ export function filterUniqueByNames(validNames: any, response: any) {
   });
 }
 
-export const getStatusLabel = (backendStatus: string) => {
-  for (const [label, statuses] of Object.entries(statusMapping)) {
-    if (statuses.includes(backendStatus)) {
-      return label;
-    }
-  }
-  return 'In Transit';
-};
-
 export function timeAgo(timestamp: string): string {
   const now = new Date();
   const past = new Date(timestamp);
@@ -302,3 +289,19 @@ export function timeAgo(timestamp: string): string {
     day: 'numeric',
   });
 }
+
+export const setAuthToken = (token: string) => {
+  Cookies.set("medi_auth", token, {
+    expires: 7, // days
+    secure: true, // only sent over HTTPS
+    sameSite: "strict",
+  });
+};
+
+export const getAuthToken = () => {
+  return Cookies.get("medi_auth");
+};
+
+export const removeAuthToken = () => {
+  Cookies.remove("medi_auth");
+};

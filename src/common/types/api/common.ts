@@ -3,10 +3,35 @@ import { UseQueryResult } from '@tanstack/react-query';
 /**
  * A success response from the API.
  */
-export type ApiSuccessResponse<T> = {
-  success: true;
-  data: T;
-};
+export interface ApiSuccessResponse<T = any> {
+    success: boolean;
+    message?: string | null;
+    data: T | null;
+}
+
+/**
+ * A paginated response data structure for API responses.
+ */
+export interface ApiPaginatedResponseData<T> {
+    success: boolean;
+    data: T[];
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+}
+
+export interface HTTPValidationError {
+    detail?: ValidationError[];
+}
+
+export interface ValidationError {
+    loc: (string | number)[];
+    msg: string;
+    type: string;
+    input?: any;
+    ctx?: Record<string, any>;
+}
 
 /**
  * An error response from the API.
@@ -21,24 +46,6 @@ export type ApiErrorResponse = {
  */
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
-/**
- * Sort direction for API requests.
- */
-export enum ApiSortDirection {
-  ASC = 'asc',
-  DESC = 'desc',
-}
-
-export enum JobType {
-  ONGOING = 'ongoing',
-  AVAILABLE = 'available',
-}
-
-export enum NotificationType {
-  ALL = 'all',
-  DELIVERY = 'delivery',
-  OTHERS = 'others',
-}
 
 /**
  * A payload for a paginated API request.
@@ -48,24 +55,6 @@ export type ApiPaginatedPayload<Filters, SortBy extends string = string> = {
   limit?: number;
   filters?: Filters;
   sortBy?: SortBy;
-  sortDirection?: ApiSortDirection;
-  jobType?: JobType;
-  notificationType?: NotificationType;
-};
-
-/**
- * A paginated response data structure for API responses.
- */
-export type ApiPaginatedResponseData<ResponseItemData> = {
-  data: ResponseItemData[];
-  meta: {
-    total: number;
-    lastPage: number;
-    currentPage: number;
-    perPage: number;
-    prev: number | null;
-    next: number | null;
-  };
 };
 
 /**

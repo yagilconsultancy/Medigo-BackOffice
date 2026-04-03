@@ -43,6 +43,7 @@ type FareTab = {
   desc: string;
   footnote?: string;
   vendorTerms?: string[];
+  vendorTermsTitle?: string;
   warningNote?: string;
   columnType:
     | 'rate'
@@ -51,10 +52,14 @@ type FareTab = {
     | 'stdRoute'
     | 'toll'
     | 'discount'
-    | 'rules';
+    | 'rules'
+    | 'stretcherRoute'
+    | 'revenueSplit'
+    | 'comparison';
   rateLabels?: { setting?: string; description?: string };
   data: TableRow[];
   sections?: SurchargeSection[];
+  surchargesInfo?: { title: string; items: string[] };
 };
 
 type VehicleConfig = {
@@ -209,6 +214,67 @@ const wavVendorTerms = [
   'One-time onboarding fee of $99 applies to all new WAV vendors',
 ];
 
+// ─── Stretcher Data ────────────────────────────────────────────────────────
+
+const stretcherRateComponents: TableRow[] = [
+  { id: '1', setting: 'Base Fare (under 10 km)', value: '85.00', unit: '$', description: 'Covers 2-person crew for short trips' },
+  { id: '2', setting: 'Per km (beyond 10 km)', value: '2.25', unit: '$/km', description: 'Highest rate — specialized vehicle + 2 crew' },
+  { id: '3', setting: 'Attendant Fee (every trip)', value: '35.00', unit: '$', description: 'Mandatory — second person required by law' },
+  { id: '4', setting: 'Surcharge', value: '0.06', unit: '$', description: 'Same as all services' },
+  { id: '5', setting: 'Insurance & Gateway', value: '1.50', unit: '$', description: 'Same as all services' },
+  { id: '6', setting: 'Wait Time (first 10 min free)', value: '1.00', unit: '$/min', description: 'Premium — 2 crew sitting idle' },
+];
+
+const stretcherFaresByRoute: TableRow[] = [
+  { id: '1', route: 'Milton Local (8 km)', baseFare: '$85.00', attendFee: '$35.00', wait: '$10.00', otherFees: '$1.56', total: '$131.56' },
+  { id: '2', route: 'Milton to Georgetown (15 km)', baseFare: '$103.00', attendFee: '$35.00', wait: '$10.00', otherFees: '$1.56', total: '$149.56' },
+  { id: '3', route: 'Milton to Oakville (29 km)', baseFare: '$121.00', attendFee: '$35.00', wait: '$20.00', otherFees: '$1.56', total: '$177.56' },
+  { id: '4', route: 'Milton to Burlington (32 km)', baseFare: '$134.50', attendFee: '$35.00', wait: '$20.00', otherFees: '$1.56', total: '$192.06' },
+  { id: '5', route: 'Milton to Brampton (38 km)', baseFare: '$148.00', attendFee: '$35.00', wait: '$20.00', otherFees: '$1.56', total: '$205.56' },
+  { id: '6', route: 'Milton to Mississauga (45 km)', baseFare: '$163.75', attendFee: '$35.00', wait: '$35.00', otherFees: '$1.56', total: '$236.31' },
+];
+
+const stretcherRevenueSplit: TableRow[] = [
+  { id: '1', route: 'Milton Local', totalFare: '$131.56', opCosts: '$55.00', net: '$76.56', your50: '$38.28', partner50: '$38.28' },
+  { id: '2', route: 'Milton to Georgetown', totalFare: '$149.56', opCosts: '$62.00', net: '$87.56', your50: '$43.78', partner50: '$43.78' },
+  { id: '3', route: 'Milton to Oakville', totalFare: '$177.56', opCosts: '$72.00', net: '$105.56', your50: '$52.78', partner50: '$52.78' },
+  { id: '4', route: 'Milton to Burlington', totalFare: '$192.06', opCosts: '$78.00', net: '$114.06', your50: '$57.03', partner50: '$57.03' },
+  { id: '5', route: 'Milton to Brampton', totalFare: '$205.56', opCosts: '$83.00', net: '$122.56', your50: '$61.28', partner50: '$61.28' },
+  { id: '6', route: 'Milton to Mississauga', totalFare: '$236.31', opCosts: '$95.00', net: '$141.31', your50: '$70.66', partner50: '$70.66' },
+];
+
+const stretcherPartnershipTerms = [
+  'All stretcher trips require a driver plus one trained attendant — no exceptions',
+  'Attendant fee of $35.00 is disclosed to client at booking and collected on every trip',
+  'All surcharges (snow, rush hour, 407, weekend, early/late) apply and are split 50/50',
+  'Maximum surcharge cap of $18.00 per trip applies to stretcher trips',
+  'Operating costs (fuel, insurance, maintenance) are deducted before the 50/50 split',
+  'Both partners must agree in writing on what qualifies as an operating cost',
+  '24-hour cancellation notice required from client to avoid trip charge',
+  'Partnership agreement should be reviewed and signed before April 2026 launch',
+];
+
+const stretcherServiceComparison: TableRow[] = [
+  { id: '1', route: 'Milton Local', ambulatory: '$14.56', wav: '$54.56', stretcher: '$131.56' },
+  { id: '2', route: 'Milton to Georgetown', ambulatory: '$22.06', wav: '$55.36', stretcher: '$149.56' },
+  { id: '3', route: 'Milton to Oakville', ambulatory: '$35.56', wav: '$72.16', stretcher: '$177.56' },
+  { id: '4', route: 'Milton to Burlington', ambulatory: '$40.06', wav: '$78.76', stretcher: '$192.06' },
+  { id: '5', route: 'Milton to Brampton', ambulatory: '$44.56', wav: '$85.36', stretcher: '$205.56' },
+  { id: '6', route: 'Milton to Mississauga', ambulatory: '$57.31', wav: '$105.06', stretcher: '$236.31' },
+];
+
+const stretcherSurchargesInfo = {
+  title: 'Surcharges — Apply to All Three Services Equally',
+  items: [
+    'Snow / winter weather: +$3.00 to +$5.00 depending on severity',
+    'Rush hour (Mon–Fri morning and evening): +$4.00 | Friday evening: +$5.00',
+    'Highway 407 toll surcharge: +$8.00 to +$10.00 depending on route',
+    'Weekend: Saturday +$3.00 | Sunday +$4.00 | Public holidays +$5.00',
+    'Early morning (5:00–6:59 am): +$5.00 | Late night (9:00–11:59 pm): +$4.00 | Overnight: +$8.00',
+    'Maximum surcharge cap of $18.00 per trip applies to ALL service types',
+  ],
+};
+
 // ─── Vehicle Configs ────────────────────────────────────────────────────────
 
 const vehicleConfigs: Record<string, VehicleConfig> = {
@@ -304,23 +370,37 @@ const vehicleConfigs: Record<string, VehicleConfig> = {
       {
         label: 'Rate Components',
         title: 'Stretcher Rate Components',
-        desc: 'Base rates applied to every Stretcher transport trip',
+        desc: 'Stretcher transport requires a driver and a trained attendant on every trip. The attendant fee is mandatory on all stretcher bookings.',
+        footnote:
+          '* The $85.00 base fare reflects the cost of deploying a 2-person crew. The attendant fee of $35.00 is a separate mandatory flat charge disclosed upfront on every booking confirmation.',
         columnType: 'rate',
-        data: [],
+        data: stretcherRateComponents,
       },
       {
         label: 'Fares by Route',
         title: 'Stretcher Fares by Route',
-        desc: 'Route-specific fare configurations for Stretcher transport',
-        columnType: 'route',
-        data: [],
+        desc: 'Fares include the attendant fee and standard billable wait time after the free 10-minute window. Final fare varies with actual wait duration and applicable surcharges.',
+        footnote:
+          '* Other Fees column includes surcharge ($0.06) and insurance & gateway ($1.50) applied on every trip.',
+        columnType: 'stretcherRoute',
+        data: stretcherFaresByRoute,
       },
       {
-        label: 'Platform Commission',
-        title: 'Platform Commission on Stretcher Trips',
-        desc: 'Platform commission details for Stretcher transport',
-        columnType: 'commission',
-        data: [],
+        label: 'Revenue Split',
+        title: '50/50 Partnership Revenue Split',
+        desc: 'Net is calculated after estimated operating costs including fuel, driver pay, attendant pay, insurance allocation and vehicle wear. Both partners receive equal share of net on every completed trip.',
+        vendorTerms: stretcherPartnershipTerms,
+        vendorTermsTitle: 'Stretcher Partnership Terms',
+        columnType: 'revenueSplit',
+        data: stretcherRevenueSplit,
+      },
+      {
+        label: 'Service Comparison',
+        title: 'All Three Services — Side by Side',
+        desc: 'Each tier reflects the equipment, staffing, and operational requirements of that service type across all Halton Region routes',
+        columnType: 'comparison',
+        data: stretcherServiceComparison,
+        surchargesInfo: stretcherSurchargesInfo,
       },
     ],
   },
@@ -834,6 +914,195 @@ export const FareConfigurationPage = () => {
     },
   ];
 
+  const stretcherRouteColumns: GridColSpec<TableRow>[] = [
+    {
+      field: 'route',
+      headerName: 'Route',
+      flex: 1.3,
+      minWidth: 200,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#111827' }}>
+          {params.row.route}
+        </Typography>
+      ),
+    },
+    {
+      field: 'baseFare',
+      headerName: 'Base Fare',
+      flex: 0.6,
+      minWidth: 90,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: currentStyle.color }}>
+          {params.row.baseFare}
+        </Typography>
+      ),
+    },
+    {
+      field: 'attendFee',
+      headerName: 'Attend. Fee',
+      flex: 0.6,
+      minWidth: 90,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 500, fontSize: pxToRem(13), color: '#374151' }}>
+          {params.row.attendFee}
+        </Typography>
+      ),
+    },
+    {
+      field: 'wait',
+      headerName: 'Wait',
+      flex: 0.5,
+      minWidth: 80,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 500, fontSize: pxToRem(13), color: '#374151' }}>
+          {params.row.wait}
+        </Typography>
+      ),
+    },
+    {
+      field: 'otherFees',
+      headerName: 'Other Fees',
+      flex: 0.6,
+      minWidth: 90,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 400, fontSize: pxToRem(13), color: '#9CA3AF' }}>
+          {params.row.otherFees}
+        </Typography>
+      ),
+    },
+    {
+      field: 'total',
+      headerName: 'Total',
+      flex: 0.6,
+      minWidth: 90,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 700, fontSize: pxToRem(13.5), color: '#111827' }}>
+          {params.row.total}
+        </Typography>
+      ),
+    },
+  ];
+
+  const revenueSplitColumns: GridColSpec<TableRow>[] = [
+    {
+      field: 'route',
+      headerName: 'Route',
+      flex: 1.2,
+      minWidth: 180,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#111827' }}>
+          {params.row.route}
+        </Typography>
+      ),
+    },
+    {
+      field: 'totalFare',
+      headerName: 'Total Fare',
+      flex: 0.7,
+      minWidth: 100,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#111827' }}>
+          {params.row.totalFare}
+        </Typography>
+      ),
+    },
+    {
+      field: 'opCosts',
+      headerName: 'Op. Costs Est.',
+      flex: 0.7,
+      minWidth: 110,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#EF4444' }}>
+          {params.row.opCosts}
+        </Typography>
+      ),
+    },
+    {
+      field: 'net',
+      headerName: 'Net',
+      flex: 0.6,
+      minWidth: 90,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#374151' }}>
+          {params.row.net}
+        </Typography>
+      ),
+    },
+    {
+      field: 'your50',
+      headerName: 'Your 50%',
+      flex: 0.6,
+      minWidth: 90,
+      renderCell: (params) => (
+        <Chip
+          label={params.row.your50}
+          size="small"
+          sx={{ background: '#ECFDF5', color: '#059669', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: pxToRem(11.5), height: '24px', borderRadius: '100px' }}
+        />
+      ),
+    },
+    {
+      field: 'partner50',
+      headerName: 'Partner 50%',
+      flex: 0.6,
+      minWidth: 90,
+      renderCell: (params) => (
+        <Chip
+          label={params.row.partner50}
+          size="small"
+          sx={{ background: '#ECFDF5', color: '#059669', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: pxToRem(11.5), height: '24px', borderRadius: '100px' }}
+        />
+      ),
+    },
+  ];
+
+  const comparisonColumns: GridColSpec<TableRow>[] = [
+    {
+      field: 'route',
+      headerName: 'Route',
+      flex: 1.2,
+      minWidth: 180,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#111827' }}>
+          {params.row.route}
+        </Typography>
+      ),
+    },
+    {
+      field: 'ambulatory',
+      headerName: 'Ambulatory',
+      flex: 0.7,
+      minWidth: 100,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#374151' }}>
+          {params.row.ambulatory}
+        </Typography>
+      ),
+    },
+    {
+      field: 'wav',
+      headerName: 'Wheelchair (WAV)',
+      flex: 0.8,
+      minWidth: 130,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 600, fontSize: pxToRem(13.5), color: '#6366F1' }}>
+          {params.row.wav}
+        </Typography>
+      ),
+    },
+    {
+      field: 'stretcher',
+      headerName: 'Stretcher',
+      flex: 0.7,
+      minWidth: 100,
+      renderCell: (params) => (
+        <Typography sx={{ fontFamily: (theme) => theme.typography.fontFamily, fontWeight: 700, fontSize: pxToRem(13.5), color: '#DC2626' }}>
+          {params.row.stretcher}
+        </Typography>
+      ),
+    },
+  ];
+
   const columnMap: Record<string, GridColSpec<TableRow>[]> = {
     rate: rateColumns,
     stdRoute: stdRouteColumns,
@@ -842,6 +1111,9 @@ export const FareConfigurationPage = () => {
     discount: discountColumns,
     rules: rulesColumns,
     commission: commissionColumns,
+    stretcherRoute: stretcherRouteColumns,
+    revenueSplit: revenueSplitColumns,
+    comparison: comparisonColumns,
   };
 
   const columns = columnMap[currentTab.columnType] || rateColumns;
@@ -1149,6 +1421,55 @@ export const FareConfigurationPage = () => {
             </Box>
           )}
 
+          {/* Surcharges Info (Service Comparison) */}
+          {currentTab.surchargesInfo && currentTab.data.length > 0 && (
+            <Box
+              sx={{
+                padding: '20px 24px',
+                borderTop: '0.67px solid #F0F4F8',
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 700,
+                  fontSize: pxToRem(14),
+                  color: '#374151',
+                  mb: '12px',
+                }}
+              >
+                {currentTab.surchargesInfo.title}
+              </Typography>
+              <Stack spacing="8px">
+                {currentTab.surchargesInfo.items.map((item, i) => (
+                  <RowStack key={i} spacing="10px" alignItems="flex-start">
+                    <Box
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        background: currentStyle.color,
+                        mt: '7px',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 400,
+                        fontSize: pxToRem(13),
+                        lineHeight: '1.6em',
+                        color: '#374151',
+                      }}
+                    >
+                      {item}
+                    </Typography>
+                  </RowStack>
+                ))}
+              </Stack>
+            </Box>
+          )}
+
           {/* Vendor Terms (Platform Commission) */}
           {currentTab.vendorTerms && currentTab.data.length > 0 && (
             <Box
@@ -1166,7 +1487,7 @@ export const FareConfigurationPage = () => {
                   mb: '12px',
                 }}
               >
-                WAV Vendor Terms
+                {currentTab.vendorTermsTitle || 'WAV Vendor Terms'}
               </Typography>
               <Stack spacing="8px">
                 {currentTab.vendorTerms.map((term, i) => (

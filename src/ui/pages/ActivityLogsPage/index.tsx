@@ -24,42 +24,10 @@ import {
   RowStack,
   AppButton,
   AppSearchField,
-  AppFilterPopover,
   FilterSection,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import { ActivityLogKPIs, formatTotalNumber, pxToRem, useGetActivityAnalytics, useGetActivityList, useResolvedApiQuery } from '../../../common';
 import { LogStatCard, LogEntryRow, LogEntry } from './ui/components';
-
-// ─── Stat Card Data ─────────────────────────────────────────────────────────
-
-const statCards = [
-  {
-    icon: (
-      <FormatListBulletedOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
-    ),
-    iconBg: '#EBF2FF',
-    value: '8,412',
-    label: 'Total Logs',
-  },
-  {
-    icon: <InfoOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-    value: '7,204',
-    label: 'Info',
-  },
-  {
-    icon: <WarningAmberOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />,
-    iconBg: '#FFFBEB',
-    value: '814',
-    label: 'Warnings',
-  },
-  {
-    icon: <ErrorOutlineOutlinedIcon sx={{ fontSize: 20, color: '#EF4444' }} />,
-    iconBg: '#FEF2F2',
-    value: '14',
-    label: 'Critical',
-  },
-];
 
 // ─── Log Entry Data ─────────────────────────────────────────────────────────
 
@@ -235,6 +203,29 @@ export const ActivityLogsPage = () => {
   const [filters, setFilters] = useState<Record<string, string>>({
     category: 'All',
   });
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 7,
+  });
+  const [severityChange, setSeverityChange] = useState<"all" | "info" | "warning" | "critical">("all")
+
+  const currentPage = useMemo<number>(() => {
+    return paginationModel.page + 1;
+  }, [paginationModel.page]);
+
+  const itemsPerPage = useMemo<number>(() => {
+    return paginationModel.pageSize || 5;
+  }, [paginationModel.pageSize]);
+  const payload = useMemo(() => {
+    return {
+      severity: severityChange,
+      search: searchQuery,
+      page: currentPage,
+      page_size: itemsPerPage
+    }
+  }, [severityChange, searchQuery, currentPage, itemsPerPage])
+  const { data: activityKpi } = useResolvedApiQuery(useGetActivityAnalytics, null)
+  const { data: activityLists } = useResolvedApiQuery(useGetActivityList, null, payload)
 
   const filteredLogs = useMemo(() => {
     return logEntries.filter((log) => {
@@ -250,6 +241,39 @@ export const ActivityLogsPage = () => {
       return matchesSearch && matchesCategory;
     });
   }, [searchQuery, filters]);
+
+  const activityKpiData = useMemo<ActivityLogKPIs | undefined>(() => {
+    return activityKpi ? activityKpi : undefined;
+  }, [activityKpi]);
+
+  const statCards = [
+    {
+      icon: (
+        <FormatListBulletedOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
+      ),
+      iconBg: '#EBF2FF',
+      value: `${formatTotalNumber(activityKpiData.total_logs)}`,
+      label: 'Total Logs',
+    },
+    {
+      icon: <InfoOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+      iconBg: '#EBF2FF',
+      value: `${formatTotalNumber(activityKpiData.info)}`,
+      label: 'Info',
+    },
+    {
+      icon: <WarningAmberOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />,
+      iconBg: '#FFFBEB',
+      value: `${formatTotalNumber(activityKpiData.warnings)}`,
+      label: 'Warnings',
+    },
+    {
+      icon: <ErrorOutlineOutlinedIcon sx={{ fontSize: 20, color: '#EF4444' }} />,
+      iconBg: '#FEF2F2',
+      value: `${formatTotalNumber(activityKpiData.critical)}`,
+      label: 'Critical',
+    },
+  ];
 
   return (
     <AppDashboardLayout>

@@ -1,2 +1,1 @@
-export * from "./activity-logs";
 export * from "./activity-list";
