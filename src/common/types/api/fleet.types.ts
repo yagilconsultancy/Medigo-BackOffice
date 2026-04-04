@@ -268,6 +268,33 @@ export interface FleetRevenueTrendResponse {
   trend: FleetRevenueTrendPoint[];
 }
 
+// Fleet Earnings — Payloads
+
+export interface FleetEarningsKpiPayload {
+  fleet_id?: string | null;
+  days?: number;
+}
+
+export interface FleetEarningsTrendPayload {
+  fleet_id?: string | null;
+  days?: number;
+}
+
+export interface FleetEarningsBreakdownPayload {
+  fleet_id?: string | null;
+  days?: number;
+  page?: number;
+  limit?: number;
+}
+
+// Fleet Earnings — Wrapped Response Aliases
+
+export type ApiFleetEarningsKpiResponse = ApiResponse<FleetEarningsKPIs>;
+export type ApiFleetEarningsTrendResponse =
+  ApiResponse<FleetRevenueTrendResponse>;
+export type FleetEarningsBreakdownPaginatedResponse =
+  ApiPaginatedResponseData<FleetEarningsBreakdownRow>;
+
 // Admin Driver Management Types
 export interface AdminDriverListItem {
   user_id: string;

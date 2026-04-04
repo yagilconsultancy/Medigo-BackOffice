@@ -6,3 +6,4 @@ export * from './analytics';
 export * from './fleet-applications';
 export * from './fleet-companies';
 export * from './fleet-vehicles';
+export * from './fleet-earnings';
