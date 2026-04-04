@@ -16,6 +16,8 @@ type ApproveDeclineModalprops = {
   textBtn: string;
   modalLabel: string;
   btnBg: string;
+  onConfirm?: () => void;
+  isLoading?: boolean;
 };
 
 export const ApproveDeclineModal = ({
@@ -28,6 +30,8 @@ export const ApproveDeclineModal = ({
   textBtn,
   modalLabel,
   btnBg,
+  onConfirm,
+  isLoading,
 }: ApproveDeclineModalprops) => {
   const theme = useTheme();
   return (
@@ -136,8 +140,10 @@ export const ApproveDeclineModal = ({
               },
             }}
             fullWidth
+            onClick={onConfirm}
+            disabled={isLoading}
           >
-            {textBtn}
+            {isLoading ? 'Processing...' : textBtn}
           </AppButton>
         </RowStack>
       </Stack>

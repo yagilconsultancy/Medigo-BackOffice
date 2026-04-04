@@ -11,7 +11,7 @@ import {
   RowStack,
   StyledImage,
 } from '../../modules/components';
-import { pxToRem, useGetAllBookings } from '../../../common';
+import { pxToRem, useGetAllBookings, useApproveBooking, useDeclineBooking } from '../../../common';
 import { RideResponse } from '../../../common/types';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { EmptyState } from '../../modules/blocks';
@@ -20,6 +20,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import dayjs from 'dayjs';
+import { toast } from 'sonner';
 import {
   ApproveDeclineModal,
   BookingDetailModal,
@@ -49,10 +50,13 @@ export const BookingPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [pageSize] = useState(10);
   const [page, setPage] = useState(1);
+  const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(null);
   const [openApprove, setOpenApprove] = useState<boolean>(false);
   const [openDecline, setOpenDecline] = useState<boolean>(false);
   const [openDetail, setOpenDetail] = useState<boolean>(false);
-  const [statusDetail, setStatusDetail] = useState<BookingRow['status']>(null);
+
+  const approveBookingMutation = useApproveBooking();
+  const declineBookingMutation = useDeclineBooking();
 
   const filterToApiStatus: Record<string, string | undefined> = {
     All: undefined,
@@ -105,28 +109,55 @@ export const BookingPage = () => {
     { text: 'Declined', count: declinedCountQuery.data?.total ?? 0, active: activeFilter === 'Declined' },
   ];
 
-  const handleOpenApprove = () => {
+  const handleOpenApprove = (booking: BookingRow) => {
+    setSelectedBooking(booking);
     setOpenApprove(true);
   };
-  const handleOpenDetail = (status: BookingRow['status']) => {
-    setOpenDetail(true);
-    setStatusDetail(status);
-  };
 
-  const handleCloseApprove = () => {
-    setOpenApprove(false);
-  };
-
-  const handleOpenDecline = () => {
+  const handleOpenDecline = (booking: BookingRow) => {
+    setSelectedBooking(booking);
     setOpenDecline(true);
   };
 
-  const handleCloseDecline = () => {
-    setOpenDecline(false);
+  const handleOpenDetail = (booking: BookingRow) => {
+    setSelectedBooking(booking);
+    setOpenDetail(true);
   };
 
-  const handleCloseDetail = () => {
-    setOpenDetail(false);
+  const handleCloseApprove = () => setOpenApprove(false);
+  const handleCloseDecline = () => setOpenDecline(false);
+  const handleCloseDetail = () => setOpenDetail(false);
+
+  const handleConfirmApprove = () => {
+    if (!selectedBooking) return;
+    approveBookingMutation.mutate(
+      { rideId: selectedBooking.id },
+      {
+        onSuccess: () => {
+          toast.success('Booking approved successfully');
+          handleCloseApprove();
+        },
+        onError: () => {
+          toast.error('Failed to approve booking');
+        },
+      }
+    );
+  };
+
+  const handleConfirmDecline = () => {
+    if (!selectedBooking) return;
+    declineBookingMutation.mutate(
+      { rideId: selectedBooking.id, reason: 'Declined by admin' },
+      {
+        onSuccess: () => {
+          toast.success('Booking declined successfully');
+          handleCloseDecline();
+        },
+        onError: () => {
+          toast.error('Failed to decline booking');
+        },
+      }
+    );
   };
 
   const columns: GridColSpec<BookingRow>[] = [
@@ -178,7 +209,7 @@ export const BookingPage = () => {
       minWidth: 120,
       sortable: false,
       renderCell: (params) => {
-        const status = params.row.status;
+        const row = params.row;
         return (
           <RowStack spacing={0.5}>
             <IconButton
@@ -186,18 +217,18 @@ export const BookingPage = () => {
               sx={{
                 color: '#9CA3AF',
               }}
-              onClick={() => handleOpenDetail(status)}
+              onClick={() => handleOpenDetail(row)}
             >
               <VisibilityOutlinedIcon sx={{ fontSize: 15 }} />
             </IconButton>
-            {status === 'Pending' && (
+            {row.status === 'Pending' && (
               <>
                 <IconButton
                   size="small"
                   sx={{
                     color: '#9CA3AF',
                   }}
-                  onClick={handleOpenApprove}
+                  onClick={() => handleOpenApprove(row)}
                 >
                   <CheckCircleOutlineIcon sx={{ fontSize: 15 }} />
                 </IconButton>
@@ -206,7 +237,7 @@ export const BookingPage = () => {
                   sx={{
                     color: '#9CA3AF',
                   }}
-                  onClick={handleOpenDecline}
+                  onClick={() => handleOpenDecline(row)}
                 >
                   <CancelOutlinedIcon sx={{ fontSize: 15 }} />
                 </IconButton>
@@ -274,28 +305,39 @@ export const BookingPage = () => {
         open={openApprove}
         handleClose={handleCloseApprove}
         title="Approve Booking"
-        text="BK-20491 · Claire Beaumont · Mar 9, 2026 · 09:00 AM"
-        location="120 King St W, Toronto, ON → Toronto General Hospital"
+        text={`${selectedBooking?.bookingId} · ${selectedBooking?.patient} · ${selectedBooking?.dateTime}`}
+        location={`${selectedBooking?.pickupLocation} → ${selectedBooking?.destination}`}
         textBeforeBtn="This will mark the booking as approved and notify the patient."
         textBtn="Confirm Approval"
         btnBg="#059669"
+        onConfirm={handleConfirmApprove}
+        isLoading={approveBookingMutation.isPending}
       />
       <ApproveDeclineModal
         modalLabel="decline-modal"
         open={openDecline}
         handleClose={handleCloseDecline}
         title="Decline Booking"
-        text="BK-20491 · Claire Beaumont · Mar 9, 2026 · 09:00 AM"
-        location="120 King St W, Toronto, ON → Toronto General Hospital"
+        text={`${selectedBooking?.bookingId} · ${selectedBooking?.patient} · ${selectedBooking?.dateTime}`}
+        location={`${selectedBooking?.pickupLocation} → ${selectedBooking?.destination}`}
         textBeforeBtn="This will decline the booking and notify the patient."
         textBtn="Confirm Decline"
         btnBg="#EF4444"
+        onConfirm={handleConfirmDecline}
+        isLoading={declineBookingMutation.isPending}
       />
       <BookingDetailModal
         open={openDetail}
         handleClose={handleCloseDetail}
-        bookingId={'BK-20491'}
-        status={statusDetail}
+        bookingId={selectedBooking?.bookingId ?? ''}
+        rideId={selectedBooking?.id ?? ''}
+        status={selectedBooking?.status ?? 'Pending'}
+        patientName={selectedBooking?.patient ?? ''}
+        dateTime={selectedBooking?.dateTime ?? ''}
+        pickup={selectedBooking?.pickupLocation ?? ''}
+        destination={selectedBooking?.destination ?? ''}
+        onApprove={() => setOpenApprove(true)}
+        onDecline={() => setOpenDecline(true)}
       />
     </AppDashboardLayout>
   );

@@ -23,21 +23,39 @@ type BookingDetailtModalProps = {
   open: boolean;
   handleClose: () => void;
   bookingId: string;
+  rideId: string;
   status: BookingRow['status'];
+  patientName: string;
+  phoneNum?: string;
+  dateTime: string;
+  pickup: string;
+  destination: string;
+  specialRequirements?: string;
+  onApprove?: () => void;
+  onDecline?: () => void;
 };
 
 export const BookingDetailModal = ({
   open,
   handleClose,
   bookingId,
+  rideId,
   status,
+  patientName,
+  phoneNum,
+  dateTime,
+  pickup,
+  destination,
+  specialRequirements,
+  onApprove,
+  onDecline,
 }: BookingDetailtModalProps) => {
   const theme = useTheme();
   const router = useRouter();
 
   const handleViewFullDetails = () => {
     handleClose();
-    router.push(`/bookings/${bookingId}`);
+    router.push(`/bookings/${rideId}`);
   };
 
   return (
@@ -82,68 +100,70 @@ export const BookingDetailModal = ({
           <BoxDetailComponent
             icon={patientIcon}
             iconTag="Patient"
-            patientName="Claire Beaumont"
-            phoneNum="+1 416 555 0123"
+            patientName={patientName}
+            phoneNum={phoneNum}
           />
           <BoxDetailComponent
             icon={dateIcon}
             iconTag="Date & Time"
-            patientName="Mar 9, 2026 · 09:00 AM"
+            patientName={dateTime}
           />
         </RowStack>
         <Stack spacing={'12px'}>
           <BoxDetailComponent
             icon={pickupIcon}
             iconTag="Pickup"
-            patientName="120 King St W, Toronto, ON"
+            patientName={pickup}
           />
           <BoxDetailComponent
             icon={destinationIcon}
             iconTag="Destination"
-            patientName="Toronto General Hospital"
+            patientName={destination}
           />
         </Stack>
-        <Stack
-          sx={{
-            padding: '18.67px 16.67px',
-            border: '0.67px solid #FDE68A',
-            borderRadius: '14px',
-            background: '#FFFBEB',
-          }}
-        >
-          <RowStack spacing={1}>
-            <StyledImage
-              src={warningIcon}
-              alt="icon"
-              sx={{
-                width: '14px',
-                height: '14px',
-              }}
-            />
+        {specialRequirements && (
+          <Stack
+            sx={{
+              padding: '18.67px 16.67px',
+              border: '0.67px solid #FDE68A',
+              borderRadius: '14px',
+              background: '#FFFBEB',
+            }}
+          >
+            <RowStack spacing={1}>
+              <StyledImage
+                src={warningIcon}
+                alt="icon"
+                sx={{
+                  width: '14px',
+                  height: '14px',
+                }}
+              />
+              <Typography
+                sx={{
+                  color: (theme) => theme.color.warning,
+                  fontWeight: 600,
+                  fontSize: pxToRem(12),
+                  lineHeight: '18px',
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                }}
+              >
+                Special Requirements
+              </Typography>
+            </RowStack>
             <Typography
               sx={{
-                color: (theme) => theme.color.warning,
-                fontWeight: 600,
-                fontSize: pxToRem(12),
-                lineHeight: '18px',
+                color: (theme) => theme.color.deepYellow,
+                fontWeight: 400,
+                fontSize: pxToRem(13.5),
+                lineHeight: '20px',
                 fontFamily: (theme) => theme.typography.fontFamily,
               }}
             >
-              Special Requirements
+              {specialRequirements}
             </Typography>
-          </RowStack>
-          <Typography
-            sx={{
-              color: (theme) => theme.color.deepYellow,
-              fontWeight: 400,
-              fontSize: pxToRem(13.5),
-              lineHeight: '20px',
-              fontFamily: (theme) => theme.typography.fontFamily,
-            }}
-          >
-            Wheelchair accessible vehicle required
-          </Typography>
-        </Stack>
+          </Stack>
+        )}
         <RowStack spacing={'12px'} width={'100%'}>
           {status !== 'Declined' && (
             <AppButton
@@ -156,7 +176,10 @@ export const BookingDetailModal = ({
                 lineHeight: '19.5px',
               }}
               fullWidth
-              onClick={handleClose}
+              onClick={() => {
+                handleClose();
+                onDecline?.();
+              }}
             >
               Decline Booking
             </AppButton>
@@ -174,6 +197,10 @@ export const BookingDetailModal = ({
                 },
               }}
               fullWidth
+              onClick={() => {
+                handleClose();
+                onApprove?.();
+              }}
             >
               Approve Booking
             </AppButton>
