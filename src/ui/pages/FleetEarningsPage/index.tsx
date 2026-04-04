@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   alpha,
   Box,
@@ -14,97 +15,130 @@ import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppGridtable,
   AppNotificationSnackbar,
+  CustomBreadCrumbs,
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
+import { EmptyState } from '../../modules/blocks';
 import { FleetRevenueChart, PayoutModal, EarningsRow } from './ui/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useResolvedApiQuery,
+  useGetFleetEarningsKpi,
+  useGetFleetEarningsTrend,
+  useGetFleetEarningsBreakdown,
+} from '../../../common';
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-const earningsData: EarningsRow[] = [
-  {
-    id: '1',
-    fleet: 'MedRide Express',
-    initials: 'MR',
-    color: '#2F6FED',
-    drivers: 42,
-    trips: '1,840',
-    grossRevenue: '$82,800',
-    commission: '−$20,700',
-    netPayout: '$62,100',
-    share: 88,
-  },
-  {
-    id: '2',
-    fleet: 'CareTransit Co.',
-    initials: 'CT',
-    color: '#10B981',
-    drivers: 31,
-    trips: '1,420',
-    grossRevenue: '$63,900',
-    commission: '−$15,975',
-    netPayout: '$47,925',
-    share: 68,
-  },
-  {
-    id: '3',
-    fleet: 'HealthHaul LLC',
-    initials: 'HH',
-    color: '#F59E0B',
-    drivers: 24,
-    trips: '1,090',
-    grossRevenue: '$49,050',
-    commission: '−$12,263',
-    netPayout: '$36,788',
-    share: 52,
-  },
-  {
-    id: '4',
-    fleet: 'SafeRide Medical',
-    initials: 'SR',
-    color: '#0EA5E9',
-    drivers: 19,
-    trips: '860',
-    grossRevenue: '$38,700',
-    commission: '−$9,675',
-    netPayout: '$29,025',
-    share: 41,
-  },
-  {
-    id: '5',
-    fleet: 'MobiCare Transport',
-    initials: 'MC',
-    color: '#8B5CF6',
-    drivers: 27,
-    trips: '1,210',
-    grossRevenue: '$54,450',
-    commission: '−$13,613',
-    netPayout: '$40,838',
-    share: 58,
-  },
-  {
-    id: '6',
-    fleet: 'Apex Medical Rides',
-    initials: 'AM',
-    color: '#6366F1',
-    drivers: 21,
-    trips: '940',
-    grossRevenue: '$42,300',
-    commission: '−$10,575',
-    netPayout: '$31,725',
-    share: 45,
-  },
+const COLORS = [
+  '#2F6FED',
+  '#10B981',
+  '#F59E0B',
+  '#0EA5E9',
+  '#8B5CF6',
+  '#6366F1',
+  '#EF4444',
+  '#EC4899',
 ];
+
+const getInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
+
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+const formatNumber = (value: number): string => {
+  return new Intl.NumberFormat('en-US').format(value);
+};
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const FleetEarningsPage = () => {
+  const searchParams = useSearchParams();
+  const fleetId = searchParams.get('fleet_id') || '';
+
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
   const [selectedFleet, setSelectedFleet] = useState<EarningsRow | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  const { data: kpis } = useResolvedApiQuery(useGetFleetEarningsKpi, null, {
+    fleet_id: fleetId || undefined,
+  });
+
+  const { data: trendData } = useResolvedApiQuery(
+    useGetFleetEarningsTrend,
+    null,
+    { fleet_id: fleetId || undefined }
+  );
+
+  const { data: breakdownData } = useGetFleetEarningsBreakdown({
+    fleet_id: fleetId || undefined,
+  });
+
+  const earningsRows = useMemo<EarningsRow[]>(() => {
+    if (!breakdownData?.success || !breakdownData?.data?.length) return [];
+    const totalRevenue = breakdownData.data.reduce(
+      (sum, row) => sum + row.revenue,
+      0
+    );
+    return breakdownData.data.map((row, index) => ({
+      id: row.fleet_id,
+      fleet: row.fleet_name,
+      initials: getInitials(row.fleet_name),
+      color: COLORS[index % COLORS.length],
+      drivers: 0,
+      trips: formatNumber(row.trips),
+      grossRevenue: formatCurrency(row.revenue),
+      commission: `−${formatCurrency(row.commission)}`,
+      netPayout: formatCurrency(row.net_earnings),
+      share: totalRevenue > 0 ? Math.round((row.revenue / totalRevenue) * 100) : 0,
+    }));
+  }, [breakdownData]);
+
+  const statCards = useMemo(
+    () => [
+      {
+        value: kpis ? formatCurrency(kpis.total_revenue) : '--',
+        label: 'Total Fleet Revenue',
+        valueColor: '#2F6FED',
+      },
+      {
+        value: kpis ? formatCurrency(kpis.total_payouts) : '--',
+        label: 'Net Fleet Payouts',
+        valueColor: '#10B981',
+      },
+      {
+        value: kpis
+          ? `${kpis.revenue_change_percent >= 0 ? '+' : ''}${kpis.revenue_change_percent.toFixed(1)}%`
+          : '--',
+        label: `Revenue Trend (${kpis?.revenue_trend ?? '--'})`,
+        valueColor: '#D97706',
+      },
+      {
+        value: kpis
+          ? `${kpis.payout_change_percent >= 0 ? '+' : ''}${kpis.payout_change_percent.toFixed(1)}%`
+          : '--',
+        label: `Payout Trend (${kpis?.payout_trend ?? '--'})`,
+        valueColor: '#6B7280',
+      },
+    ],
+    [kpis]
+  );
 
   const handlePayOut = useCallback((fleet: EarningsRow) => {
     setSelectedFleet(fleet);
@@ -123,29 +157,6 @@ export const FleetEarningsPage = () => {
     setSnackbarMessage('Exported!');
     setSnackbarOpen(true);
   }, []);
-
-  const statCards = [
-    {
-      value: '$331,200',
-      label: 'Total Fleet Revenue',
-      valueColor: '#2F6FED',
-    },
-    {
-      value: '$248,401',
-      label: 'Net Fleet Payouts',
-      valueColor: '#10B981',
-    },
-    {
-      value: '6',
-      label: 'Pending Payouts',
-      valueColor: '#D97706',
-    },
-    {
-      value: '0',
-      label: 'Paid Out',
-      valueColor: '#6B7280',
-    },
-  ];
 
   const columns: GridColSpec<EarningsRow>[] = [
     {
@@ -192,14 +203,6 @@ export const FleetEarningsPage = () => {
       ),
     },
     {
-      field: 'drivers',
-      headerName: 'Drivers',
-      flex: 0.5,
-      minWidth: 70,
-      headerAlign: 'center',
-      align: 'center',
-    },
-    {
       field: 'trips',
       headerName: 'Trips',
       flex: 0.5,
@@ -215,7 +218,7 @@ export const FleetEarningsPage = () => {
     },
     {
       field: 'commission',
-      headerName: 'Commission (25%)',
+      headerName: 'Commission',
       flex: 0.9,
       minWidth: 130,
       renderCell: (params) => (
@@ -329,6 +332,14 @@ export const FleetEarningsPage = () => {
   return (
     <AppDashboardLayout>
       <Stack spacing={'24px'}>
+        {/* Breadcrumbs */}
+        <CustomBreadCrumbs
+          breadcrumbsData={[
+            { href: '/fleet/companies', text: 'Fleet Companies' },
+            { href: '/fleet/earnings', text: 'Fleet Earnings', active: true },
+          ]}
+        />
+
         {/* Header */}
         <RowStack sx={{ justifyContent: 'space-between' }}>
           <DashboardTitleAndDesc
@@ -406,13 +417,14 @@ export const FleetEarningsPage = () => {
         </Grid>
 
         {/* Revenue Trends Chart */}
-        <FleetRevenueChart />
+        <FleetRevenueChart trendData={trendData} />
 
         {/* Earnings Breakdown Table */}
         <AppGridtable
           columns={columns}
-          data={earningsData}
+          data={earningsRows}
           initialPageSize={6}
+          emptyState={<EmptyState animationSrc="/empty.json" />}
           sx={{
             height: 'auto',
             width: '100%',
@@ -438,7 +450,8 @@ export const FleetEarningsPage = () => {
                   color: '#9CA3AF',
                 }}
               >
-                March 2026 (current month) · 6 pending payouts
+                {earningsRows.length} fleet partner
+                {earningsRows.length !== 1 ? 's' : ''}
               </Typography>
             </RowStack>
           </RowStack>

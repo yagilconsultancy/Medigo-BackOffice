@@ -277,6 +277,10 @@ export const FleetCompanyDrawer = ({
             </Typography>
           </Box>
           <Box
+            onClick={() => {
+              onClose();
+              router.push(`/fleet/earnings?fleet_id=${company.id}`);
+            }}
             sx={{
               display: 'flex',
               alignItems: 'center',

@@ -41,6 +41,7 @@ export const PayoutModal = ({
       open={open}
       setOpen={() => onClose()}
       label="payout-modal"
+      padding='0px'
       sx={{
         '& .MuiDialog-paper': {
           width: '440px',
@@ -57,7 +58,7 @@ export const PayoutModal = ({
           sx={{
             background:
               'linear-gradient(135deg, rgba(47, 111, 237, 1) 0%, rgba(47, 111, 237, 0.8) 100%)',
-            // padding: '20px 24px',
+            padding: '20px 24px',
             position: 'relative',
           }}
         >

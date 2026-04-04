@@ -68,7 +68,6 @@ export const getApiClient = () => {
 
     // const token = cookie['medi_auth'];
     const token = getAuthToken();
-    console.log('token', token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
