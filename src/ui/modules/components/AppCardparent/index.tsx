@@ -15,6 +15,7 @@ export const AppCardparent = ({ children }: AppCardParentProps) => {
         borderRadius: '16px',
         background: (theme) => theme.palette.background.default,
         width: '100%',
+        height: '100%',
       }}
       spacing="18px"
     >

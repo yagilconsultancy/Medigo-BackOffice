@@ -390,7 +390,7 @@ export const HomePage = () => {
         />
 
         {/* Stat Cards */}
-        <Grid container spacing={'20px'}>
+        <Grid container spacing={'20px'} alignItems="stretch">
           {cardData.map((card, index) => (
             <Grid size={{ sm: 6, lg: 3 }} key={index}>
               <CardComponent {...card} />
@@ -399,7 +399,7 @@ export const HomePage = () => {
         </Grid>
 
         {/* Booking Trends + Transport Type Distribution */}
-        <Grid container spacing={'20px'}>
+        <Grid container spacing={'20px'} alignItems="stretch">
           <Grid size={{ sm: 12, lg: 7 }}>
             <AppCardparent>
               <Stack spacing={'19.83px'}>
@@ -453,7 +453,7 @@ export const HomePage = () => {
         </Grid>
 
         {/* Booking Channels + Service Quality Metrics */}
-        <Grid container spacing={'20px'}>
+        <Grid container spacing={'20px'} alignItems="stretch">
           <Grid size={{ sm: 12, lg: 6 }}>
             <AppCardparent>
               <Stack spacing={'19.83px'}>
