@@ -1,10 +1,7 @@
 import { AxiosResponse } from 'axios';
 import { resolveRoute, ROUTES } from '../../../../constants';
 import { getApiClient } from '../../../../lib';
-import {
-  ApiBroadcastResponse,
-  SendBroadcastRequest,
-} from '../../../../types';
+import { ApiBroadcastResponse, SendBroadcastRequest } from '../../../../types';
 
 export const sendSystemBroadcast = async (payload: SendBroadcastRequest) => {
   return await getApiClient().post<

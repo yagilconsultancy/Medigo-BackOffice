@@ -73,9 +73,7 @@ export const getTransportDistribution = async (
   });
 };
 
-export const getTopFleetPartners = async (
-  params?: TopFleetPartnersParams
-) => {
+export const getTopFleetPartners = async (params?: TopFleetPartnersParams) => {
   return await getApiClient().get<
     TopFleetPartnersResponseWrapped,
     AxiosResponse<TopFleetPartnersResponseWrapped>

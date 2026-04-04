@@ -14,9 +14,7 @@ export const getSupportKpis = async () => {
   >(resolveRoute(ROUTES.getSupportKpis));
 };
 
-export const listSupportTickets = async (
-  payload: SupportTicketListPayload
-) => {
+export const listSupportTickets = async (payload: SupportTicketListPayload) => {
   return await getApiClient().get<
     ApiSupportTicketListResponse,
     AxiosResponse<ApiSupportTicketListResponse>

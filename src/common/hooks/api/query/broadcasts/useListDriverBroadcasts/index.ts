@@ -5,7 +5,10 @@ import { BroadcastListPayload } from '../../../../../types';
 
 export const useListDriverBroadcasts = (payload: BroadcastListPayload) => {
   return useQuery({
-    queryKey: [resolveRoute(ROUTES.listDriverBroadcasts), JSON.stringify(payload)],
+    queryKey: [
+      resolveRoute(ROUTES.listDriverBroadcasts),
+      JSON.stringify(payload),
+    ],
     queryFn: () => listDriverBroadcasts(payload).then((res) => res.data),
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {

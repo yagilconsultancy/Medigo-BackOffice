@@ -338,9 +338,7 @@ export const HomePage = () => {
   const facilityTypeCounts = useMemo(() => {
     if (!topFacilities?.type_counts) return [];
     return Object.entries(topFacilities.type_counts).map(([key, count]) => ({
-      label: key
-        .replace(/_/g, ' ')
-        .replace(/\b\w/g, (c) => c.toUpperCase()),
+      label: key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
       count,
       color: typeCountColors[key.toLowerCase()] ?? '#9CA3AF',
     }));
@@ -554,13 +552,11 @@ export const HomePage = () => {
                   title="Top Fleet Partners"
                   desc="Companies ranked by completed trips this month"
                 />
-                {fleetPartnerData.length > 0 ? (
-                  fleetPartnerData.map((partner) => (
-                    <FleetPartnerComponent key={partner.num} {...partner} />
-                  ))
-                ) : (
-                  emptyState
-                )}
+                {fleetPartnerData.length > 0
+                  ? fleetPartnerData.map((partner) => (
+                      <FleetPartnerComponent key={partner.num} {...partner} />
+                    ))
+                  : emptyState}
               </Stack>
             </AppCardparent>
           </Grid>
@@ -573,13 +569,11 @@ export const HomePage = () => {
               title="Recent Activity"
               desc="Latest bookings and system events"
             />
-            {recentData.length > 0 ? (
-              recentData.map((recent, index) => (
-                <RecentActivity key={index} {...recent} />
-              ))
-            ) : (
-              emptyState
-            )}
+            {recentData.length > 0
+              ? recentData.map((recent, index) => (
+                  <RecentActivity key={index} {...recent} />
+                ))
+              : emptyState}
           </Stack>
         </AppCardparent>
       </Stack>

@@ -41,7 +41,7 @@ export const PayoutModal = ({
       open={open}
       setOpen={() => onClose()}
       label="payout-modal"
-      padding='0px'
+      padding="0px"
       sx={{
         '& .MuiDialog-paper': {
           width: '440px',

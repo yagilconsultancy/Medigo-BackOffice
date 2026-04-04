@@ -106,7 +106,8 @@ export const FleetEarningsPage = () => {
       grossRevenue: formatCurrency(row.revenue),
       commission: `−${formatCurrency(row.commission)}`,
       netPayout: formatCurrency(row.net_earnings),
-      share: totalRevenue > 0 ? Math.round((row.revenue / totalRevenue) * 100) : 0,
+      share:
+        totalRevenue > 0 ? Math.round((row.revenue / totalRevenue) * 100) : 0,
     }));
   }, [breakdownData]);
 

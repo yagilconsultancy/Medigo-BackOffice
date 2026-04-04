@@ -257,13 +257,7 @@ export const FleetRevenueChart = ({ trendData }: FleetRevenueChartProps) => {
           margin={{ top: 5, right: 5, left: -10, bottom: 0 }}
         >
           <defs>
-            <linearGradient
-              id="gradient-revenue"
-              x1="0"
-              y1="0"
-              x2="0"
-              y2="1"
-            >
+            <linearGradient id="gradient-revenue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#2F6FED" stopOpacity={0.18} />
               <stop offset="95%" stopColor="#2F6FED" stopOpacity={0} />
             </linearGradient>

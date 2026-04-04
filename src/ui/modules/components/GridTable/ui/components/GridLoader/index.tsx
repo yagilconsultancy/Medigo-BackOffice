@@ -6,7 +6,12 @@ import {
   useGridApiContext,
   useGridSelector,
 } from '@mui/x-data-grid';
-import { CircularProgress, LinearProgress, Skeleton, Stack } from '@mui/material';
+import {
+  CircularProgress,
+  LinearProgress,
+  Skeleton,
+  Stack,
+} from '@mui/material';
 import { CSSProperties, forwardRef, ReactElement } from 'react';
 
 const LOADING_VARIANTS: Record<

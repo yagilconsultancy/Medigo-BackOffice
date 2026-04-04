@@ -10,9 +10,7 @@ import {
   FleetEarningsTrendPayload,
 } from '../../../../types';
 
-export const getFleetEarningsKpi = async (
-  payload: FleetEarningsKpiPayload
-) => {
+export const getFleetEarningsKpi = async (payload: FleetEarningsKpiPayload) => {
   return await getApiClient().get<
     ApiFleetEarningsKpiResponse,
     AxiosResponse<ApiFleetEarningsKpiResponse>

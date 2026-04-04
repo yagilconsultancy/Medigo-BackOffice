@@ -71,10 +71,7 @@ export const PendingBookingPage = () => {
     null
   );
 
-  const { data: kpis } = useResolvedApiQuery(
-    useGetPendingBookingsKpis,
-    null
-  );
+  const { data: kpis } = useResolvedApiQuery(useGetPendingBookingsKpis, null);
 
   const pendingQuery = useGetPendingBookings({ page: 1, limit: 20 });
 

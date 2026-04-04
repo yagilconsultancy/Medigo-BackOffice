@@ -46,9 +46,7 @@ export const getFleetComposition = async () => {
   >(resolveRoute(ROUTES.getFleetCompisition));
 };
 
-export const getFleetProfiles = async (
-  payload: FleetVehicleListPayload
-) => {
+export const getFleetProfiles = async (payload: FleetVehicleListPayload) => {
   return await getApiClient().get<
     FleetVehicleProfilesPaginatedResponse,
     AxiosResponse<FleetVehicleProfilesPaginatedResponse>

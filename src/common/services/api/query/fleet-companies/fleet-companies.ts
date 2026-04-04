@@ -18,9 +18,7 @@ export const getFleetCompaniesKpi = async () => {
   >(resolveRoute(ROUTES.getFleetCompaniesKpi));
 };
 
-export const getFleetCompanies = async (
-  payload: FleetCompanyListPayload
-) => {
+export const getFleetCompanies = async (payload: FleetCompanyListPayload) => {
   return await getApiClient().get<
     FleetCompanyPaginatedResponse,
     AxiosResponse<FleetCompanyPaginatedResponse>

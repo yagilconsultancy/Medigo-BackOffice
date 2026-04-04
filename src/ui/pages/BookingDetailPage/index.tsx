@@ -1,7 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Chip, Grid, Skeleton, Stack, Typography, alpha } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Grid,
+  Skeleton,
+  Stack,
+  Typography,
+  alpha,
+} from '@mui/material';
 import { useParams } from 'next/navigation';
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
@@ -20,7 +28,10 @@ import {
   useAssignDriverToBooking,
   useReassignDriver,
 } from '../../../common/hooks';
-import { AdminBookingDetailResponse, AvailableDriverResponse } from '../../../common/types';
+import {
+  AdminBookingDetailResponse,
+  AvailableDriverResponse,
+} from '../../../common/types';
 import {
   StatChip,
   InfoCard,
@@ -80,7 +91,11 @@ const formatCurrency = (amount?: number | null) => {
 };
 
 const getVehicleLabel = (d: AdminBookingDetailResponse) => {
-  const parts = [d.driver_vehicle_make, d.driver_vehicle_model, d.driver_vehicle_type].filter(Boolean);
+  const parts = [
+    d.driver_vehicle_make,
+    d.driver_vehicle_model,
+    d.driver_vehicle_type,
+  ].filter(Boolean);
   return parts.length ? parts.join(' ') : undefined;
 };
 
@@ -124,11 +139,14 @@ export const BookingDetailPage = () => {
   const [openReassignDriver, setOpenReassignDriver] = useState(false);
 
   const apiResponse = bookingQuery.data;
-  const booking = apiResponse && 'data' in apiResponse ? apiResponse.data : null;
+  const booking =
+    apiResponse && 'data' in apiResponse ? apiResponse.data : null;
 
   const driversResponse = driversQuery.data;
   const availableDrivers: AvailableDriverResponse[] =
-    driversResponse && 'data' in driversResponse ? driversResponse.data ?? [] : [];
+    driversResponse && 'data' in driversResponse
+      ? (driversResponse.data ?? [])
+      : [];
 
   const hasDriver = !!booking?.driver_id;
 
@@ -168,35 +186,82 @@ export const BookingDetailPage = () => {
     return (
       <AppDashboardLayout>
         <Stack spacing={'20px'}>
-          <Skeleton variant="rectangular" height={28} width={300} sx={{ borderRadius: '8px' }} />
+          <Skeleton
+            variant="rectangular"
+            height={28}
+            width={300}
+            sx={{ borderRadius: '8px' }}
+          />
           <RowStack justifyContent="space-between" width="100%">
             <Stack spacing={'6px'}>
-              <Skeleton variant="rectangular" height={32} width={350} sx={{ borderRadius: '8px' }} />
-              <Skeleton variant="rectangular" height={18} width={450} sx={{ borderRadius: '8px' }} />
+              <Skeleton
+                variant="rectangular"
+                height={32}
+                width={350}
+                sx={{ borderRadius: '8px' }}
+              />
+              <Skeleton
+                variant="rectangular"
+                height={18}
+                width={450}
+                sx={{ borderRadius: '8px' }}
+              />
             </Stack>
             <RowStack spacing={'8px'}>
-              <Skeleton variant="rectangular" height={36} width={160} sx={{ borderRadius: '14px' }} />
-              <Skeleton variant="rectangular" height={36} width={130} sx={{ borderRadius: '14px' }} />
+              <Skeleton
+                variant="rectangular"
+                height={36}
+                width={160}
+                sx={{ borderRadius: '14px' }}
+              />
+              <Skeleton
+                variant="rectangular"
+                height={36}
+                width={130}
+                sx={{ borderRadius: '14px' }}
+              />
             </RowStack>
           </RowStack>
           <RowStack spacing={'12px'} width="100%">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} variant="rectangular" height={60} sx={{ flex: 1, borderRadius: '12px' }} />
+              <Skeleton
+                key={i}
+                variant="rectangular"
+                height={60}
+                sx={{ flex: 1, borderRadius: '12px' }}
+              />
             ))}
           </RowStack>
           <Grid container spacing={'20px'}>
             <Grid size={{ sm: 12, lg: 3 }}>
               <Stack spacing={'16px'}>
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} variant="rectangular" height={180} sx={{ borderRadius: '16px' }} />
+                  <Skeleton
+                    key={i}
+                    variant="rectangular"
+                    height={180}
+                    sx={{ borderRadius: '16px' }}
+                  />
                 ))}
               </Stack>
             </Grid>
             <Grid size={{ sm: 12, lg: 9 }}>
               <Stack spacing={'16px'}>
-                <Skeleton variant="rectangular" height={300} sx={{ borderRadius: '16px' }} />
-                <Skeleton variant="rectangular" height={250} sx={{ borderRadius: '16px' }} />
-                <Skeleton variant="rectangular" height={200} sx={{ borderRadius: '16px' }} />
+                <Skeleton
+                  variant="rectangular"
+                  height={300}
+                  sx={{ borderRadius: '16px' }}
+                />
+                <Skeleton
+                  variant="rectangular"
+                  height={250}
+                  sx={{ borderRadius: '16px' }}
+                />
+                <Skeleton
+                  variant="rectangular"
+                  height={200}
+                  sx={{ borderRadius: '16px' }}
+                />
               </Stack>
             </Grid>
           </Grid>
@@ -208,7 +273,12 @@ export const BookingDetailPage = () => {
   if (!booking) {
     return (
       <AppDashboardLayout>
-        <Stack spacing={'20px'} alignItems="center" justifyContent="center" sx={{ minHeight: 400 }}>
+        <Stack
+          spacing={'20px'}
+          alignItems="center"
+          justifyContent="center"
+          sx={{ minHeight: 400 }}
+        >
           <Typography sx={{ fontSize: pxToRem(16), color: '#6B7280' }}>
             Booking not found
           </Typography>
@@ -384,7 +454,9 @@ export const BookingDetailPage = () => {
               label: 'Trip Status',
               value: displayStatus,
               valueColor: statusColor,
-              pulse: booking.status === 'in_progress' || booking.status === 'en_route',
+              pulse:
+                booking.status === 'in_progress' ||
+                booking.status === 'en_route',
             },
             {
               icon: (
@@ -395,7 +467,9 @@ export const BookingDetailPage = () => {
                 />
               ),
               label: 'Total Fare',
-              value: formatCurrency(booking.final_fare ?? booking.estimated_fare),
+              value: formatCurrency(
+                booking.final_fare ?? booking.estimated_fare
+              ),
             },
             {
               icon: (
@@ -650,7 +724,11 @@ export const BookingDetailPage = () => {
                 <PersonCard
                   initials="—"
                   initialsColor="#16A34A"
-                  name={booking.assistance_level ? formatStatus(booking.assistance_level) : 'Not Required'}
+                  name={
+                    booking.assistance_level
+                      ? formatStatus(booking.assistance_level)
+                      : 'Not Required'
+                  }
                 />
               </InfoCard>
             </Stack>
@@ -668,15 +746,20 @@ export const BookingDetailPage = () => {
                 destinationLat={booking.destination_latitude}
                 destinationLng={booking.destination_longitude}
               />
-              <TripTimeline
-                entries={timelineEntries}
-                adminNotes={adminNotes}
-              />
+              <TripTimeline entries={timelineEntries} adminNotes={adminNotes} />
               <FareBreakdown
                 baseFare={formatCurrency(booking.fare_breakdown?.base_fare)}
-                careAssistantFee={formatCurrency(booking.fare_breakdown?.insurance_gateway_fee)}
-                platformFee={formatCurrency(booking.fare_breakdown?.surcharges_capped)}
-                totalAmount={formatCurrency(booking.fare_breakdown?.total_fare ?? booking.final_fare ?? booking.estimated_fare)}
+                careAssistantFee={formatCurrency(
+                  booking.fare_breakdown?.insurance_gateway_fee
+                )}
+                platformFee={formatCurrency(
+                  booking.fare_breakdown?.surcharges_capped
+                )}
+                totalAmount={formatCurrency(
+                  booking.fare_breakdown?.total_fare ??
+                    booking.final_fare ??
+                    booking.estimated_fare
+                )}
                 paymentMethod={booking.fare_breakdown?.payment_method || '—'}
               />
             </Stack>

@@ -3,11 +3,12 @@ import { resolveRoute, ROUTES } from '../../../../../constants';
 import { listSupportTickets } from '../../../../../services';
 import { SupportTicketListPayload } from '../../../../../types';
 
-export const useListSupportTickets = (
-  payload: SupportTicketListPayload
-) => {
+export const useListSupportTickets = (payload: SupportTicketListPayload) => {
   return useQuery({
-    queryKey: [resolveRoute(ROUTES.listSupportTickets), JSON.stringify(payload)],
+    queryKey: [
+      resolveRoute(ROUTES.listSupportTickets),
+      JSON.stringify(payload),
+    ],
     queryFn: () => listSupportTickets(payload).then((res) => res.data),
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {

@@ -7,10 +7,7 @@ export const useGetFleetApplications = (
   payload: FleetApplicationListPayload
 ) => {
   return useQuery({
-    queryKey: [
-      resolveRoute(ROUTES.fleetApplications),
-      JSON.stringify(payload),
-    ],
+    queryKey: [resolveRoute(ROUTES.fleetApplications), JSON.stringify(payload)],
     queryFn: () => getFleetApplications(payload).then((res) => res.data),
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {

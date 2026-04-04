@@ -86,7 +86,11 @@ export const LiveRouteCard = ({
   destinationLng,
 }: LiveRouteCardProps) => {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-  const hasCoordinates = pickupLat != null && pickupLng != null && destinationLat != null && destinationLng != null;
+  const hasCoordinates =
+    pickupLat != null &&
+    pickupLng != null &&
+    destinationLat != null &&
+    destinationLng != null;
 
   return (
     <InfoCard

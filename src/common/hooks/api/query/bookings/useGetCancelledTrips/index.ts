@@ -5,10 +5,7 @@ import { CancelledTripsPayload } from '../../../../../types';
 
 export const useGetCancelledTrips = (payload: CancelledTripsPayload) => {
   return useQuery({
-    queryKey: [
-      resolveRoute(ROUTES.getCancelledTrips),
-      JSON.stringify(payload),
-    ],
+    queryKey: [resolveRoute(ROUTES.getCancelledTrips), JSON.stringify(payload)],
     queryFn: () => getCancelledTrips(payload).then((res) => res.data),
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {

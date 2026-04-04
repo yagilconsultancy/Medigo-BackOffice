@@ -30,9 +30,7 @@ export const useDisciplinaryApi = () => {
         }
       },
       async () => {
-        toast.error(
-          'An error occurred while creating the disciplinary action'
-        );
+        toast.error('An error occurred while creating the disciplinary action');
       }
     );
 
@@ -84,9 +82,7 @@ export const useDisciplinaryApi = () => {
         }
       },
       async () => {
-        toast.error(
-          'An error occurred while updating the disciplinary action'
-        );
+        toast.error('An error occurred while updating the disciplinary action');
       }
     );
 

@@ -5,10 +5,7 @@ import { ScheduledTripsPayload } from '../../../../../types';
 
 export const useGetScheduledTrips = (payload: ScheduledTripsPayload) => {
   return useQuery({
-    queryKey: [
-      resolveRoute(ROUTES.getScheduledTrips),
-      JSON.stringify(payload),
-    ],
+    queryKey: [resolveRoute(ROUTES.getScheduledTrips), JSON.stringify(payload)],
     queryFn: () => getScheduledTrips(payload).then((res) => res.data),
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {

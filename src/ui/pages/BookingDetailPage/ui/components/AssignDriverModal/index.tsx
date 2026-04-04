@@ -130,11 +130,7 @@ export const AssignDriverModal = ({
                     },
                   }}
                 >
-                  <Radio
-                    checked={isSelected}
-                    size="small"
-                    sx={{ p: 0 }}
-                  />
+                  <Radio checked={isSelected} size="small" sx={{ p: 0 }} />
                   <Box
                     sx={{
                       width: 36,
@@ -175,9 +171,7 @@ export const AssignDriverModal = ({
                         {driver.name}
                       </Typography>
                       <RowStack spacing={'2px'}>
-                        <StarIcon
-                          sx={{ fontSize: 12, color: '#F59E0B' }}
-                        />
+                        <StarIcon sx={{ fontSize: 12, color: '#F59E0B' }} />
                         <Typography
                           sx={{
                             fontWeight: 600,

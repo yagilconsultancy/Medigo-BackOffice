@@ -750,8 +750,9 @@ export interface UpdateVehicleCategoryPayload extends VehicleCategoryConfigUpdat
 export type ApiVehicleKpiResponse = ApiResponse<VehicleKPIs>;
 export type ApiVehicleDocumentOverviewResponse =
   ApiResponse<VehicleDocumentOverview>;
-export type ApiVehicleCategoryListResponse =
-  ApiResponse<VehicleCategoryConfigResponse[]>;
+export type ApiVehicleCategoryListResponse = ApiResponse<
+  VehicleCategoryConfigResponse[]
+>;
 export type ApiVehicleCompositionResponse =
   ApiResponse<VehicleCategoryFleetComposition>;
 export type FleetVehiclePaginatedResponse =
@@ -760,8 +761,9 @@ export type FleetVehicleProfilesPaginatedResponse =
   ApiPaginatedResponseData<VehicleProfileResponse>;
 export type ApiVehicleDetailResponse = ApiResponse<VehicleDetailResponse>;
 export type ApiVehicleResponse = ApiResponse<VehicleResponse>;
-export type ApiVehicleDocumentListResponse =
-  ApiResponse<VehicleDocumentResponse[]>;
+export type ApiVehicleDocumentListResponse = ApiResponse<
+  VehicleDocumentResponse[]
+>;
 export type ApiVehicleDocumentUploadResponse =
   ApiResponse<VehicleDocumentUploadResponse>;
 export type ApiVehicleCategoryResponse =

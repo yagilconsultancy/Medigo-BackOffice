@@ -5,8 +5,7 @@ import { getFleetVehicleDocuments } from '../../../../../services';
 export const useGetFleetVehicleDocuments = (vehicleId: string) => {
   return useQuery({
     queryKey: [resolveRoute(ROUTES.getFleetVehicleDocuments, vehicleId)],
-    queryFn: () =>
-      getFleetVehicleDocuments(vehicleId).then((res) => res.data),
+    queryFn: () => getFleetVehicleDocuments(vehicleId).then((res) => res.data),
     enabled: !!vehicleId,
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {

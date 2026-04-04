@@ -154,7 +154,15 @@ export const GridTable = <T extends GridRow>({
     };
 
     void loadData();
-  }, [paginationModel, sortModel, fetchData, data, disableAutoPagination, externalTotalRows, isFetchingData]);
+  }, [
+    paginationModel,
+    sortModel,
+    fetchData,
+    data,
+    disableAutoPagination,
+    externalTotalRows,
+    isFetchingData,
+  ]);
 
   return (
     <DataGrid<T>

@@ -34,9 +34,7 @@ export const useFleetVehiclesApi = () => {
   const doScheduleMaintenance = useScheduleVehicleMaintenance();
   const doUpdateCategory = useUpdateVehicleCategory();
 
-  const createVehicle = async (
-    payload: VehicleCreate
-  ): Promise<boolean> => {
+  const createVehicle = async (payload: VehicleCreate): Promise<boolean> => {
     let success = false;
 
     await tryExecute(

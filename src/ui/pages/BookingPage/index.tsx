@@ -11,7 +11,12 @@ import {
   RowStack,
   StyledImage,
 } from '../../modules/components';
-import { pxToRem, useGetAllBookings, useApproveBooking, useDeclineBooking } from '../../../common';
+import {
+  pxToRem,
+  useGetAllBookings,
+  useApproveBooking,
+  useDeclineBooking,
+} from '../../../common';
 import { RideResponse } from '../../../common/types';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { EmptyState } from '../../modules/blocks';
@@ -50,7 +55,9 @@ export const BookingPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [pageSize] = useState(10);
   const [page, setPage] = useState(1);
-  const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(
+    null
+  );
   const [openApprove, setOpenApprove] = useState<boolean>(false);
   const [openDecline, setOpenDecline] = useState<boolean>(false);
   const [openDetail, setOpenDetail] = useState<boolean>(false);
@@ -72,9 +79,21 @@ export const BookingPage = () => {
     limit: pageSize,
   });
   const allCountQuery = useGetAllBookings({ page: 1, limit: 1 });
-  const pendingCountQuery = useGetAllBookings({ status: 'pending', page: 1, limit: 1 });
-  const approvedCountQuery = useGetAllBookings({ status: 'approved', page: 1, limit: 1 });
-  const declinedCountQuery = useGetAllBookings({ status: 'declined', page: 1, limit: 1 });
+  const pendingCountQuery = useGetAllBookings({
+    status: 'pending',
+    page: 1,
+    limit: 1,
+  });
+  const approvedCountQuery = useGetAllBookings({
+    status: 'approved',
+    page: 1,
+    limit: 1,
+  });
+  const declinedCountQuery = useGetAllBookings({
+    status: 'declined',
+    page: 1,
+    limit: 1,
+  });
 
   const bookingsData = bookingsQuery.data;
 
@@ -93,7 +112,7 @@ export const BookingPage = () => {
     if (!bookingsData?.data?.length) return [];
     return bookingsData.data.map((ride: RideResponse, index: number) => ({
       id: ride.id,
-      bookingId: `BK-${String((bookingsData.total ?? 0) - ((bookingsData.page - 1) * (bookingsData.limit ?? 10)) - index + 20484).padStart(5, '0')}`,
+      bookingId: `BK-${String((bookingsData.total ?? 0) - (bookingsData.page - 1) * (bookingsData.limit ?? 10) - index + 20484).padStart(5, '0')}`,
       patient: ride.facility_name || ride.rider_id.slice(0, 8),
       pickupLocation: ride.pickup_address,
       destination: ride.destination_address,
@@ -103,10 +122,26 @@ export const BookingPage = () => {
   }, [bookingsData]);
 
   const statusFilter = [
-    { text: 'All', count: allCountQuery.data?.total ?? 0, active: activeFilter === 'All' },
-    { text: 'Pending', count: pendingCountQuery.data?.total ?? 0, active: activeFilter === 'Pending' },
-    { text: 'Approved', count: approvedCountQuery.data?.total ?? 0, active: activeFilter === 'Approved' },
-    { text: 'Declined', count: declinedCountQuery.data?.total ?? 0, active: activeFilter === 'Declined' },
+    {
+      text: 'All',
+      count: allCountQuery.data?.total ?? 0,
+      active: activeFilter === 'All',
+    },
+    {
+      text: 'Pending',
+      count: pendingCountQuery.data?.total ?? 0,
+      active: activeFilter === 'Pending',
+    },
+    {
+      text: 'Approved',
+      count: approvedCountQuery.data?.total ?? 0,
+      active: activeFilter === 'Approved',
+    },
+    {
+      text: 'Declined',
+      count: declinedCountQuery.data?.total ?? 0,
+      active: activeFilter === 'Declined',
+    },
   ];
 
   const handleOpenApprove = (booking: BookingRow) => {

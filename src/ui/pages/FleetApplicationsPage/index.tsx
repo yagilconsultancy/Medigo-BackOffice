@@ -83,7 +83,8 @@ export const FleetApplicationsPage = () => {
     useFleetApplicationsApi();
 
   const applications = useMemo<FleetApplicationRow[]>(() => {
-    if (!applicationsList?.success || !applicationsList?.data?.length) return [];
+    if (!applicationsList?.success || !applicationsList?.data?.length)
+      return [];
     return applicationsList.data.map((item) => ({
       id: item.id,
       appId: `APP-${item.id.slice(-4).toUpperCase()}`,
@@ -135,13 +136,10 @@ export const FleetApplicationsPage = () => {
     },
   ];
 
-  const handleCardClick = useCallback(
-    (application: FleetApplicationRow) => {
-      setSelectedApplication(application);
-      setModalOpen(true);
-    },
-    []
-  );
+  const handleCardClick = useCallback((application: FleetApplicationRow) => {
+    setSelectedApplication(application);
+    setModalOpen(true);
+  }, []);
 
   const openActionModal = useCallback(
     (type: FleetActionType, application: FleetApplicationRow) => {

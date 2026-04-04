@@ -5,7 +5,10 @@ import { BroadcastListPayload } from '../../../../../types';
 
 export const useListSystemBroadcasts = (payload: BroadcastListPayload) => {
   return useQuery({
-    queryKey: [resolveRoute(ROUTES.listSystemBroadcasts), JSON.stringify(payload)],
+    queryKey: [
+      resolveRoute(ROUTES.listSystemBroadcasts),
+      JSON.stringify(payload),
+    ],
     queryFn: () => listSystemBroadcasts(payload).then((res) => res.data),
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {

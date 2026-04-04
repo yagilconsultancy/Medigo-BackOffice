@@ -30,7 +30,8 @@ export const ROUTES_SPEC = {
   getPendingRides: `/${API_VERSION}/rides/admin/rides/pending`,
 
   // Admin directly assign driver to a ride
-  adminAssignDriver: (rideId: string) => `/${API_VERSION}/rides/admin/rides/${rideId}/assign-driver`,
+  adminAssignDriver: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/rides/${rideId}/assign-driver`,
 
   // ====================== ADMIN BOOKING MANAGEMENT ======================
 
@@ -56,31 +57,40 @@ export const ROUTES_SPEC = {
   getCancelledTripsKpis: `/${API_VERSION}/rides/admin/bookings/cancelled/kpis`,
 
   // Get full booking detail (with notes, timeline, fare, etc.)
-  getBookingDetail: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}`,
+  getBookingDetail: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}`,
 
   // Approve a booking (REQUESTED → CONFIRMED)
-  approveBooking: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/approve`,
+  approveBooking: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}/approve`,
 
   // Decline a booking
-  declineBooking: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/decline`,
+  declineBooking: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}/decline`,
 
   // Assign driver to a booking
-  assignDriverToBooking: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/assign-driver`,
+  assignDriverToBooking: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}/assign-driver`,
 
   // Reassign driver on an active booking
-  reassignDriver: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/reassign-driver`,
+  reassignDriver: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}/reassign-driver`,
 
   // Get list of available drivers for assignment
-  getAvailableDrivers: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/available-drivers`,
+  getAvailableDrivers: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}/available-drivers`,
 
   // Admin cancel a trip
-  adminCancelTrip: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/cancel`,
+  adminCancelTrip: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}/cancel`,
 
   // Get all admin notes for a booking
-  getBookingNotes: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/notes`,
+  getBookingNotes: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}/notes`,
 
   // Add a new admin note to a booking
-  addBookingNote: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/notes`,
+  addBookingNote: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}/notes`,
 
   // ====================== ADMIN ANALYTICS ======================
 
@@ -125,16 +135,20 @@ export const ROUTES_SPEC = {
   createIncident: `/${API_VERSION}/rides/admin/incidents`,
 
   // Get incident detail
-  getIncidentDetail: (incidentId: string) => `/${API_VERSION}/rides/admin/incidents/${incidentId}`,
+  getIncidentDetail: (incidentId: string) =>
+    `/${API_VERSION}/rides/admin/incidents/${incidentId}`,
 
   // Update incident status
-  updateIncidentStatus: (incidentId: string) => `/${API_VERSION}/rides/admin/incidents/${incidentId}/status`,
+  updateIncidentStatus: (incidentId: string) =>
+    `/${API_VERSION}/rides/admin/incidents/${incidentId}/status`,
 
   // Get incident notes
-  getIncidentNotes: (incidentId: string) => `/${API_VERSION}/rides/admin/incidents/${incidentId}/notes`,
+  getIncidentNotes: (incidentId: string) =>
+    `/${API_VERSION}/rides/admin/incidents/${incidentId}/notes`,
 
   // Add note to incident
-  addIncidentNote: (incidentId: string) => `/${API_VERSION}/rides/admin/incidents/${incidentId}/notes`,
+  addIncidentNote: (incidentId: string) =>
+    `/${API_VERSION}/rides/admin/incidents/${incidentId}/notes`,
 
   // Alert KPIs
   getAlertKpis: `/${API_VERSION}/rides/admin/alerts/kpis`,
@@ -143,13 +157,16 @@ export const ROUTES_SPEC = {
   getAlertFeed: `/${API_VERSION}/rides/admin/alerts/feed`,
 
   // Get single alert detail
-  getAlertDetail: (alertId: string) => `/${API_VERSION}/rides/admin/alerts/${alertId}`,
+  getAlertDetail: (alertId: string) =>
+    `/${API_VERSION}/rides/admin/alerts/${alertId}`,
 
   // Acknowledge an alert
-  acknowledgeAlert: (alertId: string) => `/${API_VERSION}/rides/admin/alerts/${alertId}/acknowledge`,
+  acknowledgeAlert: (alertId: string) =>
+    `/${API_VERSION}/rides/admin/alerts/${alertId}/acknowledge`,
 
   // Resolve an alert
-  resolveAlert: (alertId: string) => `/${API_VERSION}/rides/admin/alerts/${alertId}/resolve`,
+  resolveAlert: (alertId: string) =>
+    `/${API_VERSION}/rides/admin/alerts/${alertId}/resolve`,
 
   // Investigation KPIs
   getInvestigationKpis: `/${API_VERSION}/rides/admin/investigations/kpis`,
@@ -158,25 +175,32 @@ export const ROUTES_SPEC = {
   listInvestigations: `/${API_VERSION}/rides/admin/investigations`,
 
   // Get investigation detail
-  getInvestigationDetail: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}`,
+  getInvestigationDetail: (invId: string) =>
+    `/${API_VERSION}/rides/admin/investigations/${invId}`,
 
   // Assign investigator
-  assignInvestigator: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/assign`,
+  assignInvestigator: (invId: string) =>
+    `/${API_VERSION}/rides/admin/investigations/${invId}/assign`,
 
   // Update investigation status
-  updateInvestigationStatus: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/status`,
+  updateInvestigationStatus: (invId: string) =>
+    `/${API_VERSION}/rides/admin/investigations/${invId}/status`,
 
   // Update investigation progress
-  updateInvestigationProgress: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/progress`,
+  updateInvestigationProgress: (invId: string) =>
+    `/${API_VERSION}/rides/admin/investigations/${invId}/progress`,
 
   // Close investigation
-  closeInvestigation: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/close`,
+  closeInvestigation: (invId: string) =>
+    `/${API_VERSION}/rides/admin/investigations/${invId}/close`,
 
   // Get investigation notes
-  getInvestigationNotes: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/notes`,
+  getInvestigationNotes: (invId: string) =>
+    `/${API_VERSION}/rides/admin/investigations/${invId}/notes`,
 
   // Add investigation note
-  addInvestigationNote: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/notes`,
+  addInvestigationNote: (invId: string) =>
+    `/${API_VERSION}/rides/admin/investigations/${invId}/notes`,
 
   // Disciplinary KPIs
   getDisciplinaryKpis: `/${API_VERSION}/rides/admin/disciplinary/kpis`,
@@ -188,16 +212,20 @@ export const ROUTES_SPEC = {
   createDisciplinaryAction: `/${API_VERSION}/rides/admin/disciplinary`,
 
   // Get disciplinary detail
-  getDisciplinaryDetail: (actionId: string) => `/${API_VERSION}/rides/admin/disciplinary/${actionId}`,
+  getDisciplinaryDetail: (actionId: string) =>
+    `/${API_VERSION}/rides/admin/disciplinary/${actionId}`,
 
   // Get disciplinary reason
-  getDisciplinaryReason: (actionId: string) => `/${API_VERSION}/rides/admin/disciplinary/${actionId}/reason`,
+  getDisciplinaryReason: (actionId: string) =>
+    `/${API_VERSION}/rides/admin/disciplinary/${actionId}/reason`,
 
   // Reinstate disciplinary action
-  reinstateDisciplinaryAction: (actionId: string) => `/${API_VERSION}/rides/admin/disciplinary/${actionId}/reinstate`,
+  reinstateDisciplinaryAction: (actionId: string) =>
+    `/${API_VERSION}/rides/admin/disciplinary/${actionId}/reinstate`,
 
   // Toggle collapse disciplinary
-  toggleCollapseDisciplinary: (actionId: string) => `/${API_VERSION}/rides/admin/disciplinary/${actionId}/collapse`,
+  toggleCollapseDisciplinary: (actionId: string) =>
+    `/${API_VERSION}/rides/admin/disciplinary/${actionId}/collapse`,
 
   // Fleet Application
   getFleetApplicationsKpi: `/${API_VERSION}/users/admin/fleet/applications/kpis`,

@@ -16,9 +16,7 @@ export const getInvestigationKpis = async () => {
   >(resolveRoute(ROUTES.getInvestigationKpis));
 };
 
-export const listInvestigations = async (
-  payload: InvestigationListPayload
-) => {
+export const listInvestigations = async (payload: InvestigationListPayload) => {
   return await getApiClient().get<
     ApiInvestigationListResponseWrapped,
     AxiosResponse<ApiInvestigationListResponseWrapped>
