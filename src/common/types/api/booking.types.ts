@@ -1,3 +1,91 @@
+import { ApiResponse, ApiPaginatedResponseData } from './common';
+
+// ====================== ADMIN RIDES ======================
+export interface RideResponse {
+  id: string;
+  rider_id: string;
+  driver_id?: string | null;
+  business_id?: string | null;
+  ride_type: string;
+  trip_type: string;
+  trip_structure: string;
+  pickup_address: string;
+  destination_address: string;
+  scheduled_at: string;
+  status: string;
+  estimated_distance_miles?: number | null;
+  estimated_duration_minutes?: number | null;
+  estimated_fare?: number | null;
+  final_fare?: number | null;
+  special_instructions?: string | null;
+  visit_type?: string | null;
+  facility_name?: string | null;
+  booking_channel?: string;
+  facility_id?: string | null;
+  use_highway_407?: boolean;
+  highway_407_route?: string | null;
+  is_dialysis_trip?: boolean;
+  created_at: string;
+}
+
+export interface AdminAssignDriverRequest {
+  driver_id: string;
+}
+
+export interface CancelTripRequest {
+  reason: string;
+}
+
+// ====================== RIDE/BOOKING PAYLOADS ======================
+export interface AllRidesPayload {
+  status?: string | null;
+  ride_type?: string | null;
+  page?: number;
+  limit?: number;
+}
+
+export interface PendingRidesPayload {
+  page?: number;
+  limit?: number;
+}
+
+export interface AllBookingsPayload {
+  status?: string | null;
+  ride_type?: string | null;
+  search?: string | null;
+  page?: number;
+  limit?: number;
+}
+
+export interface PendingBookingsPayload {
+  page?: number;
+  limit?: number;
+}
+
+export interface ScheduledTripsPayload {
+  page?: number;
+  limit?: number;
+}
+
+export interface CancelledTripsPayload {
+  page?: number;
+  limit?: number;
+}
+
+// ====================== WRAPPED RESPONSE ALIASES ======================
+export type ApiRideListResponse = ApiPaginatedResponseData<RideResponse>;
+export type ApiPendingBookingListResponse = ApiPaginatedResponseData<PendingBookingResponse>;
+export type ApiScheduledTripListResponse = ApiPaginatedResponseData<ScheduledTripResponse>;
+export type ApiCancelledTripListResponse = ApiPaginatedResponseData<CancelledTripResponse>;
+export type ApiBookingDetailResponse = ApiResponse<AdminBookingDetailResponse>;
+export type ApiPendingBookingsKpisResponse = ApiResponse<PendingBookingsKPIs>;
+export type ApiScheduledTripsKpisResponse = ApiResponse<ScheduledTripsKPIs>;
+export type ApiCancelledTripsKpisResponse = ApiResponse<CancelledTripsKPIs>;
+export type ApiAvailableDriversResponse = ApiResponse<AvailableDriverResponse[]>;
+export type ApiBookingNotesResponse = ApiResponse<AdminNoteResponse[]>;
+export type ApiBookingNoteResponse = ApiResponse<AdminNoteResponse>;
+export type ApiRideActionResponse = ApiResponse<RideResponse>;
+
 // ====================== ADMIN BOOKING MANAGEMENT ======================
 export interface AdminBookingDetailResponse {
     id: string;

@@ -1,3 +1,92 @@
+import { ApiResponse } from './common';
+
+// ====================== INCIDENT/ALERT/INVESTIGATION/DISCIPLINARY PAYLOADS ======================
+export interface IncidentListPayload {
+  page?: number;
+  page_size?: number;
+  incident_type?: string | null;
+  status?: string | null;
+  search?: string | null;
+}
+
+export interface AlertFeedPayload {
+  page?: number;
+  page_size?: number;
+  category?: string | null;
+  severity?: string | null;
+  status?: string | null;
+}
+
+export interface InvestigationListPayload {
+  page?: number;
+  page_size?: number;
+  priority?: string | null;
+  status?: string | null;
+  search?: string | null;
+}
+
+export interface DisciplinaryListPayload {
+  page?: number;
+  page_size?: number;
+  status?: string | null;
+  search?: string | null;
+}
+
+// ====================== LIST RESPONSE SHAPES ======================
+export interface IncidentListResponse {
+  items: IncidentResponse[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface AlertListResponse {
+  items: SafetyAlertResponse[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface InvestigationListResponse {
+  items: InvestigationResponse[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface DisciplinaryListResponse {
+  items: DisciplinaryActionResponse[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface DisciplinaryReasonResponse {
+  reason?: string | null;
+}
+
+// ====================== WRAPPED RESPONSE ALIASES ======================
+export type ApiIncidentKpisResponse = ApiResponse<IncidentKPIs>;
+export type ApiIncidentListResponseWrapped = ApiResponse<IncidentListResponse>;
+export type ApiIncidentResponse = ApiResponse<IncidentResponse>;
+export type ApiIncidentNotesResponse = ApiResponse<IncidentNoteResponse[]>;
+export type ApiIncidentNoteResponse = ApiResponse<IncidentNoteResponse>;
+
+export type ApiAlertKpisResponse = ApiResponse<AlertKPIs>;
+export type ApiAlertListResponseWrapped = ApiResponse<AlertListResponse>;
+export type ApiAlertResponse = ApiResponse<SafetyAlertResponse>;
+
+export type ApiInvestigationKpisResponse = ApiResponse<InvestigationKPIs>;
+export type ApiInvestigationListResponseWrapped = ApiResponse<InvestigationListResponse>;
+export type ApiInvestigationResponse = ApiResponse<InvestigationResponse>;
+export type ApiInvestigationNotesResponse = ApiResponse<InvestigationNoteResponse[]>;
+export type ApiInvestigationNoteResponse = ApiResponse<InvestigationNoteResponse>;
+
+export type ApiDisciplinaryKpisResponse = ApiResponse<DisciplinaryKPIs>;
+export type ApiDisciplinaryListResponseWrapped = ApiResponse<DisciplinaryListResponse>;
+export type ApiDisciplinaryResponse = ApiResponse<DisciplinaryActionResponse>;
+export type ApiDisciplinaryReasonResponseWrapped = ApiResponse<DisciplinaryReasonResponse>;
+
 // ====================== ADMIN INCIDENTS ======================
 export interface IncidentKPIs {
     total: number;
@@ -178,16 +267,3 @@ export interface CreateDisciplinaryActionRequest {
     reason?: string | null;
 }
 
-// ====================== ADMIN ANALYTICS ======================
-export interface DashboardKPIs {
-    total_bookings: KPIChange;
-    active_clients: KPIChange;
-    registered_facilities: KPIChange;
-    revenue: KPIChange;
-}
-
-export interface KPIChange {
-    value: number;
-    change_percent: number;
-    trend: string;
-}

@@ -136,8 +136,6 @@ export const ROUTES_SPEC = {
   // Add note to incident
   addIncidentNote: (incidentId: string) => `/${API_VERSION}/rides/admin/incidents/${incidentId}/notes`,
 
-  // ====================== ADMIN SAFETY ALERTS ======================
-
   // Alert KPIs
   getAlertKpis: `/${API_VERSION}/rides/admin/alerts/kpis`,
 
@@ -152,8 +150,6 @@ export const ROUTES_SPEC = {
 
   // Resolve an alert
   resolveAlert: (alertId: string) => `/${API_VERSION}/rides/admin/alerts/${alertId}/resolve`,
-
-  // ====================== ADMIN INVESTIGATIONS ======================
 
   // Investigation KPIs
   getInvestigationKpis: `/${API_VERSION}/rides/admin/investigations/kpis`,
@@ -181,8 +177,6 @@ export const ROUTES_SPEC = {
 
   // Add investigation note
   addInvestigationNote: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/notes`,
-
-  // ====================== ADMIN DISCIPLINARY ACTIONS ======================
 
   // Disciplinary KPIs
   getDisciplinaryKpis: `/${API_VERSION}/rides/admin/disciplinary/kpis`,

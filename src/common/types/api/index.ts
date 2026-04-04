@@ -2,4 +2,7 @@ export * from './common';
 export * from './user';
 export * from './auth.types';
 export * from './analytics.types';
+export * from './booking.types';
+export * from './incident.types';
 export * from './fleet.types';
+export * from './notification.types';

@@ -1,3 +1,5 @@
+import { ApiResponse } from './common';
+
 export interface BroadcastKPIs {
   total_sent?: number;
   category_1_count?: number;
@@ -115,29 +117,43 @@ export interface CreateContactLogRequest {
   outcome: string;
 }
 
-export interface StandardResponse<T = any> {
-  success: boolean;
-  message?: string | null;
-  data: T | null;
+// ─── Payloads ───────────────────────────────────────────────────────────────
+
+export interface BroadcastListPayload {
+  page?: number;
+  page_size?: number;
 }
 
-export interface PaginatedResponse<T> {
-  success: boolean;
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  total_pages: number;
+export interface SupportTicketListPayload {
+  status?: string | null;
+  search?: string | null;
+  page?: number;
+  page_size?: number;
 }
 
-export interface ValidationError {
-  loc: (string | number)[];
-  msg: string;
-  type: string;
-  input?: any;
-  ctx?: Record<string, any>;
+export interface ReopenTicketPayload {
+  ticketId: string;
 }
 
-export interface HTTPValidationError {
-  detail?: ValidationError[];
+export interface ResolveTicketPayload {
+  ticketId: string;
+  response?: string | null;
 }
+
+export interface ContactLogListPayload {
+  page?: number;
+  page_size?: number;
+}
+
+// ─── Wrapped Response Aliases ───────────────────────────────────────────────
+
+export type ApiBroadcastKpisResponse = ApiResponse<BroadcastKPIs>;
+export type ApiBroadcastListResponse = ApiResponse<BroadcastListResponse>;
+export type ApiBroadcastResponse = ApiResponse<BroadcastResponse>;
+export type ApiSupportKpisResponse = ApiResponse<SupportKPIs>;
+export type ApiSupportTicketListResponse =
+  ApiResponse<SupportTicketListResponse>;
+export type ApiSupportTicketActionResponse = ApiResponse<Record<string, any>>;
+export type ApiContactKpisResponse = ApiResponse<ContactLogKPIs>;
+export type ApiContactLogListResponse = ApiResponse<ContactLogListResponse>;
+export type ApiContactLogResponse = ApiResponse<ContactLogItem>;
