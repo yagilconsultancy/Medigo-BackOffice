@@ -62,8 +62,9 @@ export const CancelledTripsPage = () => {
       date: dayjs(item.scheduled_at).format('MMM D, YYYY'),
       reason: item.cancellation_reason || 'Unknown',
       cancelledBy: item.cancelled_by_name || 'Unknown',
-      refund: (item.refund_status?.charAt(0).toUpperCase() +
-        (item.refund_status?.slice(1) || '')) as BookingRow['status'],
+      refund: (item.refund_status
+        ? item.refund_status.charAt(0).toUpperCase() + item.refund_status.slice(1)
+        : 'None') as BookingRow['status'],
       amount:
         item.refund_amount != null
           ? `$${item.refund_amount.toFixed(2)}`

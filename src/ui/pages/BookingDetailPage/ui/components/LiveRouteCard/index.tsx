@@ -70,14 +70,23 @@ type LiveRouteCardProps = {
   pickupAddress: string;
   destinationAddress: string;
   tripProgress: number;
+  pickupLat?: number | null;
+  pickupLng?: number | null;
+  destinationLat?: number | null;
+  destinationLng?: number | null;
 };
 
 export const LiveRouteCard = ({
   pickupAddress,
   destinationAddress,
   tripProgress,
+  pickupLat,
+  pickupLng,
+  destinationLat,
+  destinationLng,
 }: LiveRouteCardProps) => {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+  const hasCoordinates = pickupLat != null && pickupLng != null && destinationLat != null && destinationLng != null;
 
   return (
     <InfoCard
@@ -166,12 +175,12 @@ export const LiveRouteCard = ({
             height: 235,
           }}
         >
-          {apiKey ? (
+          {apiKey && hasCoordinates ? (
             <AppGoogleMapsProvider apiKey={apiKey}>
               <AppGoogleMap
                 markerPositions={[
-                  { lat: 43.6489, lng: -79.3847 },
-                  { lat: 43.6596, lng: -79.3895 },
+                  { lat: pickupLat!, lng: pickupLng! },
+                  { lat: destinationLat!, lng: destinationLng! },
                 ]}
                 mapContainerStyle={{ width: '100%', height: '235px' }}
                 showDirections={false}

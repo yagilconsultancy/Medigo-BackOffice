@@ -1,7 +1,10 @@
 'use client';
 
-import { Box, Chip, Grid, Stack, Typography, alpha } from '@mui/material';
+import { useState } from 'react';
+import { Box, Chip, Grid, Skeleton, Stack, Typography, alpha } from '@mui/material';
 import { useParams } from 'next/navigation';
+import dayjs from 'dayjs';
+import { toast } from 'sonner';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppButton,
@@ -12,12 +15,20 @@ import {
 } from '../../modules/components';
 import { pxToRem } from '../../../common';
 import {
+  useGetBookingDetail,
+  useGetAvailableDrivers,
+  useAssignDriverToBooking,
+  useReassignDriver,
+} from '../../../common/hooks';
+import { AdminBookingDetailResponse, AvailableDriverResponse } from '../../../common/types';
+import {
   StatChip,
   InfoCard,
   PersonCard,
   LiveRouteCard,
   TripTimeline,
   FareBreakdown,
+  AssignDriverModal,
 } from './ui/components';
 import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined';
 import LoopIcon from '@mui/icons-material/Loop';
@@ -36,114 +47,193 @@ import driverIcon from './ui/assets/icons/driver-icon.svg';
 import careassistantIcon from './ui/assets/icons/careassistant-icon.svg';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 
-const bookingData = {
-  bookingId: 'BK-20491',
-  status: 'Pending' as const,
-  createdAt: 'Created Mar 9, 2026 · 08:22 AM',
-  scheduledAt: 'Scheduled Mar 9, 2026 · 09:00 AM',
-  stats: {
-    tripStatus: 'Pending Approval',
-    totalFare: '$23.64',
-    distance: '3.0 Km',
-    estDuration: '18 min',
-    pickedUpAt: '09:04 AM',
-    etaArrival: '09:22 AM',
-  },
-  serviceType: {
-    title: 'Transport + Care Assistant',
-    description: 'Driver + Care Assistant required',
-    driver: 'Assigned',
-    careAssistant: 'Assigned',
-  },
-  rider: {
-    initials: 'HM',
-    name: 'Helen Moore',
-    phone: '+1 416 555 0123',
-    email: 'claire.beaumont@email.com',
-    insurance: 'Manulife #ML-881234',
-    memberSince: 'Jan 2024',
-  },
-  driver: {
-    initials: 'LM',
-    name: 'Liam MacDonald',
-    rating: 4.8,
-    badge: 'On Trip',
-    badgeColor: '#374151',
-    phone: '+1 416 555 9944',
-    vehicle: '2022 Toyota Sienna WAV',
-    plate: 'BDNJ 148',
-    totalTrips: '1,204',
-  },
-  careAssistant: {
-    initials: 'ST',
-    initialsColor: '#16A34A',
-    name: 'Sophie Tremblay',
-    rating: 4.7,
-    phone: '+1 416 555 7731',
-    specialty: 'Mobility Support',
-    certs: 'PSW, First Aid',
-    assignments: '287',
-  },
-  route: {
-    pickup: '120 King St W, Toronto, ON',
-    destination: 'Toronto General Hospital',
-    tripProgress: 62,
-  },
-  timeline: [
-    { time: 'Mar 9 · 08:30 AM', label: 'Booking Confirmed', isCompleted: true },
-    { time: 'Mar 9 · 08:42 AM', label: 'Driver Assigned', isCompleted: true },
-    { time: 'Mar 9 · 08:55 AM', label: 'Driver En Route', isCompleted: true },
-    { time: 'Mar 9 · 09:04 AM', label: 'Rider Picked Up', isCompleted: true },
-    {
-      time: 'Mar 9 · 09:04 AM',
-      label: 'In Transit',
-      isCurrent: true,
-      isCompleted: false,
-    },
-    { time: 'ETA 09:22 AM', label: 'Destination Arrived', isCompleted: false },
-  ],
-  adminNotes: [
-    {
-      initial: 'S',
-      author: 'System',
-      time: '08:30 AM',
-      text: 'Booking auto-confirmed. Driver match found within 2 min.',
-    },
-    {
-      initial: 'D',
-      author: 'Dispatch',
-      time: '08:42 AM',
-      text: 'Driver Marcus Johnson assigned. Vehicle WAV-certified.',
-    },
-    {
-      initial: 'A',
-      author: 'Admin',
-      time: '08:58 AM',
-      text: 'Rider confirmed pickup ready. Wheelchair ramp requested.',
-    },
-  ],
-  fare: {
-    baseFare: '$15.50',
-    careAssistantFee: '$5.64',
-    platformFee: '$2.50',
-    totalAmount: '$23.64',
-    paymentMethod: 'Insurance Billed',
-  },
+const statusColorMap: Record<string, string> = {
+  pending: '#D97706',
+  requested: '#D97706',
+  approved: '#059669',
+  accepted: '#059669',
+  in_progress: '#2563EB',
+  completed: '#059669',
+  declined: '#DC2626',
+  cancelled: '#DC2626',
 };
 
-const statusColorMap = {
-  Pending: '#D97706',
-  Approved: '#059669',
-  Declined: '#DC2626',
+const formatStatus = (status: string) =>
+  status
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
+const getInitials = (name?: string | null) => {
+  if (!name) return '—';
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
+
+const formatCurrency = (amount?: number | null) => {
+  if (amount == null) return '—';
+  return `$${amount.toFixed(2)}`;
+};
+
+const getVehicleLabel = (d: AdminBookingDetailResponse) => {
+  const parts = [d.driver_vehicle_make, d.driver_vehicle_model, d.driver_vehicle_type].filter(Boolean);
+  return parts.length ? parts.join(' ') : undefined;
+};
+
+const getTripProgress = (d: AdminBookingDetailResponse) => {
+  if (d.status === 'completed' || d.status === 'dropped_off') return 100;
+  if (d.status === 'in_progress' || d.status === 'in_transit') return 60;
+  if (d.status === 'picked_up') return 40;
+  if (d.status === 'en_route') return 20;
+  return 0;
+};
+
+const getServiceTypeInfo = (d: AdminBookingDetailResponse) => {
+  const hasDriver = !!d.driver_name;
+  const hasCareAssistant = d.assistance_level && d.assistance_level !== 'none';
+  if (hasCareAssistant) {
+    return {
+      title: 'Transport + Care Assistant',
+      description: 'Driver + Care Assistant required',
+      driverStatus: hasDriver ? 'Assigned' : 'Unassigned',
+      careAssistantStatus: 'Required',
+    };
+  }
+  return {
+    title: 'Standard Transport',
+    description: 'Driver only',
+    driverStatus: hasDriver ? 'Assigned' : 'Unassigned',
+    careAssistantStatus: 'Not Required',
+  };
 };
 
 const statIconSize = { width: 14, height: 14 };
 
 export const BookingDetailPage = () => {
   const params = useParams();
-  const bookingId = (params?.id as string) || bookingData.bookingId;
-  const data = bookingData;
-  const statusColor = statusColorMap[data.status];
+  const id = (params?.id as string) || '';
+  const bookingQuery = useGetBookingDetail(id);
+  const driversQuery = useGetAvailableDrivers(id);
+  const assignDriverMutation = useAssignDriverToBooking();
+  const reassignDriverMutation = useReassignDriver();
+  const [openAssignDriver, setOpenAssignDriver] = useState(false);
+  const [openReassignDriver, setOpenReassignDriver] = useState(false);
+
+  const apiResponse = bookingQuery.data;
+  const booking = apiResponse && 'data' in apiResponse ? apiResponse.data : null;
+
+  const driversResponse = driversQuery.data;
+  const availableDrivers: AvailableDriverResponse[] =
+    driversResponse && 'data' in driversResponse ? driversResponse.data ?? [] : [];
+
+  const hasDriver = !!booking?.driver_id;
+
+  const handleAssignDriver = (driverId: string) => {
+    assignDriverMutation.mutate(
+      { rideId: id, driver_id: driverId },
+      {
+        onSuccess: () => {
+          toast.success('Driver assigned successfully');
+          setOpenAssignDriver(false);
+          bookingQuery.refetch();
+        },
+        onError: () => {
+          toast.error('Failed to assign driver');
+        },
+      }
+    );
+  };
+
+  const handleReassignDriver = (driverId: string) => {
+    reassignDriverMutation.mutate(
+      { rideId: id, driver_id: driverId },
+      {
+        onSuccess: () => {
+          toast.success('Driver reassigned successfully');
+          setOpenReassignDriver(false);
+          bookingQuery.refetch();
+        },
+        onError: () => {
+          toast.error('Failed to reassign driver');
+        },
+      }
+    );
+  };
+
+  if (bookingQuery.isLoading) {
+    return (
+      <AppDashboardLayout>
+        <Stack spacing={'20px'}>
+          <Skeleton variant="rectangular" height={28} width={300} sx={{ borderRadius: '8px' }} />
+          <RowStack justifyContent="space-between" width="100%">
+            <Stack spacing={'6px'}>
+              <Skeleton variant="rectangular" height={32} width={350} sx={{ borderRadius: '8px' }} />
+              <Skeleton variant="rectangular" height={18} width={450} sx={{ borderRadius: '8px' }} />
+            </Stack>
+            <RowStack spacing={'8px'}>
+              <Skeleton variant="rectangular" height={36} width={160} sx={{ borderRadius: '14px' }} />
+              <Skeleton variant="rectangular" height={36} width={130} sx={{ borderRadius: '14px' }} />
+            </RowStack>
+          </RowStack>
+          <RowStack spacing={'12px'} width="100%">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} variant="rectangular" height={60} sx={{ flex: 1, borderRadius: '12px' }} />
+            ))}
+          </RowStack>
+          <Grid container spacing={'20px'}>
+            <Grid size={{ sm: 12, lg: 3 }}>
+              <Stack spacing={'16px'}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} variant="rectangular" height={180} sx={{ borderRadius: '16px' }} />
+                ))}
+              </Stack>
+            </Grid>
+            <Grid size={{ sm: 12, lg: 9 }}>
+              <Stack spacing={'16px'}>
+                <Skeleton variant="rectangular" height={300} sx={{ borderRadius: '16px' }} />
+                <Skeleton variant="rectangular" height={250} sx={{ borderRadius: '16px' }} />
+                <Skeleton variant="rectangular" height={200} sx={{ borderRadius: '16px' }} />
+              </Stack>
+            </Grid>
+          </Grid>
+        </Stack>
+      </AppDashboardLayout>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <AppDashboardLayout>
+        <Stack spacing={'20px'} alignItems="center" justifyContent="center" sx={{ minHeight: 400 }}>
+          <Typography sx={{ fontSize: pxToRem(16), color: '#6B7280' }}>
+            Booking not found
+          </Typography>
+        </Stack>
+      </AppDashboardLayout>
+    );
+  }
+
+  const statusColor = statusColorMap[booking.status] || '#6B7280';
+  const displayStatus = formatStatus(booking.status);
+  const serviceInfo = getServiceTypeInfo(booking);
+
+  const timelineEntries = booking.timeline.map((entry, idx) => ({
+    time: dayjs(entry.timestamp).format('MMM D · hh:mm A'),
+    label: formatStatus(entry.to_status),
+    isCompleted: idx < booking.timeline.length - 1,
+    isCurrent: idx === booking.timeline.length - 1,
+  }));
+
+  const adminNotes = booking.admin_notes.map((note) => ({
+    initial: (note.author_name || note.author_type || 'S')[0].toUpperCase(),
+    author: note.author_name || formatStatus(note.author_type),
+    time: dayjs(note.created_at).format('hh:mm A'),
+    text: note.content,
+  }));
 
   return (
     <AppDashboardLayout>
@@ -152,7 +242,7 @@ export const BookingDetailPage = () => {
           breadcrumbsData={[
             { href: '/bookings', text: 'Booking Management' },
             { href: '/bookings', text: 'All Bookings' },
-            { href: '#', text: bookingId },
+            { href: '#', text: booking.id.slice(0, 8).toUpperCase() },
           ]}
         />
 
@@ -172,10 +262,10 @@ export const BookingDetailPage = () => {
                   padding: '4px 12px',
                 }}
               >
-                {bookingId}
+                {booking.id.slice(0, 8).toUpperCase()}
               </Typography>
               <Chip
-                label={data.status}
+                label={displayStatus}
                 sx={{
                   background: alpha(statusColor, 0.1),
                   color: statusColor,
@@ -195,7 +285,7 @@ export const BookingDetailPage = () => {
                   color: (theme) => theme.color.lightGrey,
                 }}
               >
-                {data.createdAt}
+                {`Created ${dayjs(booking.created_at).format('MMM D, YYYY · hh:mm A')}`}
               </Typography>
               <NavigateNextIcon sx={{ fontSize: 13, color: '#D1D5DB' }} />
               <Typography
@@ -206,7 +296,7 @@ export const BookingDetailPage = () => {
                   color: (theme) => theme.color.lightGrey,
                 }}
               >
-                {data.scheduledAt}
+                {`Scheduled ${dayjs(booking.scheduled_at).format('MMM D, YYYY · hh:mm A')}`}
               </Typography>
             </RowStack>
           </Stack>
@@ -232,21 +322,42 @@ export const BookingDetailPage = () => {
             >
               Assign Care Assistant
             </AppButton>
-            <AppButton
-              sx={{
-                background: (theme) => theme.palette.primary.main,
-                color: '#FFFFFF',
-                fontWeight: 600,
-                fontSize: pxToRem(12.5),
-                borderRadius: '14px',
-                '&:hover': {
-                  background: alpha('#2F6FED', 0.9),
-                },
-              }}
-              startIcon={<LoopIcon sx={{ fontSize: 13, color: '#FFFFFF' }} />}
-            >
-              Assign Driver
-            </AppButton>
+            {hasDriver ? (
+              <AppButton
+                sx={{
+                  background: '#FEF3C7',
+                  border: '0.67px solid #FDE68A',
+                  color: '#D97706',
+                  fontWeight: 600,
+                  fontSize: pxToRem(12.5),
+                  borderRadius: '14px',
+                  '&:hover': {
+                    background: alpha('#D97706', 0.12),
+                  },
+                }}
+                startIcon={<LoopIcon sx={{ fontSize: 13, color: '#D97706' }} />}
+                onClick={() => setOpenReassignDriver(true)}
+              >
+                Reassign Driver
+              </AppButton>
+            ) : (
+              <AppButton
+                sx={{
+                  background: (theme) => theme.palette.primary.main,
+                  color: '#FFFFFF',
+                  fontWeight: 600,
+                  fontSize: pxToRem(12.5),
+                  borderRadius: '14px',
+                  '&:hover': {
+                    background: alpha('#2F6FED', 0.9),
+                  },
+                }}
+                startIcon={<LoopIcon sx={{ fontSize: 13, color: '#FFFFFF' }} />}
+                onClick={() => setOpenAssignDriver(true)}
+              >
+                Assign Driver
+              </AppButton>
+            )}
             <Box
               sx={{
                 cursor: 'pointer',
@@ -271,9 +382,9 @@ export const BookingDetailPage = () => {
                 />
               ),
               label: 'Trip Status',
-              value: data.stats.tripStatus,
-              valueColor: '#ED8A2F',
-              pulse: true,
+              value: displayStatus,
+              valueColor: statusColor,
+              pulse: booking.status === 'in_progress' || booking.status === 'en_route',
             },
             {
               icon: (
@@ -284,7 +395,7 @@ export const BookingDetailPage = () => {
                 />
               ),
               label: 'Total Fare',
-              value: data.stats.totalFare,
+              value: formatCurrency(booking.final_fare ?? booking.estimated_fare),
             },
             {
               icon: (
@@ -295,14 +406,20 @@ export const BookingDetailPage = () => {
                 />
               ),
               label: 'Distance',
-              value: data.stats.distance,
+              value: booking.actual_distance_miles
+                ? `${booking.actual_distance_miles.toFixed(1)} mi`
+                : booking.estimated_distance_miles
+                  ? `${booking.estimated_distance_miles.toFixed(1)} mi`
+                  : '—',
             },
             {
               icon: (
                 <StyledImage src={timeIcon} alt="duration" {...statIconSize} />
               ),
               label: 'Est. Duration',
-              value: data.stats.estDuration,
+              value: booking.estimated_duration_minutes
+                ? `${booking.estimated_duration_minutes} min`
+                : '—',
             },
             {
               icon: (
@@ -313,7 +430,9 @@ export const BookingDetailPage = () => {
                 />
               ),
               label: 'Picked Up At',
-              value: data.stats.pickedUpAt,
+              value: booking.pickup_at
+                ? dayjs(booking.pickup_at).format('hh:mm A')
+                : '—',
             },
             {
               icon: (
@@ -324,7 +443,13 @@ export const BookingDetailPage = () => {
                 />
               ),
               label: 'ETA Arrival',
-              value: data.stats.etaArrival,
+              value: booking.dropoff_at
+                ? dayjs(booking.dropoff_at).format('hh:mm A')
+                : booking.estimated_duration_minutes && booking.scheduled_at
+                  ? dayjs(booking.scheduled_at)
+                      .add(booking.estimated_duration_minutes, 'minute')
+                      .format('hh:mm A')
+                  : '—',
             },
           ].map((chip) => (
             <StatChip key={chip.label} {...chip} />
@@ -384,7 +509,7 @@ export const BookingDetailPage = () => {
                             color: '#15803D',
                           }}
                         >
-                          {data.serviceType.title}
+                          {serviceInfo.title}
                         </Typography>
                         <Typography
                           sx={{
@@ -394,7 +519,7 @@ export const BookingDetailPage = () => {
                             color: '#4ADE80',
                           }}
                         >
-                          {data.serviceType.description}
+                          {serviceInfo.description}
                         </Typography>
                       </Stack>
                     </RowStack>
@@ -411,7 +536,7 @@ export const BookingDetailPage = () => {
                           />
                         ),
                         label: 'Driver',
-                        status: data.serviceType.driver,
+                        status: serviceInfo.driverStatus,
                       },
                       {
                         icon: (
@@ -423,7 +548,7 @@ export const BookingDetailPage = () => {
                           />
                         ),
                         label: 'Care Assistant',
-                        status: data.serviceType.careAssistant,
+                        status: serviceInfo.careAssistantStatus,
                       },
                     ].map((row) => (
                       <RowStack
@@ -480,12 +605,11 @@ export const BookingDetailPage = () => {
                 title="Rider Information"
               >
                 <PersonCard
-                  initials={data.rider.initials}
-                  name={data.rider.name}
-                  phone={data.rider.phone}
-                  email={data.rider.email}
-                  insurance={data.rider.insurance}
-                  memberSince={data.rider.memberSince}
+                  initials={getInitials(booking.rider_name)}
+                  name={booking.rider_name}
+                  rating={booking.rider_rating}
+                  phone={booking.rider_phone || undefined}
+                  totalTrips={booking.rider_trip_count?.toString()}
                 />
               </InfoCard>
 
@@ -502,15 +626,12 @@ export const BookingDetailPage = () => {
                 title="Driver Information"
               >
                 <PersonCard
-                  initials={data.driver.initials}
-                  name={data.driver.name}
-                  rating={data.driver.rating}
-                  badge={data.driver.badge}
-                  badgeColor={data.driver.badgeColor}
-                  phone={data.driver.phone}
-                  vehicle={data.driver.vehicle}
-                  plate={data.driver.plate}
-                  totalTrips={data.driver.totalTrips}
+                  initials={getInitials(booking.driver_name)}
+                  name={booking.driver_name || 'Unassigned'}
+                  rating={booking.driver_rating ?? undefined}
+                  phone={booking.driver_phone || undefined}
+                  vehicle={getVehicleLabel(booking)}
+                  plate={booking.driver_vehicle_plate || undefined}
                 />
               </InfoCard>
 
@@ -527,14 +648,9 @@ export const BookingDetailPage = () => {
                 title="Care Assistant"
               >
                 <PersonCard
-                  initials={data.careAssistant.initials}
-                  initialsColor={data.careAssistant.initialsColor}
-                  name={data.careAssistant.name}
-                  rating={data.careAssistant.rating}
-                  phone={data.careAssistant.phone}
-                  specialty={data.careAssistant.specialty}
-                  certs={data.careAssistant.certs}
-                  assignments={data.careAssistant.assignments}
+                  initials="—"
+                  initialsColor="#16A34A"
+                  name={booking.assistance_level ? formatStatus(booking.assistance_level) : 'Not Required'}
                 />
               </InfoCard>
             </Stack>
@@ -544,25 +660,50 @@ export const BookingDetailPage = () => {
           <Grid size={{ sm: 12, lg: 9 }}>
             <Stack spacing={'16px'}>
               <LiveRouteCard
-                pickupAddress={data.route.pickup}
-                destinationAddress={data.route.destination}
-                tripProgress={data.route.tripProgress}
+                pickupAddress={booking.pickup_address}
+                destinationAddress={booking.destination_address}
+                tripProgress={getTripProgress(booking)}
+                pickupLat={booking.pickup_latitude}
+                pickupLng={booking.pickup_longitude}
+                destinationLat={booking.destination_latitude}
+                destinationLng={booking.destination_longitude}
               />
               <TripTimeline
-                entries={data.timeline}
-                adminNotes={data.adminNotes}
+                entries={timelineEntries}
+                adminNotes={adminNotes}
               />
               <FareBreakdown
-                baseFare={data.fare.baseFare}
-                careAssistantFee={data.fare.careAssistantFee}
-                platformFee={data.fare.platformFee}
-                totalAmount={data.fare.totalAmount}
-                paymentMethod={data.fare.paymentMethod}
+                baseFare={formatCurrency(booking.fare_breakdown?.base_fare)}
+                careAssistantFee={formatCurrency(booking.fare_breakdown?.insurance_gateway_fee)}
+                platformFee={formatCurrency(booking.fare_breakdown?.surcharges_capped)}
+                totalAmount={formatCurrency(booking.fare_breakdown?.total_fare ?? booking.final_fare ?? booking.estimated_fare)}
+                paymentMethod={booking.fare_breakdown?.payment_method || '—'}
               />
             </Stack>
           </Grid>
         </Grid>
       </Stack>
+
+      <AssignDriverModal
+        open={openAssignDriver}
+        handleClose={() => setOpenAssignDriver(false)}
+        drivers={availableDrivers}
+        isLoadingDrivers={driversQuery.isLoading}
+        onAssign={handleAssignDriver}
+        isAssigning={assignDriverMutation.isPending}
+      />
+
+      <AssignDriverModal
+        open={openReassignDriver}
+        handleClose={() => setOpenReassignDriver(false)}
+        drivers={availableDrivers}
+        isLoadingDrivers={driversQuery.isLoading}
+        onAssign={handleReassignDriver}
+        isAssigning={reassignDriverMutation.isPending}
+        title="Reassign Driver"
+        description="Select a new driver to reassign this booking to."
+        confirmLabel="Reassign Driver"
+      />
     </AppDashboardLayout>
   );
 };
