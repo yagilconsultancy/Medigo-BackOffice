@@ -442,9 +442,305 @@ export interface FleetDocumentResponse {
   created_at: string;
 }
 
-// Fleet Companies (no major missing)
+// Fleet Companies — Response & Request Types
 
-// Fleet Vehicles
+export interface FleetResponse {
+  id: string;
+  name: string;
+  type?: string | null;
+  tax_id?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip_code?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  logo_url?: string | null;
+  is_active: boolean;
+}
+
+export interface AddFleetPartnerRequest {
+  name: string;
+  contact_person: string;
+  email: string;
+  city?: string | null;
+  state?: string | null;
+  num_vehicles?: number;
+  num_drivers?: number;
+}
+
+export interface ToggleStatusRequest {
+  is_active: boolean;
+}
+
+export interface DriverProfileResponse {
+  user_id: string;
+  business_id: string;
+  license_number?: string | null;
+  license_expiry?: string | null;
+  vehicle_type?: string | null;
+  vehicle_make?: string | null;
+  vehicle_model?: string | null;
+  vehicle_year?: number | null;
+  vehicle_plate?: string | null;
+  vehicle_color?: string | null;
+  vehicle_vin?: string | null;
+  vehicle_photo_url?: string | null;
+  vehicle_verified: boolean;
+  background_check_status: string;
+  is_approved: boolean;
+  is_online: boolean;
+  rating: number;
+  total_trips: number;
+}
+
+// Fleet Companies — Payloads (with route param bundled)
+
+export interface FleetCompanyListPayload {
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface FleetCompanyDriversPayload {
+  businessId: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface UpdateFleetCompanyPayload extends UpdateFleetProfileRequest {
+  businessId: string;
+}
+
+export interface ToggleFleetCompanyStatusPayload {
+  businessId: string;
+  is_active: boolean;
+}
+
+export interface UploadFleetCompanyDocumentPayload {
+  businessId: string;
+  documentType: string;
+  file: File;
+}
+
+// Fleet Companies — Wrapped Response Aliases
+
+export type ApiFleetCompanyKpiResponse = ApiResponse<FleetCompanyKPIs>;
+export type FleetCompanyPaginatedResponse =
+  ApiPaginatedResponseData<FleetCompanyResponse>;
+export type ApiFleetCompanyDetailResponse =
+  ApiResponse<FleetCompanyDetailResponse>;
+export type ApiFleetResponse = ApiResponse<FleetResponse>;
+export type ApiFleetDocumentListResponse = ApiResponse<FleetDocumentResponse[]>;
+export type FleetCompanyDriversPaginatedResponse =
+  ApiPaginatedResponseData<DriverProfileResponse>;
+
+// Fleet Vehicles — Response Types
+
+export interface VehicleDocumentKPIs {
+  total_documents: number;
+  valid_count: number;
+  expiring_soon_count: number;
+  expired_count: number;
+}
+
+export interface VehicleDocumentMatrixItem {
+  document_type: string;
+  status: string;
+  file_name?: string | null;
+  expires_at?: string | null;
+  doc_id?: string | null;
+}
+
+export interface VehicleDocumentOverviewItem {
+  vehicle_id: string;
+  vehicle_name?: string | null;
+  make: string;
+  model: string;
+  plate_number: string;
+  fleet_name?: string | null;
+  documents: VehicleDocumentMatrixItem[];
+}
+
+export interface VehicleDocumentOverview {
+  kpis: VehicleDocumentKPIs;
+  vehicles: VehicleDocumentOverviewItem[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface VehicleCategoryConfigResponse {
+  id: string;
+  category: string;
+  display_name: string;
+  base_fare: string;
+  per_km_rate: string;
+  requirements: string[];
+  common_vehicles: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CategoryBreakdownItem {
+  category: string;
+  display_name: string;
+  count: number;
+  percentage: number;
+}
+
+export interface VehicleCategoryFleetComposition {
+  total_vehicles: number;
+  breakdown: CategoryBreakdownItem[];
+}
+
+export interface VehicleProfileResponse extends VehicleDetailResponse {}
+
+export interface VehicleDocumentUploadResponse {
+  id: string;
+  vehicle_id: string;
+  document_type: string;
+  file_name: string;
+  status: string;
+  expires_at?: string | null;
+  created_at: string;
+}
+
+// Fleet Vehicles — Request Types
+
+export interface VehicleUpdate {
+  vehicle_name?: string | null;
+  make?: string | null;
+  model?: string | null;
+  year?: number | null;
+  plate_number?: string | null;
+  color?: string | null;
+  vin?: string | null;
+  category?: string | null;
+  mileage?: number | null;
+  insurance_expiry?: string | null;
+  registration_expiry?: string | null;
+  passenger_capacity?: number | null;
+  special_equipment?: string[] | null;
+  insurance_provider?: string | null;
+  registration_authority?: string | null;
+  last_inspection_date?: string | null;
+  internal_notes?: string | null;
+}
+
+export interface VehicleCategoryConfigUpdate {
+  display_name?: string | null;
+  base_fare?: number | string | null;
+  per_km_rate?: number | string | null;
+  requirements?: string[] | null;
+  common_vehicles?: string[] | null;
+  is_active?: boolean | null;
+}
+
+export interface ChangeVehicleStatusRequest {
+  status: string;
+}
+
+export interface AssignDriverToVehicleRequest {
+  driver_id: string;
+}
+
+export interface ScheduleMaintenanceRequest {
+  scheduled_date: string;
+  service_type?: string | null;
+  notes?: string | null;
+  technician_notes?: string | null;
+}
+
+// Fleet Vehicles — Payloads (with route param bundled)
+
+export interface FleetVehicleListPayload {
+  page?: number;
+  limit?: number;
+  category?: string;
+  search?: string;
+  status?: string;
+}
+
+export interface FleetVehicleDocumentOverviewPayload {
+  page?: number;
+  limit?: number;
+}
+
+export interface FleetVehicleProfilesPayload {
+  page?: number;
+  limit?: number;
+  category?: string;
+}
+
+export interface UpdateVehiclePayload extends VehicleUpdate {
+  vehicleId: string;
+}
+
+export interface ChangeVehicleStatusPayload {
+  vehicleId: string;
+  status: string;
+}
+
+export interface AssignDriverToVehiclePayload {
+  vehicleId: string;
+  driver_id: string;
+}
+
+export interface UnassignDriverFromVehiclePayload {
+  vehicleId: string;
+}
+
+export interface UploadVehicleDocumentPayload {
+  vehicleId: string;
+  document_type: string;
+  file: File;
+  expires_at?: string | null;
+  notes?: string | null;
+}
+
+export interface ReplaceVehicleDocumentPayload {
+  vehicleId: string;
+  docId: string;
+  file: File;
+  expires_at?: string | null;
+  notes?: string | null;
+}
+
+export interface ScheduleMaintenancePayload extends ScheduleMaintenanceRequest {
+  vehicleId: string;
+}
+
+export interface UpdateVehicleCategoryPayload extends VehicleCategoryConfigUpdate {
+  categoryId: string;
+}
+
+// Fleet Vehicles — Wrapped Response Aliases
+
+export type ApiVehicleKpiResponse = ApiResponse<VehicleKPIs>;
+export type ApiVehicleDocumentOverviewResponse =
+  ApiResponse<VehicleDocumentOverview>;
+export type ApiVehicleCategoryListResponse =
+  ApiResponse<VehicleCategoryConfigResponse[]>;
+export type ApiVehicleCompositionResponse =
+  ApiResponse<VehicleCategoryFleetComposition>;
+export type FleetVehiclePaginatedResponse =
+  ApiPaginatedResponseData<VehicleResponse>;
+export type FleetVehicleProfilesPaginatedResponse =
+  ApiPaginatedResponseData<VehicleProfileResponse>;
+export type ApiVehicleDetailResponse = ApiResponse<VehicleDetailResponse>;
+export type ApiVehicleResponse = ApiResponse<VehicleResponse>;
+export type ApiVehicleDocumentListResponse =
+  ApiResponse<VehicleDocumentResponse[]>;
+export type ApiVehicleDocumentUploadResponse =
+  ApiResponse<VehicleDocumentUploadResponse>;
+export type ApiVehicleCategoryResponse =
+  ApiResponse<VehicleCategoryConfigResponse>;
+export type ApiMaintenanceLogResponse = ApiResponse<MaintenanceLogResponse>;
+
 export interface MaintenanceLogResponse {
   id: string;
   scheduled_date: string; // date
