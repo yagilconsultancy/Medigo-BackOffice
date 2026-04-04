@@ -1,4 +1,45 @@
+import { ApiPaginatedResponseData, ApiResponse } from './common';
+
 // Fleet Application Types
+export interface FleetApplicationListPayload {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+}
+
+export type FleetApplicationPaginatedResponse =
+  ApiPaginatedResponseData<FleetApplicationResponse>;
+
+export type ApiFleetApplicationDetailResponse =
+  ApiResponse<FleetApplicationResponse>;
+
+export type ApiFleetApplicationKPIsResponse = ApiResponse<FleetApplicationKPIs>;
+
+export type ApiFleetDocumentUploadResponse = ApiResponse<FleetDocumentResponse>;
+
+// Mutation payloads
+export interface ApproveFleetApplicationPayload {
+  appId: string;
+  notes?: string | null;
+}
+
+export interface RejectFleetApplicationPayload {
+  appId: string;
+  reason: string;
+}
+
+export interface RequestInfoFleetApplicationPayload {
+  appId: string;
+  message: string;
+}
+
+export interface UploadFleetApplicationDocumentPayload {
+  appId: string;
+  documentType: string;
+  file: File;
+}
+
 export interface FleetApplicationCreate {
   company_name: string;
   contact_person: string;

@@ -84,40 +84,25 @@ export const ROUTES_SPEC = {
 
   // ====================== ADMIN ANALYTICS ======================
 
-  // Dashboard overview KPIs
   getDashboardOverview: `/${API_VERSION}/rides/analytics/overview`,
-  // → Response: StandardResponse<DashboardKPIs>
-  // → No request payload
 
   // Trip volume trend
   getTripVolumeTrend: `/${API_VERSION}/rides/analytics/trip-volume`,
-  // → Response: StandardResponse<TripVolumeTrendResponse>
-  // → Query params optional: TripVolumeTrendParams
 
   // Trip status distribution
   getTripStatusDistribution: `/${API_VERSION}/rides/analytics/trip-status`,
-  // → Response: StandardResponse<TripStatusDistributionResponse>
-  // → No request payload
 
   // Top performing drivers
   getTopDrivers: `/${API_VERSION}/rides/analytics/top-drivers`,
-  // → Response: StandardResponse<TopDriversResponse>
-  // → Query params optional: TopDriversParams
 
   // Recent activity feed
   getRecentActivity: `/${API_VERSION}/rides/analytics/recent-activity`,
-  // → Response: StandardResponse<RecentActivityResponse>
-  // → Query params optional: RecentActivityParams
 
   // Transport type distribution
   getTransportDistribution: `/${API_VERSION}/rides/analytics/transport-distribution`,
-  // → Response: StandardResponse<TransportDistributionResponse>
-  // → No request payload
 
   // Top fleet partners
   getTopFleetPartners: `/${API_VERSION}/rides/analytics/top-fleet-partners`,
-  // → Response: StandardResponse<TopFleetPartnersResponse>
-  // → Query params optional: AnalyticsQueryParams
 
   // Booking channel breakdown
   getBookingChannels: `/${API_VERSION}/rides/analytics/booking-channels`,
@@ -223,16 +208,16 @@ export const ROUTES_SPEC = {
   // Fleet Application
   getFleetApplicationsKpi: `/${API_VERSION}/users/admin/fleet/applications/kpis`,
   fleetApplications: `/${API_VERSION}/users/admin/fleet/applications`,
-  getFleetApplicationId: (fleetId: string) =>
-    `/${API_VERSION}/users/admin/fleet/applications/${fleetId}`,
-  approveFleetApplication: (fleetId: string) =>
-    `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/approve`,
-  rejectFleetApplication: (fleetId: string) =>
-    `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/reject`,
-  requestInfoFleetApplication: (fleetId: string) =>
-    `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/request-info`,
-  uploadDocumentFleetApplication: (fleetId: string) =>
-    `/${API_VERSION}/users/admin/fleet/applications/${fleetId}/`,
+  getFleetApplicationId: (appId: string) =>
+    `/${API_VERSION}/users/admin/fleet/applications/${appId}`,
+  approveFleetApplication: (appId: string) =>
+    `/${API_VERSION}/users/admin/fleet/applications/${appId}/approve`,
+  rejectFleetApplication: (appId: string) =>
+    `/${API_VERSION}/users/admin/fleet/applications/${appId}/reject`,
+  requestInfoFleetApplication: (appId: string) =>
+    `/${API_VERSION}/users/admin/fleet/applications/${appId}/request-info`,
+  uploadDocumentFleetApplication: (appId: string) =>
+    `/${API_VERSION}/users/admin/fleet/applications/${appId}/`,
 
   // Fleet Companies
   getFleetCompaniesKpi: `/${API_VERSION}/users/admin/fleet/companies/kpis`,
@@ -246,7 +231,7 @@ export const ROUTES_SPEC = {
   fleetCompanyDrivers: (businessId: string) =>
     `/${API_VERSION}/users/admin/fleet/companies/${businessId}/drivers`,
 
-  // Fleet companies
+  // Fleet Vehicles
   getFleetVehicleKpi: `/${API_VERSION}/users/admin/fleet/vehicles/kpis`,
   getFleetVehicle: `/${API_VERSION}/users/admin/fleet/vehicles/documents/overview`,
   getFleetCategories: `/${API_VERSION}/users/admin/fleet/vehicles/categories`,

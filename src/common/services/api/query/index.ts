@@ -3,3 +3,4 @@ export * from './activity-list';
 export * from './login-history';
 export * from './security';
 export * from './analytics';
+export * from './fleet-applications';
