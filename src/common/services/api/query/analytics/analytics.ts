@@ -2,11 +2,16 @@ import { AxiosResponse } from 'axios';
 import { resolveRoute, ROUTES } from '../../../../constants';
 import { getApiClient } from '../../../../lib';
 import {
+  BookingChannelParams,
+  BookingChannelsResponseWrapped,
   DashboardKPIsResponse,
   RecentActivityParams,
   RecentActivityResponseWrapped,
+  ServiceQualityResponseWrapped,
   TopDriversParams,
   TopDriversResponseWrapped,
+  TopFacilitiesParams,
+  TopFacilitiesResponseWrapped,
   TopFleetPartnersParams,
   TopFleetPartnersResponseWrapped,
   TransportDistributionParams,
@@ -75,6 +80,31 @@ export const getTopFleetPartners = async (
     TopFleetPartnersResponseWrapped,
     AxiosResponse<TopFleetPartnersResponseWrapped>
   >(resolveRoute(ROUTES.getTopFleetPartners), {
+    ...(params && { params }),
+  });
+};
+
+export const getBookingChannels = async (params?: BookingChannelParams) => {
+  return await getApiClient().get<
+    BookingChannelsResponseWrapped,
+    AxiosResponse<BookingChannelsResponseWrapped>
+  >(resolveRoute(ROUTES.getBookingChannels), {
+    ...(params && { params }),
+  });
+};
+
+export const getServiceQuality = async () => {
+  return await getApiClient().get<
+    ServiceQualityResponseWrapped,
+    AxiosResponse<ServiceQualityResponseWrapped>
+  >(resolveRoute(ROUTES.getServiceQuality));
+};
+
+export const getTopFacilities = async (params?: TopFacilitiesParams) => {
+  return await getApiClient().get<
+    TopFacilitiesResponseWrapped,
+    AxiosResponse<TopFacilitiesResponseWrapped>
+  >(resolveRoute(ROUTES.getTopFacilities), {
     ...(params && { params }),
   });
 };

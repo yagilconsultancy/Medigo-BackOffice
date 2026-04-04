@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Grid, Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
@@ -8,7 +8,23 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { getTodayDate, pxToRem } from '../../../common';
+import { EmptyState } from '../../modules/blocks';
+import {
+  DashboardKPIs,
+  formatTotalNumber,
+  getTodayDate,
+  pxToRem,
+  timeAgo,
+  useGetBookingChannels,
+  useGetDashboardOverview,
+  useGetRecentActivity,
+  useGetServiceQuality,
+  useGetTopFacilities,
+  useGetTopFleetPartners,
+  useGetTransportDistribution,
+  useGetTripVolumeTrend,
+  useResolvedApiQuery,
+} from '../../../common';
 import {
   BookingChannelItem,
   CardComponent,
@@ -42,336 +58,328 @@ import LocalHospitalOutlinedIcon from '@mui/icons-material/LocalHospitalOutlined
 import HomeWorkOutlinedIcon from '@mui/icons-material/HomeWorkOutlined';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
 
-// ─── Stat Card Data ─────────────────────────────────────────────────────────
-
-const cardData = [
+const statCardConfig = [
   {
-    top: {
-      icon: TripsIcon,
-      iconBg: '#EBF2FF',
-      badgeIcon: TrendingUp,
-      badgeBg: '#ECFDF5',
-      volumeColor: '#10B981',
-      volumeNum: '+12.5%',
-    },
-    bottom: {
-      cardNum: '3,482',
-      cardDesc: 'Total Bookings',
-    },
+    key: 'total_bookings' as const,
+    icon: TripsIcon,
+    iconBg: '#EBF2FF',
+    label: 'Total Bookings',
+    formatValue: (metric: DashboardKPIs['total_bookings']) =>
+      formatTotalNumber(metric.value),
   },
   {
-    top: {
-      icon: DriversIcon,
-      iconBg: '#FFFBEB',
-      badgeIcon: TrendingUp,
-      badgeBg: '#ECFDF5',
-      volumeColor: '#10B981',
-      volumeNum: '+4.2%',
-    },
-    bottom: {
-      cardNum: '148',
-      cardDesc: 'Active Clients',
-    },
+    key: 'active_clients' as const,
+    icon: DriversIcon,
+    iconBg: '#FFFBEB',
+    label: 'Active Clients',
+    formatValue: (metric: DashboardKPIs['active_clients']) =>
+      formatTotalNumber(metric.value),
   },
   {
-    top: {
-      icon: PendingIcon,
-      iconBg: '#FEF2F2',
-      badgeIcon: TrendingDown,
-      badgeBg: '#FEF2F2',
-      volumeColor: '#EF4444',
-      volumeNum: '-8.1%',
-    },
-    bottom: {
-      cardNum: '37',
-      cardDesc: 'Registered Facilities',
-    },
+    key: 'registered_facilities' as const,
+    icon: PendingIcon,
+    iconBg: '#FEF2F2',
+    label: 'Registered Facilities',
+    formatValue: (metric: DashboardKPIs['registered_facilities']) =>
+      formatTotalNumber(metric.value),
   },
   {
-    top: {
-      icon: RevenueIcon,
-      iconBg: '#ECFDF5',
-      badgeIcon: TrendingUp,
-      badgeBg: '#ECFDF5',
-      volumeColor: '#10B981',
-      volumeNum: '+18.7%',
-    },
-    bottom: {
-      cardNum: '$84,320',
-      cardDesc: 'Revenue',
-    },
+    key: 'revenue' as const,
+    icon: RevenueIcon,
+    iconBg: '#ECFDF5',
+    label: 'Revenue',
+    formatValue: (metric: DashboardKPIs['revenue']) =>
+      `$${formatTotalNumber(metric.value)}`,
   },
 ];
 
-// ─── Booking Trends Data ────────────────────────────────────────────────────
+const transportColorMap: Record<string, string> = {
+  wheelchair: '#10B981',
+  stretcher: '#6366F1',
+  ambulatory: '#2F6FED',
+  standard: '#2F6FED',
+  dialysis: '#D97706',
+};
 
-const tripDataByPeriod = [
-  [
-    { day: 'Mon', trips: 38 },
-    { day: 'Tue', trips: 55 },
-    { day: 'Wed', trips: 49 },
-    { day: 'Thu', trips: 63 },
-    { day: 'Fri', trips: 72 },
-    { day: 'Sat', trips: 41 },
-    { day: 'Sun', trips: 36 },
-  ],
-  [
-    { day: 'Week 1', trips: 245 },
-    { day: 'Week 2', trips: 312 },
-    { day: 'Week 3', trips: 287 },
-    { day: 'Week 4', trips: 356 },
-  ],
-  [
-    { day: 'Jan', trips: 820 },
-    { day: 'Feb', trips: 932 },
-    { day: 'Mar', trips: 1105 },
-  ],
-];
+const tripTabPeriodDays = [7, 30, 90] as const;
 
-// ─── Transport Type Distribution Data ───────────────────────────────────────
+const activityIconMap: Record<
+  string,
+  { icon: typeof RequestIcon; iconBg: string }
+> = {
+  booking_created: { icon: RequestIcon, iconBg: '#EFF6FF' },
+  status_change: { icon: StartIcon, iconBg: '#F0FDF4' },
+  trip_completed: { icon: CompleteIcon, iconBg: '#F0FDF4' },
+  facility_registered: { icon: NewDriverIcon, iconBg: '#FAF5FF' },
+  client_signup: { icon: CardIcon, iconBg: '#FFFBEB' },
+};
 
-const transportData = [
-  {
-    label: 'Wheelchair Accessible',
-    trips: 1411,
-    percent: 52,
-    color: '#10B981',
-  },
-  { label: 'Stretcher Transport', trips: 975, percent: 28, color: '#6366F1' },
-  { label: 'Ambulatory', trips: 696, percent: 20, color: '#2F6FED' },
-];
+const defaultActivityIcon = { icon: RequestIcon, iconBg: '#EFF6FF' };
 
-// ─── Booking Channels Data ──────────────────────────────────────────────────
+const avatarColors = ['#2B7FFF', '#AD46FF', '#FE9A00', '#F6339A', '#00C950'];
 
-const bookingChannelsData = [
-  {
+const channelConfig: Record<
+  string,
+  { icon: React.ReactNode; color: string; iconBg: string; label: string }
+> = {
+  mobile_app: {
     icon: <SmartphoneOutlinedIcon sx={{ fontSize: 16, color: '#2B7FFF' }} />,
-    label: 'Mobile App',
-    count: 1823,
-    percent: 52,
     color: '#2B7FFF',
     iconBg: '#EFF6FF',
-    trendValue: '+8%',
-    trendPositive: true,
+    label: 'Mobile App',
   },
-  {
+  website_client: {
     icon: <LanguageOutlinedIcon sx={{ fontSize: 16, color: '#AD46FF' }} />,
-    label: 'Website (Client)',
-    count: 404,
-    percent: 12,
     color: '#AD46FF',
     iconBg: '#FAF5FF',
-    trendValue: '+3%',
-    trendPositive: true,
+    label: 'Website (Client)',
   },
-  {
+  website_facility: {
     icon: <BusinessOutlinedIcon sx={{ fontSize: 16, color: '#FE9A00' }} />,
-    label: 'Website (Facility)',
-    count: 1255,
-    percent: 36,
     color: '#FE9A00',
     iconBg: '#FFFBEB',
-    trendValue: '+12%',
-    trendPositive: true,
+    label: 'Website (Facility)',
   },
-];
+};
 
-// ─── Service Quality Metrics Data ───────────────────────────────────────────
+const defaultChannelConfig = {
+  icon: <SmartphoneOutlinedIcon sx={{ fontSize: 16, color: '#9CA3AF' }} />,
+  color: '#9CA3AF',
+  iconBg: '#F7F9FB',
+};
 
-const serviceMetrics = [
-  {
-    icon: <AccessTimeOutlinedIcon sx={{ fontSize: 18, color: '#2B7FFF' }} />,
-    iconBg: '#EFF6FF',
-    value: '12.4 min',
-    label: 'Avg. Pickup Time',
-    sublabel: 'Within 15 min window',
-  },
-  {
-    icon: <RouteOutlinedIcon sx={{ fontSize: 18, color: '#AD46FF' }} />,
-    iconBg: '#FAF5FF',
-    value: '18.2 mi',
-    label: 'Avg. Trip Distance',
-    sublabel: 'Round trip included',
-  },
-  {
-    icon: <StarOutlinedIcon sx={{ fontSize: 18, color: '#FE9A00' }} />,
-    iconBg: '#FFFBEB',
-    value: '4.8/5.0',
-    label: 'Service Rating',
-    sublabel: 'Based on 2,847 reviews',
-  },
-  {
-    icon: <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#00C950' }} />,
-    iconBg: '#F0FDF4',
-    value: '98.7%',
-    label: 'Completion Rate',
-    sublabel: 'Successfully completed',
-  },
-];
+const facilityTypeIconMap: Record<string, React.ReactNode> = {
+  hospital: (
+    <LocalHospitalOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />
+  ),
+  care_home: <HomeWorkOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />,
+  rehabilitation: (
+    <MedicalServicesOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />
+  ),
+};
 
-// ─── Top Performing Facilities Data ─────────────────────────────────────────
+const defaultFacilityIcon = (
+  <LocalHospitalOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />
+);
 
-const facilityData = [
-  {
-    num: '1',
-    name: 'Valley Medical Center',
-    type: 'Hospital',
-    bookings: 487,
-    acceptanceRate: 98.2,
-    iconBg: '#2B7FFF',
-    icon: <LocalHospitalOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />,
-  },
-  {
-    num: '2',
-    name: 'Sunrise Care Home',
-    type: 'Care Home',
-    bookings: 412,
-    acceptanceRate: 96.8,
-    iconBg: '#AD46FF',
-    icon: <HomeWorkOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />,
-  },
-  {
-    num: '3',
-    name: 'Memorial Rehabilitation Center',
-    type: 'Rehabilitation',
-    bookings: 358,
-    acceptanceRate: 95.4,
-    iconBg: '#FE9A00',
-    icon: (
-      <MedicalServicesOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />
-    ),
-  },
-  {
-    num: '4',
-    name: 'Evergreen Senior Living',
-    type: 'Care Home',
-    bookings: 294,
-    acceptanceRate: 97,
-    iconBg: '#F6339A',
-    icon: <HomeWorkOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />,
-  },
-  {
-    num: '5',
-    name: "St. Mary's Hospital",
-    type: 'Hospital',
-    bookings: 276,
-    acceptanceRate: 94.6,
-    iconBg: '#00C950',
-    icon: <LocalHospitalOutlinedIcon sx={{ fontSize: 18, color: '#FFFFFF' }} />,
-  },
-];
-
-// ─── Top Fleet Partners Data ────────────────────────────────────────────────
-
-const fleetPartnerData = [
-  {
-    num: '1',
-    name: 'MediTransport Solutions',
-    initials: 'MT',
-    vehicles: 24,
-    trips: 1342,
-    rating: 4.9,
-    avatarBg: '#2B7FFF',
-  },
-  {
-    num: '2',
-    name: 'CarePlus Fleet Services',
-    initials: 'CP',
-    vehicles: 18,
-    trips: 1018,
-    rating: 4.8,
-    avatarBg: '#AD46FF',
-  },
-  {
-    num: '3',
-    name: 'AccessRide Transport',
-    initials: 'AR',
-    vehicles: 15,
-    trips: 897,
-    rating: 4.7,
-    avatarBg: '#FE9A00',
-  },
-  {
-    num: '4',
-    name: 'HealthWheels Inc',
-    initials: 'HW',
-    vehicles: 12,
-    trips: 284,
-    rating: 4.9,
-    avatarBg: '#F6339A',
-  },
-  {
-    num: '5',
-    name: 'SafeJourney Medical',
-    initials: 'SJ',
-    vehicles: 8,
-    trips: 141,
-    rating: 4.6,
-    avatarBg: '#00C950',
-  },
-  {
-    num: '6',
-    name: 'Okay Medical',
-    initials: 'SJ',
-    vehicles: 8,
-    trips: 141,
-    rating: 4.6,
-    avatarBg: '#00C950',
-  },
-];
-
-// ─── Recent Activity Data ───────────────────────────────────────────────────
-
-const recentData = [
-  {
-    icon: RequestIcon,
-    iconBg: '#EFF6FF',
-    activityTitle: 'New booking from facility',
-    activityDesc: 'Sunrise Care Home \u00B7 Wheelchair transport requested',
-    time: '2 min ago',
-  },
-  {
-    icon: StartIcon,
-    iconBg: '#F0FDF4',
-    activityTitle: 'Client booked via mobile app',
-    activityDesc: 'Sarah Johnson \u00B7 Dialysis appointment',
-    time: '8 min ago',
-  },
-  {
-    icon: CompleteIcon,
-    iconBg: '#F0FDF4',
-    activityTitle: 'Trip completed',
-    activityDesc: 'Booking #BK-84731 \u00B7 Medi Transport Solutions',
-    time: '12 min ago',
-  },
-  {
-    icon: NewDriverIcon,
-    iconBg: '#FAF5FF',
-    activityTitle: 'New facility registered',
-    activityDesc: 'Memorial Rehabilitation Center',
-    time: '23 min ago',
-  },
-  {
-    icon: CardIcon,
-    iconBg: '#FFFBEB',
-    activityTitle: 'New client signup',
-    activityDesc: 'Robert Davis \u00B7 Via website',
-    time: '1 hr ago',
-  },
-  {
-    icon: RequestIcon,
-    iconBg: '#EFF6FF',
-    activityTitle: 'Recurring booking scheduled',
-    activityDesc: '',
-    time: '2 hrs ago',
-  },
-];
-
-// ─── Component ──────────────────────────────────────────────────────────────
+const typeCountColors: Record<string, string> = {
+  hospital: '#155DFC',
+  care_home: '#9810FA',
+  rehabilitation: '#E17100',
+};
 
 export const HomePage = () => {
   const today = getTodayDate();
   const [activeTripTab, setActiveTripTab] = useState(0);
+
+  const { data: dashboardKPIs } = useResolvedApiQuery(
+    useGetDashboardOverview,
+    null
+  );
+
+  const { data: tripVolumeTrend } = useResolvedApiQuery(
+    useGetTripVolumeTrend,
+    null,
+    { days: tripTabPeriodDays[activeTripTab] }
+  );
+
+  const { data: transportDistribution } = useResolvedApiQuery(
+    useGetTransportDistribution,
+    null
+  );
+
+  const { data: recentActivity } = useResolvedApiQuery(
+    useGetRecentActivity,
+    null
+  );
+
+  const { data: topFleetPartners } = useResolvedApiQuery(
+    useGetTopFleetPartners,
+    null
+  );
+
+  const { data: bookingChannels } = useResolvedApiQuery(
+    useGetBookingChannels,
+    null
+  );
+
+  const { data: serviceQuality } = useResolvedApiQuery(
+    useGetServiceQuality,
+    null
+  );
+
+  const { data: topFacilities } = useResolvedApiQuery(
+    useGetTopFacilities,
+    null
+  );
+
+  const cardData = useMemo(() => {
+    return statCardConfig.map((config) => {
+      const metric = dashboardKPIs?.[config.key];
+      const changePercent = metric?.change_percent ?? 0;
+      const isUp = (metric?.trend ?? 'up') !== 'down';
+
+      return {
+        top: {
+          icon: config.icon,
+          iconBg: config.iconBg,
+          badgeIcon: isUp ? TrendingUp : TrendingDown,
+          badgeBg: isUp ? '#ECFDF5' : '#FEF2F2',
+          volumeColor: isUp ? '#10B981' : '#EF4444',
+          volumeNum: `${isUp ? '+' : ''}${changePercent}%`,
+        },
+        bottom: {
+          cardNum: metric ? config.formatValue(metric) : '--',
+          cardDesc: config.label,
+        },
+      };
+    });
+  }, [dashboardKPIs]);
+
+  const chartData = useMemo(() => {
+    if (!tripVolumeTrend?.data?.length) return [];
+    return tripVolumeTrend.data.map((point) => ({
+      day: point.date,
+      trips: point.count,
+    }));
+  }, [tripVolumeTrend]);
+
+  const transportData = useMemo(() => {
+    if (!transportDistribution?.distribution?.length) return [];
+    return transportDistribution.distribution.map((item) => ({
+      label: item.transport_type
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase()),
+      trips: item.count,
+      percent: item.percentage,
+      color: transportColorMap[item.transport_type.toLowerCase()] ?? '#9CA3AF',
+    }));
+  }, [transportDistribution]);
+
+  const bookingChannelsData = useMemo(() => {
+    if (!bookingChannels?.channels?.length) return [];
+    return bookingChannels.channels.map((item) => {
+      const config = channelConfig[item.channel] ?? {
+        ...defaultChannelConfig,
+        label: item.channel
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase()),
+      };
+      return {
+        icon: config.icon,
+        label: config.label,
+        count: item.count,
+        percent: item.percentage,
+        color: config.color,
+        iconBg: config.iconBg,
+        trendValue: `${item.growth_percent >= 0 ? '+' : ''}${item.growth_percent}%`,
+        trendPositive: item.growth_percent >= 0,
+      };
+    });
+  }, [bookingChannels]);
+
+  const serviceMetricsData = useMemo(() => {
+    if (!serviceQuality) return [];
+    return [
+      {
+        icon: (
+          <AccessTimeOutlinedIcon sx={{ fontSize: 18, color: '#2B7FFF' }} />
+        ),
+        iconBg: '#EFF6FF',
+        value: `${serviceQuality.avg_pickup_time_minutes.toFixed(1)} min`,
+        label: 'Avg. Pickup Time',
+        sublabel: 'Within 15 min window',
+      },
+      {
+        icon: <RouteOutlinedIcon sx={{ fontSize: 18, color: '#AD46FF' }} />,
+        iconBg: '#FAF5FF',
+        value: `${serviceQuality.avg_trip_distance_km.toFixed(1)} km`,
+        label: 'Avg. Trip Distance',
+        sublabel: 'Round trip included',
+      },
+      {
+        icon: <StarOutlinedIcon sx={{ fontSize: 18, color: '#FE9A00' }} />,
+        iconBg: '#FFFBEB',
+        value: `${serviceQuality.service_rating.toFixed(1)}/5.0`,
+        label: 'Service Rating',
+        sublabel: 'Based on recent reviews',
+      },
+      {
+        icon: (
+          <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#00C950' }} />
+        ),
+        iconBg: '#F0FDF4',
+        value: `${serviceQuality.completion_rate_percent.toFixed(1)}%`,
+        label: 'Completion Rate',
+        sublabel: 'Successfully completed',
+      },
+    ];
+  }, [serviceQuality]);
+
+  const facilityData = useMemo(() => {
+    if (!topFacilities?.facilities?.length) return [];
+    return topFacilities.facilities.map((item, index) => ({
+      num: String(item.rank),
+      name: item.facility_name,
+      type: item.facility_type
+        ? item.facility_type
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (c) => c.toUpperCase())
+        : 'Facility',
+      bookings: item.total_bookings,
+      acceptanceRate: item.acceptance_rate,
+      iconBg: avatarColors[index % avatarColors.length],
+      icon:
+        facilityTypeIconMap[(item.facility_type ?? '').toLowerCase()] ??
+        defaultFacilityIcon,
+    }));
+  }, [topFacilities]);
+
+  const facilityTypeCounts = useMemo(() => {
+    if (!topFacilities?.type_counts) return [];
+    return Object.entries(topFacilities.type_counts).map(([key, count]) => ({
+      label: key
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase()),
+      count,
+      color: typeCountColors[key.toLowerCase()] ?? '#9CA3AF',
+    }));
+  }, [topFacilities]);
+
+  const recentData = useMemo(() => {
+    if (!recentActivity?.activities?.length) return [];
+    return recentActivity.activities.map((item) => {
+      const iconConfig =
+        activityIconMap[item.event_type] ?? defaultActivityIcon;
+      return {
+        icon: iconConfig.icon,
+        iconBg: iconConfig.iconBg,
+        activityTitle: item.title,
+        activityDesc: item.description ?? '',
+        time: timeAgo(item.timestamp),
+      };
+    });
+  }, [recentActivity]);
+
+  const fleetPartnerData = useMemo(() => {
+    if (!topFleetPartners?.partners?.length) return [];
+    return topFleetPartners.partners.map((item, index) => ({
+      num: String(item.rank),
+      name: item.fleet_name,
+      initials: item.fleet_name
+        .split(' ')
+        .map((w) => w[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase(),
+      vehicles: item.vehicle_count,
+      trips: item.total_trips,
+      rating: item.average_rating,
+      avatarBg: avatarColors[index % avatarColors.length],
+    }));
+  }, [topFleetPartners]);
+
+  const emptyState = <EmptyState animationSrc="/empty.json" />;
 
   return (
     <AppDashboardLayout>
@@ -409,11 +417,11 @@ export const HomePage = () => {
                     onChange={(index) => setActiveTripTab(index)}
                   />
                 </RowStack>
-                <HomeChart
-                  data={tripDataByPeriod[activeTripTab]}
-                  xKey="day"
-                  yKey="trips"
-                />
+                {chartData.length > 0 ? (
+                  <HomeChart data={chartData} xKey="day" yKey="trips" />
+                ) : (
+                  emptyState
+                )}
               </Stack>
             </AppCardparent>
           </Grid>
@@ -424,11 +432,21 @@ export const HomePage = () => {
                   title="Transport Type Distribution"
                   desc="Last 30 days breakdown by vehicle type"
                 />
-                <TransportDistribution
-                  data={transportData}
-                  clientPercent={64}
-                  facilityPercent={36}
-                />
+                {transportData.length > 0 ? (
+                  <TransportDistribution
+                    data={transportData}
+                    clientPercent={
+                      transportDistribution?.booking_source
+                        ?.client_bookings_percent ?? 0
+                    }
+                    facilityPercent={
+                      transportDistribution?.booking_source
+                        ?.facility_bookings_percent ?? 0
+                    }
+                  />
+                ) : (
+                  emptyState
+                )}
               </Stack>
             </AppCardparent>
           </Grid>
@@ -443,11 +461,15 @@ export const HomePage = () => {
                   title="Booking Channels"
                   desc="How clients are booking rides"
                 />
-                <Stack spacing={'20px'}>
-                  {bookingChannelsData.map((channel) => (
-                    <BookingChannelItem key={channel.label} {...channel} />
-                  ))}
-                </Stack>
+                {bookingChannelsData.length > 0 ? (
+                  <Stack spacing={'20px'}>
+                    {bookingChannelsData.map((channel) => (
+                      <BookingChannelItem key={channel.label} {...channel} />
+                    ))}
+                  </Stack>
+                ) : (
+                  emptyState
+                )}
               </Stack>
             </AppCardparent>
           </Grid>
@@ -458,13 +480,17 @@ export const HomePage = () => {
                   title="Service Quality Metrics"
                   desc="Performance indicators for last 30 days"
                 />
-                <Grid container spacing={'16px'}>
-                  {serviceMetrics.map((metric) => (
-                    <Grid key={metric.label} size={{ xs: 6 }}>
-                      <ServiceMetricCard {...metric} />
-                    </Grid>
-                  ))}
-                </Grid>
+                {serviceMetricsData.length > 0 ? (
+                  <Grid container spacing={'16px'}>
+                    {serviceMetricsData.map((metric) => (
+                      <Grid key={metric.label} size={{ xs: 6 }}>
+                        <ServiceMetricCard {...metric} />
+                      </Grid>
+                    ))}
+                  </Grid>
+                ) : (
+                  emptyState
+                )}
               </Stack>
             </AppCardparent>
           </Grid>
@@ -479,40 +505,45 @@ export const HomePage = () => {
                   title="Top Performing Facilities"
                   desc="Facilities ranked by booking volume and acceptance rate"
                 />
-                {facilityData.map((facility) => (
-                  <FacilityComponent key={facility.num} {...facility} />
-                ))}
-                {/* Facility type counts */}
-                <RowStack spacing={'24px'} sx={{ paddingTop: '4px' }}>
-                  {[
-                    { label: 'Hospitals', count: 12, color: '#155DFC' },
-                    { label: 'Care Homes', count: 18, color: '#9810FA' },
-                    { label: 'Rehab Centers', count: 7, color: '#E17100' },
-                  ].map((type) => (
-                    <Stack key={type.label} spacing={'2px'}>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(12),
-                          color: '#9CA3AF',
-                        }}
-                      >
-                        {type.label}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 700,
-                          fontSize: pxToRem(20),
-                          color: type.color,
-                        }}
-                      >
-                        {type.count}
-                      </Typography>
-                    </Stack>
-                  ))}
-                </RowStack>
+                {facilityData.length > 0 ? (
+                  <>
+                    {facilityData.map((facility) => (
+                      <FacilityComponent key={facility.num} {...facility} />
+                    ))}
+                    {facilityTypeCounts.length > 0 && (
+                      <RowStack spacing={'24px'} sx={{ paddingTop: '4px' }}>
+                        {facilityTypeCounts.map((type) => (
+                          <Stack key={type.label} spacing={'2px'}>
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(12),
+                                color: '#9CA3AF',
+                              }}
+                            >
+                              {type.label}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 700,
+                                fontSize: pxToRem(20),
+                                color: type.color,
+                              }}
+                            >
+                              {type.count}
+                            </Typography>
+                          </Stack>
+                        ))}
+                      </RowStack>
+                    )}
+                  </>
+                ) : (
+                  emptyState
+                )}
               </Stack>
             </AppCardparent>
           </Grid>
@@ -523,9 +554,13 @@ export const HomePage = () => {
                   title="Top Fleet Partners"
                   desc="Companies ranked by completed trips this month"
                 />
-                {fleetPartnerData.map((partner) => (
-                  <FleetPartnerComponent key={partner.num} {...partner} />
-                ))}
+                {fleetPartnerData.length > 0 ? (
+                  fleetPartnerData.map((partner) => (
+                    <FleetPartnerComponent key={partner.num} {...partner} />
+                  ))
+                ) : (
+                  emptyState
+                )}
               </Stack>
             </AppCardparent>
           </Grid>
@@ -538,9 +573,13 @@ export const HomePage = () => {
               title="Recent Activity"
               desc="Latest bookings and system events"
             />
-            {recentData.map((recent, index) => (
-              <RecentActivity key={index} {...recent} />
-            ))}
+            {recentData.length > 0 ? (
+              recentData.map((recent, index) => (
+                <RecentActivity key={index} {...recent} />
+              ))
+            ) : (
+              emptyState
+            )}
           </Stack>
         </AppCardparent>
       </Stack>

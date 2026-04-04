@@ -16,17 +16,14 @@ export interface DashboardKPIs {
 export type DashboardKPIsResponse = ApiResponse<DashboardKPIs>;
 
 export interface TripVolumeTrendPoint {
-    date: string;           // "2026-04-01" or ISO datetime
-    total_trips: number;
-    completed_trips: number;
-    cancelled_trips: number;
-    dialysis_trips?: number;
+    date: string;           // "2026-03-25"
+    count: number;
 }
 
 export interface TripVolumeTrendResponse {
-    items: TripVolumeTrendPoint[];
-    total_trips: number;
-    period: string;         // e.g. "last_30_days", "this_month"
+    period_days: number;
+    data: TripVolumeTrendPoint[];
+    total: number;
 }
 
 export type TripVolumeTrendResponseWrapped = ApiResponse<TripVolumeTrendResponse>;
@@ -64,18 +61,15 @@ export type TopDriversResponseWrapped = ApiResponse<TopDriversResponse>;
 
 export interface RecentActivityItem {
     id: string;
-    activity_type: string;      // "booking_created", "status_changed", "incident_reported", etc.
+    event_type: string;         // "status_change", "booking_created", etc.
     title: string;
     description?: string | null;
+    ride_id?: string | null;
     timestamp: string;          // ISO date-time
-    entity_id?: string | null;  // ride_id, driver_id, etc.
-    entity_type?: string | null;
-    changed_by?: string | null;
 }
 
 export interface RecentActivityResponse {
-    items: RecentActivityItem[];
-    total: number;
+    activities: RecentActivityItem[];
 }
 
 export type RecentActivityResponseWrapped = ApiResponse<RecentActivityResponse>;
@@ -86,29 +80,84 @@ export interface TransportDistributionItem {
     percentage: number;
 }
 
+export interface TransportDistributionBookingSource {
+    client_bookings_percent: number;
+    facility_bookings_percent: number;
+}
+
 export interface TransportDistributionResponse {
-    items: TransportDistributionItem[];
-    total_trips: number;
+    period_days: number;
+    total: number;
+    distribution: TransportDistributionItem[];
+    booking_source: TransportDistributionBookingSource;
 }
 
 export type TransportDistributionResponseWrapped = ApiResponse<TransportDistributionResponse>;
 
 export interface TopFleetPartnerItem {
+    rank: number;
     fleet_id: string;
     fleet_name: string;
+    logo_url?: string | null;
+    vehicle_count: number;
     total_trips: number;
-    completed_trips: number;
-    revenue_generated: number;
-    avg_rating: number;
-    vehicle_count?: number;
+    average_rating: number;
 }
 
 export interface TopFleetPartnersResponse {
-    items: TopFleetPartnerItem[];
-    limit: number;
+    period_days: number;
+    partners: TopFleetPartnerItem[];
 }
 
 export type TopFleetPartnersResponseWrapped = ApiResponse<TopFleetPartnersResponse>;
+
+// ─── Booking Channels ─────────────────────────────────────────────────────────
+
+export interface BookingChannelItem {
+    channel: string;            // "mobile_app", "website_client", "website_facility"
+    count: number;
+    percentage: number;
+    growth_percent: number;
+}
+
+export interface BookingChannelsResponse {
+    period_days: number;
+    total: number;
+    channels: BookingChannelItem[];
+}
+
+export type BookingChannelsResponseWrapped = ApiResponse<BookingChannelsResponse>;
+
+// ─── Service Quality ──────────────────────────────────────────────────────────
+
+export interface ServiceQualityResponse {
+    avg_pickup_time_minutes: number;
+    avg_trip_distance_km: number;
+    service_rating: number;
+    completion_rate_percent: number;
+}
+
+export type ServiceQualityResponseWrapped = ApiResponse<ServiceQualityResponse>;
+
+// ─── Top Facilities ───────────────────────────────────────────────────────────
+
+export interface TopFacilityItem {
+    rank: number;
+    facility_id: string;
+    facility_name: string;
+    facility_type?: string | null;
+    total_bookings: number;
+    acceptance_rate: number;
+}
+
+export interface TopFacilitiesResponse {
+    period_days: number;
+    total_facilities: number;
+    type_counts: Record<string, number>;
+    facilities: TopFacilityItem[];
+}
+
+export type TopFacilitiesResponseWrapped = ApiResponse<TopFacilitiesResponse>;
 
 // ====================== ANALYTICS QUERY PARAMS ======================
 
@@ -116,9 +165,10 @@ export type TopFleetPartnersResponseWrapped = ApiResponse<TopFleetPartnersRespon
  * Base query parameters used across most analytics endpoints
  */
 export interface AnalyticsQueryParams {
-    start_date?: string | null;      // ISO date string e.g. "2026-04-01"
-    end_date?: string | null;        // ISO date string
-    period?: "today" | "week" | "month" | "quarter" | "year" | string;
+    days?: number;
+    start_date?: string | null;
+    end_date?: string | null;
+    period?: string;
     limit?: number;
     page?: number;
 }
@@ -127,7 +177,7 @@ export interface AnalyticsQueryParams {
  * Parameters for Trip Volume Trend
  */
 export interface TripVolumeTrendParams extends AnalyticsQueryParams {
-    group_by?: "day" | "week" | "month";   // how to group the trend data
+    days?: number;                         // 7, 30, or 90
 }
 
 /**
@@ -157,3 +207,7 @@ export interface TransportDistributionParams extends AnalyticsQueryParams {}
 export interface TopFleetPartnersParams extends AnalyticsQueryParams {
     limit?: number;
 }
+
+export interface BookingChannelParams extends AnalyticsQueryParams {}
+
+export interface TopFacilitiesParams extends AnalyticsQueryParams {}

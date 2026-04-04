@@ -5,3 +5,6 @@ export * from './useGetTopDrivers';
 export * from './useGetRecentActivity';
 export * from './useGetTransportDistribution';
 export * from './useGetTopFleetPartners';
+export * from './useGetBookingChannels';
+export * from './useGetServiceQuality';
+export * from './useGetTopFacilities';
