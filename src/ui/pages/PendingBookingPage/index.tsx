@@ -1,10 +1,17 @@
 'use client';
 
+import { useState, useMemo } from 'react';
+import dayjs from 'dayjs';
 import { Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { DashboardTitle, RowStack } from '../../modules/components';
-import { pxToRem } from '../../../common';
-import { useState } from 'react';
+import {
+  pxToRem,
+  useGetPendingBookings,
+  useGetPendingBookingsKpis,
+  useResolvedApiQuery,
+} from '../../../common';
+import { EmptyState } from '../../modules/blocks';
 import {
   PendingStatCard,
   PendingBookingCard,
@@ -12,96 +19,6 @@ import {
 } from './ui/components';
 import { AssignDriverModal } from '../../modules/components';
 import { PendingBooking } from './ui/components/PendingBookingCard';
-
-const pendingBookings: PendingBooking[] = [
-  {
-    id: '1',
-    bookingId: 'BK-20495',
-    vehicleType: 'MediGo Wheelchair Van',
-    vehicleTypeColor: '#059669',
-    vehicleTypeBg: '#ECFDF5',
-    serviceType: 'Transport + Care Assistant',
-    serviceTypeColor: '#16A34A',
-    serviceTypeBg: '#F0FDF4',
-    waitTime: '24 min',
-    patientName: 'Claire Beaumont',
-    patientAge: 72,
-    patientPhone: '+1 416 555 0123',
-    pickup: '120 King St W, Toronto, ON',
-    destination: 'Toronto General Hospital',
-    dateTime: 'Mar 10, 2026 · 09:00 AM',
-    specialNote: 'Requires lift-equipped vehicle',
-  },
-  {
-    id: '2',
-    bookingId: 'BK-20494',
-    vehicleType: 'MediGo Standard Ride',
-    vehicleTypeColor: '#2F6FED',
-    vehicleTypeBg: '#EBF2FF',
-    serviceType: 'Transport Only',
-    serviceTypeColor: '#2F6FED',
-    serviceTypeBg: '#EBF2FF',
-    waitTime: '12 min',
-    patientName: 'Pierre Tremblay',
-    patientAge: 58,
-    patientPhone: '+1 514 555 0198',
-    pickup: '455 Ste-Catherine St W, Montréal, QC',
-    destination: 'Montreal General Hospital',
-    dateTime: 'Mar 10, 2026 · 10:30 AM',
-  },
-  {
-    id: '3',
-    bookingId: 'BK-20493',
-    vehicleType: 'MediGo Stretcher Van',
-    vehicleTypeColor: '#6366F1',
-    vehicleTypeBg: '#EEF2FF',
-    serviceType: 'Transport + Care Assistant',
-    serviceTypeColor: '#16A34A',
-    serviceTypeBg: '#F0FDF4',
-    waitTime: '8 min',
-    patientName: 'Dorothy MacLeod',
-    patientAge: 81,
-    patientPhone: '+1 613 555 0147',
-    pickup: 'Rideau Place Care Home, Ottawa, ON',
-    destination: 'Ottawa Kidney Care Centre',
-    dateTime: 'Mar 10, 2026 · 08:00 AM',
-    specialNote: 'Recurring – every Tuesday & Thursday',
-  },
-  {
-    id: '4',
-    bookingId: 'BK-20494',
-    vehicleType: 'MediGo Standard Ride',
-    vehicleTypeColor: '#2F6FED',
-    vehicleTypeBg: '#EBF2FF',
-    serviceType: 'Transport Only',
-    serviceTypeColor: '#2F6FED',
-    serviceTypeBg: '#EBF2FF',
-    waitTime: '12 min',
-    patientName: 'Joseph Nguyen',
-    patientAge: 62,
-    patientPhone: '+1 604 555 0132',
-    pickup: '888 Burrard St, Vancouver, BC',
-    destination: 'BC Cancer – Vancouver Centre',
-    dateTime: 'Mar 10, 2026 · 11:00 AM',
-  },
-  {
-    id: '5',
-    bookingId: 'BK-20491',
-    vehicleType: 'MediGo Stretcher Van',
-    vehicleTypeColor: '#6366F1',
-    vehicleTypeBg: '#EEF2FF',
-    serviceType: 'Transport + Care Assistant',
-    serviceTypeColor: '#16A34A',
-    serviceTypeBg: '#F0FDF4',
-    waitTime: '2 hr 15 min',
-    patientName: "Margaret O'Brien",
-    patientAge: 65,
-    patientPhone: '+1 403 555 0189',
-    pickup: '1150 12 Ave SW, Calgary, AB',
-    destination: 'Foothills Medical Centre',
-    dateTime: 'Mar 10, 2026 · 01:00 PM',
-  },
-];
 
 const availableDrivers = [
   {
@@ -147,12 +64,50 @@ const availableDrivers = [
 ];
 
 export const PendingBookingPage = () => {
+  // — All hooks first —
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<PendingBooking | null>(
     null
   );
 
+  const { data: kpis } = useResolvedApiQuery(
+    useGetPendingBookingsKpis,
+    null
+  );
+
+  const pendingQuery = useGetPendingBookings({ page: 1, limit: 20 });
+
+  const pendingBookings = useMemo(() => {
+    const items = pendingQuery.data?.data;
+    if (!items?.length) return [];
+    return items.map((item) => ({
+      id: item.id,
+      bookingId: item.id.slice(0, 8).toUpperCase(),
+      vehicleType:
+        item.ride_type
+          ?.replace(/_/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Standard Ride',
+      vehicleTypeColor: '#2F6FED',
+      vehicleTypeBg: '#EBF2FF',
+      serviceType:
+        item.trip_type
+          ?.replace(/_/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Transport Only',
+      serviceTypeColor: '#2F6FED',
+      serviceTypeBg: '#EBF2FF',
+      waitTime: `${item.wait_minutes} min`,
+      patientName: item.rider_name,
+      patientAge: 0,
+      patientPhone: item.rider_phone || '',
+      pickup: item.pickup_address,
+      destination: item.destination_address,
+      dateTime: dayjs(item.scheduled_at).format('MMM D, YYYY · hh:mm A'),
+      specialNote: item.special_instructions || undefined,
+    }));
+  }, [pendingQuery.data]);
+
+  // — Derived state / handlers —
   const handleViewDetail = (booking: PendingBooking) => {
     setSelectedBooking(booking);
     setDetailModalOpen(true);
@@ -196,22 +151,35 @@ export const PendingBookingPage = () => {
 
         {/* Stat Cards */}
         <RowStack spacing={'12px'} width="100%">
-          <PendingStatCard value="5" label="Pending Now" />
-          <PendingStatCard value="18 min" label="Avg. Wait Time" />
-          <PendingStatCard value="0" label="Assigned" />
+          <PendingStatCard
+            value={String(kpis?.pending_now ?? 0)}
+            label="Pending Now"
+          />
+          <PendingStatCard
+            value={`${kpis?.avg_wait_minutes ?? 0} min`}
+            label="Avg. Wait Time"
+          />
+          <PendingStatCard
+            value={String(kpis?.assigned_count ?? 0)}
+            label="Assigned"
+          />
         </RowStack>
 
         {/* Booking Cards */}
-        <Stack spacing={'12px'}>
-          {pendingBookings.map((booking) => (
-            <PendingBookingCard
-              key={booking.id}
-              booking={booking}
-              onViewDetail={() => handleViewDetail(booking)}
-              onAssignDriver={() => handleOpenAssignDriver(booking)}
-            />
-          ))}
-        </Stack>
+        {pendingBookings.length > 0 ? (
+          <Stack spacing={'12px'}>
+            {pendingBookings.map((booking) => (
+              <PendingBookingCard
+                key={booking.id}
+                booking={booking}
+                onViewDetail={() => handleViewDetail(booking)}
+                onAssignDriver={() => handleOpenAssignDriver(booking)}
+              />
+            ))}
+          </Stack>
+        ) : (
+          <EmptyState animationSrc="/empty.json" />
+        )}
       </Stack>
 
       {/* Detail Modal */}

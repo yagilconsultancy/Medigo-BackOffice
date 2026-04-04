@@ -6,7 +6,7 @@ import {
   useGridApiContext,
   useGridSelector,
 } from '@mui/x-data-grid';
-import { CircularProgress, LinearProgress } from '@mui/material';
+import { CircularProgress, LinearProgress, Skeleton, Stack } from '@mui/material';
 import { CSSProperties, forwardRef, ReactElement } from 'react';
 
 const LOADING_VARIANTS: Record<
@@ -25,8 +25,19 @@ const LOADING_VARIANTS: Record<
     style: { display: 'block' },
   },
   skeleton: {
-    component: () => <></>,
-    style: {},
+    component: () => (
+      <Stack spacing={1} sx={{ width: '100%', p: 2 }}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton
+            key={i}
+            variant="rectangular"
+            height={52}
+            sx={{ borderRadius: '4px' }}
+          />
+        ))}
+      </Stack>
+    ),
+    style: { height: 400, alignItems: 'flex-start' },
   },
 };
 
@@ -39,7 +50,7 @@ export const DataGridLoader = forwardRef<HTMLDivElement, DataGridLoaderProps>(
   function DataGridLoader(props, ref) {
     const {
       variant = 'linear-progress',
-      noRowsVariant = 'circular-progress',
+      noRowsVariant = 'skeleton',
       style,
       ...other
     } = props;

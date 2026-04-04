@@ -11,12 +11,15 @@ import {
   RowStack,
   StyledImage,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import { pxToRem, useGetAllBookings } from '../../../common';
+import { RideResponse } from '../../../common/types';
 import { GridColSpec } from '../../modules/components/GridTable';
+import { EmptyState } from '../../modules/blocks';
 import filterIcon from './ui/assets/icons/filter-Icon.svg';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import dayjs from 'dayjs';
 import {
   ApproveDeclineModal,
   BookingDetailModal,
@@ -41,120 +44,65 @@ export type BookingRow = {
     | 'Full Refund';
 };
 
-const allBookings: BookingRow[] = [
-  {
-    id: '1',
-    bookingId: 'BK-20491',
-    patient: 'Claire Beaumont',
-    pickupLocation: '120 King St W, Toronto, ON',
-    destination: 'Toronto General Hospital',
-    dateTime: 'Mar 9, 2026 · 09:00 AM',
-    status: 'Pending',
-  },
-  {
-    id: '2',
-    bookingId: 'BK-20490',
-    patient: 'Pierre Tremblay',
-    pickupLocation: '455 Ste-Catherine St W, Montreal, QC',
-    destination: 'Montreal General Hospital',
-    dateTime: 'Mar 9, 2026 · 10:30 AM',
-    status: 'Approved',
-  },
-  {
-    id: '3',
-    bookingId: 'BK-20489',
-    patient: "Margaret O'Brien",
-    pickupLocation: '1150 12 Ave SW, Calgary, AB',
-    destination: 'Foothills Medical Centre',
-    dateTime: 'Mar 9, 2026 · 11:15 AM',
-    status: 'Approved',
-  },
-  {
-    id: '4',
-    bookingId: 'BK-20488',
-    patient: 'Gordon MacPherson',
-    pickupLocation: '321 Elgin St, Ottawa, ON',
-    destination: 'The Ottawa Hospital',
-    dateTime: 'Mar 9, 2026 · 12:00 PM',
-    status: 'Declined',
-  },
-  {
-    id: '5',
-    bookingId: 'BK-20487',
-    patient: 'Dorothy MacLeod',
-    pickupLocation: '1225 Gladstone Ave, Ottawa, ON',
-    destination: 'Ottawa Kidney Care Centre',
-    dateTime: 'Mar 9, 2026 · 01:30 PM',
-    status: 'Pending',
-  },
-  {
-    id: '6',
-    bookingId: 'BK-20486',
-    patient: 'Joseph Nguyen',
-    pickupLocation: '888 Burrard St, Vancouver, BC',
-    destination: 'Vancouver General Hospital',
-    dateTime: 'Mar 9, 2026 · 02:00 PM',
-    status: 'Approved',
-  },
-  {
-    id: '7',
-    bookingId: 'BK-20485',
-    patient: 'Isabelle Côté',
-    pickupLocation: '800 René-Lévesque Blvd, Montreal, QC',
-    destination: 'Montreal Heart Institute',
-    dateTime: 'Mar 9, 2026 · 03:00 PM',
-    status: 'Pending',
-  },
-];
-
 export const BookingPage = () => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [pageSize] = useState(10);
+  const [page, setPage] = useState(1);
   const [openApprove, setOpenApprove] = useState<boolean>(false);
   const [openDecline, setOpenDecline] = useState<boolean>(false);
   const [openDetail, setOpenDetail] = useState<boolean>(false);
   const [statusDetail, setStatusDetail] = useState<BookingRow['status']>(null);
 
+  const filterToApiStatus: Record<string, string | undefined> = {
+    All: undefined,
+    Pending: 'pending',
+    Approved: 'approved',
+    Declined: 'declined',
+  };
+
+  const bookingsQuery = useGetAllBookings({
+    status: filterToApiStatus[activeFilter],
+    search: searchQuery || undefined,
+    page,
+    limit: pageSize,
+  });
+  const allCountQuery = useGetAllBookings({ page: 1, limit: 1 });
+  const pendingCountQuery = useGetAllBookings({ status: 'pending', page: 1, limit: 1 });
+  const approvedCountQuery = useGetAllBookings({ status: 'approved', page: 1, limit: 1 });
+  const declinedCountQuery = useGetAllBookings({ status: 'declined', page: 1, limit: 1 });
+
+  const bookingsData = bookingsQuery.data;
+
+  const statusMap: Record<string, BookingRow['status']> = {
+    requested: 'Pending',
+    pending: 'Pending',
+    approved: 'Approved',
+    confirmed: 'Approved',
+    accepted: 'Approved',
+    declined: 'Declined',
+    rejected: 'Declined',
+    cancelled: 'Declined',
+  };
+
   const filteredBookings = useMemo(() => {
-    let filtered = allBookings;
-
-    if (activeFilter !== 'All') {
-      filtered = filtered.filter((b) => b.status === activeFilter);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (b) =>
-          b.bookingId.toLowerCase().includes(query) ||
-          b.patient.toLowerCase().includes(query) ||
-          b.pickupLocation.toLowerCase().includes(query) ||
-          b.destination.toLowerCase().includes(query) ||
-          b.dateTime.toLowerCase().includes(query) ||
-          b.status.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [activeFilter, searchQuery]);
+    if (!bookingsData?.data?.length) return [];
+    return bookingsData.data.map((ride: RideResponse, index: number) => ({
+      id: ride.id,
+      bookingId: `BK-${String((bookingsData.total ?? 0) - ((bookingsData.page - 1) * (bookingsData.limit ?? 10)) - index + 20484).padStart(5, '0')}`,
+      patient: ride.facility_name || ride.rider_id.slice(0, 8),
+      pickupLocation: ride.pickup_address,
+      destination: ride.destination_address,
+      dateTime: dayjs(ride.scheduled_at).format('MMM D, YYYY · hh:mm A'),
+      status: statusMap[ride.status?.toLowerCase()] || 'Pending',
+    }));
+  }, [bookingsData]);
 
   const statusFilter = [
-    { text: 'All', count: allBookings.length, active: activeFilter === 'All' },
-    {
-      text: 'Pending',
-      count: allBookings.filter((b) => b.status === 'Pending').length,
-      active: activeFilter === 'Pending',
-    },
-    {
-      text: 'Approved',
-      count: allBookings.filter((b) => b.status === 'Approved').length,
-      active: activeFilter === 'Approved',
-    },
-    {
-      text: 'Declined',
-      count: allBookings.filter((b) => b.status === 'Declined').length,
-      active: activeFilter === 'Declined',
-    },
+    { text: 'All', count: allCountQuery.data?.total ?? 0, active: activeFilter === 'All' },
+    { text: 'Pending', count: pendingCountQuery.data?.total ?? 0, active: activeFilter === 'Pending' },
+    { text: 'Approved', count: approvedCountQuery.data?.total ?? 0, active: activeFilter === 'Approved' },
+    { text: 'Declined', count: declinedCountQuery.data?.total ?? 0, active: activeFilter === 'Declined' },
   ];
 
   const handleOpenApprove = () => {
@@ -280,7 +228,14 @@ export const BookingPage = () => {
         <AppGridtable
           columns={columns}
           data={filteredBookings}
-          initialPageSize={4}
+          disableAutoPagination
+          totalRows={bookingsData?.total ?? 0}
+          initialPageSize={pageSize}
+          isFetchingData={bookingsQuery.isFetching}
+          onPaginationModelChange={(model) => {
+            setPage(model.page + 1);
+          }}
+          emptyState={<EmptyState animationSrc="/empty.json" />}
           sx={{
             height: 'auto',
             width: '100%',
@@ -292,51 +247,25 @@ export const BookingPage = () => {
                 <AppPillCount
                   {...filter}
                   key={index}
-                  onClick={() => setActiveFilter(filter.text)}
+                  onClick={() => {
+                    setActiveFilter(filter.text);
+                    setPage(1);
+                  }}
                 />
               ))}
             </RowStack>
-            <RowStack spacing={1}>
-              <AppSearchField
-                name="search"
-                placeholder="Search bookings..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                boxProps={{
-                  sx: { width: '240px' },
-                }}
-              />
-              <RowStack
-                spacing={1}
-                sx={{
-                  padding: '11.5px 16.07px',
-                  borderRadius: '14px',
-                  background: '#F7F9FB',
-                  border: '0.67px solid #E8ECF0',
-                  cursor: 'pointer',
-                }}
-              >
-                <StyledImage
-                  src={filterIcon}
-                  alt="filter"
-                  sx={{
-                    width: '15px',
-                    height: '15px',
-                  }}
-                />
-                <Typography
-                  sx={{
-                    color: (theme) => theme.color.grey,
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(13),
-                    lineHeight: '19.5px',
-                  }}
-                >
-                  Filter
-                </Typography>
-              </RowStack>
-            </RowStack>
+            <AppSearchField
+              name="search"
+              placeholder="Search bookings..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
+              boxProps={{
+                sx: { width: '240px' },
+              }}
+            />
           </RowStack>
         </AppGridtable>
       </Stack>

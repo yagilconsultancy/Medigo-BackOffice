@@ -64,6 +64,8 @@ export type AppDataGridProps<T extends GridRow> = Omit<
   ) => void;
   /** When true, automatic pagination will be disabled and the value of "data" will be used. This requires manual server-side pagination handling */
   disableAutoPagination?: boolean;
+  /** Total number of rows across all pages. Required when using disableAutoPagination for correct pagination controls */
+  totalRows?: number;
   /** Useful for manual server-side pagination */
   isFetchingData?: boolean;
   /** When true, the pagination footer will be hidden. Defaults to false */
@@ -82,6 +84,7 @@ export const GridTable = <T extends GridRow>({
   initialPageSize = 5,
   slots,
   disableAutoPagination,
+  totalRows: externalTotalRows,
   isFetchingData,
   hidePagination,
   onPaginationModelChange,
@@ -121,6 +124,8 @@ export const GridTable = <T extends GridRow>({
     const loadData = async () => {
       if (disableAutoPagination) {
         setRows(data || []);
+        if (externalTotalRows !== undefined) setRowCount(externalTotalRows);
+        if (isFetchingData !== undefined) setLoading(isFetchingData);
         return;
       }
 
@@ -149,7 +154,7 @@ export const GridTable = <T extends GridRow>({
     };
 
     void loadData();
-  }, [paginationModel, sortModel, fetchData, data, disableAutoPagination]);
+  }, [paginationModel, sortModel, fetchData, data, disableAutoPagination, externalTotalRows, isFetchingData]);
 
   return (
     <DataGrid<T>

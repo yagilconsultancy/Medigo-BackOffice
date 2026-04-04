@@ -1,90 +1,19 @@
 'use client';
 
-import { Box, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { AssignDriverModal, RowStack } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetScheduledTrips,
+  useGetScheduledTripsKpis,
+  useResolvedApiQuery,
+} from '../../../common';
 import { ScheduledTripRow, ScheduledTrip } from './ui/components';
+import { EmptyState } from '../../modules/blocks';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
-import { useState } from 'react';
-
-const statCards = [
-  { value: '6', label: 'Upcoming Trips' },
-  { value: '3', label: 'Recurring' },
-  { value: '1', label: 'Needs Assignment' },
-];
-
-const scheduledTrips: ScheduledTrip[] = [
-  {
-    id: '1',
-    patientName: 'Claire Beaumont',
-    bookingId: 'BK-20510',
-    vehicleType: 'MediGo Wheelchair Van',
-    vehicleTypeColor: '#059669',
-    vehicleTypeBg: '#ECFDF5',
-    recurrence: 'Tue & Thu',
-    dateTime: 'Mar 11, 2026 · 09:00 AM',
-    route: '120 King St W, Toronto, ON → Toronto General Hospital',
-    driverName: 'Liam MacDonald',
-  },
-  {
-    id: '2',
-    patientName: 'Dorothy MacLeod',
-    bookingId: 'BK-20509',
-    vehicleType: 'MediGo Stretcher Van',
-    vehicleTypeColor: '#6366F1',
-    vehicleTypeBg: '#EEF2FF',
-    recurrence: 'Mon, Wed, Fri',
-    dateTime: 'Mar 12, 2026 · 08:00 AM',
-    route: 'Rideau Place Care Home, Ottawa, ON → Ottawa Kidney Care Centre',
-    driverName: 'Sophie Tremblay',
-  },
-  {
-    id: '3',
-    patientName: 'Joseph Nguyen',
-    bookingId: 'BK-20508',
-    vehicleType: 'MediGo Standard Ride',
-    vehicleTypeColor: '#2F6FED',
-    vehicleTypeBg: '#EBF2FF',
-    dateTime: 'Mar 11, 2026 · 10:00 AM',
-    route: '888 Burrard St, Vancouver, BC → BC Cancer – Vancouver Centre',
-    driverName: 'David Chen',
-  },
-  {
-    id: '4',
-    patientName: 'Pierre Tremblay',
-    bookingId: 'BK-20507',
-    vehicleType: 'MediGo Standard Ride',
-    vehicleTypeColor: '#2F6FED',
-    vehicleTypeBg: '#EBF2FF',
-    dateTime: 'Mar 13, 2026 · 11:30 AM',
-    route: '455 Ste-Catherine St W, Montréal → Montreal General Hospital',
-    driverName: 'Anna Kim',
-  },
-  {
-    id: '5',
-    patientName: "Margaret O'Brien",
-    bookingId: 'BK-20506',
-    vehicleType: 'MediGo Stretcher Van',
-    vehicleTypeColor: '#6366F1',
-    vehicleTypeBg: '#EEF2FF',
-    recurrence: 'Bi-weekly',
-    dateTime: 'Mar 14, 2026 · 01:00 PM',
-    route: '1150 12 Ave SW, Calgary, AB → Foothills Medical Centre',
-    driverName: null,
-  },
-  {
-    id: '6',
-    patientName: 'Isabelle Cote',
-    bookingId: 'BK-20505',
-    vehicleType: 'MediGo Standard Ride',
-    vehicleTypeColor: '#2F6FED',
-    vehicleTypeBg: '#EBF2FF',
-    dateTime: 'Mar 15, 2026 · 02:30 PM',
-    route: '800 Rene-Levesque Blvd W, Montreal → Montreal Heart Institute',
-    driverName: 'Isabelle Roy',
-  },
-];
+import { useState, useMemo } from 'react';
+import dayjs from 'dayjs';
 
 const availableDrivers = [
   {
@@ -130,9 +59,44 @@ const availableDrivers = [
 ];
 
 export const ScheduledTripsPage = () => {
+  // — All hooks first —
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<ScheduledTrip | null>(null);
 
+  const { data: kpis } = useResolvedApiQuery(useGetScheduledTripsKpis, null);
+  const scheduledQuery = useGetScheduledTrips({ page: 1, limit: 20 });
+
+  const scheduledTrips = useMemo(() => {
+    const items = scheduledQuery.data?.data;
+    if (!items?.length) return [];
+    return items.map((item) => ({
+      id: item.id,
+      patientName: item.rider_name,
+      bookingId: item.id.slice(0, 8).toUpperCase(),
+      vehicleType:
+        item.ride_type
+          ?.replace(/_/g, ' ')
+          .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Standard Ride',
+      vehicleTypeColor: '#2F6FED',
+      vehicleTypeBg: '#EBF2FF',
+      recurrence: item.recurring_frequency || undefined,
+      dateTime: dayjs(item.scheduled_at).format('MMM D, YYYY · hh:mm A'),
+      route: `${item.pickup_address} → ${item.destination_address}`,
+      driverName: item.driver_name || null,
+    }));
+  }, [scheduledQuery.data]);
+
+  // — Derived state —
+  const statCards = [
+    { value: String(kpis?.upcoming_count ?? 0), label: 'Upcoming Trips' },
+    { value: String(kpis?.recurring_count ?? 0), label: 'Recurring' },
+    {
+      value: String(kpis?.needs_assignment_count ?? 0),
+      label: 'Needs Assignment',
+    },
+  ];
+
+  // — Handlers —
   const handleOpenAssignDriver = (trip: ScheduledTrip) => {
     setSelectedTrip(trip);
     setAssignModalOpen(true);
@@ -240,16 +204,20 @@ export const ScheduledTripsPage = () => {
           </RowStack>
 
           {/* Table Rows */}
-          {scheduledTrips.map((trip, index) => (
-            <ScheduledTripRow
-              key={trip.id}
-              trip={{
-                ...trip,
-                onAssign: () => handleOpenAssignDriver(trip),
-              }}
-              isLast={index === scheduledTrips.length - 1}
-            />
-          ))}
+          {scheduledTrips.length === 0 ? (
+            <EmptyState animationSrc="/empty.json" />
+          ) : (
+            scheduledTrips.map((trip, index) => (
+              <ScheduledTripRow
+                key={trip.id}
+                trip={{
+                  ...trip,
+                  onAssign: () => handleOpenAssignDriver(trip),
+                }}
+                isLast={index === scheduledTrips.length - 1}
+              />
+            ))
+          )}
         </Stack>
       </Stack>
 

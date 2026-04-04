@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Chip, Grid, IconButton, Stack, Typography } from '@mui/material';
+import { Grid, IconButton, Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppGridtable,
@@ -9,7 +9,13 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetCancelledTrips,
+  useGetCancelledTripsKpis,
+  useResolvedApiQuery,
+} from '../../../common';
+import dayjs from 'dayjs';
 import { GridColSpec } from '../../modules/components/GridTable';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
@@ -19,6 +25,7 @@ import {
   StatusComponent,
 } from '../BookingPage/ui/components';
 import { BookingRow } from '../BookingPage';
+import { EmptyState } from '../../modules/blocks';
 
 type CancelledTripRow = {
   id: string;
@@ -32,185 +39,40 @@ type CancelledTripRow = {
   amount: string;
 };
 
-const statCards = [
-  { value: '6', label: 'Total Cancelled', color: '#EF4444' },
-  { value: '1', label: 'Rider No-show', color: '#F59E0B' },
-  { value: '1', label: 'Refunds Pending', color: '#6366F1' },
-  { value: '3', label: 'Refunds Processed', color: '#059669' },
-];
-
-const cancelledTrips: CancelledTripRow[] = [
-  {
-    id: '1',
-    bookingId: 'BK-20488',
-    patient: 'Gordon MacPherson',
-    route: '321 Elgin St, Ottawa → The Ottawa Hospital',
-    date: 'Mar 8, 2026',
-    reason: 'Rider No-show',
-    cancelledBy: 'System (auto)',
-    refund: 'Pending',
-    amount: '$40.00',
-  },
-  {
-    id: '2',
-    bookingId: 'BK-20487',
-    patient: 'Jacques Bourgeois',
-    route: '88 Sherbrooke St E, Montreal → Montreal Heart Institute',
-    date: 'Mar 7, 2026',
-    reason: 'Driver Unavailable',
-    cancelledBy: 'System',
-    refund: 'Processed',
-    amount: '$35.50',
-  },
-  {
-    id: '3',
-    bookingId: 'BK-20486',
-    patient: "Margaret O'Brien",
-    route: '1150 12 Ave SW, Calgary → Foothills Medical Centre',
-    date: 'Mar 7, 2026',
-    reason: 'Rider Request',
-    cancelledBy: 'Rider',
-    refund: 'None',
-    amount: '$0.00',
-  },
-  {
-    id: '4',
-    bookingId: 'BK-20485',
-    patient: 'Pierre Tremblay',
-    route: '455 Ste-Catherine St W, Montreal → Montreal General Hospital',
-    date: 'Mar 6, 2026',
-    reason: 'Vehicle Breakdown',
-    cancelledBy: 'Driver',
-    refund: 'Full Refund',
-    amount: '$48.00',
-  },
-  {
-    id: '5',
-    bookingId: 'BK-20484',
-    patient: 'Lisa Anderson',
-    route: '800 Rene-Levesque Blvd W → Montreal Heart Institute',
-    date: 'Mar 5, 2026',
-    reason: 'Medical Emergency',
-    cancelledBy: 'Admin',
-    refund: 'Processed',
-    amount: '$42.75',
-  },
-  {
-    id: '6',
-    bookingId: 'BK-20483',
-    patient: 'Helen Moore',
-    route: '120 King St W, Toronto → Toronto General Hospital',
-    date: 'Mar 4, 2026',
-    reason: 'Appointment Rescheduled',
-    cancelledBy: 'Rider',
-    refund: 'None',
-    amount: '$0.00',
-  },
-];
-
-const tripDetails: Record<string, CancelledTripDetail> = {
-  '1': {
-    bookingId: 'BK-20488',
-    serviceType: 'Standard Medical',
-    patientName: 'Gordon MacPherson',
-    age: 44,
-    phone: '+1 613 555 0312',
-    dateTime: 'Mar 8, 2026, 12:00 PM',
-    pickup: '321 Elgin St, Ottawa, ON',
-    destination: 'The Ottawa Hospital',
-    cancellationReason: 'Rider No-show',
-    cancelledBy: 'System (auto)',
-    assignedDriver: 'Anna Kim',
-    refundStatus: 'Pending',
-    amount: '$40.00',
-  },
-  '2': {
-    bookingId: 'BK-20487',
-    serviceType: 'Standard Medical',
-    patientName: 'Jacques Bourgeois',
-    age: 58,
-    phone: '+1 514 555 0198',
-    dateTime: 'Mar 7, 2026, 09:30 AM',
-    pickup: '88 Sherbrooke St E, Montreal, QC',
-    destination: 'Montreal Heart Institute',
-    cancellationReason: 'Driver Unavailable',
-    cancelledBy: 'System',
-    assignedDriver: 'Sophie Tremblay',
-    refundStatus: 'Processed',
-    amount: '$35.50',
-  },
-  '3': {
-    bookingId: 'BK-20486',
-    serviceType: 'Standard Medical',
-    patientName: "Margaret O'Brien",
-    age: 72,
-    phone: '+1 403 555 0245',
-    dateTime: 'Mar 7, 2026, 11:00 AM',
-    pickup: '1150 12 Ave SW, Calgary, AB',
-    destination: 'Foothills Medical Centre',
-    cancellationReason: 'Rider Request',
-    cancelledBy: 'Rider',
-    assignedDriver: 'David Chen',
-    refundStatus: 'None',
-    amount: '$0.00',
-  },
-  '4': {
-    bookingId: 'BK-20485',
-    serviceType: 'Standard Medical',
-    patientName: 'Pierre Tremblay',
-    age: 65,
-    phone: '+1 514 555 0334',
-    dateTime: 'Mar 6, 2026, 11:30 AM',
-    pickup: '455 Ste-Catherine St W, Montreal, QC',
-    destination: 'Montreal General Hospital',
-    cancellationReason: 'Vehicle Breakdown',
-    cancelledBy: 'Driver',
-    assignedDriver: 'Anna Kim',
-    refundStatus: 'Full Refund',
-    amount: '$48.00',
-  },
-  '5': {
-    bookingId: 'BK-20484',
-    serviceType: 'Standard Medical',
-    patientName: 'Lisa Anderson',
-    age: 51,
-    phone: '+1 514 555 0467',
-    dateTime: 'Mar 5, 2026, 02:00 PM',
-    pickup: '800 Rene-Levesque Blvd W, Montreal, QC',
-    destination: 'Montreal Heart Institute',
-    cancellationReason: 'Medical Emergency',
-    cancelledBy: 'Admin',
-    assignedDriver: 'Liam MacDonald',
-    refundStatus: 'Processed',
-    amount: '$42.75',
-  },
-  '6': {
-    bookingId: 'BK-20483',
-    serviceType: 'Standard Medical',
-    patientName: 'Helen Moore',
-    age: 68,
-    phone: '+1 416 555 0523',
-    dateTime: 'Mar 4, 2026, 10:00 AM',
-    pickup: '120 King St W, Toronto, ON',
-    destination: 'Toronto General Hospital',
-    cancellationReason: 'Appointment Rescheduled',
-    cancelledBy: 'Rider',
-    assignedDriver: 'Marcus Johnson',
-    refundStatus: 'None',
-    amount: '$0.00',
-  },
-};
-
 export const CancelledTripsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<CancelledTripDetail | null>(
     null
   );
 
+  const { data: kpis } = useResolvedApiQuery(useGetCancelledTripsKpis, null);
+
+  const cancelledQuery = useGetCancelledTrips({ page, limit: 20 });
+
+  const cancelledTrips = useMemo(() => {
+    const items = cancelledQuery.data?.data;
+    if (!items?.length) return [];
+    return items.map((item) => ({
+      id: item.id,
+      bookingId: item.id.slice(0, 8).toUpperCase(),
+      patient: item.rider_name,
+      route: `${item.pickup_address} \u2192 ${item.destination_address}`,
+      date: dayjs(item.scheduled_at).format('MMM D, YYYY'),
+      reason: item.cancellation_reason || 'Unknown',
+      cancelledBy: item.cancelled_by_name || 'Unknown',
+      refund: (item.refund_status?.charAt(0).toUpperCase() +
+        (item.refund_status?.slice(1) || '')) as BookingRow['status'],
+      amount:
+        item.refund_amount != null
+          ? `$${item.refund_amount.toFixed(2)}`
+          : '$0.00',
+    }));
+  }, [cancelledQuery.data]);
+
   const filteredTrips = useMemo(() => {
     if (!searchQuery.trim()) return cancelledTrips;
-
     const query = searchQuery.toLowerCase();
     return cancelledTrips.filter(
       (t) =>
@@ -220,10 +82,33 @@ export const CancelledTripsPage = () => {
         t.reason.toLowerCase().includes(query) ||
         t.cancelledBy.toLowerCase().includes(query)
     );
-  }, [searchQuery]);
+  }, [searchQuery, cancelledTrips]);
+
+  const statCards = [
+    {
+      value: String(kpis?.total_cancelled ?? 0),
+      label: 'Total Cancelled',
+      color: '#EF4444',
+    },
+    {
+      value: String(kpis?.no_show_count ?? 0),
+      label: 'Rider No-show',
+      color: '#F59E0B',
+    },
+    {
+      value: String(kpis?.refunds_pending ?? 0),
+      label: 'Refunds Pending',
+      color: '#6366F1',
+    },
+    {
+      value: String(kpis?.refunds_processed ?? 0),
+      label: 'Refunds Processed',
+      color: '#059669',
+    },
+  ];
 
   const handleViewTrip = (tripId: string) => {
-    setSelectedTrip(tripDetails[tripId] || null);
+    setSelectedTrip(null);
     setDetailOpen(true);
   };
 
@@ -360,6 +245,7 @@ export const CancelledTripsPage = () => {
         <AppGridtable
           columns={columns}
           data={filteredTrips}
+          emptyState={<EmptyState animationSrc="/empty.json" />}
           initialPageSize={6}
           sx={{
             height: 'auto',
