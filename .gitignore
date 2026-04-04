@@ -47,3 +47,6 @@ yalc.lock
 # Claude
 CLAUDE.md
 .mcp.json
+
+#extras
+extra.json

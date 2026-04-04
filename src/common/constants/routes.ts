@@ -21,6 +21,205 @@ export const ROUTES_SPEC = {
   revokeSession: (sessionId: string) =>
     `/${API_VERSION}/users/admin/sessions/${sessionId}`,
 
+  // ====================== ADMIN RIDES ======================
+
+  // Get all rides with filters (admin dashboard)
+  getAllRides: `/${API_VERSION}/rides/admin/rides`,
+
+  // Get pending rides awaiting assignment
+  getPendingRides: `/${API_VERSION}/rides/admin/rides/pending`,
+
+  // Admin directly assign driver to a ride
+  adminAssignDriver: (rideId: string) => `/${API_VERSION}/rides/admin/rides/${rideId}/assign-driver`,
+
+  // ====================== ADMIN BOOKING MANAGEMENT ======================
+
+  // Get all bookings with status, ride type, and search filters
+  getAllBookings: `/${API_VERSION}/rides/admin/bookings`,
+
+  // Get pending bookings (awaiting admin approval)
+  getPendingBookings: `/${API_VERSION}/rides/admin/bookings/pending`,
+
+  // Get pending bookings KPIs
+  getPendingBookingsKpis: `/${API_VERSION}/rides/admin/bookings/pending/kpis`,
+
+  // Get scheduled trips (future/recurring bookings)
+  getScheduledTrips: `/${API_VERSION}/rides/admin/bookings/scheduled`,
+
+  // Get scheduled trips KPIs
+  getScheduledTripsKpis: `/${API_VERSION}/rides/admin/bookings/scheduled/kpis`,
+
+  // Get cancelled trips
+  getCancelledTrips: `/${API_VERSION}/rides/admin/bookings/cancelled`,
+
+  // Get cancelled trips KPIs
+  getCancelledTripsKpis: `/${API_VERSION}/rides/admin/bookings/cancelled/kpis`,
+
+  // Get full booking detail (with notes, timeline, fare, etc.)
+  getBookingDetail: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}`,
+
+  // Approve a booking (REQUESTED → CONFIRMED)
+  approveBooking: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/approve`,
+
+  // Decline a booking
+  declineBooking: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/decline`,
+
+  // Assign driver to a booking
+  assignDriverToBooking: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/assign-driver`,
+
+  // Reassign driver on an active booking
+  reassignDriver: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/reassign-driver`,
+
+  // Get list of available drivers for assignment
+  getAvailableDrivers: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/available-drivers`,
+
+  // Admin cancel a trip
+  adminCancelTrip: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/cancel`,
+
+  // Get all admin notes for a booking
+  getBookingNotes: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/notes`,
+
+  // Add a new admin note to a booking
+  addBookingNote: (rideId: string) => `/${API_VERSION}/rides/admin/bookings/${rideId}/notes`,
+
+  // ====================== ADMIN ANALYTICS ======================
+
+  // Dashboard overview KPIs
+  getDashboardOverview: `/${API_VERSION}/rides/analytics/overview`,
+  // → Response: StandardResponse<DashboardKPIs>
+  // → No request payload
+
+  // Trip volume trend
+  getTripVolumeTrend: `/${API_VERSION}/rides/analytics/trip-volume`,
+  // → Response: StandardResponse<TripVolumeTrendResponse>
+  // → Query params optional: TripVolumeTrendParams
+
+  // Trip status distribution
+  getTripStatusDistribution: `/${API_VERSION}/rides/analytics/trip-status`,
+  // → Response: StandardResponse<TripStatusDistributionResponse>
+  // → No request payload
+
+  // Top performing drivers
+  getTopDrivers: `/${API_VERSION}/rides/analytics/top-drivers`,
+  // → Response: StandardResponse<TopDriversResponse>
+  // → Query params optional: TopDriversParams
+
+  // Recent activity feed
+  getRecentActivity: `/${API_VERSION}/rides/analytics/recent-activity`,
+  // → Response: StandardResponse<RecentActivityResponse>
+  // → Query params optional: RecentActivityParams
+
+  // Transport type distribution
+  getTransportDistribution: `/${API_VERSION}/rides/analytics/transport-distribution`,
+  // → Response: StandardResponse<TransportDistributionResponse>
+  // → No request payload
+
+  // Top fleet partners
+  getTopFleetPartners: `/${API_VERSION}/rides/analytics/top-fleet-partners`,
+  // → Response: StandardResponse<TopFleetPartnersResponse>
+  // → Query params optional: AnalyticsQueryParams
+
+  // Booking channel breakdown
+  getBookingChannels: `/${API_VERSION}/rides/analytics/booking-channels`,
+
+  // Service quality metrics
+  getServiceQuality: `/${API_VERSION}/rides/analytics/service-quality`,
+
+  // Top facilities
+  getTopFacilities: `/${API_VERSION}/rides/analytics/top-facilities`,
+
+  // ====================== ADMIN INCIDENTS ======================
+
+  // Incident KPIs
+  getIncidentKpis: `/${API_VERSION}/rides/admin/incidents/kpis`,
+
+  // List all incidents
+  listIncidents: `/${API_VERSION}/rides/admin/incidents`,
+
+  // Create a new incident
+  createIncident: `/${API_VERSION}/rides/admin/incidents`,
+
+  // Get incident detail
+  getIncidentDetail: (incidentId: string) => `/${API_VERSION}/rides/admin/incidents/${incidentId}`,
+
+  // Update incident status
+  updateIncidentStatus: (incidentId: string) => `/${API_VERSION}/rides/admin/incidents/${incidentId}/status`,
+
+  // Get incident notes
+  getIncidentNotes: (incidentId: string) => `/${API_VERSION}/rides/admin/incidents/${incidentId}/notes`,
+
+  // Add note to incident
+  addIncidentNote: (incidentId: string) => `/${API_VERSION}/rides/admin/incidents/${incidentId}/notes`,
+
+  // ====================== ADMIN SAFETY ALERTS ======================
+
+  // Alert KPIs
+  getAlertKpis: `/${API_VERSION}/rides/admin/alerts/kpis`,
+
+  // Get alert feed
+  getAlertFeed: `/${API_VERSION}/rides/admin/alerts/feed`,
+
+  // Get single alert detail
+  getAlertDetail: (alertId: string) => `/${API_VERSION}/rides/admin/alerts/${alertId}`,
+
+  // Acknowledge an alert
+  acknowledgeAlert: (alertId: string) => `/${API_VERSION}/rides/admin/alerts/${alertId}/acknowledge`,
+
+  // Resolve an alert
+  resolveAlert: (alertId: string) => `/${API_VERSION}/rides/admin/alerts/${alertId}/resolve`,
+
+  // ====================== ADMIN INVESTIGATIONS ======================
+
+  // Investigation KPIs
+  getInvestigationKpis: `/${API_VERSION}/rides/admin/investigations/kpis`,
+
+  // List investigations
+  listInvestigations: `/${API_VERSION}/rides/admin/investigations`,
+
+  // Get investigation detail
+  getInvestigationDetail: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}`,
+
+  // Assign investigator
+  assignInvestigator: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/assign`,
+
+  // Update investigation status
+  updateInvestigationStatus: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/status`,
+
+  // Update investigation progress
+  updateInvestigationProgress: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/progress`,
+
+  // Close investigation
+  closeInvestigation: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/close`,
+
+  // Get investigation notes
+  getInvestigationNotes: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/notes`,
+
+  // Add investigation note
+  addInvestigationNote: (invId: string) => `/${API_VERSION}/rides/admin/investigations/${invId}/notes`,
+
+  // ====================== ADMIN DISCIPLINARY ACTIONS ======================
+
+  // Disciplinary KPIs
+  getDisciplinaryKpis: `/${API_VERSION}/rides/admin/disciplinary/kpis`,
+
+  // List disciplinary actions
+  listDisciplinaryActions: `/${API_VERSION}/rides/admin/disciplinary`,
+
+  // Create disciplinary action
+  createDisciplinaryAction: `/${API_VERSION}/rides/admin/disciplinary`,
+
+  // Get disciplinary detail
+  getDisciplinaryDetail: (actionId: string) => `/${API_VERSION}/rides/admin/disciplinary/${actionId}`,
+
+  // Get disciplinary reason
+  getDisciplinaryReason: (actionId: string) => `/${API_VERSION}/rides/admin/disciplinary/${actionId}/reason`,
+
+  // Reinstate disciplinary action
+  reinstateDisciplinaryAction: (actionId: string) => `/${API_VERSION}/rides/admin/disciplinary/${actionId}/reinstate`,
+
+  // Toggle collapse disciplinary
+  toggleCollapseDisciplinary: (actionId: string) => `/${API_VERSION}/rides/admin/disciplinary/${actionId}/collapse`,
+
   // Fleet Application
   getFleetApplicationsKpi: `/${API_VERSION}/users/admin/fleet/applications/kpis`,
   fleetApplications: `/${API_VERSION}/users/admin/fleet/applications`,
