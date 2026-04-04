@@ -79,7 +79,6 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
           { text: 'Fleet Applications', link: '/fleet' },
           { text: 'Fleet Companies', link: '/fleet/companies' },
           { text: 'Fleet Profiles', link: '/fleet/profiles' },
-          { text: 'Fleet Drivers', link: '/fleet/drivers' },
           { text: 'Fleet Vehicles', link: '/fleet/vehicles' },
         ],
       },

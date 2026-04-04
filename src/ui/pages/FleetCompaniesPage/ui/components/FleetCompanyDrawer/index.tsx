@@ -276,38 +276,74 @@ export const FleetCompanyDrawer = ({
               View Full Profile
             </Typography>
           </Box>
-          <Box
-            onClick={() => {
-              onClose();
-              router.push(`/fleet/earnings?fleet_id=${company.id}`);
-            }}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '42.83px',
-              background: '#FFFFFF',
-              border: '0.67px solid #E5E7EB',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              transition: 'opacity 0.15s ease',
-              '&:hover': { opacity: 0.85 },
-            }}
-          >
-            <Typography
+          <RowStack spacing={'8px'}>
+            <Box
+              onClick={() => {
+                onClose();
+                router.push(`/fleet/earnings?fleet_id=${company.id}`);
+              }}
               sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 600,
-                fontSize: pxToRem(13),
-                lineHeight: '1.5em',
-                letterSpacing: '0.008em',
-                color: '#374151',
-                textAlign: 'center',
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '42.83px',
+                background: '#FFFFFF',
+                border: '0.67px solid #E5E7EB',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                transition: 'opacity 0.15s ease',
+                '&:hover': { opacity: 0.85 },
               }}
             >
-              Fleet Earnings
-            </Typography>
-          </Box>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 600,
+                  fontSize: pxToRem(13),
+                  lineHeight: '1.5em',
+                  letterSpacing: '0.008em',
+                  color: '#374151',
+                  textAlign: 'center',
+                }}
+              >
+                Fleet Earnings
+              </Typography>
+            </Box>
+            <Box
+              onClick={() => {
+                onClose();
+                router.push(`/fleet/drivers?fleet_id=${company.id}`);
+              }}
+              sx={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '42.83px',
+                background: '#FFFFFF',
+                border: '0.67px solid #E5E7EB',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                transition: 'opacity 0.15s ease',
+                '&:hover': { opacity: 0.85 },
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 600,
+                  fontSize: pxToRem(13),
+                  lineHeight: '1.5em',
+                  letterSpacing: '0.008em',
+                  color: '#374151',
+                  textAlign: 'center',
+                }}
+              >
+                Fleet Drivers
+              </Typography>
+            </Box>
+          </RowStack>
         </Stack>
       </Stack>
     </AppModal>

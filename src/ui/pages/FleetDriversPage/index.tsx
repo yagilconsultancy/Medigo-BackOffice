@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Avatar,
   Chip,
@@ -20,16 +21,18 @@ import {
   AppGridtable,
   AppSearchField,
   AppNotificationSnackbar,
+  CustomBreadCrumbs,
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
+import { EmptyState } from '../../modules/blocks';
 import {
   FleetDriverProfileDrawer,
   FleetDriverRow,
   DriverStatus,
 } from './ui/components';
-import { pxToRem } from '../../../common';
+import { pxToRem, useGetFleetCompanyDrivers } from '../../../common';
 
 // ─── Status Config ──────────────────────────────────────────────────────────
 
@@ -75,147 +78,26 @@ const statusChipConfig: Record<
   },
 };
 
-// ─── Fleet Filter Tabs ──────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-const fleetFilters = [
-  'All',
-  'MedRide Express',
-  'CareTransit Co.',
-  'HealthHaul LLC',
-  'SafeRide Medical',
-  'MobiCare Transport',
-];
-
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const driversData: FleetDriverRow[] = [
-  {
-    id: '1',
-    name: 'Sarah Williams',
-    avatar: '',
-    fleetCompany: 'MedRide Express',
-    vehicle: 'Honda Odyssey · 2021',
-    plate: 'DEF-5678',
-    status: 'Available',
-    rating: 4.8,
-    trips: 287,
-    joinedDate: 'Feb 2024',
-    phone: '+1 (555) 202-4455',
-    email: 's.williams@medride.com',
-    license: 'DL-NY-559932',
-  },
-  {
-    id: '2',
-    name: 'Leon Price',
-    avatar: '',
-    fleetCompany: 'MedRide Express',
-    vehicle: 'Toyota Camry · 2022',
-    plate: 'GHI-9012',
-    status: 'On Trip',
-    rating: 4.7,
-    trips: 198,
-    joinedDate: 'Mar 2024',
-    phone: '+1 (555) 303-5566',
-    email: 'l.price@medride.com',
-    license: 'DL-CA-448821',
-  },
-  {
-    id: '3',
-    name: 'Emily Rodriguez',
-    avatar: '',
-    fleetCompany: 'CareTransit Co.',
-    vehicle: 'Chrysler Pacifica · 2020',
-    plate: 'JKL-3456',
-    status: 'On Trip',
-    rating: 4.7,
-    trips: 241,
-    joinedDate: 'Feb 2024',
-    phone: '+1 (555) 404-7788',
-    email: 'e.rodriguez@caretransit.ca',
-    license: 'DL-BC-337710',
-  },
-  {
-    id: '4',
-    name: 'Kevin Cho',
-    avatar: '',
-    fleetCompany: 'CareTransit Co.',
-    vehicle: 'Ford Escape · 2022',
-    plate: 'MNO-7890',
-    status: 'Available',
-    rating: 4.6,
-    trips: 176,
-    joinedDate: 'Apr 2024',
-    phone: '+1 (555) 505-9900',
-    email: 'k.cho@caretransit.ca',
-    license: 'DL-BC-226609',
-  },
-  {
-    id: '5',
-    name: 'James Thompson',
-    avatar: '',
-    fleetCompany: 'HealthHaul LLC',
-    vehicle: 'Dodge Caravan · 2021',
-    plate: 'PQR-1234',
-    status: 'On Trip',
-    rating: 4.7,
-    trips: 218,
-    joinedDate: 'Mar 2024',
-    phone: '+1 (555) 606-1122',
-    email: 'j.thompson@healthhaul.ca',
-    license: 'DL-QC-115508',
-  },
-  {
-    id: '6',
-    name: 'Mia Patel',
-    avatar: '',
-    fleetCompany: 'HealthHaul LLC',
-    vehicle: 'Kia Sedona · 2021',
-    plate: 'STU-5678',
-    status: 'Off Duty',
-    rating: 4.5,
-    trips: 142,
-    joinedDate: 'May 2024',
-    phone: '+1 (555) 707-3344',
-    email: 'm.patel@healthhaul.ca',
-    license: 'DL-QC-004407',
-  },
-  {
-    id: '7',
-    name: 'Tom Roberts',
-    avatar: '',
-    fleetCompany: 'SafeRide Medical',
-    vehicle: 'Kia Sedona · 2020',
-    plate: 'VWX-9012',
-    status: 'Off Duty',
-    rating: 4.5,
-    trips: 178,
-    joinedDate: 'Apr 2024',
-    phone: '+1 (555) 808-5566',
-    email: 't.roberts@saferidemd.ca',
-    license: 'DL-AB-993306',
-  },
-  {
-    id: '8',
-    name: 'Grace Miller',
-    avatar: '',
-    fleetCompany: 'MobiCare Transport',
-    vehicle: 'Buick Enclave · 2021',
-    plate: 'YZA-3456',
-    status: 'Available',
-    rating: 4.4,
-    trips: 156,
-    joinedDate: 'Jun 2024',
-    phone: '+1 (555) 909-7788',
-    email: 'g.miller@mobicare.ca',
-    license: 'DL-ON-882205',
-  },
-];
+const mapApiStatusToDriverStatus = (
+  isOnline: boolean,
+  isApproved: boolean,
+  bgStatus: string
+): DriverStatus => {
+  if (bgStatus === 'suspended') return 'Suspended';
+  if (!isApproved) return 'Off Duty';
+  if (isOnline) return 'Available';
+  return 'Off Duty';
+};
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const FleetDriversPage = () => {
+  const searchParams = useSearchParams();
+  const fleetId = searchParams.get('fleet_id') || '';
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFleetFilter, setActiveFleetFilter] = useState('All');
   const [selectedDriver, setSelectedDriver] = useState<FleetDriverRow | null>(
     null
   );
@@ -223,34 +105,57 @@ export const FleetDriversPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
+  // ─── API Hook ─────────────────────────────────────────────────────────
+  const { data: driversData } = useGetFleetCompanyDrivers({
+    businessId: fleetId,
+  });
+
+  // ─── Derived State ────────────────────────────────────────────────────
+  const driverRows = useMemo<FleetDriverRow[]>(() => {
+    if (!driversData?.success || !driversData?.data?.length) return [];
+    return driversData.data.map((driver) => ({
+      id: driver.user_id,
+      name: driver.user_id,
+      avatar: '',
+      fleetCompany: '--',
+      vehicle:
+        [driver.vehicle_make, driver.vehicle_model, driver.vehicle_year]
+          .filter(Boolean)
+          .join(' ') || '--',
+      plate: driver.vehicle_plate ?? '--',
+      status: mapApiStatusToDriverStatus(
+        driver.is_online,
+        driver.is_approved,
+        driver.background_check_status
+      ),
+      rating: driver.rating,
+      trips: driver.total_trips,
+      joinedDate: '--',
+      phone: '',
+      email: '',
+      license: driver.license_number ?? '--',
+    }));
+  }, [driversData]);
+
   const filteredDrivers = useMemo(() => {
-    let filtered = driversData;
-
-    if (activeFleetFilter !== 'All') {
-      filtered = filtered.filter((d) => d.fleetCompany === activeFleetFilter);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (d) =>
-          d.name.toLowerCase().includes(query) ||
-          d.fleetCompany.toLowerCase().includes(query) ||
-          d.vehicle.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [searchQuery, activeFleetFilter]);
+    if (!searchQuery.trim()) return driverRows;
+    const query = searchQuery.toLowerCase();
+    return driverRows.filter(
+      (d) =>
+        d.name.toLowerCase().includes(query) ||
+        d.fleetCompany.toLowerCase().includes(query) ||
+        d.vehicle.toLowerCase().includes(query)
+    );
+  }, [searchQuery, driverRows]);
 
   const statusCounts = useMemo(() => {
     return {
-      total: driversData.length,
-      available: driversData.filter((d) => d.status === 'Available').length,
-      onTrip: driversData.filter((d) => d.status === 'On Trip').length,
-      offDuty: driversData.filter((d) => d.status === 'Off Duty').length,
+      total: driverRows.length,
+      available: driverRows.filter((d) => d.status === 'Available').length,
+      onTrip: driverRows.filter((d) => d.status === 'On Trip').length,
+      offDuty: driverRows.filter((d) => d.status === 'Off Duty').length,
     };
-  }, []);
+  }, [driverRows]);
 
   const statCards = [
     {
@@ -275,6 +180,7 @@ export const FleetDriversPage = () => {
     },
   ];
 
+  // ─── Handlers ─────────────────────────────────────────────────────────
   const handleRowClick = useCallback((row: FleetDriverRow) => {
     setSelectedDriver(row);
     setDrawerOpen(true);
@@ -330,12 +236,6 @@ export const FleetDriversPage = () => {
           </RowStack>
         );
       },
-    },
-    {
-      field: 'fleetCompany',
-      headerName: 'Fleet Company',
-      flex: 1,
-      minWidth: 150,
     },
     {
       field: 'vehicle',
@@ -440,6 +340,14 @@ export const FleetDriversPage = () => {
   return (
     <AppDashboardLayout>
       <Stack spacing={'24px'}>
+        {/* Breadcrumbs */}
+        <CustomBreadCrumbs
+          breadcrumbsData={[
+            { href: '/fleet/companies', text: 'Fleet Companies' },
+            { href: '/fleet/drivers', text: 'Fleet Drivers', active: true },
+          ]}
+        />
+
         {/* Header */}
         <DashboardTitleAndDesc
           title="Fleet Drivers"
@@ -486,43 +394,13 @@ export const FleetDriversPage = () => {
           ))}
         </Grid>
 
-        {/* Fleet Filter Tabs */}
-        <RowStack spacing={'0px'}>
-          {fleetFilters.map((filter) => (
-            <Typography
-              key={filter}
-              onClick={() => setActiveFleetFilter(filter)}
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 600,
-                fontSize: pxToRem(12),
-                color: activeFleetFilter === filter ? '#FFFFFF' : '#6B7280',
-                background:
-                  activeFleetFilter === filter ? '#2F6FED' : 'transparent',
-                border: `0.67px solid ${activeFleetFilter === filter ? '#2F6FED' : '#E8ECF0'}`,
-                borderRadius: '20px',
-                padding: '6px 14px',
-                cursor: 'pointer',
-                userSelect: 'none',
-                transition: 'all 0.15s ease',
-                whiteSpace: 'nowrap',
-                '&:hover': {
-                  background:
-                    activeFleetFilter === filter ? '#2F6FED' : '#F7F9FB',
-                },
-              }}
-            >
-              {filter}
-            </Typography>
-          ))}
-        </RowStack>
-
         {/* Table */}
         <AppGridtable
           columns={columns}
           data={filteredDrivers}
           initialPageSize={8}
           onRowClick={(row) => handleRowClick(row)}
+          emptyState={<EmptyState animationSrc="/empty.json" />}
           sx={{
             height: 'auto',
             width: '100%',
