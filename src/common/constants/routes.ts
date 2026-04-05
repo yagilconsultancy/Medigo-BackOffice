@@ -244,6 +244,7 @@ export const ROUTES_SPEC = {
   // Fleet Companies
   getFleetCompaniesKpi: `/${API_VERSION}/users/admin/fleet/companies/kpis`,
   fleetCompanies: `/${API_VERSION}/users/admin/fleet/companies`,
+  getAllFleetCompanies: `/${API_VERSION}/users/admin/fleet/companies/all`,
   fleetCompanyDetail: (businessId: string) =>
     `/${API_VERSION}/users/admin/fleet/companies/${businessId}`,
   fleetCompanyStatus: (businessId: string) =>

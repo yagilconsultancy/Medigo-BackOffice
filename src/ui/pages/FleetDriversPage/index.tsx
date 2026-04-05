@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useQueries } from '@tanstack/react-query';
 import {
   Avatar,
   Chip,
@@ -9,6 +10,8 @@ import {
   IconButton,
   Rating,
   Stack,
+  Tab,
+  Tabs,
   Typography,
 } from '@mui/material';
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
@@ -32,7 +35,13 @@ import {
   FleetDriverRow,
   DriverStatus,
 } from './ui/components';
-import { pxToRem, useGetFleetCompanyDrivers } from '../../../common';
+import { pxToRem, useGetFleetCompanies } from '../../../common';
+import { resolveRoute, ROUTES } from '../../../common/constants';
+import { getFleetCompanyDrivers } from '../../../common/services';
+import {
+  DriverProfileResponse,
+  FleetCompanyResponse,
+} from '../../../common/types';
 
 // ─── Status Config ──────────────────────────────────────────────────────────
 
@@ -78,6 +87,8 @@ const statusChipConfig: Record<
   },
 };
 
+const ALL_TAB = 'all';
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const mapApiStatusToDriverStatus = (
@@ -91,12 +102,19 @@ const mapApiStatusToDriverStatus = (
   return 'Off Duty';
 };
 
+const formatDriverName = (driver: DriverProfileResponse): string => {
+  const plate = driver.vehicle_plate?.trim();
+  if (plate) return plate;
+  return `Driver ${driver.user_id.slice(0, 8).toUpperCase()}`;
+};
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const FleetDriversPage = () => {
   const searchParams = useSearchParams();
-  const fleetId = searchParams.get('fleet_id') || '';
+  const initialFleetId = searchParams.get('fleet_id') || ALL_TAB;
 
+  const [activeTab, setActiveTab] = useState<string>(initialFleetId);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDriver, setSelectedDriver] = useState<FleetDriverRow | null>(
     null
@@ -105,57 +123,91 @@ export const FleetDriversPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
-  // ─── API Hook ─────────────────────────────────────────────────────────
-  const { data: driversData } = useGetFleetCompanyDrivers({
-    businessId: fleetId,
+  // ─── Fleet Companies (for tabs) ───────────────────────────────────────
+  const { data: companiesList } = useGetFleetCompanies({ limit: 100 });
+
+  const companies = useMemo<FleetCompanyResponse[]>(() => {
+    if (!companiesList?.success || !companiesList?.data?.length) return [];
+    return companiesList.data;
+  }, [companiesList]);
+
+  // ─── Drivers (one query per company, aggregated) ──────────────────────
+  const driverQueryResults = useQueries({
+    queries: companies.map((company) => ({
+      queryKey: [
+        resolveRoute(ROUTES.fleetCompanyDrivers, company.id),
+        { businessId: company.id },
+      ],
+      queryFn: () =>
+        getFleetCompanyDrivers({ businessId: company.id }).then((r) => r.data),
+      enabled: !!company.id,
+    })),
   });
 
-  // ─── Derived State ────────────────────────────────────────────────────
-  const driverRows = useMemo<FleetDriverRow[]>(() => {
-    if (!driversData?.success || !driversData?.data?.length) return [];
-    return driversData.data.map((driver) => ({
-      id: driver.user_id,
-      name: driver.user_id,
-      avatar: '',
-      fleetCompany: '--',
-      vehicle:
-        [driver.vehicle_make, driver.vehicle_model, driver.vehicle_year]
-          .filter(Boolean)
-          .join(' ') || '--',
-      plate: driver.vehicle_plate ?? '--',
-      status: mapApiStatusToDriverStatus(
-        driver.is_online,
-        driver.is_approved,
-        driver.background_check_status
-      ),
-      rating: driver.rating,
-      trips: driver.total_trips,
-      joinedDate: '--',
-      phone: '',
-      email: '',
-      license: driver.license_number ?? '--',
-    }));
-  }, [driversData]);
+  // ─── Derived: all drivers across companies, enriched with fleet info ──
+  const allDriverRows = useMemo<FleetDriverRow[]>(() => {
+    const rows: FleetDriverRow[] = [];
+    companies.forEach((company, index) => {
+      const result = driverQueryResults[index];
+      const data = result?.data;
+      if (!data?.success || !data?.data?.length) return;
+      data.data.forEach((driver: DriverProfileResponse) => {
+        rows.push({
+          id: `${company.id}-${driver.user_id}`,
+          name: formatDriverName(driver),
+          avatar: driver.vehicle_photo_url ?? '',
+          fleetCompany: company.name,
+          vehicle:
+            [driver.vehicle_make, driver.vehicle_model, driver.vehicle_year]
+              .filter(Boolean)
+              .join(' ') || '—',
+          plate: driver.vehicle_plate ?? '—',
+          status: mapApiStatusToDriverStatus(
+            driver.is_online,
+            driver.is_approved,
+            driver.background_check_status
+          ),
+          rating: driver.rating,
+          trips: driver.total_trips,
+          joinedDate: '—',
+          phone: '',
+          email: '',
+          license: driver.license_number ?? '—',
+        });
+      });
+    });
+    return rows;
+  }, [companies, driverQueryResults]);
 
+  // ─── Filter by active tab + search ────────────────────────────────────
   const filteredDrivers = useMemo(() => {
-    if (!searchQuery.trim()) return driverRows;
+    const activeCompany = companies.find((c) => c.id === activeTab);
+    const byTab =
+      activeTab === ALL_TAB || !activeCompany
+        ? allDriverRows
+        : allDriverRows.filter((d) => d.fleetCompany === activeCompany.name);
+
+    if (!searchQuery.trim()) return byTab;
     const query = searchQuery.toLowerCase();
-    return driverRows.filter(
+    return byTab.filter(
       (d) =>
         d.name.toLowerCase().includes(query) ||
         d.fleetCompany.toLowerCase().includes(query) ||
-        d.vehicle.toLowerCase().includes(query)
+        d.vehicle.toLowerCase().includes(query) ||
+        d.plate.toLowerCase().includes(query)
     );
-  }, [searchQuery, driverRows]);
+  }, [activeTab, allDriverRows, companies, searchQuery]);
 
-  const statusCounts = useMemo(() => {
-    return {
-      total: driverRows.length,
-      available: driverRows.filter((d) => d.status === 'Available').length,
-      onTrip: driverRows.filter((d) => d.status === 'On Trip').length,
-      offDuty: driverRows.filter((d) => d.status === 'Off Duty').length,
-    };
-  }, [driverRows]);
+  // ─── Stat Cards (always based on all drivers) ─────────────────────────
+  const statusCounts = useMemo(
+    () => ({
+      total: allDriverRows.length,
+      available: allDriverRows.filter((d) => d.status === 'Available').length,
+      onTrip: allDriverRows.filter((d) => d.status === 'On Trip').length,
+      offDuty: allDriverRows.filter((d) => d.status === 'Off Duty').length,
+    }),
+    [allDriverRows]
+  );
 
   const statCards = [
     {
@@ -236,6 +288,24 @@ export const FleetDriversPage = () => {
           </RowStack>
         );
       },
+    },
+    {
+      field: 'fleetCompany',
+      headerName: 'Fleet Company',
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => (
+        <Typography
+          sx={{
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 500,
+            fontSize: pxToRem(13),
+            color: '#374151',
+          }}
+        >
+          {params.row.fleetCompany}
+        </Typography>
+      ),
     },
     {
       field: 'vehicle',
@@ -393,6 +463,65 @@ export const FleetDriversPage = () => {
             </Grid>
           ))}
         </Grid>
+
+        {/* Fleet Company Tabs */}
+        <Tabs
+          value={activeTab}
+          onChange={(_, newValue) => setActiveTab(newValue)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{
+            minHeight: '40px',
+            '& .MuiTabs-indicator': { display: 'none' },
+            '& .MuiTabs-flexContainer': { gap: '8px' },
+          }}
+        >
+          <Tab
+            value={ALL_TAB}
+            label="All"
+            sx={{
+              minHeight: '36px',
+              textTransform: 'none',
+              fontFamily: (theme) => theme.typography.fontFamily,
+              fontWeight: 600,
+              fontSize: pxToRem(13),
+              padding: '8px 18px',
+              borderRadius: '100px',
+              color: '#6B7280',
+              background: '#FFFFFF',
+              border: '0.67px solid #E8ECF0',
+              '&.Mui-selected': {
+                color: '#FFFFFF',
+                background: (theme) => theme.palette.primary.main,
+                borderColor: (theme) => theme.palette.primary.main,
+              },
+            }}
+          />
+          {companies.map((company) => (
+            <Tab
+              key={company.id}
+              value={company.id}
+              label={company.name}
+              sx={{
+                minHeight: '36px',
+                textTransform: 'none',
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 600,
+                fontSize: pxToRem(13),
+                padding: '8px 18px',
+                borderRadius: '100px',
+                color: '#6B7280',
+                background: '#FFFFFF',
+                border: '0.67px solid #E8ECF0',
+                '&.Mui-selected': {
+                  color: '#FFFFFF',
+                  background: (theme) => theme.palette.primary.main,
+                  borderColor: (theme) => theme.palette.primary.main,
+                },
+              }}
+            />
+          ))}
+        </Tabs>
 
         {/* Table */}
         <AppGridtable

@@ -85,16 +85,16 @@ export interface FleetApplicationKPIs {
 export interface FleetCompanyResponse {
   id: string;
   name: string;
-  contact_person?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  city?: string | null;
-  state?: string | null;
-  logo_url?: string | null;
+  contact_person: string;
+  email: string;
+  phone: string;
+  city: string;
+  state: string;
+  logo_url: string;
   is_active: boolean;
-  vehicle_count?: number;
-  driver_count?: number;
-  revenue?: number;
+  vehicle_count: number;
+  driver_count: number;
+  revenue: number;
   created_at: string;
 }
 
@@ -558,6 +558,9 @@ export type FleetCompanyPaginatedResponse =
   ApiPaginatedResponseData<FleetCompanyResponse>;
 export type ApiFleetCompanyDetailResponse =
   ApiResponse<FleetCompanyDetailResponse>;
+export type ApiAllFleetCompaniesResponse = ApiResponse<
+  FleetCompanyDetailResponse[]
+>;
 export type ApiFleetResponse = ApiResponse<FleetResponse>;
 export type ApiFleetDocumentListResponse = ApiResponse<FleetDocumentResponse[]>;
 export type FleetCompanyDriversPaginatedResponse =

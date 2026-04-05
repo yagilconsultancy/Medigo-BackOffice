@@ -2,6 +2,7 @@ import { AxiosResponse } from 'axios';
 import { resolveRoute, ROUTES } from '../../../../constants';
 import { getApiClient } from '../../../../lib';
 import {
+  ApiAllFleetCompaniesResponse,
   ApiFleetCompanyDetailResponse,
   ApiFleetCompanyKpiResponse,
   ApiFleetDocumentListResponse,
@@ -27,6 +28,13 @@ export const getFleetCompanies = async (payload: FleetCompanyListPayload) => {
       ...payload,
     },
   });
+};
+
+export const getAllFleetCompanies = async () => {
+  return await getApiClient().get<
+    ApiAllFleetCompaniesResponse,
+    AxiosResponse<ApiAllFleetCompaniesResponse>
+  >(resolveRoute(ROUTES.getAllFleetCompanies));
 };
 
 export const getFleetCompanyDetail = async (businessId: string) => {
