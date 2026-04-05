@@ -1,118 +1,95 @@
 'use client';
 
-import { useState } from 'react';
-import { Stack } from '@mui/material';
+import { useMemo, useState } from 'react';
+import dayjs from 'dayjs';
+import { Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { DashboardTitleAndDesc } from '../../modules/components';
+import { EmptyState } from '../../modules/blocks';
 import {
   FleetProfileCard,
   FleetProfileData,
   EditFleetProfileModal,
 } from './ui/components';
+import { pxToRem, useGetAllFleetCompanies } from '../../../common';
+import type { FleetCompanyDetailResponse } from '../../../common';
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-const profilesData: FleetProfileData[] = [
-  {
-    id: '1',
-    fleetId: 'FL-001',
-    companyName: 'MedRide Express',
-    initials: 'MR',
-    color: '#2F6FED',
-    contactPerson: 'Ryan MacDougall',
-    contactEmail: 'ryan@medride.ca',
-    contactPhone: '+1 416 555 0101',
-    city: 'Toronto, ON',
-    vehicles: 48,
-    drivers: 42,
-    revenue: '$128,400',
-    rating: '4.8 / 5.0',
-    status: 'Active',
-    joinedDate: 'Jan 2024',
-    documents: {
-      businessLicense: true,
-      insuranceCertificate: true,
-      vehicleFleetList: true,
-      driverCertifications: false,
-    },
-  },
-  {
-    id: '2',
-    fleetId: 'FL-002',
-    companyName: 'CareTransit Co.',
-    initials: 'CT',
-    color: '#10B981',
-    contactPerson: 'Sophie Lacroix',
-    contactEmail: 'sophie@caretransit.ca',
-    contactPhone: '+1 514 555 0202',
-    city: 'Montréal, QC',
-    vehicles: 36,
-    drivers: 31,
-    revenue: '$94,200',
-    rating: '4.7 / 5.0',
-    status: 'Active',
-    joinedDate: 'Feb 2024',
-    documents: {
-      businessLicense: true,
-      insuranceCertificate: true,
-      vehicleFleetList: false,
-      driverCertifications: false,
-    },
-  },
-  {
-    id: '3',
-    fleetId: 'FL-003',
-    companyName: 'HealthHaul LLC',
-    initials: 'HH',
-    color: '#6366F1',
-    contactPerson: 'David Kim',
-    contactEmail: 'david@healthhaul.ca',
-    contactPhone: '+1 604 555 0303',
-    city: 'Vancouver, BC',
-    vehicles: 29,
-    drivers: 24,
-    revenue: '$71,600',
-    rating: '4.6 / 5.0',
-    status: 'Active',
-    joinedDate: 'Mar 2024',
-    documents: {
-      businessLicense: true,
-      insuranceCertificate: true,
-      vehicleFleetList: false,
-      driverCertifications: true,
-    },
-  },
-  {
-    id: '4',
-    fleetId: 'FL-004',
-    companyName: 'SafeRide Medical',
-    initials: 'SR',
-    color: '#F59E0B',
-    contactPerson: 'Tina Nguyen',
-    contactEmail: 'tina@saferidemd.ca',
-    contactPhone: '+1 403 555 0404',
-    city: 'Calgary, AB',
-    vehicles: 22,
-    drivers: 19,
-    revenue: '$58,800',
-    rating: '4.5 / 5.0',
-    status: 'Active',
-    joinedDate: 'Apr 2024',
-    documents: {
-      businessLicense: true,
-      insuranceCertificate: false,
-      vehicleFleetList: false,
-      driverCertifications: false,
-    },
-  },
+const COLORS = [
+  '#2F6FED',
+  '#10B981',
+  '#6366F1',
+  '#F59E0B',
+  '#EC4899',
+  '#0EA5E9',
+  '#8B5CF6',
+  '#D97706',
 ];
+
+const getInitials = (name: string) =>
+  name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+const formatCurrency = (amount?: number | null) =>
+  amount != null
+    ? `$${amount.toLocaleString('en-US', { minimumFractionDigits: 0 })}`
+    : '—';
+
+const formatRating = (rating?: number | null) =>
+  rating != null ? `${rating.toFixed(1)} / 5.0` : '—';
+
+const hasDocument = (
+  documents: FleetCompanyDetailResponse['documents'],
+  keyword: string
+) =>
+  documents.some((doc) =>
+    doc.document_type?.toLowerCase().includes(keyword.toLowerCase())
+  );
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const FleetProfilesPage = () => {
+  const { data: companiesResponse, isLoading } = useGetAllFleetCompanies();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] =
     useState<FleetProfileData | null>(null);
+
+  const profiles = useMemo<FleetProfileData[]>(() => {
+    if (!companiesResponse?.success || !companiesResponse?.data?.length)
+      return [];
+
+    return companiesResponse.data.map((item, index) => ({
+      id: item.id,
+      fleetId: `FL-${item.id.slice(-3).toUpperCase()}`,
+      companyName: item.name,
+      initials: getInitials(item.name),
+      color: COLORS[index % COLORS.length],
+      contactPerson: item.contact_person ?? '—',
+      contactEmail: item.email ?? '—',
+      contactPhone: item.phone ?? '—',
+      city: [item.city, item.state].filter(Boolean).join(', ') || '—',
+      vehicles: item.vehicle_count ?? 0,
+      drivers: item.driver_count ?? 0,
+      revenue: formatCurrency(item.total_revenue),
+      rating: formatRating(item.avg_rating),
+      status: item.is_active ? 'Active' : 'Suspended',
+      joinedDate: dayjs(item.created_at).format('MMM YYYY'),
+      documents: {
+        businessLicense: hasDocument(item.documents ?? [], 'business_license'),
+        insuranceCertificate: hasDocument(item.documents ?? [], 'insurance'),
+        vehicleFleetList: hasDocument(item.documents ?? [], 'vehicle_fleet'),
+        driverCertifications: hasDocument(
+          item.documents ?? [],
+          'driver_cert'
+        ),
+      },
+    }));
+  }, [companiesResponse]);
 
   const handleEdit = (profile: FleetProfileData) => {
     setSelectedProfile(profile);
@@ -129,15 +106,38 @@ export const FleetProfilesPage = () => {
         />
 
         {/* Profile Cards */}
-        <Stack spacing={'16px'}>
-          {profilesData.map((profile) => (
-            <FleetProfileCard
-              key={profile.id}
-              profile={profile}
-              onEdit={() => handleEdit(profile)}
-            />
-          ))}
-        </Stack>
+        {!isLoading && profiles.length === 0 ? (
+          <EmptyState
+            emptyState={
+              <Stack spacing={'4px'} sx={{ alignItems: 'center' }}>
+                <Typography
+                  sx={{
+                    fontSize: pxToRem(14),
+                    fontWeight: 600,
+                    color: '#111827',
+                  }}
+                >
+                  No fleet profiles found
+                </Typography>
+                <Typography
+                  sx={{ fontSize: pxToRem(12), color: '#6B7280' }}
+                >
+                  Approved fleet partners will appear here.
+                </Typography>
+              </Stack>
+            }
+          />
+        ) : (
+          <Stack spacing={'16px'}>
+            {profiles.map((profile) => (
+              <FleetProfileCard
+                key={profile.id}
+                profile={profile}
+                onEdit={() => handleEdit(profile)}
+              />
+            ))}
+          </Stack>
+        )}
       </Stack>
 
       {/* Edit Fleet Profile Modal */}

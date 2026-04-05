@@ -12,6 +12,9 @@ export const useUpdateFleetCompany = () => {
         queryKey: [resolveRoute(ROUTES.fleetCompanies)],
       });
       queryClient.invalidateQueries({
+        queryKey: [resolveRoute(ROUTES.getAllFleetCompanies)],
+      });
+      queryClient.invalidateQueries({
         queryKey: [resolveRoute(ROUTES.getFleetCompaniesKpi)],
       });
     },

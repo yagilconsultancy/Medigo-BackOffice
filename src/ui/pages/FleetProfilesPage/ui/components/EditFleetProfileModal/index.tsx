@@ -1,15 +1,20 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Box, IconButton, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  CircularProgress,
+  IconButton,
+  Stack,
+  Typography,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import CheckIcon from '@mui/icons-material/Check';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { AppModal, RowStack } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import { pxToRem, useFleetCompaniesApi } from '../../../../../../common';
 import { FleetProfileData } from '../FleetProfileCard';
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -25,6 +30,7 @@ export const EditFleetProfileModal = ({
   setOpen,
   profile,
 }: EditFleetProfileModalProps) => {
+  const { updateCompany } = useFleetCompaniesApi();
   const [form, setForm] = useState({
     companyName: '',
     contactPerson: '',
@@ -32,13 +38,7 @@ export const EditFleetProfileModal = ({
     phone: '',
     city: '',
   });
-
-  const [documents, setDocuments] = useState({
-    businessLicense: false,
-    insuranceCertificate: false,
-    vehicleFleetList: false,
-    driverCertifications: false,
-  });
+  const [isSaving, setIsSaving] = useState(false);
 
   // Populate form when profile changes
   useEffect(() => {
@@ -50,7 +50,6 @@ export const EditFleetProfileModal = ({
         phone: profile.contactPhone,
         city: profile.city,
       });
-      setDocuments({ ...profile.documents });
     }
   }, [profile]);
 
@@ -61,10 +60,6 @@ export const EditFleetProfileModal = ({
     []
   );
 
-  const toggleDocument = useCallback((key: keyof typeof documents) => {
-    setDocuments((prev) => ({ ...prev, [key]: !prev[key] }));
-  }, []);
-
   const isFormValid = useMemo(
     () =>
       form.companyName.trim() !== '' &&
@@ -73,17 +68,29 @@ export const EditFleetProfileModal = ({
     [form.companyName, form.contactPerson, form.city]
   );
 
-  if (!profile) return null;
+  const handleSave = useCallback(async () => {
+    if (!profile || !isFormValid || isSaving) return;
 
-  const documentItems: {
-    key: keyof typeof documents;
-    label: string;
-  }[] = [
-    { key: 'businessLicense', label: 'Business License' },
-    { key: 'insuranceCertificate', label: 'Insurance Certificate' },
-    { key: 'vehicleFleetList', label: 'Vehicle Fleet List' },
-    { key: 'driverCertifications', label: 'Driver Certifications' },
-  ];
+    const [cityPart, statePart] = form.city.split(',').map((s) => s.trim());
+
+    setIsSaving(true);
+    const success = await updateCompany({
+      businessId: profile.id,
+      name: form.companyName.trim(),
+      contact_person: form.contactPerson.trim(),
+      email: form.email.trim() || null,
+      phone: form.phone.trim() || null,
+      city: cityPart || null,
+      state: statePart || null,
+    });
+    setIsSaving(false);
+
+    if (success) {
+      setOpen(false);
+    }
+  }, [profile, isFormValid, isSaving, form, updateCompany, setOpen]);
+
+  if (!profile) return null;
 
   return (
     <AppModal
@@ -186,37 +193,6 @@ export const EditFleetProfileModal = ({
               <LocationOnOutlinedIcon sx={{ fontSize: 13, color: '#9CA3AF' }} />
             }
           />
-
-          {/* Documents on File */}
-          <Stack spacing={'10px'}>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 600,
-                fontSize: pxToRem(12),
-                lineHeight: '1.5em',
-                color: '#374151',
-              }}
-            >
-              Documents on File
-            </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '8px',
-              }}
-            >
-              {documentItems.map((doc) => (
-                <DocumentCheckbox
-                  key={doc.key}
-                  label={doc.label}
-                  checked={documents[doc.key]}
-                  onClick={() => toggleDocument(doc.key)}
-                />
-              ))}
-            </Box>
-          </Stack>
         </Stack>
 
         {/* Footer Buttons */}
@@ -251,6 +227,7 @@ export const EditFleetProfileModal = ({
             </Typography>
           </Box>
           <Box
+            onClick={handleSave}
             sx={{
               flex: 1,
               display: 'flex',
@@ -258,14 +235,19 @@ export const EditFleetProfileModal = ({
               justifyContent: 'center',
               gap: '6px',
               height: '41px',
-              background: isFormValid ? '#2F6FED' : 'rgba(47, 111, 237, 0.5)',
+              background:
+                isFormValid && !isSaving ? '#2F6FED' : 'rgba(47, 111, 237, 0.5)',
               borderRadius: '10px',
-              cursor: isFormValid ? 'pointer' : 'default',
+              cursor: isFormValid && !isSaving ? 'pointer' : 'default',
               transition: 'all 0.15s ease',
-              '&:hover': { opacity: isFormValid ? 0.85 : 1 },
+              '&:hover': { opacity: isFormValid && !isSaving ? 0.85 : 1 },
             }}
           >
-            <SaveOutlinedIcon sx={{ fontSize: 14, color: '#FFFFFF' }} />
+            {isSaving ? (
+              <CircularProgress size={14} sx={{ color: '#FFFFFF' }} />
+            ) : (
+              <SaveOutlinedIcon sx={{ fontSize: 14, color: '#FFFFFF' }} />
+            )}
             <Typography
               sx={{
                 fontFamily: (theme) => theme.typography.fontFamily,
@@ -276,7 +258,7 @@ export const EditFleetProfileModal = ({
                 textAlign: 'center',
               }}
             >
-              Save Changes
+              {isSaving ? 'Saving…' : 'Save Changes'}
             </Typography>
           </Box>
         </RowStack>
@@ -345,54 +327,4 @@ const FormField = ({
       />
     </RowStack>
   </Stack>
-);
-
-const DocumentCheckbox = ({
-  label,
-  checked,
-  onClick,
-}: {
-  label: string;
-  checked: boolean;
-  onClick: () => void;
-}) => (
-  <RowStack
-    spacing={'8px'}
-    onClick={onClick}
-    sx={{
-      background: checked ? '#F0FDF4' : '#F7F9FB',
-      border: `0.67px solid ${checked ? '#BBF7D0' : '#E8ECF0'}`,
-      borderRadius: '14px',
-      padding: '10px 12px',
-      cursor: 'pointer',
-      transition: 'all 0.15s ease',
-      '&:hover': { opacity: 0.85 },
-    }}
-  >
-    <Box
-      sx={{
-        width: 16,
-        height: 16,
-        borderRadius: '4px',
-        background: checked ? '#059669' : '#E5E7EB',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}
-    >
-      {checked && <CheckIcon sx={{ fontSize: 10, color: '#FFFFFF' }} />}
-    </Box>
-    <Typography
-      sx={{
-        fontFamily: (theme) => theme.typography.fontFamily,
-        fontWeight: 500,
-        fontSize: pxToRem(12),
-        lineHeight: '1.5em',
-        color: checked ? '#374151' : '#9CA3AF',
-      }}
-    >
-      {label}
-    </Typography>
-  </RowStack>
 );
