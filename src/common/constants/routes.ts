@@ -322,7 +322,7 @@ export const ROUTES_SPEC = {
   suspendRider: (riderId: string) =>
     `/${API_VERSION}/users/admin/riders/${riderId}/suspend`,
   reinstateRider: (riderId: string) =>
-    `/${API_VERSION}/users/admin/riders/${riderId}/riders`,
+    `/${API_VERSION}/users/admin/riders/${riderId}/reinstate`,
   riderRides: (riderId: string) =>
     `/${API_VERSION}/users/admin/riders/${riderId}/rides`,
 

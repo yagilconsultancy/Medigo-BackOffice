@@ -6,6 +6,7 @@ export * from './fleet-applications';
 export * from './fleet-companies';
 export * from './fleet-vehicles';
 export * from './fleet-earnings';
+export * from './riders';
 export * from './support';
 export * from './contact-logs';
 export * from './broadcasts';

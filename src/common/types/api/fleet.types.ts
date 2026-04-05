@@ -863,3 +863,144 @@ export interface AdminRiderActivityItem {
   trend: string;
   status: string;
 }
+
+export interface AdminRiderProfileCard {
+  user_id: string; // uuid
+  first_name: string;
+  last_name: string;
+  avatar_url?: string | null;
+  date_of_birth?: string | null; // date
+  member_since?: string | null; // date-time
+  total_rides?: number;
+  email?: string | null;
+  phone?: string | null;
+  last_ride?: string | null; // date-time
+  insurance_provider?: string | null;
+  insurance_policy_number?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_relationship?: string | null;
+  payment_brand?: string | null;
+  payment_last_four?: string | null;
+}
+
+export interface RiderIssueKPIs {
+  open_count: number;
+  under_review_count: number;
+  resolved_count: number;
+}
+
+export interface RiderIssueListItem {
+  id: string; // uuid
+  ticket_number: string;
+  rider_id: string; // uuid
+  rider_name: string;
+  issue_type: string;
+  subject: string;
+  status: string;
+  priority: string;
+  created_at: string; // date-time
+}
+
+export interface RiderIssueListResponse {
+  kpis: RiderIssueKPIs;
+  issues: RiderIssueListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface RiderIssueNoteResponse {
+  id: string; // uuid
+  author_id: string; // uuid
+  note_text: string;
+  action?: string | null;
+  created_at: string; // date-time
+}
+
+export interface RiderIssueDetailResponse {
+  id: string; // uuid
+  ticket_number: string;
+  rider_id: string; // uuid
+  rider_name: string;
+  issue_type: string;
+  subject: string;
+  description: string;
+  status: string;
+  priority: string;
+  assigned_to?: string | null; // uuid
+  resolved_at?: string | null; // date-time
+  created_by: string; // uuid
+  created_at: string; // date-time
+  updated_at: string; // date-time
+  notes?: RiderIssueNoteResponse[];
+}
+
+export interface RiderProfileCardsPayload {
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface RiderActivityPayload {
+  page?: number;
+  limit?: number;
+}
+
+export interface RiderListPayload {
+  search?: string;
+  status?: string;
+  sort_by?: 'created_at' | 'name';
+  page?: number;
+  limit?: number;
+}
+
+export interface RiderIssueListPayload {
+  status?: string;
+  priority?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface RiderRidesPayload {
+  riderId: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface CreateRiderIssuePayload {
+  rider_id: string; // uuid
+  issue_type: string;
+  subject: string;
+  description: string;
+  priority?: string;
+}
+
+export interface UpdateRiderIssueStatusPayload {
+  issueId: string;
+  status: string;
+}
+
+export interface AddRiderIssueNotePayload {
+  issueId: string;
+  note_text: string;
+}
+
+export interface SuspendRiderPayload {
+  riderId: string;
+  reason: string;
+}
+
+export interface ReinstateRiderPayload {
+  riderId: string;
+}
+
+export type ApiAdminRiderListResponse = ApiResponse<AdminRiderListResponse>;
+export type ApiAdminRiderDetailResponse = ApiResponse<AdminRiderDetailResponse>;
+export type ApiAdminRiderActivityResponse =
+  ApiResponse<AdminRiderActivityResponse>;
+export type ApiRiderIssueListResponse = ApiResponse<RiderIssueListResponse>;
+export type ApiRiderIssueDetailResponse = ApiResponse<RiderIssueDetailResponse>;
+export type RiderProfileCardsPaginatedResponse =
+  ApiPaginatedResponseData<AdminRiderProfileCard>;

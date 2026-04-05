@@ -3,6 +3,7 @@ export * from './security';
 export * from './fleet-applications';
 export * from './fleet-companies';
 export * from './fleet-vehicles';
+export * from './riders';
 export * from './broadcasts';
 export * from './support';
 export * from './contact-logs';
