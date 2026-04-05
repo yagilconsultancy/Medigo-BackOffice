@@ -1,10 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import dayjs, { Dayjs } from 'dayjs';
 import { Box, IconButton, Stack, TextField, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
-import { AppModal } from '../../../../../modules/components';
-import { RowStack } from '../../../../../modules/components';
+import {
+  AppModal,
+  RowStack,
+  AppDatePickerPopover,
+} from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import type { FleetVehicleRow } from '../../..';
 
@@ -23,21 +26,21 @@ export const ScheduleMaintenanceModal = ({
   vehicle,
   onConfirm,
 }: ScheduleMaintenanceModalProps) => {
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState<Dayjs | null>(null);
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
     if (open) {
-      setDate('');
+      setDate(null);
       setNotes('');
     }
   }, [open]);
 
-  const isFormValid = useMemo(() => date.trim().length > 0, [date]);
+  const isFormValid = useMemo(() => date !== null, [date]);
 
   const handleConfirm = useCallback(() => {
-    if (isFormValid) {
-      onConfirm(date, notes);
+    if (isFormValid && date) {
+      onConfirm(date.format('YYYY-MM-DD'), notes);
     }
   }, [isFormValid, date, notes, onConfirm]);
 
@@ -48,6 +51,7 @@ export const ScheduleMaintenanceModal = ({
       open={open}
       setOpen={() => onClose()}
       label="schedule-maintenance-modal"
+      padding='0px'
       sx={{
         '& .MuiDialog-paper': {
           width: '420px',
@@ -130,33 +134,21 @@ export const ScheduleMaintenanceModal = ({
             >
               Maintenance Date *
             </Typography>
-            <TextField
-              type="date"
+            <AppDatePickerPopover
               value={date}
-              onChange={(e) => setDate(e.target.value)}
-              placeholder="mm/dd/yyyy"
-              fullWidth
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  height: '39px',
-                  background: '#F7F9FB',
-                  borderRadius: '10px',
-                  fontFamily: 'Inter, sans-serif',
-                  fontWeight: 400,
-                  fontSize: pxToRem(13),
-                  color: '#111827',
-                  '& fieldset': {
-                    borderColor: '#E8ECF0',
-                    borderWidth: '0.67px',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: '#E8ECF0',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#2F6FED',
-                    borderWidth: '1px',
-                  },
-                },
+              onChange={(newDate) => setDate(newDate)}
+              minDate={dayjs()}
+              buttonSx={{
+                height: 39,
+                borderRadius: '10px',
+                background: '#F7F9FB',
+                border: '0.67px solid #E8ECF0',
+                width: '100%',
+              }}
+              textSx={{
+                fontWeight: 400,
+                fontSize: pxToRem(13),
+                color: date ? '#111827' : 'rgba(55, 65, 81, 0.5)',
               }}
             />
           </Stack>

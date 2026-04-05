@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import dayjs from 'dayjs';
 import { Grid, IconButton, Stack, Typography } from '@mui/material';
 import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
@@ -11,6 +12,7 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
+import { EmptyState } from '../../modules/blocks';
 import { GridColSpec } from '../../modules/components/GridTable';
 import {
   VehicleStatusChip,
@@ -20,7 +22,15 @@ import {
   FleetVehicleDrawer,
   ScheduleMaintenanceModal,
 } from './ui/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetFleetVehicles,
+  useGetFleetVehicleKpi,
+  useGetAllFleetCompanies,
+  useResolvedApiQuery,
+  useFleetVehiclesApi,
+} from '../../../common';
+import type { VehicleResponse } from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -39,139 +49,53 @@ export type FleetVehicleRow = {
   vin: string;
 };
 
-// ─── Fleet Filter Options ───────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-const fleetFilters = [
-  'All',
-  'MedRide Express',
-  'CareTransit Co.',
-  'HealthHaul LLC',
-  'SafeRide Medical',
-  'MobiCare Transport',
-];
+const ALL_FLEETS = 'All';
 
-// ─── Sample Data (from Figma) ───────────────────────────────────────────────
+const apiStatusToUi: Record<string, VehicleStatus> = {
+  active: 'Active',
+  maintenance: 'Maintenance',
+  inactive: 'Inactive',
+};
 
-const vehiclesData: FleetVehicleRow[] = [
-  {
-    id: '1',
-    vehicleId: 'VH-002',
-    vehicle: '2022 Toyota Sienna',
-    plate: 'DEF-5678',
-    category: 'Standard Ride',
-    fleet: 'MedRide Express',
-    driver: 'Sophie Tremblay',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '62,400 mi',
-    vin: '5FNRL6H74MB049221',
-  },
-  {
-    id: '2',
-    vehicleId: 'VH-011',
-    vehicle: '2022 Toyota Sienna',
-    plate: 'EFG-2345',
-    category: 'Wheelchair Accessible',
-    fleet: 'MedRide Express',
-    driver: 'Luc Boivin',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '48,200 mi',
-    vin: '4T1BF1FK5CU521234',
-  },
-  {
-    id: '3',
-    vehicleId: 'VH-004',
-    vehicle: '2021 Dodge Grand Caravan',
-    plate: 'JKL-3456',
-    category: 'Wheelchair Accessible',
-    fleet: 'CareTransit Co.',
-    driver: 'Aisha Mensah',
-    status: 'Maintenance',
-    insurance: 'Valid',
-    registration: 'Expiring',
-    mileage: '85,100 mi',
-    vin: '2C4RDGCG5LR198765',
-  },
-  {
-    id: '4',
-    vehicleId: 'VH-012',
-    vehicle: '2022 Ford Transit',
-    plate: 'NOP-6789',
-    category: 'Assisted Ride',
-    fleet: 'CareTransit Co.',
-    driver: 'Kevin Park',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '31,800 mi',
-    vin: '1FTBW2CM3NKA43210',
-  },
-  {
-    id: '5',
-    vehicleId: 'VH-005',
-    vehicle: '2021 Dodge Grand Caravan',
-    plate: 'MNO-7890',
-    category: 'Standard Ride',
-    fleet: 'HealthHaul LLC',
-    driver: 'Marc Lefebvre',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '72,600 mi',
-    vin: '2C4RDGCG1LR167890',
-  },
-  {
-    id: '6',
-    vehicleId: 'VH-013',
-    vehicle: '2021 Mercedes Sprinter',
-    plate: 'QRS-0123',
-    category: 'Assisted Ride',
-    fleet: 'HealthHaul LLC',
-    driver: 'Priya Mehta',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '55,300 mi',
-    vin: 'WD3PE8CD2LP123456',
-  },
-  {
-    id: '7',
-    vehicleId: 'VH-007',
-    vehicle: '2020 Ford Transit',
-    plate: 'STU-5678',
-    category: 'Standard Ride',
-    fleet: 'SafeRide Medical',
-    driver: "Ryan O'Brien",
-    status: 'Inactive',
-    insurance: 'Expired',
-    registration: 'Valid',
-    mileage: '98,200 mi',
-    vin: '1FTBW2CM0LKB56789',
-  },
-  {
-    id: '8',
-    vehicleId: 'VH-008',
-    vehicle: '2021 Chevrolet Express',
-    plate: 'VWX-9012',
-    category: 'Assisted Ride',
-    fleet: 'MobiCare Transport',
-    driver: 'Isabelle Roy',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '44,700 mi',
-    vin: '1GCWGAFG5M1234567',
-  },
-];
+const uiStatusToApi: Record<VehicleStatus, string> = {
+  Active: 'active',
+  Maintenance: 'maintenance',
+  Inactive: 'inactive',
+};
+
+const apiCategoryToUi = (category?: string | null) => {
+  if (!category) return '—';
+  return category
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+};
+
+const resolveDocValidity = (expiry?: string | null): DocValidity => {
+  if (!expiry) return 'Expired';
+  const expiryDate = dayjs(expiry);
+  if (!expiryDate.isValid()) return 'Expired';
+  const now = dayjs();
+  if (expiryDate.isBefore(now, 'day')) return 'Expired';
+  if (expiryDate.diff(now, 'day') <= 30) return 'Expiring';
+  return 'Valid';
+};
+
+const buildVehicleName = (v: VehicleResponse) => {
+  const parts = [v.year, v.make, v.model].filter(Boolean);
+  return parts.length ? parts.join(' ') : (v.vehicle_name ?? '—');
+};
+
+const formatMileage = (mileage?: number | null) =>
+  mileage != null ? `${mileage.toLocaleString('en-US')} mi` : '—';
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const FleetVehiclesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFleetFilter, setActiveFleetFilter] = useState('All');
+  const [activeFleetFilter, setActiveFleetFilter] = useState(ALL_FLEETS);
   const [selectedVehicle, setSelectedVehicle] =
     useState<FleetVehicleRow | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -179,56 +103,69 @@ export const FleetVehiclesPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
+  const { data: kpis } = useResolvedApiQuery(useGetFleetVehicleKpi, null);
+
+  const {
+    data: vehiclesList,
+    isFetching: isFetchingVehicles,
+    isLoading: isLoadingVehicles,
+  } = useGetFleetVehicles({
+    limit: 100,
+    search: searchQuery.trim() || undefined,
+  });
+
+  const { data: companiesResponse } = useGetAllFleetCompanies();
+
+  const { changeVehicleStatus, scheduleMaintenance } = useFleetVehiclesApi();
+
+  const vehicles = useMemo<FleetVehicleRow[]>(() => {
+    if (!vehiclesList?.success || !vehiclesList?.data?.length) return [];
+    return vehiclesList.data.map((item) => ({
+      id: item.id,
+      vehicleId: `VH-${item.id.slice(-3).toUpperCase()}`,
+      vehicle: buildVehicleName(item),
+      plate: item.plate_number ?? '—',
+      category: apiCategoryToUi(item.category),
+      fleet: item.fleet_name ?? '—',
+      driver: item.driver_name ?? '—',
+      status: apiStatusToUi[item.status?.toLowerCase?.()] ?? 'Inactive',
+      insurance: resolveDocValidity(item.insurance_expiry),
+      registration: resolveDocValidity(item.registration_expiry),
+      mileage: formatMileage(item.mileage),
+      vin: item.vin ?? '—',
+    }));
+  }, [vehiclesList]);
+
+  const fleetFilters = useMemo<string[]>(() => {
+    if (!companiesResponse?.success || !companiesResponse?.data?.length)
+      return [ALL_FLEETS];
+    const names = companiesResponse.data.map((c) => c.name).filter(Boolean);
+    return [ALL_FLEETS, ...names];
+  }, [companiesResponse]);
+
   const filteredVehicles = useMemo(() => {
-    let filtered = vehiclesData;
-
-    if (activeFleetFilter !== 'All') {
-      filtered = filtered.filter((v) => v.fleet === activeFleetFilter);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (v) =>
-          v.vehicleId.toLowerCase().includes(query) ||
-          v.vehicle.toLowerCase().includes(query) ||
-          v.plate.toLowerCase().includes(query) ||
-          v.fleet.toLowerCase().includes(query) ||
-          v.driver.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [searchQuery, activeFleetFilter]);
-
-  const statusCounts = useMemo(() => {
-    return {
-      total: vehiclesData.length,
-      active: vehiclesData.filter((v) => v.status === 'Active').length,
-      maintenance: vehiclesData.filter((v) => v.status === 'Maintenance')
-        .length,
-      inactive: vehiclesData.filter((v) => v.status === 'Inactive').length,
-    };
-  }, []);
+    if (activeFleetFilter === ALL_FLEETS) return vehicles;
+    return vehicles.filter((v) => v.fleet === activeFleetFilter);
+  }, [vehicles, activeFleetFilter]);
 
   const statCards = [
     {
-      value: String(statusCounts.total),
+      value: String(kpis?.total_vehicles ?? '--'),
       label: 'Total Fleet Vehicles',
       valueColor: '#2F6FED',
     },
     {
-      value: String(statusCounts.active),
+      value: String(kpis?.active ?? '--'),
       label: 'Active',
       valueColor: '#10B981',
     },
     {
-      value: String(statusCounts.maintenance),
+      value: String(kpis?.maintenance ?? '--'),
       label: 'Maintenance',
       valueColor: '#D97706',
     },
     {
-      value: String(statusCounts.inactive),
+      value: String(kpis?.inactive ?? '--'),
       label: 'Inactive',
       valueColor: '#6B7280',
     },
@@ -240,12 +177,17 @@ export const FleetVehiclesPage = () => {
   }, []);
 
   const handleStatusChange = useCallback(
-    (vehicle: FleetVehicleRow, newStatus: VehicleStatus) => {
-      setSnackbarMessage(`${vehicle.vehicle} status updated to ${newStatus}`);
-      setSnackbarOpen(true);
-      setSelectedVehicle({ ...vehicle, status: newStatus });
+    async (vehicle: FleetVehicleRow, newStatus: VehicleStatus) => {
+      const success = await changeVehicleStatus({
+        vehicleId: vehicle.id,
+        status: uiStatusToApi[newStatus],
+      });
+
+      if (success) {
+        setSelectedVehicle({ ...vehicle, status: newStatus });
+      }
     },
-    []
+    [changeVehicleStatus]
   );
 
   const handleScheduleMaintenance = useCallback(() => {
@@ -253,14 +195,24 @@ export const FleetVehiclesPage = () => {
   }, []);
 
   const handleConfirmSchedule = useCallback(
-    (date: string, notes: string) => {
-      setMaintenanceModalOpen(false);
-      setSnackbarMessage(
-        `Maintenance scheduled for ${selectedVehicle?.vehicle ?? 'vehicle'} on ${date}`
-      );
-      setSnackbarOpen(true);
+    async (date: string, notes: string) => {
+      if (!selectedVehicle) return;
+
+      const success = await scheduleMaintenance({
+        vehicleId: selectedVehicle.id,
+        scheduled_date: date,
+        notes: notes.trim() || null,
+      });
+
+      if (success) {
+        setMaintenanceModalOpen(false);
+        setSnackbarMessage(
+          `Maintenance scheduled for ${selectedVehicle.vehicle} on ${date}`
+        );
+        setSnackbarOpen(true);
+      }
     },
-    [selectedVehicle]
+    [selectedVehicle, scheduleMaintenance]
   );
 
   const columns: GridColSpec<FleetVehicleRow>[] = [
@@ -411,7 +363,7 @@ export const FleetVehiclesPage = () => {
         </Grid>
 
         {/* Fleet Filter Tabs */}
-        <RowStack spacing={'0px'}>
+        <RowStack spacing={'8px'} sx={{ flexWrap: 'wrap', gap: '8px' }}>
           {fleetFilters.map((filter) => (
             <Typography
               key={filter}
@@ -447,7 +399,10 @@ export const FleetVehiclesPage = () => {
           data={filteredVehicles}
           initialPageSize={8}
           onRowClick={(row) => handleRowClick(row)}
+          emptyState={<EmptyState animationSrc="/empty.json" />}
+          isFetchingData={isFetchingVehicles || isLoadingVehicles}
           sx={{
+            minHeight: '500px',
             height: 'auto',
             width: '100%',
           }}
