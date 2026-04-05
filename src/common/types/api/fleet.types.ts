@@ -331,6 +331,9 @@ export interface AdminDriverKPIs {
   suspended_count: number;
   pending_count: number;
   online_count: number;
+  available_now?: number;
+  on_trip?: number;
+  total_mileage?: number;
   approval_rate: number;
 }
 
@@ -360,6 +363,7 @@ export interface AdminDriverDetailResponse {
   vehicle_photo_url?: string | null;
   license_number?: string | null;
   license_expiry?: string | null;
+  medical_transport_certification?: string | null;
   date_of_birth?: string | null;
   address?: string | null;
   city?: string | null;
@@ -1004,3 +1008,173 @@ export type ApiRiderIssueListResponse = ApiResponse<RiderIssueListResponse>;
 export type ApiRiderIssueDetailResponse = ApiResponse<RiderIssueDetailResponse>;
 export type RiderProfileCardsPaginatedResponse =
   ApiPaginatedResponseData<AdminRiderProfileCard>;
+
+// ─── Admin Driver Management — Document Overview ────────────────────────────
+
+export interface AdminDriverDocumentKPIs {
+  total_drivers: number;
+  all_docs_verified: number;
+  pending_review: number;
+  expired_docs: number;
+}
+
+export interface AdminDriverDocumentListItem {
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email?: string | null;
+  fleet_name?: string | null;
+  documents: DriverDocumentSummary[];
+  document_status: string;
+}
+
+export interface AdminDriverDocumentOverview {
+  kpis: AdminDriverDocumentKPIs;
+  drivers: AdminDriverDocumentListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+// ─── Admin Driver Management — Status Overview ──────────────────────────────
+
+export interface DriverStatusKPIs {
+  active_count: number;
+  suspended_count: number;
+  pending_count: number;
+  deactivated_count: number;
+}
+
+export interface DriverStatusItem {
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email?: string | null;
+  fleet_name?: string | null;
+  account_status: string;
+  suspension_reason?: string | null;
+  suspended_at?: string | null;
+  created_at?: string | null;
+}
+
+export interface DriverStatusSection {
+  status: string;
+  count: number;
+  drivers: DriverStatusItem[];
+}
+
+export interface AdminDriverStatusOverview {
+  kpis: DriverStatusKPIs;
+  sections: DriverStatusSection[];
+}
+
+// ─── Admin Driver Management — Request Payloads ─────────────────────────────
+
+export interface DriverDocumentOverviewPayload {
+  search?: string;
+  status_filter?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface DriverListPayload {
+  search?: string;
+  fleet_id?: string;
+  account_status?: string;
+  is_online?: boolean;
+  sort_by?: 'created_at' | 'name' | 'rating' | 'total_trips';
+  page?: number;
+  limit?: number;
+}
+
+export interface DriverTripsPayload {
+  driverId: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface DriverRatingsPayload {
+  driverId: string;
+  limit?: number;
+}
+
+export interface SuspendDriverPayload {
+  driverId: string;
+  reason: string;
+}
+
+export interface ReactivateDriverPayload {
+  driverId: string;
+}
+
+export interface ApproveDriverPayload {
+  driverId: string;
+}
+
+export interface ResendDriverInvitePayload {
+  driverId: string;
+}
+
+export interface ReassignDriverFleetPayload {
+  driverId: string;
+  fleet_id: string;
+}
+
+export interface CreateDriverPayload {
+  first_name: string;
+  last_name: string;
+  email: string;
+  fleet_id: string;
+  phone?: string | null;
+  license_number?: string | null;
+  license_expiry?: string | null;
+  medical_transport_certification?: string | null;
+  background_check_status?: string;
+  vehicle_id?: string | null;
+  service_capabilities?: string | null;
+  specialty?: string | null;
+  date_of_birth?: string | null;
+  account_status?: string;
+  vehicle_insurance_file?: File | null;
+  drivers_license_file?: File | null;
+  certificate_file?: File | null;
+}
+
+export interface UpdateDriverPayload {
+  driverId: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  fleet_id?: string | null;
+  license_number?: string | null;
+  license_expiry?: string | null;
+  medical_transport_certification?: string | null;
+  background_check_status?: string | null;
+  vehicle_id?: string | null;
+  service_capabilities?: string[] | null;
+  specialty?: string | null;
+  date_of_birth?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  province?: string | null;
+  postal_code?: string | null;
+  account_status?: string | null;
+  notes?: string | null;
+}
+
+export interface DeactivateDriverPayload {
+  driverId: string;
+}
+
+// ─── Admin Driver Management — Envelope Response Aliases ────────────────────
+
+export type ApiAdminDriverListResponse = ApiResponse<AdminDriverListResponse>;
+export type ApiAdminDriverDetailResponse =
+  ApiResponse<AdminDriverDetailResponse>;
+export type ApiAdminDriverDocumentOverviewResponse =
+  ApiResponse<AdminDriverDocumentOverview>;
+export type ApiAdminDriverStatusOverviewResponse =
+  ApiResponse<AdminDriverStatusOverview>;

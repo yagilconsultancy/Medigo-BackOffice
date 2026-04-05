@@ -4,6 +4,7 @@ export * from './useFleetApplicationsApi';
 export * from './useFleetCompaniesApi';
 export * from './useFleetVehiclesApi';
 export * from './useRidersApi';
+export * from './useDriversApi';
 export * from './useRidesApi';
 export * from './useBookingsApi';
 export * from './useIncidentsApi';
