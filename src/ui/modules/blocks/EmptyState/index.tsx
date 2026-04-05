@@ -1,7 +1,14 @@
-import { Player } from '@lottiefiles/react-lottie-player';
+'use client';
+
 import { Stack, Typography } from '@mui/material';
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { pxToRem } from '../../../../common';
+
+const Player = dynamic(
+  () => import('@lottiefiles/react-lottie-player').then((mod) => mod.Player),
+  { ssr: false }
+);
 
 export type EmptyStateProps = {
   emptyState?: React.ReactNode;
