@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import {
   alpha,
@@ -32,17 +33,22 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
+import { EmptyState } from '../../modules/blocks';
 import { AppDropdownMenu } from '../../modules/components/AppDropdownMenu';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useSearchDrivers,
+  useResolvedApiQuery,
+  type AdminDriverListItem,
+  type AdminDriverListResponse,
+} from '../../../common';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import {
   DriverViewDrawer,
-  DriverViewData,
   AddDriverDrawer,
   EditDriverDrawer,
-  EditDriverData,
   DriverProfileCard,
   DriverProfileCardData,
   SuspendDriverModal,
@@ -58,8 +64,14 @@ import {
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type DriverStatus = 'Available' | 'On Trip' | 'Suspended';
-type DocsStatus = 'Complete' | 'Pending';
+type DriverStatus =
+  | 'Available'
+  | 'On Trip'
+  | 'Suspended'
+  | 'Pending'
+  | 'Offline'
+  | 'Deactivated';
+type DocsStatus = 'Complete' | 'Pending' | 'Missing' | 'Expired';
 
 type DriverRow = {
   id: string;
@@ -113,6 +125,9 @@ const statusConfig: Record<
   Available: { color: '#166534', bg: '#EDFAF4', border: '#BBF7D0' },
   'On Trip': { color: '#3730A3', bg: '#EEF2FF', border: '#C7D2FE' },
   Suspended: { color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
+  Pending: { color: '#78350F', bg: '#FFFBEB', border: '#FDE68A' },
+  Offline: { color: '#4B5563', bg: '#F3F4F6', border: '#E5E7EB' },
+  Deactivated: { color: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB' },
 };
 
 const caregiverStatusConfig: Record<
@@ -130,6 +145,8 @@ const docsConfig: Record<
 > = {
   Complete: { color: '#166534', bg: '#EDFAF4', border: '#BBF7D0' },
   Pending: { color: '#78350F', bg: '#FFFBEB', border: '#FDE68A' },
+  Missing: { color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
+  Expired: { color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
 };
 
 // ─── Reusable Stat Card ─────────────────────────────────────────────────────
@@ -192,34 +209,99 @@ const StatCard = ({ icon, iconBg, value, label }: StatCardProps) => (
   </Stack>
 );
 
-// ─── Mock Data ──────────────────────────────────────────────────────────────
+// ─── API Defaults & Mappers ─────────────────────────────────────────────────
 
-const statCardsData: StatCardProps[] = [
-  {
-    icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-    value: '148',
-    label: 'Total Drivers',
+const DEFAULT_DRIVERS_RESPONSE: AdminDriverListResponse = {
+  kpis: {
+    total_drivers: 0,
+    active_count: 0,
+    suspended_count: 0,
+    pending_count: 0,
+    online_count: 0,
+    available_now: 0,
+    on_trip: 0,
+    total_mileage: 0,
+    approval_rate: 0,
   },
-  {
-    icon: <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#10B981' }} />,
-    iconBg: '#ECFDF5',
-    value: '32',
-    label: 'Available Now',
-  },
-  {
-    icon: <NearMeOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
-    iconBg: '#EEF2FF',
-    value: '62',
-    label: 'On Trip',
-  },
-  {
-    icon: <SpeedOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
-    iconBg: '#FFFBEB',
-    value: '84,320 mi',
-    label: 'Total Mileage',
-  },
-];
+  drivers: [],
+  total: 0,
+  page: 1,
+  limit: 10,
+  total_pages: 0,
+};
+
+const mapDriverStatus = (item: AdminDriverListItem): DriverStatus => {
+  const normalized = (item.account_status ?? '').toLowerCase();
+  if (normalized === 'suspended') return 'Suspended';
+  if (normalized === 'pending') return 'Pending';
+  if (normalized === 'deactivated' || normalized === 'inactive') {
+    return 'Deactivated';
+  }
+  if (normalized === 'on_trip' || normalized === 'on trip') return 'On Trip';
+  if (normalized === 'active') {
+    return item.is_online ? 'Available' : 'Offline';
+  }
+  return 'Offline';
+};
+
+const mapDocsStatus = (status?: string | null): DocsStatus => {
+  const normalized = (status ?? '').toLowerCase();
+  if (
+    normalized === 'complete' ||
+    normalized === 'verified' ||
+    normalized === 'approved'
+  ) {
+    return 'Complete';
+  }
+  if (normalized === 'missing' || normalized === 'none') return 'Missing';
+  if (normalized === 'expired') return 'Expired';
+  return 'Pending';
+};
+
+const buildListVehicleLabel = (item: AdminDriverListItem): string => {
+  const parts = [
+    item.vehicle_make,
+    item.vehicle_model,
+    item.vehicle_year ? String(item.vehicle_year) : null,
+  ].filter((p) => p && String(p).trim().length);
+  const label = parts.join(' ').trim();
+  return label || item.vehicle_type || '—';
+};
+
+const mapApiDriver = (item: AdminDriverListItem): DriverRow => {
+  const fullName =
+    `${item.first_name ?? ''} ${item.last_name ?? ''}`.trim() || 'Unknown';
+  const joinedLabel = item.created_at
+    ? dayjs(item.created_at).format('MMM YYYY')
+    : '—';
+  return {
+    id: item.user_id,
+    driverId: item.user_id,
+    name: fullName,
+    avatar: item.avatar_url ?? '',
+    fleet: item.fleet_name ?? '—',
+    vehicle: buildListVehicleLabel(item),
+    plate: item.vehicle_plate ?? '—',
+    status: mapDriverStatus(item),
+    rating: item.rating ?? 0,
+    trips: item.total_trips ?? 0,
+    docs: mapDocsStatus(item.document_status),
+    joinedDate: joinedLabel,
+    phone: item.phone ?? '—',
+    email: item.email ?? '—',
+    dateOfBirth: '—',
+    memberSince: joinedLabel,
+    license: '—',
+    bgCheck: '—',
+    licenseExpiry: '—',
+    docsStatus: item.document_status ?? '—',
+    capabilities: [],
+  };
+};
+
+const formatMileage = (value: number): string => {
+  return `${new Intl.NumberFormat('en-US').format(value)} mi`;
+};
 
 const driversData: DriverRow[] = [
   {
@@ -408,8 +490,6 @@ const driversData: DriverRow[] = [
   },
 ];
 
-// ─── Caregiver Stat Cards ────────────────────────────────────────────────────
-
 const caregiverStatCards: StatCardProps[] = [
   {
     icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
@@ -436,8 +516,6 @@ const caregiverStatCards: StatCardProps[] = [
     label: 'Avg. Rating',
   },
 ];
-
-// ─── Caregiver Mock Data ─────────────────────────────────────────────────────
 
 const caregiversData: CaregiverRow[] = [
   {
@@ -570,8 +648,6 @@ const caregiversData: CaregiverRow[] = [
   },
 ];
 
-// ─── Component ──────────────────────────────────────────────────────────────
-
 export const ServiceProviderPage = () => {
   const router = useRouter();
 
@@ -585,14 +661,18 @@ export const ServiceProviderPage = () => {
   // Search
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Drivers pagination
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<DriverRow | null>(null);
   const [addDriverOpen, setAddDriverOpen] = useState(false);
   const [editDriverOpen, setEditDriverOpen] = useState(false);
-  const [editingDriver, setEditingDriver] = useState<EditDriverData | null>(
-    null
-  );
+  const [editingDriverId, setEditingDriverId] = useState<string | null>(null);
 
   // Modal state (drivers)
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
@@ -614,17 +694,59 @@ export const ServiceProviderPage = () => {
   // Caregiver search
   const [caregiverSearchQuery, setCaregiverSearchQuery] = useState('');
 
-  const filteredDrivers = useMemo(() => {
-    if (!searchQuery.trim()) return driversData;
-    const query = searchQuery.toLowerCase();
-    return driversData.filter(
-      (d) =>
-        d.name.toLowerCase().includes(query) ||
-        d.fleet.toLowerCase().includes(query) ||
-        d.vehicle.toLowerCase().includes(query) ||
-        d.driverId.toLowerCase().includes(query)
-    );
-  }, [searchQuery]);
+  const {
+    data: driversResponse,
+    isFetching: isFetchingDrivers,
+    isLoading: isLoadingDrivers,
+    refetch: refetchDrivers,
+  } = useResolvedApiQuery(useSearchDrivers, DEFAULT_DRIVERS_RESPONSE, {
+    search: searchQuery.trim() || undefined,
+    page: paginationModel.page + 1,
+    limit: paginationModel.pageSize,
+    sort_by: 'created_at',
+  });
+
+  const apiDrivers = useMemo<DriverRow[]>(
+    () => driversResponse.drivers.map(mapApiDriver),
+    [driversResponse]
+  );
+
+  const driverKpis = driversResponse.kpis;
+  const totalDriverCount = driversResponse.total ?? 0;
+
+  const handleDriverSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, []);
+
+  const driverStatCards: StatCardProps[] = [
+    {
+      icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+      iconBg: '#EBF2FF',
+      value: String(driverKpis.total_drivers ?? 0),
+      label: 'Total Drivers',
+    },
+    {
+      icon: <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#10B981' }} />,
+      iconBg: '#ECFDF5',
+      value: String(
+        driverKpis.available_now ?? driverKpis.online_count ?? 0
+      ),
+      label: 'Available Now',
+    },
+    {
+      icon: <NearMeOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
+      iconBg: '#EEF2FF',
+      value: String(driverKpis.on_trip ?? 0),
+      label: 'On Trip',
+    },
+    {
+      icon: <SpeedOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
+      iconBg: '#FFFBEB',
+      value: formatMileage(driverKpis.total_mileage ?? 0),
+      label: 'Total Mileage',
+    },
+  ];
 
   const filteredCaregivers = useMemo(() => {
     if (!caregiverSearchQuery.trim()) return caregiversData;
@@ -638,7 +760,6 @@ export const ServiceProviderPage = () => {
     );
   }, [caregiverSearchQuery]);
 
-  // ─── Table Columns ──────────────────────────────────────────────────────
 
   const columns: GridColSpec<DriverRow>[] = [
     {
@@ -865,7 +986,7 @@ export const ServiceProviderPage = () => {
           <IconButton
             size="small"
             onClick={() => {
-              setEditingDriver(params.row);
+              setEditingDriverId(params.row.driverId);
               setEditDriverOpen(true);
             }}
             sx={{
@@ -882,7 +1003,6 @@ export const ServiceProviderPage = () => {
     },
   ];
 
-  // ─── Caregiver Table Columns ─────────────────────────────────────────────
 
   const caregiverColumns: GridColSpec<CaregiverRow>[] = [
     {
@@ -1116,8 +1236,6 @@ export const ServiceProviderPage = () => {
     },
   ];
 
-  // ─── Render ───────────────────────────────────────────────────────────────
-
   return (
     <AppDashboardLayout>
       <Stack spacing={'24px'}>
@@ -1251,7 +1369,7 @@ export const ServiceProviderPage = () => {
 
               {/* Stat Cards */}
               <Grid container spacing={'16px'}>
-                {statCardsData.map((card, index) => (
+                {driverStatCards.map((card, index) => (
                   <Grid key={index} size={{ xs: 6, lg: 3 }}>
                     <StatCard {...card} />
                   </Grid>
@@ -1261,8 +1379,22 @@ export const ServiceProviderPage = () => {
               {/* Driver Table */}
               <AppGridtable
                 columns={columns}
-                data={filteredDrivers}
-                initialPageSize={8}
+                data={apiDrivers}
+                initialPageSize={10}
+                disableAutoPagination
+                totalRows={totalDriverCount}
+                onPaginationModelChange={(model) =>
+                  setPaginationModel({
+                    page: model.page,
+                    pageSize: model.pageSize,
+                  })
+                }
+                emptyState={
+                  <Box sx={{ height: 400, width: '100%' }}>
+                    <EmptyState animationSrc="/empty.json" />
+                  </Box>
+                }
+                isFetchingData={isFetchingDrivers || isLoadingDrivers}
                 sx={{ height: 'auto', width: '100%' }}
               >
                 <RowStack justifyContent={'space-between'} width={'100%'}>
@@ -1287,15 +1419,15 @@ export const ServiceProviderPage = () => {
                         lineHeight: '1.5em',
                       }}
                     >
-                      {filteredDrivers.length} registered drivers — fleet
-                      association shown
+                      {totalDriverCount} registered drivers — fleet association
+                      shown
                     </Typography>
                   </Stack>
                   <AppSearchField
                     name="search"
                     placeholder="Search drivers..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => handleDriverSearchChange(e.target.value)}
                     boxProps={{ sx: { width: '240px' } }}
                   />
                 </RowStack>
@@ -1436,20 +1568,39 @@ export const ServiceProviderPage = () => {
       <DriverViewDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        driver={selectedDriver}
+        driverId={selectedDriver?.driverId ?? null}
+        seed={
+          selectedDriver
+            ? {
+                driverId: selectedDriver.driverId,
+                name: selectedDriver.name,
+                avatar: selectedDriver.avatar,
+                fleet: selectedDriver.fleet,
+                vehicle: selectedDriver.vehicle,
+                status: selectedDriver.status,
+                joinedDate: selectedDriver.joinedDate,
+              }
+            : null
+        }
       />
 
       {/* Add Driver Drawer */}
       <AddDriverDrawer
         open={addDriverOpen}
         onClose={() => setAddDriverOpen(false)}
+        onSuccess={() => {
+          refetchDrivers();
+        }}
       />
 
       {/* Edit Driver Drawer */}
       <EditDriverDrawer
         open={editDriverOpen}
         onClose={() => setEditDriverOpen(false)}
-        driver={editingDriver}
+        driverId={editingDriverId}
+        onSuccess={() => {
+          refetchDrivers();
+        }}
       />
 
       {/* Suspend Driver Modal */}

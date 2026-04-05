@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Formik, Form, useField } from 'formik';
 import * as Yup from 'yup';
 import dayjs, { Dayjs } from 'dayjs';
@@ -27,12 +27,18 @@ import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import PhoneIphoneOutlinedIcon from '@mui/icons-material/PhoneIphoneOutlined';
-import AccessibleOutlinedIcon from '@mui/icons-material/AccessibleOutlined';
-import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
-import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
-import MonitorHeartOutlinedIcon from '@mui/icons-material/MonitorHeartOutlined';
-import { pxToRem } from '../../../../../../common';
+import {
+  pxToRem,
+  useDriversApi,
+  useGetAllFleetCompanies,
+  useGetFleetVehicles,
+  useResolvedApiQuery,
+} from '../../../../../../common';
+import type {
+  CreateDriverPayload,
+  FleetCompanyDetailResponse,
+  VehicleResponse,
+} from '../../../../../../common';
 import {
   AppButton,
   AppDatePickerPopover,
@@ -48,60 +54,28 @@ import { AppDropdownMenu } from '../../../../../modules/components/AppDropdownMe
 export type AddDriverDrawerProps = {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 };
 
-// ─── Dropdown Options ───────────────────────────────────────────────────────
-
-const fleetOptions = [
-  'Independent (MediGo Direct)',
-  'MediRide Express',
-  'QuickHealth Transport',
-  'SwiftCare Logistics',
-  'RapidMed Transit',
-  'HealthLink Services',
-];
-
-const vehicleOptions = [
-  'Toyota Sienna · 2022',
-  'Honda Odyssey · 2022',
-  'Chrysler Pacifica · 2022',
-  'Honda Odyssey · 2023',
-  'Kia Carnival · 2022',
-  'Wheelchair Van · 2022',
-];
+// ─── Static Dropdown Options ────────────────────────────────────────────────
 
 const bgCheckOptions = ['Verified', 'Pending', 'Not Verified'];
-const accountStatusOptions = ['Active', 'Pending Verification', 'Suspended'];
+
+// ─── Date Helper ────────────────────────────────────────────────────────────
+
+const toIsoDate = (value?: string | null): string | null => {
+  if (!value) return null;
+  const parsed = dayjs(value, 'MM/DD/YYYY');
+  return parsed.isValid() ? parsed.format('YYYY-MM-DD') : null;
+};
 
 // ─── Service Capabilities Config ────────────────────────────────────────────
 
 const capabilitiesConfig = [
-  {
-    name: 'wheelchairAssistance',
-    label: 'Wheelchair Assistance',
-    icon: <AccessibleOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-  },
-  {
-    name: 'seniorAssistance',
-    label: 'Senior Assistance',
-    icon: (
-      <FavoriteBorderOutlinedIcon sx={{ fontSize: 18, color: '#EC4899' }} />
-    ),
-    iconBg: '#FDF2F8',
-  },
-  {
-    name: 'medicalEscort',
-    label: 'Medical Escort Support',
-    icon: <SupportAgentOutlinedIcon sx={{ fontSize: 18, color: '#8B5CF6' }} />,
-    iconBg: '#F5F3FF',
-  },
-  {
-    name: 'stretcherTransport',
-    label: 'Stretcher Transport',
-    icon: <MonitorHeartOutlinedIcon sx={{ fontSize: 18, color: '#F59E0B' }} />,
-    iconBg: '#FFFBEB',
-  },
+  { name: 'wheelchairAssistance', label: 'Wheelchair Assistance' },
+  { name: 'seniorAssistance', label: 'Senior Assistance' },
+  { name: 'medicalEscort', label: 'Medical Escort Support' },
+  { name: 'stretcherTransport', label: 'Stretcher Transport' },
 ];
 
 // ─── Validation Schema ──────────────────────────────────────────────────────
@@ -124,8 +98,6 @@ const validationSchema = Yup.object().shape({
   medicalEscort: Yup.boolean(),
   seniorAssistance: Yup.boolean(),
   stretcherTransport: Yup.boolean(),
-  accountStatus: Yup.string(),
-  appUsername: Yup.string(),
   appPassword: Yup.string(),
 });
 
@@ -145,8 +117,6 @@ const initialValues = {
   medicalEscort: false,
   seniorAssistance: false,
   stretcherTransport: false,
-  accountStatus: '',
-  appUsername: '',
   appPassword: '',
 };
 
@@ -504,13 +474,9 @@ const FileUploadField = ({
 const FormikCheckboxCard = ({
   name,
   label,
-  icon,
-  iconBg,
 }: {
   name: string;
   label: string;
-  icon: React.ReactNode;
-  iconBg: string;
 }) => {
   const [field, , helpers] = useField(name);
 
@@ -530,32 +496,6 @@ const FormikCheckboxCard = ({
         },
       }}
     >
-      <Box
-        sx={{
-          width: 34,
-          height: 34,
-          borderRadius: '8px',
-          background: iconBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        {icon}
-      </Box>
-      <Typography
-        sx={{
-          fontFamily: (theme) => theme.typography.fontFamily,
-          fontWeight: 500,
-          fontSize: pxToRem(13),
-          color: '#374151',
-          flex: 1,
-          ml: '12px',
-        }}
-      >
-        {label}
-      </Typography>
       <Checkbox
         checked={!!field.value}
         sx={{
@@ -564,17 +504,60 @@ const FormikCheckboxCard = ({
           padding: '4px',
         }}
       />
+      <Typography
+        sx={{
+          fontFamily: (theme) => theme.typography.fontFamily,
+          fontWeight: 500,
+          fontSize: pxToRem(13),
+          color: '#374151',
+          flex: 1,
+          ml: '10px',
+        }}
+      >
+        {label}
+      </Typography>
     </RowStack>
   );
 };
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
+export const AddDriverDrawer = ({
+  open,
+  onClose,
+  onSuccess,
+}: AddDriverDrawerProps) => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
   const [certFile, setCertFile] = useState<File | null>(null);
+
+  const { createDriver } = useDriversApi();
+
+  const { data: fleetCompanies } = useResolvedApiQuery(
+    useGetAllFleetCompanies,
+    [] as FleetCompanyDetailResponse[]
+  );
+
+  const vehiclesQuery = useGetFleetVehicles({ page: 1, limit: 100 });
+  const allVehicles: VehicleResponse[] = useMemo(
+    () => vehiclesQuery.data?.data ?? [],
+    [vehiclesQuery.data]
+  );
+
+  const fleetOptionMap = useMemo(() => {
+    const map = new Map<string, string>();
+    fleetCompanies.forEach((company) => map.set(company.name, company.id));
+    return map;
+  }, [fleetCompanies]);
+
+  const fleetOptions = useMemo(
+    () => fleetCompanies.map((company) => company.name),
+    [fleetCompanies]
+  );
+
+  const buildVehicleLabel = (vehicle: VehicleResponse) =>
+    `${vehicle.make} ${vehicle.model} · ${vehicle.year} (${vehicle.plate_number})`;
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -607,17 +590,68 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
-        onSubmit={async (values, { setSubmitting }) => {
+        onSubmit={async (values, { setSubmitting, resetForm }) => {
           try {
-            // Mock submit — integrate with API later
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            handleClose();
+            const fleetId = fleetOptionMap.get(values.fleet);
+            if (!fleetId) {
+              setSubmitting(false);
+              return;
+            }
+
+            const fleetVehicles = allVehicles.filter(
+              (v) => v.business_id === fleetId
+            );
+            const selectedVehicle = fleetVehicles.find(
+              (v) => buildVehicleLabel(v) === values.vehicle
+            );
+
+            const capabilities = [
+              values.wheelchairAssistance && 'wheelchair_assistance',
+              values.seniorAssistance && 'senior_assistance',
+              values.medicalEscort && 'medical_escort',
+              values.stretcherTransport && 'stretcher_transport',
+            ].filter(Boolean) as string[];
+
+            const payload: CreateDriverPayload = {
+              first_name: values.firstName.trim(),
+              last_name: values.lastName.trim(),
+              email: values.email.trim(),
+              fleet_id: fleetId,
+              phone: values.phone.trim() || null,
+              license_number: values.licenseNumber.trim() || null,
+              license_expiry: toIsoDate(values.licenseExpiry),
+              medical_transport_certification:
+                values.medicalCertification.trim() || null,
+              background_check_status: values.bgCheckStatus || undefined,
+              vehicle_id: selectedVehicle?.id ?? null,
+              service_capabilities: capabilities.length
+                ? capabilities.join(',')
+                : null,
+              date_of_birth: toIsoDate(values.dateOfBirth),
+              drivers_license_file: licenseFile,
+              certificate_file: certFile,
+            };
+
+            const success = await createDriver(payload);
+
+            if (success) {
+              resetForm();
+              handleClose();
+              onSuccess?.();
+            }
           } finally {
             setSubmitting(false);
           }
         }}
       >
-        {({ isSubmitting, isValid, dirty, values, setFieldValue }) => (
+        {({ isSubmitting, isValid, dirty, values }) => {
+          const selectedFleetId = fleetOptionMap.get(values.fleet);
+          const filteredVehicles = selectedFleetId
+            ? allVehicles.filter((v) => v.business_id === selectedFleetId)
+            : [];
+          const vehicleOptions = filteredVehicles.map(buildVehicleLabel);
+
+          return (
           <Form
             style={{
               display: 'flex',
@@ -1044,8 +1078,6 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
                         key={cap.name}
                         name={cap.name}
                         label={cap.label}
-                        icon={cap.icon}
-                        iconBg={cap.iconBg}
                       />
                     ))}
                   </Box>
@@ -1061,101 +1093,26 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
                     }
                     title="Account Settings"
                   />
-                  <Stack spacing={'6px'}>
-                    <FieldLabel text="Driver Status" />
-                    <RowStack spacing={'10px'}>
-                      {accountStatusOptions.map((status) => {
-                        const isSelected = values.accountStatus === status;
-                        const statusColor =
-                          status === 'Active'
-                            ? '#166534'
-                            : status === 'Pending Verification'
-                              ? '#78350F'
-                              : '#991B1B';
-                        return (
-                          <Box
-                            key={status}
-                            onClick={() =>
-                              setFieldValue('accountStatus', status)
-                            }
-                            sx={{
-                              flex: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '8px 16px',
-                              borderRadius: '9px',
-                              border: `1.33px solid ${isSelected ? statusColor : '#E8ECF0'}`,
-                              background: '#FFFFFF',
-                              cursor: 'pointer',
-                              transition: 'all 0.15s ease',
-                              '&:hover': {
-                                borderColor: isSelected
-                                  ? statusColor
-                                  : '#D1D5DB',
-                              },
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontFamily: (theme) =>
-                                  theme.typography.fontFamily,
-                                fontWeight: isSelected ? 600 : 400,
-                                fontSize: pxToRem(13),
-                                color: isSelected ? statusColor : '#6B7280',
-                              }}
-                            >
-                              {status}
-                            </Typography>
-                          </Box>
-                        );
-                      })}
-                    </RowStack>
-                  </Stack>
-                </SectionCard>
-
-                {/* ═══ Section 7: Driver App Login ═══════════════ */}
-                <Stack spacing={'16px'}>
-                  <SectionHeader
-                    icon={
-                      <PhoneIphoneOutlinedIcon
-                        sx={{ fontSize: 16, color: '#2F6FED' }}
-                      />
-                    }
-                    title="Create Driver App Login"
-                  />
-                  <Box
+                  <Typography
                     sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '16px',
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 700,
+                      fontSize: pxToRem(11),
+                      letterSpacing: '0.6px',
+                      color: '#6B7280',
+                      textTransform: 'uppercase',
                     }}
                   >
-                    <Stack spacing={'6px'}>
-                      <FieldLabel text="App Username" />
-                      <FormikAppTextField
-                        name="appUsername"
-                        placeholder="auto-generated"
-                        value={
-                          values.firstName && values.lastName
-                            ? `${values.firstName}${values.lastName.charAt(0)}`
-                            : ''
-                        }
-                        InputProps={{ readOnly: true }}
-                        sx={{
-                          '& .MuiInputBase-root': { background: '#F9FAFB' },
-                        }}
-                      />
-                    </Stack>
-                    <Stack spacing={'6px'}>
-                      <FieldLabel text="App Password" />
-                      <FormikAppPasswordField
-                        name="appPassword"
-                        placeholder="Set initial password"
-                      />
-                    </Stack>
-                  </Box>
-                </Stack>
+                    Create Driver App Login
+                  </Typography>
+                  <Stack spacing={'6px'}>
+                    <FieldLabel text="App Password" />
+                    <FormikAppPasswordField
+                      name="appPassword"
+                      placeholder="Set initial password"
+                    />
+                  </Stack>
+                </SectionCard>
               </Stack>
             </Box>
 
@@ -1218,7 +1175,8 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
               </AppButton>
             </RowStack>
           </Form>
-        )}
+          );
+        }}
       </Formik>
     </Drawer>
   );

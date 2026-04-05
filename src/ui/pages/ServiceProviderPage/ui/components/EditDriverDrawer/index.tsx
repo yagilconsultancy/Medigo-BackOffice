@@ -8,6 +8,7 @@ import {
   Avatar,
   Box,
   Checkbox,
+  CircularProgress,
   Drawer,
   IconButton,
   Stack,
@@ -27,12 +28,20 @@ import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import PhoneIphoneOutlinedIcon from '@mui/icons-material/PhoneIphoneOutlined';
-import AccessibleOutlinedIcon from '@mui/icons-material/AccessibleOutlined';
-import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
-import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
-import MonitorHeartOutlinedIcon from '@mui/icons-material/MonitorHeartOutlined';
-import { pxToRem } from '../../../../../../common';
+import {
+  pxToRem,
+  useDriversApi,
+  useGetAllFleetCompanies,
+  useGetDriverDetail,
+  useGetFleetVehicles,
+  useResolvedApiQuery,
+} from '../../../../../../common';
+import type {
+  AdminDriverDetailResponse,
+  FleetCompanyDetailResponse,
+  UpdateDriverPayload,
+  VehicleResponse,
+} from '../../../../../../common';
 import {
   AppButton,
   AppDatePickerPopover,
@@ -45,83 +54,104 @@ import { AppDropdownMenu } from '../../../../../modules/components/AppDropdownMe
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-export type EditDriverData = {
-  id: string;
-  driverId: string;
-  name: string;
-  avatar: string;
-  fleet: string;
-  vehicle: string;
-  plate: string;
-  status: string;
-  phone: string;
-  email: string;
-  dateOfBirth: string;
-  license: string;
-  bgCheck: string;
-  licenseExpiry: string;
-  docsStatus: string;
-  capabilities: string[];
-};
-
 export type EditDriverDrawerProps = {
   open: boolean;
   onClose: () => void;
-  driver: EditDriverData | null;
+  driverId: string | null;
+  onSuccess?: () => void;
 };
 
-// ─── Dropdown Options ───────────────────────────────────────────────────────
-
-const fleetOptions = [
-  'Independent (MediGo Direct)',
-  'MediRide Express',
-  'QuickHealth Transport',
-  'SwiftCare Logistics',
-  'RapidMed Transit',
-  'HealthLink Services',
-];
-
-const vehicleOptions = [
-  'Toyota Sienna · 2022',
-  'Honda Odyssey · 2022',
-  'Chrysler Pacifica · 2022',
-  'Honda Odyssey · 2023',
-  'Kia Carnival · 2022',
-  'Wheelchair Van · 2022',
-];
+// ─── Static Dropdown Options ────────────────────────────────────────────────
 
 const bgCheckOptions = ['Verified', 'Pending', 'Not Verified'];
-const accountStatusOptions = ['Active', 'Pending Verification', 'Suspended'];
+
+// ─── Default Driver Detail ──────────────────────────────────────────────────
+
+const DEFAULT_DRIVER_DETAIL: AdminDriverDetailResponse = {
+  user_id: '',
+  first_name: '',
+  last_name: '',
+  email: null,
+  phone: null,
+  avatar_url: null,
+  fleet_id: null,
+  fleet_name: null,
+  account_status: 'active',
+  is_online: false,
+  is_approved: false,
+  rating: 0,
+  total_trips: 0,
+  specialty: null,
+  service_capabilities: [],
+  vehicle_type: null,
+  vehicle_make: null,
+  vehicle_model: null,
+  vehicle_year: null,
+  vehicle_plate: null,
+  vehicle_color: null,
+  vehicle_vin: null,
+  vehicle_photo_url: null,
+  license_number: null,
+  license_expiry: null,
+  medical_transport_certification: null,
+  date_of_birth: null,
+  address: null,
+  city: null,
+  province: null,
+  postal_code: null,
+  emergency_contact_name: null,
+  emergency_contact_phone: null,
+  background_check_status: null,
+  suspension_reason: null,
+  suspended_at: null,
+  deactivated_at: null,
+  approved_at: null,
+  notes: null,
+  invited_via_email: null,
+  trip_stats: { total_trips: 0, hours_online: 0, average_earnings: 0 },
+  documents: [],
+  ratings: [],
+  suspension_history: [],
+  invite_token: null,
+  created_at: null,
+  updated_at: null,
+};
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+const toDisplayDate = (value?: string | null): string => {
+  if (!value) return '';
+  const parsed = dayjs(value);
+  return parsed.isValid() ? parsed.format('MM/DD/YYYY') : '';
+};
+
+const toIsoDate = (value?: string | null): string | null => {
+  if (!value) return null;
+  const parsed = dayjs(value, 'MM/DD/YYYY');
+  return parsed.isValid() ? parsed.format('YYYY-MM-DD') : null;
+};
+
+const titleCaseBgCheck = (value?: string | null): string => {
+  if (!value) return '';
+  const normalized = value.toLowerCase();
+  if (normalized === 'verified') return 'Verified';
+  if (normalized === 'pending') return 'Pending';
+  if (normalized === 'not_verified' || normalized === 'not verified') {
+    return 'Not Verified';
+  }
+  return '';
+};
+
+const buildVehicleLabel = (vehicle: VehicleResponse) =>
+  `${vehicle.make} ${vehicle.model} · ${vehicle.year} (${vehicle.plate_number})`;
 
 // ─── Service Capabilities Config ────────────────────────────────────────────
 
 const capabilitiesConfig = [
-  {
-    name: 'wheelchairAssistance',
-    label: 'Wheelchair Assistance',
-    icon: <AccessibleOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-  },
-  {
-    name: 'seniorAssistance',
-    label: 'Senior Assistance',
-    icon: (
-      <FavoriteBorderOutlinedIcon sx={{ fontSize: 18, color: '#EC4899' }} />
-    ),
-    iconBg: '#FDF2F8',
-  },
-  {
-    name: 'medicalEscort',
-    label: 'Medical Escort Support',
-    icon: <SupportAgentOutlinedIcon sx={{ fontSize: 18, color: '#8B5CF6' }} />,
-    iconBg: '#F5F3FF',
-  },
-  {
-    name: 'stretcherTransport',
-    label: 'Stretcher Transport',
-    icon: <MonitorHeartOutlinedIcon sx={{ fontSize: 18, color: '#F59E0B' }} />,
-    iconBg: '#FFFBEB',
-  },
+  { name: 'wheelchairAssistance', label: 'Wheelchair Assistance' },
+  { name: 'seniorAssistance', label: 'Senior Assistance' },
+  { name: 'medicalEscort', label: 'Medical Escort Support' },
+  { name: 'stretcherTransport', label: 'Stretcher Transport' },
 ];
 
 // ─── Validation Schema ──────────────────────────────────────────────────────
@@ -144,8 +174,6 @@ const validationSchema = Yup.object().shape({
   medicalEscort: Yup.boolean(),
   seniorAssistance: Yup.boolean(),
   stretcherTransport: Yup.boolean(),
-  accountStatus: Yup.string(),
-  appUsername: Yup.string(),
   appPassword: Yup.string(),
 });
 
@@ -165,8 +193,6 @@ const emptyInitialValues = {
   medicalEscort: false,
   seniorAssistance: false,
   stretcherTransport: false,
-  accountStatus: '',
-  appUsername: '',
   appPassword: '',
 };
 
@@ -511,13 +537,9 @@ const FileUploadField = ({
 const FormikCheckboxCard = ({
   name,
   label,
-  icon,
-  iconBg,
 }: {
   name: string;
   label: string;
-  icon: React.ReactNode;
-  iconBg: string;
 }) => {
   const [field, , helpers] = useField(name);
 
@@ -537,32 +559,6 @@ const FormikCheckboxCard = ({
         },
       }}
     >
-      <Box
-        sx={{
-          width: 34,
-          height: 34,
-          borderRadius: '8px',
-          background: iconBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
-        {icon}
-      </Box>
-      <Typography
-        sx={{
-          fontFamily: (theme) => theme.typography.fontFamily,
-          fontWeight: 500,
-          fontSize: pxToRem(13),
-          color: '#374151',
-          flex: 1,
-          ml: '12px',
-        }}
-      >
-        {label}
-      </Typography>
       <Checkbox
         checked={!!field.value}
         sx={{
@@ -571,6 +567,18 @@ const FormikCheckboxCard = ({
           padding: '4px',
         }}
       />
+      <Typography
+        sx={{
+          fontFamily: (theme) => theme.typography.fontFamily,
+          fontWeight: 500,
+          fontSize: pxToRem(13),
+          color: '#374151',
+          flex: 1,
+          ml: '10px',
+        }}
+      >
+        {label}
+      </Typography>
     </RowStack>
   );
 };
@@ -580,58 +588,86 @@ const FormikCheckboxCard = ({
 export const EditDriverDrawer = ({
   open,
   onClose,
-  driver,
+  driverId,
+  onSuccess,
 }: EditDriverDrawerProps) => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
   const [certFile, setCertFile] = useState<File | null>(null);
 
-  // Compute initial values from driver prop
+  const { updateDriver } = useDriversApi();
+  const resolvedDriverId = driverId ?? '';
+
+  const {
+    data: detail,
+    isLoading: isLoadingDetail,
+    isFetching: isFetchingDetail,
+  } = useResolvedApiQuery(
+    useGetDriverDetail,
+    DEFAULT_DRIVER_DETAIL,
+    resolvedDriverId
+  );
+
+  const { data: fleetCompanies } = useResolvedApiQuery(
+    useGetAllFleetCompanies,
+    [] as FleetCompanyDetailResponse[]
+  );
+
+  const vehiclesQuery = useGetFleetVehicles({ page: 1, limit: 100 });
+  const allVehicles: VehicleResponse[] = useMemo(
+    () => vehiclesQuery.data?.data ?? [],
+    [vehiclesQuery.data]
+  );
+
+  const fleetOptionMap = useMemo(() => {
+    const map = new Map<string, string>();
+    fleetCompanies.forEach((company) => map.set(company.name, company.id));
+    return map;
+  }, [fleetCompanies]);
+
+  const fleetOptions = useMemo(
+    () => fleetCompanies.map((company) => company.name),
+    [fleetCompanies]
+  );
+
+  const hasDetail = Boolean(detail && detail.user_id);
+
+  // Compute initial values from the resolved driver detail
   const editInitialValues = useMemo(() => {
-    if (!driver) return emptyInitialValues;
+    if (!hasDetail) return emptyInitialValues;
 
-    const nameParts = driver.name.split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    const caps = (detail.service_capabilities || []).map((c) =>
+      c.toLowerCase()
+    );
 
-    // Map fleet name
-    const fleet =
-      driver.fleet === 'MediGo Direct'
-        ? 'Independent (MediGo Direct)'
-        : driver.fleet;
-
-    // Map status
-    const accountStatus =
-      driver.status === 'Suspended' ? 'Suspended' : 'Active';
+    // Build the vehicle label matching the dropdown format
+    const vehicleLabel =
+      detail.vehicle_make && detail.vehicle_model
+        ? `${detail.vehicle_make} ${detail.vehicle_model} · ${detail.vehicle_year ?? ''} (${detail.vehicle_plate ?? ''})`
+        : '';
 
     return {
-      firstName,
-      lastName,
-      phone: driver.phone,
-      email: driver.email,
-      dateOfBirth: driver.dateOfBirth
-        ? dayjs(driver.dateOfBirth).format('MM/DD/YYYY')
-        : '',
-      fleet,
-      licenseNumber: driver.license,
-      licenseExpiry: driver.licenseExpiry
-        ? dayjs(driver.licenseExpiry).format('MM/DD/YYYY')
-        : '',
-      medicalCertification: '',
-      bgCheckStatus: driver.bgCheck,
-      vehicle: driver.vehicle,
-      wheelchairAssistance: driver.capabilities.includes(
-        'Wheelchair Assistance'
-      ),
-      medicalEscort: driver.capabilities.includes('Medical Escort Support'),
-      seniorAssistance: driver.capabilities.includes('Senior Assistance'),
-      stretcherTransport: driver.capabilities.includes('Stretcher Transport'),
-      accountStatus,
-      appUsername: `${firstName}${lastName.charAt(0)}`,
+      firstName: detail.first_name || '',
+      lastName: detail.last_name || '',
+      phone: detail.phone || '',
+      email: detail.email || '',
+      dateOfBirth: toDisplayDate(detail.date_of_birth),
+      fleet: detail.fleet_name || '',
+      licenseNumber: detail.license_number || '',
+      licenseExpiry: toDisplayDate(detail.license_expiry),
+      medicalCertification: detail.medical_transport_certification || '',
+      bgCheckStatus: titleCaseBgCheck(detail.background_check_status),
+      vehicle: vehicleLabel,
+      wheelchairAssistance: caps.includes('wheelchair_assistance'),
+      medicalEscort: caps.includes('medical_escort'),
+      seniorAssistance: caps.includes('senior_assistance'),
+      stretcherTransport: caps.includes('stretcher_transport'),
       appPassword: '',
     };
-  }, [driver]);
+  }, [hasDetail, detail]);
+
+  const isInitialLoading = isLoadingDetail && !hasDetail;
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -667,15 +703,62 @@ export const EditDriverDrawer = ({
         enableReinitialize
         onSubmit={async (values, { setSubmitting }) => {
           try {
-            // Mock submit — integrate with API later
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            handleClose();
+            if (!resolvedDriverId) {
+              setSubmitting(false);
+              return;
+            }
+
+            const fleetId = fleetOptionMap.get(values.fleet) || null;
+
+            const fleetVehicles = fleetId
+              ? allVehicles.filter((v) => v.business_id === fleetId)
+              : [];
+            const selectedVehicle = fleetVehicles.find(
+              (v) => buildVehicleLabel(v) === values.vehicle
+            );
+
+            const capabilities = [
+              values.wheelchairAssistance && 'wheelchair_assistance',
+              values.seniorAssistance && 'senior_assistance',
+              values.medicalEscort && 'medical_escort',
+              values.stretcherTransport && 'stretcher_transport',
+            ].filter(Boolean) as string[];
+
+            const payload: UpdateDriverPayload = {
+              driverId: resolvedDriverId,
+              first_name: values.firstName.trim() || null,
+              last_name: values.lastName.trim() || null,
+              phone: values.phone.trim() || null,
+              fleet_id: fleetId,
+              license_number: values.licenseNumber.trim() || null,
+              license_expiry: toIsoDate(values.licenseExpiry),
+              medical_transport_certification:
+                values.medicalCertification.trim() || null,
+              background_check_status: values.bgCheckStatus || null,
+              vehicle_id: selectedVehicle?.id ?? null,
+              service_capabilities: capabilities.length ? capabilities : null,
+              date_of_birth: toIsoDate(values.dateOfBirth),
+            };
+
+            const success = await updateDriver(payload);
+
+            if (success) {
+              handleClose();
+              onSuccess?.();
+            }
           } finally {
             setSubmitting(false);
           }
         }}
       >
-        {({ isSubmitting, isValid, dirty, values, setFieldValue }) => (
+        {({ isSubmitting, dirty, values }) => {
+          const selectedFleetId = fleetOptionMap.get(values.fleet);
+          const filteredVehicles = selectedFleetId
+            ? allVehicles.filter((v) => v.business_id === selectedFleetId)
+            : [];
+          const vehicleOptions = filteredVehicles.map(buildVehicleLabel);
+
+          return (
           <Form
             style={{
               display: 'flex',
@@ -737,8 +820,18 @@ export const EditDriverDrawer = ({
                 padding: '24px',
                 '::-webkit-scrollbar': { display: 'none' },
                 scrollbarWidth: 'none',
+                position: 'relative',
               }}
             >
+              {isInitialLoading ? (
+                <Stack
+                  alignItems="center"
+                  justifyContent="center"
+                  sx={{ py: '80px' }}
+                >
+                  <CircularProgress size={28} sx={{ color: '#2F6FED' }} />
+                </Stack>
+              ) : (
               <Stack spacing={'20px'}>
                 {/* Section 1: Personal Information */}
                 <Stack spacing={'16px'}>
@@ -754,7 +847,7 @@ export const EditDriverDrawer = ({
                   {/* Avatar Upload */}
                   <RowStack spacing={'16px'}>
                     <Avatar
-                      src={avatarPreview || driver?.avatar || undefined}
+                      src={avatarPreview || detail.avatar_url || undefined}
                       sx={{
                         width: 72,
                         height: 72,
@@ -764,7 +857,7 @@ export const EditDriverDrawer = ({
                         color: '#2F6FED',
                       }}
                     >
-                      {!avatarPreview && !driver?.avatar && (
+                      {!avatarPreview && !detail.avatar_url && (
                         <CameraAltOutlinedIcon
                           sx={{ fontSize: 24, color: '#2F6FED' }}
                         />
@@ -798,7 +891,7 @@ export const EditDriverDrawer = ({
                             '&:hover': { color: '#2F6FED' },
                           }}
                         >
-                          {avatarPreview || driver?.avatar
+                          {avatarPreview || detail.avatar_url
                             ? 'Replace Photo'
                             : 'Upload Photo'}
                         </Typography>
@@ -1103,8 +1196,6 @@ export const EditDriverDrawer = ({
                         key={cap.name}
                         name={cap.name}
                         label={cap.label}
-                        icon={cap.icon}
-                        iconBg={cap.iconBg}
                       />
                     ))}
                   </Box>
@@ -1120,102 +1211,41 @@ export const EditDriverDrawer = ({
                     }
                     title="Account Settings"
                   />
-                  <Stack spacing={'6px'}>
-                    <FieldLabel text="Driver Status" />
-                    <RowStack spacing={'10px'}>
-                      {accountStatusOptions.map((status) => {
-                        const isSelected = values.accountStatus === status;
-                        const statusColor =
-                          status === 'Active'
-                            ? '#166534'
-                            : status === 'Pending Verification'
-                              ? '#78350F'
-                              : '#991B1B';
-                        return (
-                          <Box
-                            key={status}
-                            onClick={() =>
-                              setFieldValue('accountStatus', status)
-                            }
-                            sx={{
-                              flex: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              padding: '8px 16px',
-                              borderRadius: '9px',
-                              border: `1.33px solid ${isSelected ? statusColor : '#E8ECF0'}`,
-                              background: '#FFFFFF',
-                              cursor: 'pointer',
-                              transition: 'all 0.15s ease',
-                              '&:hover': {
-                                borderColor: isSelected
-                                  ? statusColor
-                                  : '#D1D5DB',
-                              },
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontFamily: (theme) =>
-                                  theme.typography.fontFamily,
-                                fontWeight: isSelected ? 600 : 400,
-                                fontSize: pxToRem(13),
-                                color: isSelected ? statusColor : '#6B7280',
-                              }}
-                            >
-                              {status}
-                            </Typography>
-                          </Box>
-                        );
-                      })}
-                    </RowStack>
-                  </Stack>
-                </SectionCard>
-
-                {/* Section 7: Driver App Login */}
-                <Stack spacing={'16px'}>
-                  <SectionHeader
-                    icon={
-                      <PhoneIphoneOutlinedIcon
-                        sx={{ fontSize: 16, color: '#2F6FED' }}
-                      />
-                    }
-                    title="Driver App Login"
-                  />
-                  <Box
+                  <Typography
                     sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '16px',
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 700,
+                      fontSize: pxToRem(11),
+                      letterSpacing: '0.6px',
+                      color: '#6B7280',
+                      textTransform: 'uppercase',
                     }}
                   >
-                    <Stack spacing={'6px'}>
-                      <FieldLabel text="App Username" />
-                      <FormikAppTextField
-                        name="appUsername"
-                        placeholder="auto-generated"
-                        value={
-                          values.firstName && values.lastName
-                            ? `${values.firstName}${values.lastName.charAt(0)}`
-                            : ''
-                        }
-                        InputProps={{ readOnly: true }}
-                        sx={{
-                          '& .MuiInputBase-root': { background: '#F9FAFB' },
-                        }}
-                      />
-                    </Stack>
-                    <Stack spacing={'6px'}>
-                      <FieldLabel text="App Password" />
-                      <FormikAppPasswordField
-                        name="appPassword"
-                        placeholder="Set initial password"
-                      />
-                    </Stack>
-                  </Box>
-                </Stack>
+                    Driver App Login
+                  </Typography>
+                  <Stack spacing={'6px'}>
+                    <FieldLabel text="App Password" />
+                    <FormikAppPasswordField
+                      name="appPassword"
+                      placeholder="Set new password (leave blank to keep)"
+                    />
+                  </Stack>
+                </SectionCard>
               </Stack>
+              )}
+              {isFetchingDetail && hasDetail && !isInitialLoading && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <CircularProgress size={14} sx={{ color: '#9CA3AF' }} />
+                </Box>
+              )}
             </Box>
 
             {/* ─── Footer ────────────────────────────────────────── */}
@@ -1277,7 +1307,8 @@ export const EditDriverDrawer = ({
               </AppButton>
             </RowStack>
           </Form>
-        )}
+          );
+        }}
       </Formik>
     </Drawer>
   );

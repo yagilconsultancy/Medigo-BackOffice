@@ -311,6 +311,10 @@ export interface AdminDriverListItem {
   rating: number;
   total_trips: number;
   vehicle_type?: string | null;
+  vehicle_make?: string | null;
+  vehicle_model?: string | null;
+  vehicle_year?: number | null;
+  vehicle_plate?: string | null;
   specialty?: string | null;
   document_status?: string;
   created_at?: string | null;
