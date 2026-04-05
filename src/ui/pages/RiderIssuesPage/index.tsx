@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import dayjs from 'dayjs';
 import {
   Avatar,
   Box,
@@ -20,8 +21,16 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
+import { EmptyState } from '../../modules/blocks';
 import { IssueDetailModal } from './ui/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useListRiderIssues,
+  useRidersApi,
+  useResolvedApiQuery,
+  type RiderIssueListItem,
+  type RiderIssueListResponse,
+} from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -37,6 +46,7 @@ export type IssueStatus = 'Open' | 'Under Review' | 'Resolved';
 
 export type RiderIssue = {
   id: string;
+  apiId: string;
   riderName: string;
   avatar: string;
   issueType: IssueType;
@@ -69,86 +79,107 @@ const statusConfig: Record<IssueStatus, { color: string; bg: string }> = {
   Resolved: { color: '#059669', bg: '#ECFDF5' },
 };
 
-// ─── Mock Data ──────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-const issuesData: RiderIssue[] = [
-  {
-    id: 'IS-001',
-    riderName: 'Helen Moore',
-    avatar: '',
-    issueType: 'Support Ticket',
-    description: "Driver didn't show up – BK-20491",
-    date: 'Mar 9, 2026',
-    severity: 'High',
-    status: 'Open',
-  },
-  {
-    id: 'IS-002',
-    riderName: 'George Lewis',
-    avatar: '',
-    issueType: 'Complaint',
-    description: 'Abusive behaviour toward driver',
-    date: 'Mar 8, 2026',
-    severity: 'High',
-    status: 'Under Review',
-  },
-  {
-    id: 'IS-003',
-    riderName: 'Nancy White',
-    avatar: '',
-    issueType: 'Refund Request',
-    description: 'Cancelled trip – refund not received',
-    date: 'Mar 7, 2026',
-    severity: 'Medium',
-    status: 'Open',
-  },
-  {
-    id: 'IS-004',
-    riderName: 'Robert Garcia',
-    avatar: '',
-    issueType: 'No-show',
-    description: '3 consecutive no-shows flagged',
-    date: 'Mar 6, 2026',
-    severity: 'Medium',
-    status: 'Under Review',
-  },
-  {
-    id: 'IS-005',
-    riderName: 'Patricia Clark',
-    avatar: '',
-    issueType: 'Billing Dispute',
-    description: 'Duplicate charge on trip BK-20102',
-    date: 'Mar 4, 2026',
-    severity: 'Low',
-    status: 'Resolved',
-  },
-  {
-    id: 'IS-006',
-    riderName: 'Lisa Anderson',
-    avatar: '',
-    issueType: 'Service Complaint',
-    description: 'Long wait time for pickup',
-    date: 'Mar 3, 2026',
-    severity: 'Low',
-    status: 'Resolved',
-  },
-];
+const normalizeIssueType = (value?: string | null): IssueType => {
+  const v = (value ?? '').toLowerCase().replace(/[_\s-]+/g, '');
+  if (v === 'complaint' || v === 'servicecomplaint') return 'Complaint';
+  if (v === 'refundrequest' || v === 'refund') return 'Refund Request';
+  if (v === 'noshow') return 'No-show';
+  if (v === 'billingdispute' || v === 'billing') return 'Billing Dispute';
+  if (v === 'serviceissue') return 'Service Complaint';
+  return 'Support Ticket';
+};
+
+const normalizePriority = (value?: string | null): Severity => {
+  const v = (value ?? '').toLowerCase();
+  if (v === 'high' || v === 'urgent' || v === 'critical') return 'High';
+  if (v === 'low') return 'Low';
+  return 'Medium';
+};
+
+const normalizeIssueStatus = (value?: string | null): IssueStatus => {
+  const v = (value ?? '').toLowerCase().replace(/[_\s-]+/g, '');
+  if (v === 'underreview' || v === 'inprogress' || v === 'investigating')
+    return 'Under Review';
+  if (v === 'resolved' || v === 'closed') return 'Resolved';
+  return 'Open';
+};
+
+export const uiStatusToApi = (value: IssueStatus): string => {
+  if (value === 'Under Review') return 'under_review';
+  if (value === 'Resolved') return 'resolved';
+  return 'open';
+};
+
+const DEFAULT_ISSUES: RiderIssueListResponse = {
+  kpis: { open_count: 0, under_review_count: 0, resolved_count: 0 },
+  issues: [],
+  total: 0,
+  page: 1,
+  limit: 10,
+  total_pages: 0,
+};
+
+const mapIssue = (item: RiderIssueListItem): RiderIssue => ({
+  id: item.ticket_number || item.id,
+  apiId: item.id,
+  riderName: item.rider_name || 'Unknown',
+  avatar: '',
+  issueType: normalizeIssueType(item.issue_type),
+  description: item.subject || '—',
+  date: item.created_at ? dayjs(item.created_at).format('MMM D, YYYY') : '—',
+  severity: normalizePriority(item.priority),
+  status: normalizeIssueStatus(item.status),
+});
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const RiderIssuesPage = () => {
+  const { data: issuesData, refetch } = useResolvedApiQuery(
+    useListRiderIssues,
+    DEFAULT_ISSUES,
+    { limit: 10 }
+  );
+  const { updateIssueStatus } = useRidersApi();
+
   const [selectedIssue, setSelectedIssue] = useState<RiderIssue | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
-  const openCount = issuesData.filter((i) => i.status === 'Open').length;
-  const reviewCount = issuesData.filter(
-    (i) => i.status === 'Under Review'
-  ).length;
-  const resolvedCount = issuesData.filter(
-    (i) => i.status === 'Resolved'
-  ).length;
+  const issues = useMemo<RiderIssue[]>(
+    () => issuesData.issues.map(mapIssue),
+    [issuesData]
+  );
+
+  const kpis = issuesData.kpis;
+
+  const openCount = kpis.open_count;
+  const reviewCount = kpis.under_review_count;
+  const resolvedCount = kpis.resolved_count;
+
+  const handleStatusChange = async (
+    issue: RiderIssue,
+    newStatus: IssueStatus
+  ) => {
+    const success = await updateIssueStatus({
+      issueId: issue.apiId,
+      status: uiStatusToApi(newStatus),
+    });
+
+    if (success) {
+      setDetailOpen(false);
+      const statusLabels: Record<IssueStatus, string> = {
+        'Under Review': 'moved to Under Review',
+        Resolved: 'marked as Resolved',
+        Open: 'reopened',
+      };
+      setSnackbarMessage(`${issue.id} has been ${statusLabels[newStatus]}`);
+      setSnackbarOpen(true);
+      refetch();
+    }
+  };
 
   const statCards = [
     {
@@ -245,66 +276,128 @@ export const RiderIssuesPage = () => {
         </Grid>
 
         {/* Issues List */}
-        <Stack spacing={'12px'}>
-          {issuesData.map((issue) => {
-            const nameParts = issue.riderName.split(' ');
-            const initials =
-              nameParts.length > 1
-                ? `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`
-                : nameParts[0].charAt(0);
+        {issues.length === 0 ? (
+          <Box sx={{ height: 400, width: '100%' }}>
+            <EmptyState animationSrc="/empty.json" />
+          </Box>
+        ) : (
+          <Stack spacing={'12px'}>
+            {issues.map((issue) => {
+              const nameParts = issue.riderName.split(' ');
+              const initials =
+                nameParts.length > 1
+                  ? `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`
+                  : nameParts[0].charAt(0);
 
-            const typeConfig = issueTypeConfig[issue.issueType];
-            const sevConfig = severityConfig[issue.severity];
-            const statConfig = statusConfig[issue.status];
+              const typeConfig = issueTypeConfig[issue.issueType];
+              const sevConfig = severityConfig[issue.severity];
+              const statConfig = statusConfig[issue.status];
 
-            return (
-              <RowStack
-                key={issue.id}
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #F0F4F8',
-                  borderRadius: '14px',
-                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-                  padding: '14px 20px',
-                }}
-              >
-                {/* Avatar */}
-                <Avatar
-                  src={issue.avatar || undefined}
-                  alt={issue.riderName}
+              return (
+                <RowStack
+                  key={issue.apiId}
                   sx={{
-                    width: 40,
-                    height: 40,
-                    fontSize: pxToRem(13),
-                    fontWeight: 600,
-                    background: '#E5E7EB',
-                    color: '#9CA3AF',
-                    flexShrink: 0,
-                    mr: '14px',
+                    background: '#FFFFFF',
+                    border: '0.67px solid #F0F4F8',
+                    borderRadius: '14px',
+                    boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                    padding: '14px 20px',
                   }}
                 >
-                  {initials}
-                </Avatar>
+                  {/* Avatar */}
+                  <Avatar
+                    src={issue.avatar || undefined}
+                    alt={issue.riderName}
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      fontSize: pxToRem(13),
+                      fontWeight: 600,
+                      background: '#E5E7EB',
+                      color: '#9CA3AF',
+                      flexShrink: 0,
+                      mr: '14px',
+                    }}
+                  >
+                    {initials}
+                  </Avatar>
 
-                {/* Name + Chip + Description */}
-                <Stack sx={{ flex: 1, minWidth: 0, mr: '16px' }}>
-                  <RowStack spacing={'8px'}>
+                  {/* Name + Chip + Description */}
+                  <Stack sx={{ flex: 1, minWidth: 0, mr: '16px' }}>
+                    <RowStack spacing={'8px'}>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 600,
+                          fontSize: pxToRem(13.5),
+                          color: '#111827',
+                          lineHeight: '1.5em',
+                        }}
+                      >
+                        {issue.riderName}
+                      </Typography>
+                      <Box
+                        sx={{
+                          padding: '1px 10px',
+                          borderRadius: '100px',
+                          background: typeConfig.bg,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 600,
+                            fontSize: pxToRem(11),
+                            color: typeConfig.color,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {issue.issueType}
+                        </Typography>
+                      </Box>
+                    </RowStack>
                     <Typography
                       sx={{
                         fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 600,
-                        fontSize: pxToRem(13.5),
-                        color: '#111827',
+                        fontWeight: 400,
+                        fontSize: pxToRem(13),
+                        color: '#6B7280',
                         lineHeight: '1.5em',
                       }}
                     >
-                      {issue.riderName}
+                      {issue.description}
                     </Typography>
+                  </Stack>
+
+                  {/* Date */}
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(12.5),
+                      color: '#6B7280',
+                      width: 100,
+                      flexShrink: 0,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {issue.date}
+                  </Typography>
+
+                  {/* Severity */}
+                  <Box
+                    sx={{
+                      width: 80,
+                      flexShrink: 0,
+                      display: 'flex',
+                      justifyContent: 'center',
+                    }}
+                  >
                     <Box
                       sx={{
-                        padding: '1px 10px',
+                        padding: '2px 10px',
                         borderRadius: '100px',
-                        background: typeConfig.bg,
+                        background: sevConfig.bg,
                       }}
                     >
                       <Typography
@@ -312,122 +405,66 @@ export const RiderIssuesPage = () => {
                           fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 600,
                           fontSize: pxToRem(11),
-                          color: typeConfig.color,
+                          color: sevConfig.color,
                           whiteSpace: 'nowrap',
                         }}
                       >
-                        {issue.issueType}
+                        {issue.severity}
                       </Typography>
                     </Box>
-                  </RowStack>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(13),
-                      color: '#6B7280',
-                      lineHeight: '1.5em',
-                    }}
-                  >
-                    {issue.description}
-                  </Typography>
-                </Stack>
+                  </Box>
 
-                {/* Date */}
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(12.5),
-                    color: '#6B7280',
-                    width: 100,
-                    flexShrink: 0,
-                    textAlign: 'center',
-                  }}
-                >
-                  {issue.date}
-                </Typography>
-
-                {/* Severity */}
-                <Box
-                  sx={{
-                    width: 80,
-                    flexShrink: 0,
-                    display: 'flex',
-                    justifyContent: 'center',
-                  }}
-                >
+                  {/* Status */}
                   <Box
                     sx={{
-                      padding: '2px 10px',
-                      borderRadius: '100px',
-                      background: sevConfig.bg,
+                      width: 100,
+                      flexShrink: 0,
+                      display: 'flex',
+                      justifyContent: 'center',
                     }}
                   >
-                    <Typography
+                    <Box
                       sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 600,
-                        fontSize: pxToRem(11),
-                        color: sevConfig.color,
-                        whiteSpace: 'nowrap',
+                        padding: '2px 10px',
+                        borderRadius: '100px',
+                        background: statConfig.bg,
                       }}
                     >
-                      {issue.severity}
-                    </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 600,
+                          fontSize: pxToRem(11),
+                          color: statConfig.color,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {issue.status}
+                      </Typography>
+                    </Box>
                   </Box>
-                </Box>
 
-                {/* Status */}
-                <Box
-                  sx={{
-                    width: 100,
-                    flexShrink: 0,
-                    display: 'flex',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Box
+                  {/* Action Button */}
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setSelectedIssue(issue);
+                      setDetailOpen(true);
+                    }}
                     sx={{
-                      padding: '2px 10px',
-                      borderRadius: '100px',
-                      background: statConfig.bg,
+                      background: alpha('#2F6FED', 0.1),
+                      color: '#2F6FED',
+                      flexShrink: 0,
+                      '&:hover': { background: alpha('#2F6FED', 0.18) },
                     }}
                   >
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 600,
-                        fontSize: pxToRem(11),
-                        color: statConfig.color,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {issue.status}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Action Button */}
-                <IconButton
-                  size="small"
-                  onClick={() => {
-                    setSelectedIssue(issue);
-                    setDetailOpen(true);
-                  }}
-                  sx={{
-                    background: alpha('#2F6FED', 0.1),
-                    color: '#2F6FED',
-                    flexShrink: 0,
-                    '&:hover': { background: alpha('#2F6FED', 0.18) },
-                  }}
-                >
-                  <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-              </RowStack>
-            );
-          })}
-        </Stack>
+                    <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </RowStack>
+              );
+            })}
+          </Stack>
+        )}
       </Stack>
 
       {/* Issue Detail Modal */}
@@ -435,16 +472,7 @@ export const RiderIssuesPage = () => {
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         issue={selectedIssue}
-        onStatusChange={(issue, newStatus) => {
-          setDetailOpen(false);
-          const statusLabels: Record<string, string> = {
-            'Under Review': 'moved to Under Review',
-            Resolved: 'marked as Resolved',
-            Open: 'reopened',
-          };
-          setSnackbarMessage(`${issue.id} has been ${statusLabels[newStatus]}`);
-          setSnackbarOpen(true);
-        }}
+        onStatusChange={handleStatusChange}
       />
 
       {/* Snackbar */}

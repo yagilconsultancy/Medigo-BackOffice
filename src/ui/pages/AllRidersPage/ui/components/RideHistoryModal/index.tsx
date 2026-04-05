@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+import dayjs from 'dayjs';
 import { Box, Stack, Typography } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
@@ -11,7 +13,11 @@ import FmdGoodOutlinedIcon from '@mui/icons-material/FmdGoodOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import { AppModal, RowStack } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import {
+  pxToRem,
+  useGetRiderRides,
+  useResolvedApiQuery,
+} from '../../../../../../common';
 import type { RiderRow } from '../../..';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -23,80 +29,79 @@ type RideHistoryModalProps = {
   rider: RiderRow | null;
 };
 
+type RideStatus = 'Completed' | 'Cancelled' | 'In Progress';
+
 type RideEntry = {
   id: string;
-  status: 'Completed' | 'Cancelled';
+  status: RideStatus;
   date: string;
   amount: string;
   pickup: string;
   destination: string;
   driver: string;
+  rawAmount: number;
 };
 
-// ─── Mock Data ──────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-const rideHistoryData: Record<string, RideEntry[]> = {
-  'R-001': [
-    {
-      id: 'BK-20491',
-      status: 'Completed',
-      date: 'Mar 9, 2026',
-      amount: '$45.00',
-      pickup: '120 King St W, Toronto',
-      destination: 'Toronto General Hospital',
-      driver: 'Liam MacDonald',
-    },
-    {
-      id: 'BK-20388',
-      status: 'Completed',
-      date: 'Mar 6, 2026',
-      amount: '$42.00',
-      pickup: '120 King St W, Toronto',
-      destination: 'Ottawa Kidney Care Centre',
-      driver: 'Sophie Tremblay',
-    },
-    {
-      id: 'BK-20305',
-      status: 'Completed',
-      date: 'Mar 3, 2026',
-      amount: '$38.00',
-      pickup: '120 King St W, Toronto',
-      destination: 'Dr. Singh Family Clinic',
-      driver: 'Liam MacDonald',
-    },
-    {
-      id: 'BK-20201',
-      status: 'Completed',
-      date: 'Feb 28, 2026',
-      amount: '$45.00',
-      pickup: '120 King St W, Toronto',
-      destination: 'Sunnybrook Health Sciences',
-      driver: 'Aisha Mensah',
-    },
-    {
-      id: 'BK-20140',
-      status: 'Cancelled',
-      date: 'Feb 25, 2026',
-      amount: '$0.00',
-      pickup: '120 King St W, Toronto',
-      destination: 'Toronto General Hospital',
-      driver: 'David Chen',
-    },
-    {
-      id: 'BK-20077',
-      status: 'Completed',
-      date: 'Feb 22, 2026',
-      amount: '$45.00',
-      pickup: '120 King St W, Toronto',
-      destination: 'Sunnybrook Health Sciences',
-      driver: 'Sophie Tremblay',
-    },
-  ],
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 };
 
-const statusBadge: Record<string, { color: string; bg: string }> = {
+const normalizeStatus = (status?: string | null): RideStatus => {
+  const s = (status ?? '').toLowerCase();
+  if (s === 'completed') return 'Completed';
+  if (s === 'cancelled' || s === 'canceled') return 'Cancelled';
+  return 'In Progress';
+};
+
+const mapRide = (ride: any): RideEntry => {
+  const amount = Number(
+    ride?.fare_total ??
+      ride?.total_amount ??
+      ride?.amount ??
+      ride?.fare ??
+      0
+  );
+  return {
+    id:
+      ride?.booking_id ??
+      ride?.id ??
+      ride?.ride_id ??
+      ride?.booking_reference ??
+      '—',
+    status: normalizeStatus(ride?.status),
+    date: ride?.created_at
+      ? dayjs(ride.created_at).format('MMM D, YYYY')
+      : ride?.scheduled_at
+        ? dayjs(ride.scheduled_at).format('MMM D, YYYY')
+        : '—',
+    amount: formatCurrency(amount),
+    rawAmount: amount,
+    pickup: ride?.pickup_address ?? ride?.pickup_location ?? '—',
+    destination:
+      ride?.dropoff_address ??
+      ride?.destination_address ??
+      ride?.destination ??
+      '—',
+    driver:
+      ride?.driver_name ||
+      [ride?.driver_first_name, ride?.driver_last_name]
+        .filter(Boolean)
+        .join(' ') ||
+      '—',
+  };
+};
+
+const statusBadge: Record<RideStatus, { color: string; bg: string }> = {
   Completed: { color: '#059669', bg: '#ECFDF5' },
   Cancelled: { color: '#6B7280', bg: '#F3F4F6' },
+  'In Progress': { color: '#2F6FED', bg: '#EBF2FF' },
 };
 
 // ─── Stat Card ──────────────────────────────────────────────────────────────
@@ -155,13 +160,28 @@ export const RideHistoryModal = ({
   onBack,
   rider,
 }: RideHistoryModalProps) => {
+  const { data: ridesPayload } = useResolvedApiQuery(useGetRiderRides, null, {
+    riderId: rider?.id ?? '',
+    limit: 10,
+  });
+
+  const rides = useMemo<RideEntry[]>(() => {
+    if (!ridesPayload) return [];
+    const list = Array.isArray(ridesPayload)
+      ? ridesPayload
+      : (ridesPayload?.items ??
+        ridesPayload?.rides ??
+        ridesPayload?.results ??
+        []);
+    return (list as any[]).map(mapRide);
+  }, [ridesPayload]);
+
   if (!rider) return null;
 
-  const rides = rideHistoryData[rider.id] || [];
   const completedCount = rides.filter((r) => r.status === 'Completed').length;
   const totalPaid = rides
-    .reduce((sum, r) => sum + parseFloat(r.amount.replace('$', '')), 0)
-    .toFixed(2);
+    .filter((r) => r.status === 'Completed')
+    .reduce((sum, r) => sum + r.rawAmount, 0);
 
   const btnSx = {
     width: 30,
@@ -322,7 +342,7 @@ export const RideHistoryModal = ({
                 />
               </Box>
             }
-            value={`$${totalPaid}`}
+            value={formatCurrency(totalPaid)}
             label="Total Paid"
           />
         </RowStack>
@@ -337,6 +357,20 @@ export const RideHistoryModal = ({
             overflowY: 'auto',
           }}
         >
+          {rides.length === 0 && (
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 500,
+                fontSize: pxToRem(12.5),
+                color: '#9CA3AF',
+                textAlign: 'center',
+                py: '24px',
+              }}
+            >
+              No ride history available.
+            </Typography>
+          )}
           {rides.map((ride) => {
             const badge = statusBadge[ride.status];
             const isCancelled = ride.status === 'Cancelled';

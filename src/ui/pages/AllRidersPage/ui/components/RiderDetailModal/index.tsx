@@ -1,5 +1,6 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { Box, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
@@ -21,7 +22,12 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
 import { AppModal, RowStack } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import {
+  pxToRem,
+  useGetRiderDetail,
+  useResolvedApiQuery,
+  type AdminRiderDetailResponse,
+} from '../../../../../../common';
 import type { RiderRow } from '../../..';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -35,60 +41,16 @@ type RiderDetailModalProps = {
   onViewHistory?: (rider: RiderRow) => void;
 };
 
-// ─── Detail data per rider (extends table data) ─────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-const riderDetails: Record<
-  string,
-  { dob: string; insurance: string; emergencyContact: string; avgCost: string }
-> = {
-  'R-001': {
-    dob: 'Mar 14, 1954',
-    insurance: 'Blue Cross Canada #BC-881234',
-    emergencyContact: 'Frank Moore · Husband · +1 514 555 0278',
-    avgCost: '$45',
-  },
-  'R-002': {
-    dob: 'Jul 22, 1968',
-    insurance: 'Sun Life #SL-334521',
-    emergencyContact: 'Maria Garcia · Wife · +1 416 555 0189',
-    avgCost: '$40',
-  },
-  'R-003': {
-    dob: 'Nov 5, 1960',
-    insurance: 'Manulife #ML-667890',
-    emergencyContact: 'Tom White · Son · +1 416 555 0234',
-    avgCost: '$38',
-  },
-  'R-004': {
-    dob: 'N/A',
-    insurance: 'Manulife #ML-998765',
-    emergencyContact: 'Susan Lewis · Wife · +1 613 555 0313',
-    avgCost: '$40',
-  },
-  'R-005': {
-    dob: 'Sep 12, 1971',
-    insurance: 'Great-West Life #GW-112233',
-    emergencyContact: 'James Clark · Husband · +1 416 555 0345',
-    avgCost: '$44',
-  },
-  'R-006': {
-    dob: 'Jan 30, 1985',
-    insurance: 'Desjardins #DJ-445566',
-    emergencyContact: 'Ana Martinez · Sister · +1 416 555 0456',
-    avgCost: '$40',
-  },
-  'R-007': {
-    dob: 'Apr 18, 1978',
-    insurance: 'Blue Cross Canada #BC-778899',
-    emergencyContact: 'Mark Anderson · Husband · +1 416 555 0567',
-    avgCost: '$40',
-  },
-  'R-008': {
-    dob: 'N/A',
-    insurance: 'Ontario Health #OH-556677',
-    emergencyContact: 'Admin Office · +1 408 555 0100',
-    avgCost: '$40',
-  },
+const formatCurrency = (value?: number | null): string => {
+  if (value == null) return '—';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
 };
 
 const statusConfig: Record<
@@ -251,19 +213,47 @@ export const RiderDetailModal = ({
   onReinstate,
   onViewHistory,
 }: RiderDetailModalProps) => {
-  if (!rider) return null;
+  const { data: detail } = useResolvedApiQuery(
+    useGetRiderDetail,
+    null as unknown as AdminRiderDetailResponse,
+    rider?.id ?? ''
+  );
 
-  const detail = riderDetails[rider.id] || {
-    dob: '—',
-    insurance: '—',
-    emergencyContact: '—',
-    avgCost: '—',
-  };
+  if (!rider) return null;
 
   const config = statusConfig[rider.status] || statusConfig.Active;
   const isSuspended = rider.status === 'Suspended';
 
   const iconSx = { fontSize: 11, color: '#9CA3AF' };
+
+  const dob = detail?.date_of_birth
+    ? dayjs(detail.date_of_birth).format('MMM D, YYYY')
+    : '—';
+  const insurance =
+    detail?.insurance_provider || detail?.insurance_policy_number
+      ? `${detail?.insurance_provider ?? ''}${
+          detail?.insurance_policy_number
+            ? ` #${detail.insurance_policy_number}`
+            : ''
+        }`.trim()
+      : '—';
+
+  const primaryContact = detail?.emergency_contacts?.[0];
+  const emergencyContact = primaryContact
+    ? `${primaryContact.name}${
+        primaryContact.relationship_type
+          ? ` · ${primaryContact.relationship_type}`
+          : ''
+      } · ${primaryContact.phone}`
+    : '—';
+
+  const totalRides = detail?.trip_stats?.total_rides ?? rider.trips;
+  const totalSpent = detail?.trip_stats
+    ? formatCurrency(detail.trip_stats.total_spent)
+    : rider.spent;
+  const avgCost = detail?.trip_stats
+    ? formatCurrency(detail.trip_stats.avg_cost)
+    : '—';
 
   return (
     <AppModal
@@ -353,7 +343,8 @@ export const RiderDetailModal = ({
                       color: '#F87171',
                     }}
                   >
-                    This rider cannot book trips until reinstated.
+                    {detail?.suspension_reason ??
+                      'This rider cannot book trips until reinstated.'}
                   </Typography>
                 </Stack>
               </RowStack>
@@ -462,7 +453,7 @@ export const RiderDetailModal = ({
                     sx={{ fontSize: 14, color: '#9CA3AF' }}
                   />
                 }
-                value={String(rider.trips)}
+                value={String(totalRides)}
                 label="Total Rides"
               />
               <StatCard
@@ -471,7 +462,7 @@ export const RiderDetailModal = ({
                     sx={{ fontSize: 14, color: '#9CA3AF' }}
                   />
                 }
-                value={rider.spent}
+                value={totalSpent}
                 label="Total Spent"
               />
               <StatCard
@@ -480,7 +471,7 @@ export const RiderDetailModal = ({
                     sx={{ fontSize: 14, color: '#9CA3AF' }}
                   />
                 }
-                value={detail.avgCost}
+                value={avgCost}
                 label="Avg Cost"
               />
             </RowStack>
@@ -516,7 +507,7 @@ export const RiderDetailModal = ({
                 <InfoField
                   icon={<CakeOutlinedIcon sx={iconSx} />}
                   label="Date of Birth"
-                  value={detail.dob}
+                  value={dob}
                 />
                 <InfoField
                   icon={<CalendarTodayOutlinedIcon sx={iconSx} />}
@@ -566,7 +557,7 @@ export const RiderDetailModal = ({
                     color: '#111827',
                   }}
                 >
-                  {detail.insurance}
+                  {insurance}
                 </Typography>
               </RowStack>
             </Stack>
@@ -599,7 +590,7 @@ export const RiderDetailModal = ({
                     color: '#111827',
                   }}
                 >
-                  {detail.emergencyContact}
+                  {emergencyContact}
                 </Typography>
               </RowStack>
             </Stack>

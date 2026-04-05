@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import dayjs from 'dayjs';
 import { Box, Grid, IconButton, Stack, Typography, alpha } from '@mui/material';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
@@ -15,9 +16,31 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
+import { EmptyState } from '../../modules/blocks';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { RiderDetailModal, RideHistoryModal } from './ui/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useSearchRiders,
+  useRidersApi,
+  useResolvedApiQuery,
+  type AdminRiderListItem,
+  type AdminRiderListResponse,
+} from '../../../common';
+
+const DEFAULT_RIDERS: AdminRiderListResponse = {
+  kpis: {
+    total_riders: 0,
+    active_count: 0,
+    suspended_count: 0,
+    open_tickets: 0,
+  },
+  riders: [],
+  total: 0,
+  page: 1,
+  limit: 10,
+  total_pages: 0,
+};
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -46,179 +69,145 @@ const statusColors: Record<RiderStatus, { color: string; bg: string }> = {
 
 const statusFilters: RiderStatus[] = ['Active', 'Inactive', 'Suspended'];
 
-// ─── Mock Data ──────────────────────────────────────────────────────────────
+const uiStatusToApi: Record<RiderStatus, string> = {
+  Active: 'active',
+  Inactive: 'inactive',
+  Suspended: 'suspended',
+};
 
-const ridersData: RiderRow[] = [
-  {
-    id: 'R-001',
-    client: 'Helen Moore',
-    email: 'helen.moore@email.com',
-    phone: '+1 416 555 0123',
-    joined: 'Jan 8, 2024',
-    trips: 42,
-    spent: '$1,890',
-    frequency: '3–4×/week',
-    tickets: '—',
-    status: 'Active',
-  },
-  {
-    id: 'R-002',
-    client: 'Robert Garcia',
-    email: 'r.garcia@email.com',
-    phone: '+1 416 555 0123',
-    joined: 'Feb 14, 2024',
-    trips: 31,
-    spent: '$1,240',
-    frequency: '2×/week',
-    tickets: '1',
-    status: 'Active',
-  },
-  {
-    id: 'R-003',
-    client: 'Nancy White',
-    email: 'nwhite@email.com',
-    phone: '+1 416 555 0123',
-    joined: 'Mar 3, 2024',
-    trips: 28,
-    spent: '$1,050',
-    frequency: '1–2×/week',
-    tickets: '—',
-    status: 'Active',
-  },
-  {
-    id: 'R-004',
-    client: 'Maple Leaf Hospital',
-    email: 'mapleleaf@email.com',
-    phone: '+1 416 555 0123',
-    joined: 'Apr 11, 2024',
-    trips: 9,
-    spent: '$360',
-    frequency: 'Irregular',
-    tickets: '3',
-    status: 'Suspended',
-  },
-  {
-    id: 'R-005',
-    client: 'Patricia Clark',
-    email: 'p.clark@email.com',
-    phone: '+1 416 555 0123',
-    joined: 'May 20, 2024',
-    trips: 56,
-    spent: '$2,460',
-    frequency: 'Daily',
-    tickets: '—',
-    status: 'Active',
-  },
-  {
-    id: 'R-006',
-    client: 'Daniel Martinez',
-    email: 'd.martinez@email.com',
-    phone: '+1 416 555 0123',
-    joined: 'Jun 5, 2024',
-    trips: 87,
-    spent: '$3,480',
-    frequency: 'Daily',
-    tickets: '—',
-    status: 'Active',
-  },
-  {
-    id: 'R-007',
-    client: 'Lisa Anderson',
-    email: 'l.anderson@email.com',
-    phone: '+1 416 555 0123',
-    joined: 'Jul 18, 2024',
-    trips: 18,
-    spent: '$720',
-    frequency: 'Weekly',
-    tickets: '—',
-    status: 'Active',
-  },
-  {
-    id: 'R-008',
-    client: 'Sunnyvale Medical Center',
-    email: 'j.porter@email.com',
-    phone: '+1 416 555 0123',
-    joined: 'Aug 22, 2024',
-    trips: 4,
-    spent: '$160',
-    frequency: 'Inactive',
-    tickets: '1',
-    status: 'Inactive',
-  },
-];
+const apiStatusToUi = (status?: string | null): RiderStatus => {
+  const normalized = (status ?? '').toLowerCase();
+  if (normalized === 'active') return 'Active';
+  if (normalized === 'suspended') return 'Suspended';
+  return 'Inactive';
+};
+
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+const mapRider = (item: AdminRiderListItem): RiderRow => ({
+  id: item.user_id,
+  client:
+    `${item.first_name ?? ''} ${item.last_name ?? ''}`.trim() || 'Unknown',
+  email: item.email ?? '—',
+  phone: item.phone ?? '—',
+  joined: item.joined_at ? dayjs(item.joined_at).format('MMM D, YYYY') : '—',
+  trips: item.total_trips ?? 0,
+  spent: formatCurrency(item.total_spent ?? 0),
+  frequency: item.frequency || '—',
+  tickets: item.open_tickets > 0 ? String(item.open_tickets) : '—',
+  status: apiStatusToUi(item.status),
+});
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const AllRidersPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'All' | RiderStatus>('All');
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
   const [selectedRider, setSelectedRider] = useState<RiderRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
+  const {
+    data: ridersData,
+    isFetching: isFetchingRiders,
+    isLoading: isLoadingRiders,
+  } = useResolvedApiQuery(useSearchRiders, DEFAULT_RIDERS, {
+    search: searchQuery.trim() || undefined,
+    status: activeFilter === 'All' ? undefined : uiStatusToApi[activeFilter],
+    page: paginationModel.page + 1,
+    limit: paginationModel.pageSize,
+  });
+
+  const { suspendRider, reinstateRider } = useRidersApi();
+
+  const riders = useMemo<RiderRow[]>(() => {
+    return ridersData.riders.map(mapRider);
+  }, [ridersData]);
+
+  const kpis = ridersData.kpis;
+  const totalCount = ridersData.total ?? 0;
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, []);
+
+  const handleFilterChange = useCallback((filter: 'All' | RiderStatus) => {
+    setActiveFilter(filter);
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, []);
+
   const handleViewRider = useCallback((rider: RiderRow) => {
     setSelectedRider(rider);
     setDetailOpen(true);
   }, []);
 
-  const filteredRiders = useMemo(() => {
-    let filtered = ridersData;
+  const handleSuspend = useCallback(
+    async (rider: RiderRow) => {
+      const success = await suspendRider({
+        riderId: rider.id,
+        reason: 'Administrative action',
+      });
+      if (success) {
+        setDetailOpen(false);
+        setSelectedRider({ ...rider, status: 'Suspended' });
+        setSnackbarMessage(`${rider.client} has been suspended`);
+        setSnackbarOpen(true);
+      }
+    },
+    [suspendRider]
+  );
 
-    if (activeFilter !== 'All') {
-      filtered = filtered.filter((r) => r.status === activeFilter);
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (r) =>
-          r.client.toLowerCase().includes(q) ||
-          r.email.toLowerCase().includes(q) ||
-          r.phone.includes(q)
-      );
-    }
-
-    return filtered;
-  }, [searchQuery, activeFilter]);
-
-  const statusCounts = useMemo(() => {
-    return {
-      total: ridersData.length,
-      active: ridersData.filter((r) => r.status === 'Active').length,
-      suspended: ridersData.filter((r) => r.status === 'Suspended').length,
-      openTickets: ridersData.reduce((sum, r) => {
-        const t = parseInt(r.tickets);
-        return sum + (isNaN(t) ? 0 : t);
-      }, 0),
-    };
-  }, []);
+  const handleReinstate = useCallback(
+    async (rider: RiderRow) => {
+      const success = await reinstateRider({ riderId: rider.id });
+      if (success) {
+        setDetailOpen(false);
+        setSelectedRider({ ...rider, status: 'Active' });
+        setSnackbarMessage(`${rider.client} has been reinstated`);
+        setSnackbarOpen(true);
+      }
+    },
+    [reinstateRider]
+  );
 
   const statCards = [
     {
-      value: String(statusCounts.total),
+      value: String(kpis.total_riders),
       label: 'Total Riders',
       valueColor: '#2F6FED',
       icon: <PeopleOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
       iconBg: '#EBF2FF',
     },
     {
-      value: String(statusCounts.active),
+      value: String(kpis.active_count),
       label: 'Active',
       valueColor: '#10B981',
       icon: <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#10B981' }} />,
       iconBg: '#ECFDF5',
     },
     {
-      value: String(statusCounts.suspended),
+      value: String(kpis.suspended_count),
       label: 'Suspended',
       valueColor: '#EF4444',
       icon: <BlockOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
       iconBg: '#FEF2F2',
     },
     {
-      value: String(statusCounts.openTickets),
+      value: String(kpis.open_tickets),
       label: 'Open Tickets',
       valueColor: '#D97706',
       icon: (
@@ -501,8 +490,19 @@ export const AllRidersPage = () => {
         {/* Table */}
         <AppGridtable
           columns={columns}
-          data={filteredRiders}
+          data={riders}
           initialPageSize={10}
+          disableAutoPagination
+          totalRows={totalCount}
+          onPaginationModelChange={(model) =>
+            setPaginationModel({ page: model.page, pageSize: model.pageSize })
+          }
+          emptyState={
+            <Box sx={{ height: 400, width: '100%' }}>
+              <EmptyState animationSrc="/empty.json" />
+            </Box>
+          }
+          isFetchingData={isFetchingRiders || isLoadingRiders}
           sx={{ height: 'auto', width: '100%' }}
         >
           <RowStack justifyContent={'space-between'} width={'100%'}>
@@ -511,7 +511,7 @@ export const AllRidersPage = () => {
               {(['All', ...statusFilters] as const).map((filter) => (
                 <Typography
                   key={filter}
-                  onClick={() => setActiveFilter(filter)}
+                  onClick={() => handleFilterChange(filter)}
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,
                     fontWeight: 600,
@@ -542,7 +542,7 @@ export const AllRidersPage = () => {
               name="search"
               placeholder="Search riders..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               boxProps={{ sx: { width: '240px' } }}
             />
           </RowStack>
@@ -554,16 +554,8 @@ export const AllRidersPage = () => {
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         rider={selectedRider}
-        onSuspend={(rider) => {
-          setDetailOpen(false);
-          setSnackbarMessage(`${rider.client} has been suspended`);
-          setSnackbarOpen(true);
-        }}
-        onReinstate={(rider) => {
-          setDetailOpen(false);
-          setSnackbarMessage(`${rider.client} has been reinstated`);
-          setSnackbarOpen(true);
-        }}
+        onSuspend={handleSuspend}
+        onReinstate={handleReinstate}
         onViewHistory={() => {
           setDetailOpen(false);
           setHistoryOpen(true);

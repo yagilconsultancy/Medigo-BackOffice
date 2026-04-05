@@ -1,6 +1,8 @@
 'use client';
 
-import { Avatar, Box, Grid, Stack, Typography } from '@mui/material';
+import { useMemo, useState } from 'react';
+import dayjs from 'dayjs';
+import { Avatar, Box, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
@@ -9,7 +11,13 @@ import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import PaymentOutlinedIcon from '@mui/icons-material/PaymentOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import { CustomPagination } from '../../modules/components/GridTable/ui/components/DataGridPagination/ui/components/CustomPagination';
+import { EmptyState } from '../../modules/blocks';
+import {
+  pxToRem,
+  useGetRidersProfiles,
+  type AdminRiderProfileCard,
+} from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -30,106 +38,54 @@ type RiderProfile = {
   paymentColor: string;
 };
 
-// ─── Mock Data ──────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-const ridersData: RiderProfile[] = [
-  {
-    id: 'R-001',
-    name: 'Helen Moore',
-    avatar: '',
-    dob: 'Mar 14, 1954',
-    memberSince: 'Jan 8, 2024',
-    totalRides: 42,
-    ridesColor: '#2F6FED',
-    email: 'helen.moore@email.com',
-    phone: '+1 416 555 0123',
-    lastRide: 'Mar 9, 2026',
-    insurance: 'Blue Cross Canada #BC-881234',
-    emergency: 'Frank Moore · Husband',
-    payment: 'Blue Cross · Visa ••4521',
+const formatDate = (value?: string | null): string =>
+  value ? dayjs(value).format('MMM D, YYYY') : '—';
+
+const mapRiderProfile = (item: AdminRiderProfileCard): RiderProfile => {
+  const fullName =
+    `${item.first_name ?? ''} ${item.last_name ?? ''}`.trim() || 'Unknown';
+  const insurance =
+    item.insurance_provider || item.insurance_policy_number
+      ? `${item.insurance_provider ?? ''}${
+          item.insurance_policy_number
+            ? ` #${item.insurance_policy_number}`
+            : ''
+        }`.trim()
+      : '—';
+  const emergency = item.emergency_contact_name
+    ? `${item.emergency_contact_name}${
+        item.emergency_contact_relationship
+          ? ` · ${item.emergency_contact_relationship}`
+          : ''
+      }`
+    : '—';
+  const payment =
+    item.payment_brand || item.payment_last_four
+      ? `${item.payment_brand ?? ''}${
+          item.payment_last_four ? ` ••${item.payment_last_four}` : ''
+        }`.trim()
+      : '—';
+  const totalRides = item.total_rides ?? 0;
+
+  return {
+    id: item.user_id,
+    name: fullName,
+    avatar: item.avatar_url ?? '',
+    dob: formatDate(item.date_of_birth),
+    memberSince: formatDate(item.member_since),
+    totalRides,
+    ridesColor: totalRides >= 50 ? '#059669' : '#2F6FED',
+    email: item.email ?? '—',
+    phone: item.phone ?? '—',
+    lastRide: formatDate(item.last_ride),
+    insurance,
+    emergency,
+    payment,
     paymentColor: '#2F6FED',
-  },
-  {
-    id: 'R-002',
-    name: 'Robert Garcia',
-    avatar: '',
-    dob: 'Jul 22, 1980',
-    memberSince: 'Feb 14, 2024',
-    totalRides: 31,
-    ridesColor: '#2F6FED',
-    email: 'r.garcia@email.com',
-    phone: '+1 514 555 0198',
-    lastRide: 'Mar 8, 2026',
-    insurance: 'Sun Life #SL-554321',
-    emergency: 'Maria Garcia · Wife',
-    payment: 'Sun Life Direct',
-    paymentColor: '#2F6FED',
-  },
-  {
-    id: 'R-003',
-    name: 'Patricia Clark',
-    avatar: '',
-    dob: 'Feb 26, 1948',
-    memberSince: 'May 20, 2024',
-    totalRides: 56,
-    ridesColor: '#059669',
-    email: 'p.clark@email.com',
-    phone: '+1 613 555 0147',
-    lastRide: 'Mar 9, 2026',
-    insurance: 'OHIP #OH-447812',
-    emergency: 'Bill Clark · Son',
-    payment: 'OHIP',
-    paymentColor: '#2F6FED',
-  },
-  {
-    id: 'R-004',
-    name: 'Daniel Martinez',
-    avatar: '',
-    dob: 'Aug 1, 1964',
-    memberSince: 'Jun 5, 2024',
-    totalRides: 87,
-    ridesColor: '#059669',
-    email: 'd.martinez@email.com',
-    phone: '+1 604 555 0132',
-    lastRide: 'Mar 9, 2026',
-    insurance: 'BC MSP #MSP-336699',
-    emergency: 'Rosa Martinez · Daughter',
-    payment: 'BC MSP',
-    paymentColor: '#2F6FED',
-  },
-  {
-    id: 'R-005',
-    name: 'Nancy White',
-    avatar: '',
-    dob: 'Sep 5, 1981',
-    memberSince: 'Mar 3, 2024',
-    totalRides: 28,
-    ridesColor: '#2F6FED',
-    email: 'nwhite@email.com',
-    phone: '+1 403 555 0189',
-    lastRide: 'Mar 7, 2026',
-    insurance: 'Alberta AHCIP #AH-221876',
-    emergency: 'Tom White · Son',
-    payment: 'Visa ••8732',
-    paymentColor: '#EF4444',
-  },
-  {
-    id: 'R-006',
-    name: 'Lisa Anderson',
-    avatar: '',
-    dob: 'Apr 12, 1986',
-    memberSince: 'Jul 18, 2024',
-    totalRides: 18,
-    ridesColor: '#2F6FED',
-    email: 'l.anderson@email.com',
-    phone: '+1 514 555 0276',
-    lastRide: 'Mar 6, 2026',
-    insurance: 'Desjardins #DJ-773214',
-    emergency: 'Mike Anderson · Husband',
-    payment: 'Desjardins · MC ••8944',
-    paymentColor: '#EF4444',
-  },
-];
+  };
+};
 
 // ─── Info Row ───────────────────────────────────────────────────────────────
 
@@ -337,6 +293,70 @@ const RiderCard = ({ rider }: { rider: RiderProfile }) => {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const RiderProfilesPage = () => {
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+
+  // Note: useGetRidersProfiles returns a flat paginated response
+  // (RiderProfileCardsPaginatedResponse) with `data` + `total` + `page` + ...
+  // rather than an ApiResponse<T> envelope, so useResolvedApiQuery doesn't
+  // fit here — we need access to `total` for the pagination control.
+  const { data: profilesResponse, isFetching } = useGetRidersProfiles({
+    page: paginationModel.page + 1,
+    limit: paginationModel.pageSize,
+  });
+
+  const profiles = profilesResponse?.data ?? [];
+  const totalCount = profilesResponse?.total ?? 0;
+
+  const riders = useMemo<RiderProfile[]>(
+    () => profiles.map(mapRiderProfile),
+    [profiles]
+  );
+
+  const handlePageChange = (newPage: number) => {
+    setPaginationModel((prev) => ({ ...prev, page: newPage }));
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPaginationModel({ page: 0, pageSize: newPageSize });
+  };
+
+  if (isFetching) {
+    return (
+      <AppDashboardLayout>
+        <Stack spacing={'24px'}>
+          <Stack spacing={'6px'}>
+            <Skeleton
+              variant="rectangular"
+              height={28}
+              width={240}
+              sx={{ borderRadius: '8px' }}
+            />
+            <Skeleton
+              variant="rectangular"
+              height={16}
+              width={420}
+              sx={{ borderRadius: '8px' }}
+            />
+          </Stack>
+          <Grid container spacing={'20px'}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Grid key={i} size={{ xs: 12, md: 6 }}>
+                <Skeleton
+                  variant="rectangular"
+                  height={360}
+                  sx={{ borderRadius: '16px' }}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </Stack>
+      </AppDashboardLayout>
+    );
+  }
+
   return (
     <AppDashboardLayout>
       <Stack spacing={'24px'}>
@@ -347,13 +367,39 @@ export const RiderProfilesPage = () => {
         />
 
         {/* Rider Cards Grid */}
-        <Grid container spacing={'20px'}>
-          {ridersData.map((rider) => (
-            <Grid key={rider.id} size={{ xs: 12, md: 6 }}>
-              <RiderCard rider={rider} />
-            </Grid>
-          ))}
-        </Grid>
+        {riders.length === 0 ? (
+          <Box sx={{ height: 400, width: '100%' }}>
+            <EmptyState animationSrc="/empty.json" />
+          </Box>
+        ) : (
+          <Grid container spacing={'20px'}>
+            {riders.map((rider) => (
+              <Grid key={rider.id} size={{ xs: 12, md: 6 }}>
+                <RiderCard rider={rider} />
+              </Grid>
+            ))}
+          </Grid>
+        )}
+
+        {/* Pagination */}
+        {totalCount > 0 && (
+          <Box
+            sx={{
+              background: '#FFFFFF',
+              border: '0.67px solid #E8ECF0',
+              borderRadius: '16px',
+              overflow: 'hidden',
+            }}
+          >
+            <CustomPagination
+              count={totalCount}
+              page={paginationModel.page}
+              pageSize={paginationModel.pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          </Box>
+        )}
       </Stack>
     </AppDashboardLayout>
   );
