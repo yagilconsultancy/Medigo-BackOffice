@@ -20,8 +20,13 @@ import {
   RowStack,
   StyledImage,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
-import { useState } from 'react';
+import {
+  pxToRem,
+  useGetDispatchSettings,
+  useResolvedApiQuery,
+  useDispatchApi,
+} from '../../../common';
+import { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
 import settingIcon from './ui/assets/icons/setting-icon.svg';
 
@@ -75,24 +80,53 @@ const IOSSwitch = styled((props: SwitchProps) => (
   },
 }));
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-
 type DistanceRadius = '2' | '5' | '10' | '15';
 
 type FallbackOption = 'expandRadius' | 'notifyDispatch' | 'notifyRider';
 
-// ─── Component ──────────────────────────────────────────────────────────────
 
 export const AutoDispatchPage = () => {
+  const { updateDispatchSettings } = useDispatchApi();
+  const { data: settingsData } = useResolvedApiQuery(
+    useGetDispatchSettings,
+    null
+  );
+
+  const theme = useTheme();
+
   const [isEnabled, setIsEnabled] = useState(true);
   const [selectedRadius, setSelectedRadius] = useState<DistanceRadius>('5');
   const [prioritizeRating, setPrioritizeRating] = useState(true);
   const [prioritizeFleet, setPrioritizeFleet] = useState(false);
   const [matchVehicleType, setMatchVehicleType] = useState(true);
-  const theme = useTheme();
   const [fallbackOptions, setFallbackOptions] = useState<Set<FallbackOption>>(
     new Set(['expandRadius', 'notifyDispatch'])
   );
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (settingsData) {
+      setIsEnabled(settingsData.auto_dispatch_enabled ?? true);
+      setSelectedRadius(
+        (settingsData.distance_matching?.search_radius_km?.toString() as DistanceRadius) ?? '5'
+      );
+      setPrioritizeRating(settingsData.priority_rules?.prioritize_by_rating ?? true);
+      setPrioritizeFleet(settingsData.priority_rules?.prioritize_by_fleet ?? false);
+      setMatchVehicleType(settingsData.priority_rules?.match_vehicle_type ?? true);
+
+      const fallbacks = new Set<FallbackOption>();
+      if (settingsData.fallback_behavior?.expand_search_radius) {
+        fallbacks.add('expandRadius');
+      }
+      if (settingsData.fallback_behavior?.notify_dispatch_team) {
+        fallbacks.add('notifyDispatch');
+      }
+      if (settingsData.fallback_behavior?.notify_rider) {
+        fallbacks.add('notifyRider');
+      }
+      setFallbackOptions(fallbacks);
+    }
+  }, [settingsData]);
 
   const toggleFallback = (option: FallbackOption) => {
     setFallbackOptions((prev) => {
@@ -106,8 +140,27 @@ export const AutoDispatchPage = () => {
     });
   };
 
-  const handleSave = () => {
-    toast.success('Auto dispatch settings saved successfully');
+  const handleSave = async () => {
+    const payload = {
+      auto_dispatch_enabled: isEnabled,
+      distance_matching: {
+        search_radius_km: Number(selectedRadius),
+      },
+      priority_rules: {
+        prioritize_by_rating: prioritizeRating,
+        prioritize_by_fleet: prioritizeFleet,
+        match_vehicle_type: matchVehicleType,
+      },
+      fallback_behavior: {
+        expand_search_radius: fallbackOptions.has('expandRadius'),
+        notify_dispatch_team: fallbackOptions.has('notifyDispatch'),
+        notify_rider: fallbackOptions.has('notifyRider'),
+      },
+    };
+
+    setIsLoading(true);
+    await updateDispatchSettings(payload);
+    setIsLoading(false);
   };
 
   const distanceOptions: { value: DistanceRadius; label: string }[] = [
@@ -519,6 +572,7 @@ export const AutoDispatchPage = () => {
         <Box>
           <AppButton
             onClick={handleSave}
+            disabled={isLoading}
             sx={{
               background: (theme) => theme.palette.primary.main,
               color: '#FFFFFF',
@@ -531,7 +585,7 @@ export const AutoDispatchPage = () => {
               },
             }}
           >
-            Save Settings
+            {isLoading ? 'Saving...' : 'Save Settings'}
           </AppButton>
         </Box>
       </Stack>

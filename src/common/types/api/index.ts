@@ -6,3 +6,4 @@ export * from './booking.types';
 export * from './incident.types';
 export * from './fleet.types';
 export * from './notification.types';
+export * from './dispatch.types';

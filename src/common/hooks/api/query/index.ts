@@ -17,3 +17,4 @@ export * from './incidents';
 export * from './alerts';
 export * from './investigations';
 export * from './disciplinary';
+export * from './dispatch';

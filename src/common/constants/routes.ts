@@ -223,6 +223,16 @@ export const ROUTES_SPEC = {
   toggleCollapseDisciplinary: (actionId: string) =>
     `/${API_VERSION}/rides/admin/disciplinary/${actionId}/collapse`,
 
+  // Dispatch Center
+  getDispatchDashboard: `/${API_VERSION}/rides/admin/admin/dispatch/dashboard`,
+  getUnassignedRides: `/${API_VERSION}/rides/admin/admin/dispatch/unassigned-rides`,
+  getAvailableDispatchDrivers: `/${API_VERSION}/rides/admin/admin/dispatch/available-drivers`,
+  manuallyAssignDriver: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/admin/dispatch/rides/${rideId}/assign`,
+  getDispatchSettings: `/${API_VERSION}/rides/admin/admin/dispatch/settings`,
+  updateDispatchSettings: `/${API_VERSION}/rides/admin/admin/dispatch/settings`,
+  triggerAutoDispatch: `/${API_VERSION}/rides/admin/admin/dispatch/auto-assign`,
+
   // Fleet Application
   getFleetApplicationsKpi: `/${API_VERSION}/users/admin/fleet/applications/kpis`,
   fleetApplications: `/${API_VERSION}/users/admin/fleet/applications`,

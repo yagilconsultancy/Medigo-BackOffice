@@ -14,3 +14,4 @@ export * from './useContactLogsApi';
 export * from './useAlertsApi';
 export * from './useInvestigationsApi';
 export * from './useDisciplinaryApi';
+export * from './useDispatchApi';

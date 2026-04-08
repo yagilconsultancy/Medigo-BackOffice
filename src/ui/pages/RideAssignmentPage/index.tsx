@@ -3,8 +3,15 @@
 import { Grid, Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { RowStack } from '../../modules/components';
-import { pxToRem } from '../../../common';
-import { useState } from 'react';
+import { EmptyState } from '../../modules/blocks';
+import {
+  pxToRem,
+  useGetUnassignedRides,
+  useGetAvailableDispatchDrivers,
+  useResolvedApiQuery,
+  useDispatchApi,
+} from '../../../common';
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import {
   UnassignedRideCard,
@@ -12,111 +19,6 @@ import {
   RideDriverCard,
   RideDriver,
 } from './ui/components';
-
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const allRides: UnassignedRide[] = [
-  {
-    id: '1',
-    bookingId: 'BK-20491',
-    bookingIdColor: '#2F6FED',
-    bookingIdBg: '#EBF2FF',
-    patientName: 'Claire Beaumont',
-    pickup: '120 King St W, Toronto, ON',
-    destination: 'Toronto General Hospital',
-    time: '09:00 AM',
-    distance: '4.3 mi',
-    specialNote: 'Wheelchair Accessible',
-    specialNoteBg: '#FFFBEB',
-    specialNoteColor: '#D97706',
-  },
-  {
-    id: '2',
-    bookingId: 'BK-20494',
-    bookingIdColor: '#059669',
-    bookingIdBg: '#ECFDF5',
-    patientName: 'Pierre Tremblay',
-    pickup: '455 Ste-Catherine St W, Montréal, QC',
-    destination: 'Montreal General Hospital',
-    time: '10:30 AM',
-    distance: '4.5 mi',
-    specialNote: 'Standard Ride',
-    specialNoteBg: '#EBF2FF',
-    specialNoteColor: '#2F6FED',
-  },
-  {
-    id: '3',
-    bookingId: 'BK-20483',
-    bookingIdColor: '#8B5CF6',
-    bookingIdBg: '#F3F0FF',
-    patientName: 'Dorothy MacLeod',
-    pickup: 'Rideau Place Care Home, Ottawa, ON',
-    destination: 'Ottawa Kidney Care Centre',
-    time: '08:00 AM',
-    distance: '5.0 mi',
-    specialNote: 'Assisted Ride',
-    specialNoteBg: '#FEF3C7',
-    specialNoteColor: '#92400E',
-  },
-];
-
-const allDrivers: RideDriver[] = [
-  {
-    id: '1',
-    initials: 'SW',
-    initialsColor: '#8B5CF6',
-    name: 'Sarah Williams',
-    vehicle: 'Honda Odyssey · 2021',
-    rating: 4.8,
-    trips: 287,
-    distance: '1.2 mi',
-    eta: '4 min',
-  },
-  {
-    id: '2',
-    initials: 'DC',
-    initialsColor: '#F59E0B',
-    name: 'David Chen',
-    vehicle: 'Ford Escape · 2023',
-    rating: 4.8,
-    trips: 264,
-    distance: '1.2 mi',
-    eta: '5 min',
-  },
-  {
-    id: '3',
-    initials: 'AK',
-    initialsColor: '#0EA5E9',
-    name: 'Anna Kim',
-    vehicle: 'Toyota Camry · 2022',
-    rating: 4.6,
-    trips: 195,
-    distance: '2.1 mi',
-    eta: '8 min',
-  },
-  {
-    id: '4',
-    initials: 'GM',
-    initialsColor: '#EF4444',
-    name: 'Grace Miller',
-    vehicle: 'Buick Enclave · 2021',
-    rating: 4.6,
-    trips: 210,
-    distance: '1.6 mi',
-    eta: '7 min',
-  },
-  {
-    id: '5',
-    initials: 'MJ',
-    initialsColor: '#2F6FED',
-    name: 'Marcus Johnson',
-    vehicle: 'Toyota Sienna WAV · 2022',
-    rating: 4.9,
-    trips: 312,
-    distance: '0.5 mi',
-    eta: '3 min',
-  },
-];
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -131,6 +33,110 @@ export const RideAssignmentPage = () => {
     {}
   );
 
+  // Fetch unassigned rides and available drivers
+  const { data: unassignedRidesData } = useResolvedApiQuery(
+    useGetUnassignedRides,
+    null,
+    {
+      page: 1,
+      limit: 20
+    }
+  );
+  const { data: availableDriversData } = useResolvedApiQuery(
+    useGetAvailableDispatchDrivers,null);
+  const { manuallyAssignDriver } = useDispatchApi();
+
+  const resolvedUnassignedRides = useMemo(() => {
+    return unassignedRidesData?.items || [];
+  }, [unassignedRidesData]);
+
+  const resolvedAvailableDrivers = useMemo(() => {
+    return availableDriversData || [];
+  }, [availableDriversData]);
+  // Transform unassigned rides to UI format
+  const allRides = useMemo<UnassignedRide[]>(() => {
+    const rideColors = [
+      { color: '#2F6FED', bg: '#EBF2FF' },
+      { color: '#059669', bg: '#ECFDF5' },
+      { color: '#8B5CF6', bg: '#F3F0FF' },
+      { color: '#F59E0B', bg: '#FFFBEB' },
+      { color: '#EF4444', bg: '#FEF2F2' },
+    ];
+
+    return (resolvedUnassignedRides || []).map((ride, index) => {
+      const colorScheme = rideColors[index % rideColors.length];
+      const specialReq = ride.special_requirements?.[0] || 'Standard Ride';
+
+      let specialNoteBg = '#EBF2FF';
+      let specialNoteColor = '#2F6FED';
+      if (specialReq.toLowerCase().includes('wheelchair')) {
+        specialNoteBg = '#FFFBEB';
+        specialNoteColor = '#D97706';
+      } else if (
+        specialReq.toLowerCase().includes('assist') ||
+        specialReq.toLowerCase().includes('care')
+      ) {
+        specialNoteBg = '#FEF3C7';
+        specialNoteColor = '#92400E';
+      }
+
+      return {
+        id: ride.ride_id,
+        bookingId: ride.booking_number,
+        bookingIdColor: colorScheme.color,
+        bookingIdBg: colorScheme.bg,
+        patientName: ride.rider_name,
+        pickup: ride.pickup_address,
+        destination: ride.destination_address,
+        time: new Date(ride.scheduled_at).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        }),
+        distance: ride.distance
+          ? `${ride.distance.toFixed(1)} mi`
+          : 'N/A',
+        specialNote: specialReq,
+        specialNoteBg,
+        specialNoteColor,
+      };
+    });
+  }, [resolvedUnassignedRides]);
+
+  // Transform available drivers to UI format
+  const allDrivers = useMemo<RideDriver[]>(() => {
+    const driverColors = [
+      '#8B5CF6',
+      '#F59E0B',
+      '#0EA5E9',
+      '#EF4444',
+      '#2F6FED',
+      '#059669',
+    ];
+
+    return (resolvedAvailableDrivers || []).map((driver, index) => {
+      const nameParts = driver.driver_name.split(' ');
+      const initials =
+        nameParts.length > 1
+          ? `${nameParts[0][0]}${nameParts[1][0]}`
+          : nameParts[0].substring(0, 2);
+
+      return {
+        id: driver.driver_id,
+        initials: initials.toUpperCase(),
+        initialsColor: driverColors[index % driverColors.length],
+        name: driver.driver_name,
+        vehicle: driver.vehicle_info,
+        rating: driver.rating,
+        trips: driver.total_trips,
+        distance: driver.distance_from_pickup
+          ? `${driver.distance_from_pickup.toFixed(1)} mi`
+          : 'N/A',
+        eta: driver.eta_minutes ? `${driver.eta_minutes} min` : 'N/A',
+      };
+    });
+  }, [availableDriversData]);
+
   const assignedDriverIds = new Set(
     Object.values(assignments).map((a) => a.driverId)
   );
@@ -138,22 +144,25 @@ export const RideAssignmentPage = () => {
     (d) => !assignedDriverIds.has(d.id)
   );
 
-  const handleAssign = (driverId: string) => {
+  const handleAssign = async (driverId: string) => {
     if (!selectedRideId) return;
 
     const driver = allDrivers.find((d) => d.id === driverId);
     const ride = allRides.find((r) => r.id === selectedRideId);
     if (!driver || !ride) return;
 
-    setAssignments((prev) => ({
-      ...prev,
-      [selectedRideId]: { driverId, driverName: driver.name },
-    }));
-    setSelectedRideId(null);
+    const success = await manuallyAssignDriver({
+      rideId: selectedRideId,
+      driver_id: driverId,
+    });
 
-    toast.success(
-      `${driver.name} assigned to ${ride.bookingId} · ${ride.patientName}`
-    );
+    if (success) {
+      setAssignments((prev) => ({
+        ...prev,
+        [selectedRideId]: { driverId, driverName: driver.name },
+      }));
+      setSelectedRideId(null);
+    }
   };
 
   const handleRideClick = (rideId: string) => {
@@ -225,17 +234,32 @@ export const RideAssignmentPage = () => {
                 </Typography>
               </Stack>
 
-              {allRides.map((ride) => (
-                <UnassignedRideCard
-                  key={ride.id}
-                  ride={{
-                    ...ride,
-                    assignedDriver: assignments[ride.id]?.driverName,
+              {allRides.length === 0 ? (
+                <Stack
+                  sx={{
+                    height: '400px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
-                  isSelected={selectedRideId === ride.id}
-                  onClick={() => handleRideClick(ride.id)}
-                />
-              ))}
+                >
+                  <EmptyState emptyState="No Unassigned Rides" />
+                </Stack>
+              ) : (
+                <>
+                  {allRides.map((ride) => (
+                    <UnassignedRideCard
+                      key={ride.id}
+                      ride={{
+                        ...ride,
+                        assignedDriver: assignments[ride.id]?.driverName,
+                      }}
+                      isSelected={selectedRideId === ride.id}
+                      onClick={() => handleRideClick(ride.id)}
+                    />
+                  ))}
+                </>
+              )}
             </Stack>
           </Grid>
 
@@ -273,28 +297,28 @@ export const RideAssignmentPage = () => {
                 </Typography>
               </Stack>
 
-              {filteredDrivers.map((driver) => (
-                <RideDriverCard
-                  key={driver.id}
-                  driver={driver}
-                  isActive={!!selectedRideId}
-                  onAssign={() => handleAssign(driver.id)}
-                />
-              ))}
-
-              {filteredDrivers.length === 0 && (
-                <Typography
+              {filteredDrivers.length === 0 ? (
+                <Stack
                   sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(13),
-                    color: (theme) => theme.color.lightGrey,
-                    textAlign: 'center',
-                    padding: '40px 0',
+                    height: '400px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  All drivers have been assigned
-                </Typography>
+                  <EmptyState emptyState="No Available Drivers" />
+                </Stack>
+              ) : (
+                <>
+                  {filteredDrivers.map((driver) => (
+                    <RideDriverCard
+                      key={driver.id}
+                      driver={driver}
+                      isActive={!!selectedRideId}
+                      onAssign={() => handleAssign(driver.id)}
+                    />
+                  ))}
+                </>
               )}
             </Stack>
           </Grid>

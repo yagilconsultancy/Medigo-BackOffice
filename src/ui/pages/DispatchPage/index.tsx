@@ -10,8 +10,14 @@ import {
   RowStack,
   StyledImage,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
-import { useState } from 'react';
+import { EmptyState } from '../../modules/blocks';
+import {
+  pxToRem,
+  useGetDispatchDashboard,
+  useResolvedApiQuery,
+  useDispatchApi,
+} from '../../../common';
+import { useState, useMemo } from 'react';
 import {
   DispatchStatCard,
   DispatchBookingCard,
@@ -31,58 +37,6 @@ import driverIcon from './ui/assets/icons/driverinfo-icon.svg';
 import userGroupIcon from './ui/assets/icons/drivermanagement-Icon.svg';
 import tripIcon from './ui/assets/icons/tripstatus-icon.svg';
 import assignIcon from './ui/assets/icons/assign-icon.svg';
-
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const pendingBookings: DispatchBooking[] = [
-  {
-    id: '1',
-    bookingId: 'BK-20491',
-    patientName: 'Claire Beaumont',
-    time: '09:00 AM',
-    pickup: '120 King St W, Toronto, ON',
-    destination: 'Toronto General Hospital',
-    specialNote: 'Wheelchair accessible',
-    specialNoteType: 'wheelchair',
-    status: 'urgent',
-  },
-  {
-    id: '2',
-    bookingId: 'BK-20487',
-    patientName: 'Dorothy MacLeod',
-    time: '01:30 PM',
-    pickup: '1225 Gladstone Ave, Ottawa, ON',
-    destination: 'Ottawa Kidney Care Centre',
-    specialNote: 'Care Assistant required',
-    specialNoteType: 'careAssistant',
-  },
-  {
-    id: '3',
-    bookingId: 'BK-20485',
-    patientName: 'Isabelle Côté',
-    time: '03:00 PM',
-    pickup: '800 René-Lévesque Blvd W, Montréal, QC',
-    destination: 'Montreal Heart Institute',
-  },
-  {
-    id: '4',
-    bookingId: 'BK-20483',
-    patientName: 'Gordon MacPherson',
-    time: '04:30 PM',
-    pickup: '321 Elgin St, Ottawa, ON',
-    destination: 'Civic Hospital Ottawa',
-    specialNote: 'Oxygen needed',
-    specialNoteType: 'oxygen',
-  },
-  {
-    id: '5',
-    bookingId: 'BK-20480',
-    patientName: "Margaret O'Brien",
-    time: '05:00 PM',
-    pickup: '1150 12 Ave SW, Calgary, AB',
-    destination: 'Foothills Medical Centre',
-  },
-];
 
 const availableDrivers: AvailableDriver[] = [
   {
@@ -232,13 +186,6 @@ const activeTrips: ActiveTrip[] = [
   },
 ];
 
-const dispatchDrivers = availableDrivers.map((d, i) => ({
-  ...d,
-  isBestMatch: i === 0,
-}));
-
-// ─── Component ──────────────────────────────────────────────────────────────
-
 type ViewTab = 'assignments' | 'liveMap';
 
 export const DispatchPage = () => {
@@ -248,6 +195,85 @@ export const DispatchPage = () => {
     useState<DispatchBooking | null>(null);
   const [selectedTripId, setSelectedTripId] = useState<string>('1');
 
+  // Fetch dispatch dashboard data
+  const { data: dashboardData } = useResolvedApiQuery(
+    useGetDispatchDashboard,
+    null
+  );
+  const { triggerAutoDispatch } = useDispatchApi();
+
+  // Transform unassigned rides to pending bookings format
+  const pendingBookings = useMemo<DispatchBooking[]>(() => {
+    return (dashboardData?.unassigned_rides || []).map((ride, index) => ({
+      id: ride.ride_id,
+      bookingId: ride.booking_number,
+      patientName: ride.rider_name,
+      time: new Date(ride.scheduled_at).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }),
+      pickup: ride.pickup_address,
+      destination: ride.destination_address,
+      specialNote: ride.special_requirements?.[0],
+      specialNoteType: ride.special_requirements?.[0]
+        ? (ride.special_requirements[0]
+            .toLowerCase()
+            .includes('wheelchair')
+            ? 'wheelchair'
+            : ride.special_requirements[0].toLowerCase().includes('care')
+              ? 'careAssistant'
+              : ride.special_requirements[0].toLowerCase().includes('oxygen')
+                ? 'oxygen'
+                : undefined)
+        : undefined,
+      status: index === 0 ? ('urgent' as const) : undefined,
+    }));
+  }, [dashboardData?.unassigned_rides]);
+
+  // Transform available drivers
+  const availableDrivers = useMemo<AvailableDriver[]>(() => {
+    const driverColors = [
+      '#2F6FED',
+      '#8B5CF6',
+      '#F59E0B',
+      '#EF4444',
+      '#059669',
+      '#0EA5E9',
+    ];
+
+    return (dashboardData?.available_drivers || []).map((driver, index) => {
+      const nameParts = driver.driver_name.split(' ');
+      const initials =
+        nameParts.length > 1
+          ? `${nameParts[0][0]}${nameParts[1][0]}`
+          : nameParts[0].substring(0, 2);
+
+      return {
+        id: driver.driver_id,
+        initials: initials.toUpperCase(),
+        initialsColor: driverColors[index % driverColors.length],
+        name: driver.driver_name,
+        vehicle: driver.vehicle_info,
+        rating: driver.rating,
+        trips: driver.total_trips,
+        distance: driver.distance_from_pickup
+          ? `${driver.distance_from_pickup.toFixed(1)} mi`
+          : 'N/A',
+        eta: driver.eta_minutes ? `${driver.eta_minutes} min` : 'N/A',
+        status: 'Available' as const,
+      };
+    });
+  }, [dashboardData?.available_drivers]);
+
+  // Add isBestMatch flag for modal driver list
+  const dispatchDrivers = useMemo(() => {
+    return availableDrivers.map((d, i) => ({
+      ...d,
+      isBestMatch: i === 0,
+    }));
+  }, [availableDrivers]);
+
   const selectedTrip =
     activeTrips.find((t) => t.id === selectedTripId) || activeTrips[0];
 
@@ -256,32 +282,47 @@ export const DispatchPage = () => {
     setAssignModalOpen(true);
   };
 
+  const handleAutoAssignAll = async () => {
+    await triggerAutoDispatch();
+  };
+
+  const kpis = dashboardData?.kpis || {
+    pending_assignments: 0,
+    assigned_today: 0,
+    available_drivers: 0,
+    drivers_on_trip: 0,
+  };
+
   const statCards = [
     {
       icon: pendingIcon,
-      value: '5',
+      value: kpis.pending_assignments.toString(),
       label: 'Pending Assignments',
       subtitle: 'Awaiting driver',
-      badge: { text: '5 need action', color: '#EF4444', bg: '#FEF2F2' },
-      progress: '0/5 assigned',
+      badge: {
+        text: `${kpis.pending_assignments} need action`,
+        color: '#EF4444',
+        bg: '#FEF2F2',
+      },
+      progress: `0/${kpis.pending_assignments} assigned`,
     },
     {
       icon: driverIcon,
-      value: '89',
+      value: kpis.assigned_today.toString(),
       label: 'Assigned Today',
       subtitle: 'Dispatched trips',
       badge: { text: '+0 this session', color: '#059669', bg: '#ECFDF5' },
     },
     {
       icon: userGroupIcon,
-      value: '32',
+      value: kpis.available_drivers.toString(),
       label: 'Available Drivers',
       subtitle: 'Ready to dispatch',
       badge: { text: 'Online now', color: '#2F6FED', bg: '#EEF3FF' },
     },
     {
       icon: tripIcon,
-      value: '62',
+      value: kpis.drivers_on_trip.toString(),
       label: 'Drivers On Trip',
       subtitle: 'Active rides',
       badge: { text: 'Live tracking', color: '#9CA3AF', bg: '#F3F4F6' },
@@ -382,9 +423,9 @@ export const DispatchPage = () => {
 
         {/* ═══════════ ASSIGNMENTS VIEW ═══════════ */}
         {activeView === 'assignments' && (
-          <Grid container spacing={'20px'}>
+          <Grid container spacing={'20px'} alignItems="stretch">
             {/* Left: Pending Bookings */}
-            <Grid size={{ xs: 12, lg: 5 }}>
+            <Grid size={{ xs: 12, lg: 5 }} sx={{ height: '100%' }}>
               <Stack
                 spacing={'12px'}
                 sx={{
@@ -392,6 +433,7 @@ export const DispatchPage = () => {
                   borderRadius: '16px',
                   padding: '20px',
                   border: '0.67px solid #EAECF0',
+                  height: '100%',
                 }}
               >
                 <Stack spacing={'2px'}>
@@ -417,28 +459,43 @@ export const DispatchPage = () => {
                   </Typography>
                 </Stack>
 
-                <Stack
-                  sx={{
-                    height: '600px',
-                    overflowY: 'auto',
-                    '::-webkit-scrollbar': { display: 'none' },
-                    scrollbarWidth: 'none',
-                  }}
-                  spacing={0.4}
-                >
-                  {pendingBookings.map((booking) => (
-                    <DispatchBookingCard
-                      key={booking.id}
-                      booking={booking}
-                      onAssignDriver={() => handleAssignDriver(booking)}
+                {pendingBookings.length === 0 ? (
+                  <Stack
+                    sx={{
+                      height: '600px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <EmptyState
+                      emptyState="No Pending Bookings"
                     />
-                  ))}
-                </Stack>
+                  </Stack>
+                ) : (
+                  <Stack
+                    sx={{
+                      height: '600px',
+                      overflowY: 'auto',
+                      '::-webkit-scrollbar': { display: 'none' },
+                      scrollbarWidth: 'none',
+                    }}
+                    spacing={0.4}
+                  >
+                    {pendingBookings.map((booking) => (
+                      <DispatchBookingCard
+                        key={booking.id}
+                        booking={booking}
+                        onAssignDriver={() => handleAssignDriver(booking)}
+                      />
+                    ))}
+                  </Stack>
+                )}
               </Stack>
             </Grid>
 
             {/* Right: Available Drivers */}
-            <Grid size={{ xs: 12, lg: 7 }}>
+            <Grid size={{ xs: 12, lg: 7 }} sx={{ height: '100%' }}>
               <Stack
                 spacing={'0px'}
                 sx={{
@@ -446,6 +503,7 @@ export const DispatchPage = () => {
                   borderRadius: '16px',
                   padding: '20px',
                   border: '0.67px solid #EAECF0',
+                  height: '100%',
                 }}
               >
                 <RowStack
@@ -475,6 +533,7 @@ export const DispatchPage = () => {
                     </Typography>
                   </Stack>
                   <AppButton
+                    onClick={handleAutoAssignAll}
                     sx={{
                       background: '#F7F9FB',
                       color: (theme) => theme.color.deepBlue,
@@ -500,9 +559,27 @@ export const DispatchPage = () => {
                   </AppButton>
                 </RowStack>
 
-                {availableDrivers.map((driver) => (
-                  <AvailableDriverCard key={driver.id} driver={driver} />
-                ))}
+                {availableDrivers.length === 0 ? (
+                  <Stack
+                    sx={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: '400px',
+                    }}
+                  >
+                    <EmptyState
+                      emptyState="No Available Drivers"
+                    />
+                  </Stack>
+                ) : (
+                  <>
+                    {availableDrivers.map((driver) => (
+                      <AvailableDriverCard key={driver.id} driver={driver} />
+                    ))}
+                  </>
+                )}
               </Stack>
             </Grid>
           </Grid>
