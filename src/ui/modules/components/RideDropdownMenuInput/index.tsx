@@ -1,10 +1,10 @@
-import { Box, Menu, MenuItem, Stack, Typography } from "@mui/material";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { pxToRem, useGetAllRides } from "../../../../common";
-import { AppSearchField } from "../TextField";
-import { RowStack } from "../RowStack";
-import { EmptyState } from "../../blocks";
-import dayjs from "dayjs";
+import { Box, Menu, MenuItem, Stack, Typography } from '@mui/material';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { pxToRem, useGetAllRides } from '../../../../common';
+import { AppSearchField } from '../TextField';
+import { RowStack } from '../RowStack';
+import { EmptyState } from '../../blocks';
+import dayjs from 'dayjs';
 
 export interface RideInputData {
   id: string;
@@ -25,7 +25,7 @@ export const RideDropdownMenuInput = ({
   handleRideSelected,
   selectedRideDisplay,
 }: RideDropdownMenuInputProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const menuButtonRef = useRef<HTMLDivElement>(null);
@@ -74,7 +74,7 @@ export const RideDropdownMenuInput = ({
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setSearchQuery("");
+    setSearchQuery('');
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,14 +82,14 @@ export const RideDropdownMenuInput = ({
   };
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.currentTarget.blur();
     }
   };
 
   const onRideSelected = (ride: RideInputData) => {
     setAnchorEl(null);
-    setSearchQuery("");
+    setSearchQuery('');
 
     handleRideSelected(ride);
   };
@@ -102,14 +102,14 @@ export const RideDropdownMenuInput = ({
         ref={menuButtonRef}
         onClick={handleMenuOpen}
         sx={{
-          p: "10px 16px",
-          borderRadius: "8px",
-          border: "1px solid rgba(81, 93, 101, 0.20)",
-          background: "#FFF",
-          cursor: "pointer",
-          "&:hover": {
+          p: '10px 16px',
+          borderRadius: '8px',
+          border: '1px solid rgba(81, 93, 101, 0.20)',
+          background: '#FFF',
+          cursor: 'pointer',
+          '&:hover': {
             border: `1px solid rgba(81, 93, 101, 1)`,
-            transition: ".3s ease",
+            transition: '.3s ease',
           },
         }}
       >
@@ -117,11 +117,11 @@ export const RideDropdownMenuInput = ({
           sx={{
             fontSize: pxToRem(14),
             fontWeight: 400,
-            opacity: selectedRideDisplay ? "1" : "0.5",
-            color: selectedRideDisplay ? "#374151" : "inherit",
+            opacity: selectedRideDisplay ? '1' : '0.5',
+            color: selectedRideDisplay ? '#374151' : 'inherit',
           }}
         >
-          {selectedRideDisplay || "Select a ride/trip"}
+          {selectedRideDisplay || 'Select a ride/trip'}
         </Typography>
       </Box>
 
@@ -130,24 +130,24 @@ export const RideDropdownMenuInput = ({
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
         anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "left",
+          vertical: 'bottom',
+          horizontal: 'left',
         }}
         transformOrigin={{
-          vertical: "top",
-          horizontal: "left",
+          vertical: 'top',
+          horizontal: 'left',
         }}
         slotProps={{
           paper: {
             sx: {
               width: menuWidth,
-              maxHeight: "500px",
-              mt: "8px",
-              borderRadius: "8px",
+              maxHeight: '500px',
+              mt: '8px',
+              borderRadius: '8px',
               boxShadow:
-                "0 14px 22px -9px rgba(16, 25, 40, 0.14), 0 0 3px -1px rgba(16, 25, 40, 0.04)",
-              "& .MuiList-root": {
-                padding: "8px",
+                '0 14px 22px -9px rgba(16, 25, 40, 0.14), 0 0 3px -1px rgba(16, 25, 40, 0.04)',
+              '& .MuiList-root': {
+                padding: '8px',
               },
             },
           },
@@ -155,57 +155,57 @@ export const RideDropdownMenuInput = ({
       >
         <Box
           sx={{
-            p: "8px 12px",
-            position: "sticky",
+            p: '8px 12px',
+            position: 'sticky',
             top: 0,
-            background: "#FFF",
+            background: '#FFF',
             zIndex: 1,
           }}
           onClick={(e) => e.stopPropagation()}
         >
           <AppSearchField
-            variant={"filled"}
+            variant={'filled'}
             placeholder="Search rides..."
             onChange={handleSearchChange}
             onKeyDown={handleSearch}
             value={searchQuery}
             boxProps={{
               sx: {
-                width: "100%",
+                width: '100%',
               },
             }}
           />
         </Box>
 
         <Stack
-          spacing={"16px"}
+          spacing={'16px'}
           sx={{
-            maxHeight: "380px",
-            p: "8px 12px",
-            overflowY: "auto",
-            "&::-webkit-scrollbar": {
-              width: "6px",
+            maxHeight: '380px',
+            p: '8px 12px',
+            overflowY: 'auto',
+            '&::-webkit-scrollbar': {
+              width: '6px',
             },
-            "&::-webkit-scrollbar-track": {
-              background: "#F4F4F4",
+            '&::-webkit-scrollbar-track': {
+              background: '#F4F4F4',
             },
-            "&::-webkit-scrollbar-thumb": {
-              background: "#CCC",
-              borderRadius: "4px",
+            '&::-webkit-scrollbar-thumb': {
+              background: '#CCC',
+              borderRadius: '4px',
             },
           }}
         >
           {isLoading ? (
             <Stack
-              justifyContent={"center"}
-              alignItems={"center"}
-              sx={{ height: "200px" }}
+              justifyContent={'center'}
+              alignItems={'center'}
+              sx={{ height: '200px' }}
             >
               <Typography
                 sx={{
                   fontSize: pxToRem(14),
                   fontWeight: 400,
-                  color: "#6B7280",
+                  color: '#6B7280',
                 }}
               >
                 Loading rides...
@@ -217,35 +217,35 @@ export const RideDropdownMenuInput = ({
                 key={ride.id}
                 onClick={() => onRideSelected(ride)}
                 sx={{
-                  p: "16px",
-                  borderRadius: "8px",
-                  background: "#FFF",
+                  p: '16px',
+                  borderRadius: '8px',
+                  background: '#FFF',
                   border: `1px solid rgba(81, 93, 101, 0.20)`,
                   boxShadow:
-                    "0 14px 22px -9px rgba(16, 25, 40, 0.14), 0 0 3px -1px rgba(16, 25, 40, 0.04)",
-                  cursor: "pointer",
-                  "&:hover": {
+                    '0 14px 22px -9px rgba(16, 25, 40, 0.14), 0 0 3px -1px rgba(16, 25, 40, 0.04)',
+                  cursor: 'pointer',
+                  '&:hover': {
                     border: `1px solid rgba(81, 93, 101, 1)`,
-                    transition: ".3s ease",
+                    transition: '.3s ease',
                   },
                 }}
               >
-                <Stack spacing={"8px"} sx={{ width: "100%" }}>
-                  <RowStack spacing={"8px"}>
+                <Stack spacing={'8px'} sx={{ width: '100%' }}>
+                  <RowStack spacing={'8px'}>
                     <Typography
                       sx={{
                         fontSize: pxToRem(13),
                         fontWeight: 600,
-                        color: "#111827",
+                        color: '#111827',
                       }}
                     >
-                      {ride.rideType.replace("_", " ").toUpperCase()}
+                      {ride.rideType.replace('_', ' ').toUpperCase()}
                     </Typography>
                     <Typography
                       sx={{
                         fontSize: pxToRem(12),
                         fontWeight: 500,
-                        color: "#374151",
+                        color: '#374151',
                       }}
                     >
                       •
@@ -255,15 +255,15 @@ export const RideDropdownMenuInput = ({
                         fontSize: pxToRem(12),
                         fontWeight: 500,
                         color:
-                          ride.status === "completed"
-                            ? "#059669"
-                            : ride.status === "in_progress"
-                            ? "#2F6FED"
-                            : "#6B7280",
-                        textTransform: "capitalize",
+                          ride.status === 'completed'
+                            ? '#059669'
+                            : ride.status === 'in_progress'
+                              ? '#2F6FED'
+                              : '#6B7280',
+                        textTransform: 'capitalize',
                       }}
                     >
-                      {ride.status.replace("_", " ")}
+                      {ride.status.replace('_', ' ')}
                     </Typography>
                   </RowStack>
 
@@ -271,10 +271,10 @@ export const RideDropdownMenuInput = ({
                     sx={{
                       fontSize: pxToRem(12),
                       fontWeight: 400,
-                      color: "#6B7280",
+                      color: '#6B7280',
                     }}
                   >
-                    <strong style={{ color: "#374151" }}>From:</strong>{" "}
+                    <strong style={{ color: '#374151' }}>From:</strong>{' '}
                     {ride.pickup_address}
                   </Typography>
 
@@ -282,10 +282,10 @@ export const RideDropdownMenuInput = ({
                     sx={{
                       fontSize: pxToRem(12),
                       fontWeight: 400,
-                      color: "#6B7280",
+                      color: '#6B7280',
                     }}
                   >
-                    <strong style={{ color: "#374151" }}>To:</strong>{" "}
+                    <strong style={{ color: '#374151' }}>To:</strong>{' '}
                     {ride.destination_address}
                   </Typography>
 
@@ -293,10 +293,11 @@ export const RideDropdownMenuInput = ({
                     sx={{
                       fontSize: pxToRem(11.5),
                       fontWeight: 400,
-                      color: "#9CA3AF",
+                      color: '#9CA3AF',
                     }}
                   >
-                    Scheduled: {dayjs(ride.scheduledAt).format("MMM D, YYYY h:mm A")}
+                    Scheduled:{' '}
+                    {dayjs(ride.scheduledAt).format('MMM D, YYYY h:mm A')}
                   </Typography>
                 </Stack>
               </MenuItem>
@@ -308,7 +309,7 @@ export const RideDropdownMenuInput = ({
                   sx={{
                     fontSize: pxToRem(16),
                     fontWeight: 400,
-                    textAlign: "center",
+                    textAlign: 'center',
                   }}
                 >
                   No rides found

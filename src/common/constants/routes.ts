@@ -361,6 +361,103 @@ export const ROUTES_SPEC = {
   getContactKpis: `/${API_VERSION}/notifications/admin/contact-logs/kpis`,
   listContactLogs: `/${API_VERSION}/notifications/admin/contact-logs`,
   createContactLog: `/${API_VERSION}/notifications/admin/contact-logs`,
+
+  // Admin Transactions
+  getTransactionKpis: `/${API_VERSION}/payments/admin/transactions/kpis`,
+  getPaymentMethodBreakdown: `/${API_VERSION}/payments/admin/transactions/payment-method-breakdown`,
+  getAllTransactions: `/${API_VERSION}/payments/admin/transactions`,
+  getTransactionDetail: (transactionId: string) =>
+    `/${API_VERSION}/payments/admin/transactions/${transactionId}`,
+
+  // Admin Revenue
+  getRevenueKpis: `/${API_VERSION}/payments/admin/revenue/kpis`,
+  getRevenueTrend: `/${API_VERSION}/payments/admin/revenue/trend`,
+  getRevenueByRideType: `/${API_VERSION}/payments/admin/revenue/by-ride-type`,
+  getRevenueByCity: `/${API_VERSION}/payments/admin/revenue/by-city`,
+  getRevenueDistribution: `/${API_VERSION}/payments/admin/revenue/distribution`,
+
+  // Admin Payouts
+  getPayoutKpis: `/${API_VERSION}/payments/admin/payouts/kpis`,
+  getPayoutSchedule: `/${API_VERSION}/payments/admin/payouts/schedule`,
+  getEarningsBreakdown: `/${API_VERSION}/payments/admin/payouts/earnings-breakdown`,
+  getMonthlyDistribution: `/${API_VERSION}/payments/admin/payouts/monthly-distribution`,
+  getPayoutsBySpecialty: `/${API_VERSION}/payments/admin/payouts/by-specialty`,
+  getDriverEarningsList: `/${API_VERSION}/payments/admin/payouts/drivers`,
+  getPayoutDetail: (driverId: string) =>
+    `/${API_VERSION}/payments/admin/payouts/drivers/${driverId}`,
+  processPayout: (driverId: string) =>
+    `/${API_VERSION}/payments/admin/payouts/drivers/${driverId}/pay`,
+
+  // Admin Refunds
+  getRefundKpis: `/${API_VERSION}/payments/admin/refunds/kpis`,
+  getRefundRequests: `/${API_VERSION}/payments/admin/refunds`,
+  createRefundRequest: `/${API_VERSION}/payments/admin/refunds`,
+  getRefundDetail: (refundId: string) =>
+    `/${API_VERSION}/payments/admin/refunds/${refundId}`,
+  approveRefund: (refundId: string) =>
+    `/${API_VERSION}/payments/admin/refunds/${refundId}/approve`,
+  rejectRefund: (refundId: string) =>
+    `/${API_VERSION}/payments/admin/refunds/${refundId}/reject`,
+
+  // ====================== PAYMENTS PRICING ======================
+
+  // Pricing Dashboard
+  getPricingDashboardKpis: `/${API_VERSION}/payments/pricing/dashboard/kpis`,
+  getRouteComparison: `/${API_VERSION}/payments/pricing/dashboard/route-comparison`,
+  getRecentPricingChanges: `/${API_VERSION}/payments/pricing/dashboard/recent-changes`,
+  getPricingHealth: `/${API_VERSION}/payments/pricing/dashboard/health`,
+
+  // Fare Configuration
+  listServiceTypes: `/${API_VERSION}/payments/pricing/fare-config/service-types`,
+  getServiceTypeConfig: (serviceType: string) =>
+    `/${API_VERSION}/payments/pricing/fare-config/${serviceType}`,
+  updateServiceTypeConfig: (serviceType: string) =>
+    `/${API_VERSION}/payments/pricing/fare-config/${serviceType}`,
+  getRoutePricing: (serviceType: string) =>
+    `/${API_VERSION}/payments/pricing/fare-config/${serviceType}/routes`,
+  updateRoutePricing: (serviceType: string) =>
+    `/${API_VERSION}/payments/pricing/fare-config/${serviceType}/routes`,
+  getCommissionView: (serviceType: string) =>
+    `/${API_VERSION}/payments/pricing/fare-config/${serviceType}/commission`,
+
+  // Surcharges
+  getSurchargeKpis: `/${API_VERSION}/payments/pricing/surcharges/kpis`,
+  listSurchargeRules: `/${API_VERSION}/payments/pricing/surcharges`,
+  createSurchargeRule: `/${API_VERSION}/payments/pricing/surcharges`,
+  updateSurchargeRule: (ruleId: string) =>
+    `/${API_VERSION}/payments/pricing/surcharges/${ruleId}`,
+  deleteSurchargeRule: (ruleId: string) =>
+    `/${API_VERSION}/payments/pricing/surcharges/${ruleId}`,
+
+  // Ride Packages
+  getPackageKpis: `/${API_VERSION}/payments/pricing/packages/kpis`,
+  listPackages: `/${API_VERSION}/payments/pricing/packages`,
+  createPackage: `/${API_VERSION}/payments/pricing/packages`,
+  getPackage: (packageId: string) =>
+    `/${API_VERSION}/payments/pricing/packages/${packageId}`,
+  updatePackage: (packageId: string) =>
+    `/${API_VERSION}/payments/pricing/packages/${packageId}`,
+  togglePackage: (packageId: string) =>
+    `/${API_VERSION}/payments/pricing/packages/${packageId}/toggle`,
+
+  // Pricing Configuration
+  getConfigKpis: `/${API_VERSION}/payments/pricing/configuration/kpis`,
+  getCurrentConfig: `/${API_VERSION}/payments/pricing/configuration`,
+  saveConfiguration: `/${API_VERSION}/payments/pricing/configuration`,
+
+  // Pricing Logs
+  listPricingLogs: `/${API_VERSION}/payments/pricing/logs`,
+  exportPricingLogs: `/${API_VERSION}/payments/pricing/logs/export`,
+
+  // Commission Settings
+  getCommissionKpis: `/${API_VERSION}/payments/pricing/commission/kpis`,
+  getCommissionConfig: `/${API_VERSION}/payments/pricing/commission`,
+  updateCommissionConfig: `/${API_VERSION}/payments/pricing/commission`,
+
+  // Cancellation Policy
+  getCancellationKpis: `/${API_VERSION}/payments/pricing/cancellation/kpis`,
+  getCancellationPolicies: `/${API_VERSION}/payments/pricing/cancellation`,
+  updateCancellationPolicies: `/${API_VERSION}/payments/pricing/cancellation`,
 } as const;
 
 export const ROUTES = Object.fromEntries(

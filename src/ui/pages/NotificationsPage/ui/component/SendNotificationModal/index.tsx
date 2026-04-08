@@ -82,7 +82,7 @@ export const SendNotificationModal = ({
     } finally {
       setSubmitting(false);
     }
-  }
+  };
 
   return (
     <AppModal

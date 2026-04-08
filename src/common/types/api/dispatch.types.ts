@@ -111,7 +111,9 @@ export type ApiDispatchDashboardResponse =
   ApiResponse<DispatchDashboardResponse>;
 export type ApiUnassignedRidesResponse =
   ApiResponse<UnassignedRidesListResponse>;
-export type ApiAvailableDispatchDriversResponse = ApiResponse<AvailableDriverItem[]>;
+export type ApiAvailableDispatchDriversResponse = ApiResponse<
+  AvailableDriverItem[]
+>;
 export type ApiDispatchSettingsResponse = ApiResponse<AutoDispatchSettings>;
 export type ApiTriggerAutoDispatchResponse =
   ApiResponse<TriggerAutoDispatchResponse>;

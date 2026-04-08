@@ -7,3 +7,4 @@ export * from './incident.types';
 export * from './fleet.types';
 export * from './notification.types';
 export * from './dispatch.types';
+export * from './payments.types';

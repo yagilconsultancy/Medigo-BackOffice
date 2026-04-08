@@ -154,7 +154,9 @@ export const IncidentInvestigationsPage = () => {
     page: currentPage,
     page_size: itemsPerPage,
     priority:
-      filters.priority !== 'All' ? priorityMapToApi[filters.priority] : undefined,
+      filters.priority !== 'All'
+        ? priorityMapToApi[filters.priority]
+        : undefined,
     status:
       filters.status !== 'All' ? statusMapToApi[filters.status] : undefined,
   });
@@ -376,352 +378,356 @@ export const IncidentInvestigationsPage = () => {
           ) : (
             <Stack>
               {filteredData.map((caseRow) => {
-              const priColors = priorityColors[caseRow.priority];
-              const statColors = statusColors[caseRow.status];
-              const isUnassigned = caseRow.status === 'Unassigned';
-              const isNearComplete = caseRow.progress >= 80;
-              const isExpanded = expandedId === caseRow.id;
+                const priColors = priorityColors[caseRow.priority];
+                const statColors = statusColors[caseRow.status];
+                const isUnassigned = caseRow.status === 'Unassigned';
+                const isNearComplete = caseRow.progress >= 80;
+                const isExpanded = expandedId === caseRow.id;
 
-              const getProgressBarColor = () => {
-                if (isNearComplete && !isUnassigned) return '#22C55E';
-                if (isUnassigned) return '#F59E0B';
-                return '#2F6FED';
-              };
+                const getProgressBarColor = () => {
+                  if (isNearComplete && !isUnassigned) return '#22C55E';
+                  if (isUnassigned) return '#F59E0B';
+                  return '#2F6FED';
+                };
 
-              return (
-                <Box
-                  key={caseRow.id}
-                  sx={{
-                    borderTop: '1px solid #F0F4F8',
-                  }}
-                >
-                  <RowStack
-                    spacing={'16px'}
-                    sx={{ padding: '18px 24px' }}
-                    alignItems={'flex-start'}
+                return (
+                  <Box
+                    key={caseRow.id}
+                    sx={{
+                      borderTop: '1px solid #F0F4F8',
+                    }}
                   >
-                    {/* Left Icon */}
-                    <Box
-                      sx={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: '12px',
-                        background: '#FEF3C7',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        mt: '2px',
-                      }}
+                    <RowStack
+                      spacing={'16px'}
+                      sx={{ padding: '18px 24px' }}
+                      alignItems={'flex-start'}
                     >
-                      <AssignmentOutlinedIcon
-                        sx={{ fontSize: 20, color: '#D97706' }}
-                      />
-                    </Box>
+                      {/* Left Icon */}
+                      <Box
+                        sx={{
+                          width: 42,
+                          height: 42,
+                          borderRadius: '12px',
+                          background: '#FEF3C7',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          mt: '2px',
+                        }}
+                      >
+                        <AssignmentOutlinedIcon
+                          sx={{ fontSize: 20, color: '#D97706' }}
+                        />
+                      </Box>
 
-                    {/* Content Area */}
-                    <Stack spacing={'10px'} sx={{ flex: 1, minWidth: 0 }}>
-                      {/* Top Row: IDs + Chips + Actions */}
-                      <RowStack justifyContent={'space-between'}>
-                        <RowStack spacing={'10px'} sx={{ flexWrap: 'wrap' }}>
+                      {/* Content Area */}
+                      <Stack spacing={'10px'} sx={{ flex: 1, minWidth: 0 }}>
+                        {/* Top Row: IDs + Chips + Actions */}
+                        <RowStack justifyContent={'space-between'}>
+                          <RowStack spacing={'10px'} sx={{ flexWrap: 'wrap' }}>
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 700,
+                                fontSize: pxToRem(13),
+                                color: '#2F6FED',
+                              }}
+                            >
+                              {caseRow.caseId}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(12),
+                                color: '#9CA3AF',
+                              }}
+                            >
+                              ← {caseRow.incidentId}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(12.5),
+                                color: '#6B7280',
+                              }}
+                            >
+                              {caseRow.category}
+                            </Typography>
+                            <Chip
+                              label={caseRow.priority}
+                              size="small"
+                              sx={{
+                                background: priColors.bg,
+                                color: priColors.color,
+                                fontWeight: 600,
+                                fontSize: pxToRem(11.5),
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                borderRadius: '16px',
+                                height: '24px',
+                              }}
+                            />
+                            <Chip
+                              label={caseRow.status}
+                              size="small"
+                              sx={{
+                                background: statColors.bg,
+                                color: statColors.color,
+                                fontWeight: 600,
+                                fontSize: pxToRem(11.5),
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                borderRadius: '16px',
+                                height: '24px',
+                              }}
+                            />
+                          </RowStack>
+
+                          {/* Action Buttons */}
+                          <RowStack spacing={'8px'} sx={{ flexShrink: 0 }}>
+                            {isExpanded ? (
+                              <RowStack
+                                spacing={'4px'}
+                                onClick={() => setExpandedId(null)}
+                                sx={{
+                                  padding: '5px 12px',
+                                  borderRadius: '8px',
+                                  border: '0.67px solid #E8ECF0',
+                                  background: '#F7F9FB',
+                                  cursor: 'pointer',
+                                  '&:hover': { background: '#E8ECF0' },
+                                }}
+                              >
+                                <UnfoldLessOutlinedIcon
+                                  sx={{ fontSize: 13, color: '#6B7280' }}
+                                />
+                                <Typography
+                                  sx={{
+                                    fontFamily: (theme) =>
+                                      theme.typography.fontFamily,
+                                    fontWeight: 500,
+                                    fontSize: pxToRem(12),
+                                    color: '#6B7280',
+                                    lineHeight: '18px',
+                                  }}
+                                >
+                                  Collapse
+                                </Typography>
+                              </RowStack>
+                            ) : (
+                              <RowStack
+                                spacing={'4px'}
+                                onClick={() => setExpandedId(caseRow.id)}
+                                sx={{
+                                  padding: '5px 12px',
+                                  borderRadius: '8px',
+                                  border: '0.67px solid #E8ECF0',
+                                  background: '#F7F9FB',
+                                  cursor: 'pointer',
+                                  '&:hover': { background: '#E8ECF0' },
+                                }}
+                              >
+                                <StickyNote2OutlinedIcon
+                                  sx={{ fontSize: 13, color: '#B3B9C2' }}
+                                />
+                                <Typography
+                                  sx={{
+                                    fontFamily: (theme) =>
+                                      theme.typography.fontFamily,
+                                    fontWeight: 500,
+                                    fontSize: pxToRem(12),
+                                    color: '#B3B9C2',
+                                    lineHeight: '18px',
+                                  }}
+                                >
+                                  Notes
+                                </Typography>
+                              </RowStack>
+                            )}
+                            {isUnassigned && (
+                              <AppButton
+                                variant="contained"
+                                onClick={() => handleAssign(caseRow.id)}
+                                sx={{
+                                  background: '#2F6FED',
+                                  color: '#FFFFFF',
+                                  borderRadius: '8px',
+                                  padding: '4px 14px',
+                                  textTransform: 'none',
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(12),
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  minWidth: 'unset',
+                                  height: 30,
+                                  boxShadow: 'none',
+                                  '&:hover': {
+                                    background: '#2558C9',
+                                    boxShadow: 'none',
+                                  },
+                                }}
+                              >
+                                Assign
+                              </AppButton>
+                            )}
+                            {!isUnassigned && isNearComplete && (
+                              <AppButton
+                                variant="contained"
+                                onClick={() => handleCloseCase(caseRow.id)}
+                                sx={{
+                                  background: '#ECFDF5',
+                                  color: '#065F46',
+                                  borderRadius: '8px',
+                                  padding: '4px 14px',
+                                  textTransform: 'none',
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(12),
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  minWidth: 'unset',
+                                  height: 30,
+                                  boxShadow: 'none',
+                                  '&:hover': {
+                                    background: '#D1FAE5',
+                                    boxShadow: 'none',
+                                  },
+                                }}
+                              >
+                                Close Case
+                              </AppButton>
+                            )}
+                          </RowStack>
+                        </RowStack>
+
+                        {/* Details Row */}
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 400,
+                            fontSize: pxToRem(12.5),
+                            color: '#9CA3AF',
+                            lineHeight: '18px',
+                          }}
+                        >
+                          Subject:{' '}
                           <Typography
+                            component="span"
                             sx={{
                               fontFamily: (theme) =>
                                 theme.typography.fontFamily,
-                              fontWeight: 700,
-                              fontSize: pxToRem(13),
-                              color: '#2F6FED',
+                              fontWeight: 600,
+                              fontSize: pxToRem(12.5),
+                              color: '#374151',
                             }}
                           >
-                            {caseRow.caseId}
+                            {caseRow.subject}
                           </Typography>
                           <Typography
+                            component="span"
+                            sx={{ color: '#D1D5DB', mx: '6px' }}
+                          >
+                            ·
+                          </Typography>
+                          Assignee:{' '}
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(12.5),
+                              color: isUnassigned ? '#EF4444' : '#374151',
+                            }}
+                          >
+                            {caseRow.assignee}
+                          </Typography>
+                          <Typography
+                            component="span"
+                            sx={{ color: '#D1D5DB', mx: '6px' }}
+                          >
+                            ·
+                          </Typography>
+                          Opened {caseRow.openedDate}{' '}
+                          <Typography
+                            component="span"
                             sx={{
                               fontFamily: (theme) =>
                                 theme.typography.fontFamily,
                               fontWeight: 400,
                               fontSize: pxToRem(12),
-                              color: '#9CA3AF',
+                              color: '#B3B9C2',
                             }}
                           >
-                            ← {caseRow.incidentId}
+                            ({caseRow.daysAgo})
                           </Typography>
-                          <Typography
-                            sx={{
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              fontWeight: 400,
-                              fontSize: pxToRem(12.5),
-                              color: '#6B7280',
-                            }}
-                          >
-                            {caseRow.category}
-                          </Typography>
-                          <Chip
-                            label={caseRow.priority}
-                            size="small"
-                            sx={{
-                              background: priColors.bg,
-                              color: priColors.color,
-                              fontWeight: 600,
-                              fontSize: pxToRem(11.5),
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              borderRadius: '16px',
-                              height: '24px',
-                            }}
-                          />
-                          <Chip
-                            label={caseRow.status}
-                            size="small"
-                            sx={{
-                              background: statColors.bg,
-                              color: statColors.color,
-                              fontWeight: 600,
-                              fontSize: pxToRem(11.5),
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              borderRadius: '16px',
-                              height: '24px',
-                            }}
-                          />
-                        </RowStack>
+                        </Typography>
 
-                        {/* Action Buttons */}
-                        <RowStack spacing={'8px'} sx={{ flexShrink: 0 }}>
-                          {isExpanded ? (
-                            <RowStack
-                              spacing={'4px'}
-                              onClick={() => setExpandedId(null)}
+                        {/* Full-Width Progress Bar */}
+                        <RowStack spacing={'12px'} alignItems={'center'}>
+                          <Box sx={{ flex: 1 }}>
+                            <LinearProgress
+                              variant="determinate"
+                              value={caseRow.progress}
                               sx={{
-                                padding: '5px 12px',
-                                borderRadius: '8px',
-                                border: '0.67px solid #E8ECF0',
-                                background: '#F7F9FB',
-                                cursor: 'pointer',
-                                '&:hover': { background: '#E8ECF0' },
-                              }}
-                            >
-                              <UnfoldLessOutlinedIcon
-                                sx={{ fontSize: 13, color: '#6B7280' }}
-                              />
-                              <Typography
-                                sx={{
-                                  fontFamily: (theme) =>
-                                    theme.typography.fontFamily,
-                                  fontWeight: 500,
-                                  fontSize: pxToRem(12),
-                                  color: '#6B7280',
-                                  lineHeight: '18px',
-                                }}
-                              >
-                                Collapse
-                              </Typography>
-                            </RowStack>
-                          ) : (
-                            <RowStack
-                              spacing={'4px'}
-                              onClick={() => setExpandedId(caseRow.id)}
-                              sx={{
-                                padding: '5px 12px',
-                                borderRadius: '8px',
-                                border: '0.67px solid #E8ECF0',
-                                background: '#F7F9FB',
-                                cursor: 'pointer',
-                                '&:hover': { background: '#E8ECF0' },
-                              }}
-                            >
-                              <StickyNote2OutlinedIcon
-                                sx={{ fontSize: 13, color: '#B3B9C2' }}
-                              />
-                              <Typography
-                                sx={{
-                                  fontFamily: (theme) =>
-                                    theme.typography.fontFamily,
-                                  fontWeight: 500,
-                                  fontSize: pxToRem(12),
-                                  color: '#B3B9C2',
-                                  lineHeight: '18px',
-                                }}
-                              >
-                                Notes
-                              </Typography>
-                            </RowStack>
-                          )}
-                          {isUnassigned && (
-                            <AppButton
-                              variant="contained"
-                              onClick={() => handleAssign(caseRow.id)}
-                              sx={{
-                                background: '#2F6FED',
-                                color: '#FFFFFF',
-                                borderRadius: '8px',
-                                padding: '4px 14px',
-                                textTransform: 'none',
-                                fontWeight: 600,
-                                fontSize: pxToRem(12),
-                                fontFamily: (theme) =>
-                                  theme.typography.fontFamily,
-                                minWidth: 'unset',
-                                height: 30,
-                                boxShadow: 'none',
-                                '&:hover': {
-                                  background: '#2558C9',
-                                  boxShadow: 'none',
-                                },
-                              }}
-                            >
-                              Assign
-                            </AppButton>
-                          )}
-                          {!isUnassigned && isNearComplete && (
-                            <AppButton
-                              variant="contained"
-                              onClick={() => handleCloseCase(caseRow.id)}
-                              sx={{
-                                background: '#ECFDF5',
-                                color: '#065F46',
-                                borderRadius: '8px',
-                                padding: '4px 14px',
-                                textTransform: 'none',
-                                fontWeight: 600,
-                                fontSize: pxToRem(12),
-                                fontFamily: (theme) =>
-                                  theme.typography.fontFamily,
-                                minWidth: 'unset',
-                                height: 30,
-                                boxShadow: 'none',
-                                '&:hover': {
-                                  background: '#D1FAE5',
-                                  boxShadow: 'none',
-                                },
-                              }}
-                            >
-                              Close Case
-                            </AppButton>
-                          )}
-                        </RowStack>
-                      </RowStack>
-
-                      {/* Details Row */}
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(12.5),
-                          color: '#9CA3AF',
-                          lineHeight: '18px',
-                        }}
-                      >
-                        Subject:{' '}
-                        <Typography
-                          component="span"
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 600,
-                            fontSize: pxToRem(12.5),
-                            color: '#374151',
-                          }}
-                        >
-                          {caseRow.subject}
-                        </Typography>
-                        <Typography
-                          component="span"
-                          sx={{ color: '#D1D5DB', mx: '6px' }}
-                        >
-                          ·
-                        </Typography>
-                        Assignee:{' '}
-                        <Typography
-                          component="span"
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 600,
-                            fontSize: pxToRem(12.5),
-                            color: isUnassigned ? '#EF4444' : '#374151',
-                          }}
-                        >
-                          {caseRow.assignee}
-                        </Typography>
-                        <Typography
-                          component="span"
-                          sx={{ color: '#D1D5DB', mx: '6px' }}
-                        >
-                          ·
-                        </Typography>
-                        Opened {caseRow.openedDate}{' '}
-                        <Typography
-                          component="span"
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 400,
-                            fontSize: pxToRem(12),
-                            color: '#B3B9C2',
-                          }}
-                        >
-                          ({caseRow.daysAgo})
-                        </Typography>
-                      </Typography>
-
-                      {/* Full-Width Progress Bar */}
-                      <RowStack spacing={'12px'} alignItems={'center'}>
-                        <Box sx={{ flex: 1 }}>
-                          <LinearProgress
-                            variant="determinate"
-                            value={caseRow.progress}
-                            sx={{
-                              height: 6,
-                              borderRadius: 3,
-                              backgroundColor: '#F0F4F8',
-                              '& .MuiLinearProgress-bar': {
+                                height: 6,
                                 borderRadius: 3,
-                                backgroundColor: getProgressBarColor(),
-                              },
-                            }}
-                          />
-                        </Box>
-                        <Typography
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 500,
-                            fontSize: pxToRem(11.5),
-                            color: '#6B7280',
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {caseRow.progress}% complete
-                        </Typography>
-                      </RowStack>
-
-                      {/* Expanded Description */}
-                      {isExpanded && caseRow.description && (
-                        <Box
-                          sx={{
-                            background: '#F7F9FB',
-                            borderRadius: '10px',
-                            padding: '12px 16px',
-                          }}
-                        >
+                                backgroundColor: '#F0F4F8',
+                                '& .MuiLinearProgress-bar': {
+                                  borderRadius: 3,
+                                  backgroundColor: getProgressBarColor(),
+                                },
+                              }}
+                            />
+                          </Box>
                           <Typography
                             sx={{
                               fontFamily: (theme) =>
                                 theme.typography.fontFamily,
-                              fontWeight: 400,
-                              fontSize: pxToRem(12.5),
+                              fontWeight: 500,
+                              fontSize: pxToRem(11.5),
                               color: '#6B7280',
-                              lineHeight: '20px',
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0,
                             }}
                           >
-                            {caseRow.description}
+                            {caseRow.progress}% complete
                           </Typography>
-                        </Box>
-                      )}
-                    </Stack>
-                  </RowStack>
-                </Box>
-              );
-            })}
+                        </RowStack>
+
+                        {/* Expanded Description */}
+                        {isExpanded && caseRow.description && (
+                          <Box
+                            sx={{
+                              background: '#F7F9FB',
+                              borderRadius: '10px',
+                              padding: '12px 16px',
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(12.5),
+                                color: '#6B7280',
+                                lineHeight: '20px',
+                              }}
+                            >
+                              {caseRow.description}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Stack>
+                    </RowStack>
+                  </Box>
+                );
+              })}
             </Stack>
           )}
         </Stack>

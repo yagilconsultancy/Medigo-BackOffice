@@ -84,7 +84,6 @@ type DistanceRadius = '2' | '5' | '10' | '15';
 
 type FallbackOption = 'expandRadius' | 'notifyDispatch' | 'notifyRider';
 
-
 export const AutoDispatchPage = () => {
   const { updateDispatchSettings } = useDispatchApi();
   const { data: settingsData } = useResolvedApiQuery(
@@ -108,11 +107,18 @@ export const AutoDispatchPage = () => {
     if (settingsData) {
       setIsEnabled(settingsData.auto_dispatch_enabled ?? true);
       setSelectedRadius(
-        (settingsData.distance_matching?.search_radius_km?.toString() as DistanceRadius) ?? '5'
+        (settingsData.distance_matching?.search_radius_km?.toString() as DistanceRadius) ??
+          '5'
       );
-      setPrioritizeRating(settingsData.priority_rules?.prioritize_by_rating ?? true);
-      setPrioritizeFleet(settingsData.priority_rules?.prioritize_by_fleet ?? false);
-      setMatchVehicleType(settingsData.priority_rules?.match_vehicle_type ?? true);
+      setPrioritizeRating(
+        settingsData.priority_rules?.prioritize_by_rating ?? true
+      );
+      setPrioritizeFleet(
+        settingsData.priority_rules?.prioritize_by_fleet ?? false
+      );
+      setMatchVehicleType(
+        settingsData.priority_rules?.match_vehicle_type ?? true
+      );
 
       const fallbacks = new Set<FallbackOption>();
       if (settingsData.fallback_behavior?.expand_search_radius) {

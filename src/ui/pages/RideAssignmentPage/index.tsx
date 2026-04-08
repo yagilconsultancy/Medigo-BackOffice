@@ -39,11 +39,13 @@ export const RideAssignmentPage = () => {
     null,
     {
       page: 1,
-      limit: 20
+      limit: 20,
     }
   );
   const { data: availableDriversData } = useResolvedApiQuery(
-    useGetAvailableDispatchDrivers,null);
+    useGetAvailableDispatchDrivers,
+    null
+  );
   const { manuallyAssignDriver } = useDispatchApi();
 
   const resolvedUnassignedRides = useMemo(() => {
@@ -93,9 +95,7 @@ export const RideAssignmentPage = () => {
           minute: '2-digit',
           hour12: true,
         }),
-        distance: ride.distance
-          ? `${ride.distance.toFixed(1)} mi`
-          : 'N/A',
+        distance: ride.distance ? `${ride.distance.toFixed(1)} mi` : 'N/A',
         specialNote: specialReq,
         specialNoteBg,
         specialNoteColor,

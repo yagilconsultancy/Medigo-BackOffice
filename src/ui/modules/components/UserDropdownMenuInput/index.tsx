@@ -1,9 +1,17 @@
-import { Avatar, Box, Menu, MenuItem, Stack, Typography, Rating } from "@mui/material";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { pxToRem, useSearchDrivers, useSearchRiders } from "../../../../common";
-import { AppSearchField } from "../TextField";
-import { RowStack } from "../RowStack";
-import { EmptyState } from "../../blocks";
+import {
+  Avatar,
+  Box,
+  Menu,
+  MenuItem,
+  Stack,
+  Typography,
+  Rating,
+} from '@mui/material';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { pxToRem, useSearchDrivers, useSearchRiders } from '../../../../common';
+import { AppSearchField } from '../TextField';
+import { RowStack } from '../RowStack';
+import { EmptyState } from '../../blocks';
 
 export interface UserInputData {
   id: string;
@@ -11,12 +19,12 @@ export interface UserInputData {
   lastName: string;
   imageUri?: string;
   email?: string;
-  role: "driver" | "rider";
+  role: 'driver' | 'rider';
   rating?: number;
 }
 
 export interface UserDropdownMenuInputProps {
-  type: "rider" | "driver";
+  type: 'rider' | 'driver';
   handleUserSelected: (user: UserInputData) => void;
   selectedUserId?: string;
   selectedUserName?: string;
@@ -28,8 +36,8 @@ export const UserDropdownMenuInput = ({
   selectedUserId,
   selectedUserName,
 }: UserDropdownMenuInputProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const menuButtonRef = useRef<HTMLDivElement>(null);
@@ -58,26 +66,26 @@ export const UserDropdownMenuInput = ({
 
   // Transform API data to UserInputData format
   const userList = useMemo<UserInputData[]>(() => {
-    if (type === "driver" && driversData?.success && driversData.data) {
+    if (type === 'driver' && driversData?.success && driversData.data) {
       return driversData.data.drivers.map((driver) => ({
         id: driver.user_id,
         firstName: driver.first_name,
         lastName: driver.last_name,
         imageUri: driver.avatar_url || undefined,
         email: driver.email || undefined,
-        role: "driver" as const,
+        role: 'driver' as const,
         rating: driver.rating || 0,
       }));
     }
 
-    if (type === "rider" && ridersData?.success && ridersData.data) {
+    if (type === 'rider' && ridersData?.success && ridersData.data) {
       return ridersData.data.riders.map((rider) => ({
         id: rider.user_id,
         firstName: rider.first_name,
         lastName: rider.last_name,
         imageUri: rider.avatar_url || undefined,
         email: rider.email || undefined,
-        role: "rider" as const,
+        role: 'rider' as const,
         rating: undefined,
       }));
     }
@@ -91,7 +99,7 @@ export const UserDropdownMenuInput = ({
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setSearchQuery("");
+    setSearchQuery('');
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,21 +107,21 @@ export const UserDropdownMenuInput = ({
   };
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.currentTarget.blur();
     }
   };
 
   const onUserSelected = (user: UserInputData) => {
     setAnchorEl(null);
-    setSearchQuery("");
+    setSearchQuery('');
 
     handleUserSelected(user);
   };
 
   const menuWidth = menuButtonRef.current?.offsetWidth || 0;
 
-  const isLoading = type === "driver" ? isLoadingDrivers : isLoadingRiders;
+  const isLoading = type === 'driver' ? isLoadingDrivers : isLoadingRiders;
   const userToRender = useMemo(() => userList, [userList]);
 
   return (
@@ -122,14 +130,14 @@ export const UserDropdownMenuInput = ({
         ref={menuButtonRef}
         onClick={handleMenuOpen}
         sx={{
-          p: "10px 16px",
-          borderRadius: "8px",
-          border: "1px solid rgba(81, 93, 101, 0.20)",
-          background: "#FFF",
-          cursor: "pointer",
-          "&:hover": {
+          p: '10px 16px',
+          borderRadius: '8px',
+          border: '1px solid rgba(81, 93, 101, 0.20)',
+          background: '#FFF',
+          cursor: 'pointer',
+          '&:hover': {
             border: `1px solid rgba(81, 93, 101, 1)`,
-            transition: ".3s ease",
+            transition: '.3s ease',
           },
         }}
       >
@@ -137,8 +145,8 @@ export const UserDropdownMenuInput = ({
           sx={{
             fontSize: pxToRem(14),
             fontWeight: 400,
-            opacity: selectedUserName ? "1" : "0.5",
-            color: selectedUserName ? "#374151" : "inherit",
+            opacity: selectedUserName ? '1' : '0.5',
+            color: selectedUserName ? '#374151' : 'inherit',
           }}
         >
           {selectedUserName || `Select a ${type}`}
@@ -150,24 +158,24 @@ export const UserDropdownMenuInput = ({
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
         anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "left",
+          vertical: 'bottom',
+          horizontal: 'left',
         }}
         transformOrigin={{
-          vertical: "top",
-          horizontal: "left",
+          vertical: 'top',
+          horizontal: 'left',
         }}
         slotProps={{
           paper: {
             sx: {
               width: menuWidth,
-              maxHeight: "500px",
-              mt: "8px",
-              borderRadius: "8px",
+              maxHeight: '500px',
+              mt: '8px',
+              borderRadius: '8px',
               boxShadow:
-                "0 14px 22px -9px rgba(16, 25, 40, 0.14), 0 0 3px -1px rgba(16, 25, 40, 0.04)",
-              "& .MuiList-root": {
-                padding: "8px",
+                '0 14px 22px -9px rgba(16, 25, 40, 0.14), 0 0 3px -1px rgba(16, 25, 40, 0.04)',
+              '& .MuiList-root': {
+                padding: '8px',
               },
             },
           },
@@ -175,16 +183,16 @@ export const UserDropdownMenuInput = ({
       >
         <Box
           sx={{
-            p: "8px 12px",
-            position: "sticky",
+            p: '8px 12px',
+            position: 'sticky',
             top: 0,
-            background: "#FFF",
+            background: '#FFF',
             zIndex: 1,
           }}
           onClick={(e) => e.stopPropagation()}
         >
           <AppSearchField
-            variant={"filled"}
+            variant={'filled'}
             placeholder={`Search ${type}`}
             onChange={handleSearchChange}
             onKeyDown={handleSearch}
@@ -192,41 +200,41 @@ export const UserDropdownMenuInput = ({
             // autoFocus
             boxProps={{
               sx: {
-                width: "100%",
+                width: '100%',
               },
             }}
           />
         </Box>
 
         <Stack
-          spacing={"16px"}
+          spacing={'16px'}
           sx={{
-            maxHeight: "380px",
-            p: "8px 12px",
-            overflowY: "auto",
-            "&::-webkit-scrollbar": {
-              width: "6px",
+            maxHeight: '380px',
+            p: '8px 12px',
+            overflowY: 'auto',
+            '&::-webkit-scrollbar': {
+              width: '6px',
             },
-            "&::-webkit-scrollbar-track": {
-              background: "#F4F4F4",
+            '&::-webkit-scrollbar-track': {
+              background: '#F4F4F4',
             },
-            "&::-webkit-scrollbar-thumb": {
-              background: "#CCC",
-              borderRadius: "4px",
+            '&::-webkit-scrollbar-thumb': {
+              background: '#CCC',
+              borderRadius: '4px',
             },
           }}
         >
           {isLoading ? (
             <Stack
-              justifyContent={"center"}
-              alignItems={"center"}
-              sx={{ height: "200px" }}
+              justifyContent={'center'}
+              alignItems={'center'}
+              sx={{ height: '200px' }}
             >
               <Typography
                 sx={{
                   fontSize: pxToRem(14),
                   fontWeight: 400,
-                  color: "#6B7280",
+                  color: '#6B7280',
                 }}
               >
                 Loading {type}s...
@@ -238,63 +246,65 @@ export const UserDropdownMenuInput = ({
                 key={user.id}
                 onClick={() => onUserSelected(user)}
                 sx={{
-                  p: "16px",
-                  borderRadius: "8px",
-                  background: "#FFF",
+                  p: '16px',
+                  borderRadius: '8px',
+                  background: '#FFF',
                   border: `1px solid rgba(81, 93, 101, 0.20)`,
                   boxShadow:
-                    "0 14px 22px -9px rgba(16, 25, 40, 0.14), 0 0 3px -1px rgba(16, 25, 40, 0.04)",
-                  cursor: "pointer",
-                  "&:hover": {
+                    '0 14px 22px -9px rgba(16, 25, 40, 0.14), 0 0 3px -1px rgba(16, 25, 40, 0.04)',
+                  cursor: 'pointer',
+                  '&:hover': {
                     border: `1px solid rgba(81, 93, 101, 1)`,
-                    transition: ".3s ease",
+                    transition: '.3s ease',
                   },
                 }}
               >
-                <RowStack spacing={"12px"} sx={{ width: "100%" }}>
+                <RowStack spacing={'12px'} sx={{ width: '100%' }}>
                   <Avatar
                     src={user.imageUri}
                     alt={user.firstName}
                     sx={{
                       width: 44,
                       height: 44,
-                      backgroundColor: !user.imageUri ? "primary.main" : "transparent",
+                      backgroundColor: !user.imageUri
+                        ? 'primary.main'
+                        : 'transparent',
                       color: (theme) => theme.palette.text.primary,
                     }}
                   >
                     {`${user.firstName.charAt(0)}${user.lastName.charAt(0)}`}
                   </Avatar>
 
-                  <Stack spacing={"4px"} sx={{ flex: 1 }}>
+                  <Stack spacing={'4px'} sx={{ flex: 1 }}>
                     <Typography
                       sx={{
                         fontSize: pxToRem(14),
                         fontWeight: 600,
-                        color: "#111827",
+                        color: '#111827',
                       }}
                     >
                       {user.firstName} {user.lastName}
                     </Typography>
 
-                    <RowStack spacing={"8px"}>
+                    <RowStack spacing={'8px'}>
                       <Typography
                         sx={{
                           fontSize: pxToRem(12),
                           fontWeight: 400,
-                          color: "#6B7280",
-                          textTransform: "capitalize",
+                          color: '#6B7280',
+                          textTransform: 'capitalize',
                         }}
                       >
                         {user.role}
                       </Typography>
 
-                      {user.role === "driver" && user.rating !== undefined && (
-                        <RowStack spacing={"4px"}>
+                      {user.role === 'driver' && user.rating !== undefined && (
+                        <RowStack spacing={'4px'}>
                           <Typography
                             sx={{
                               fontSize: pxToRem(12),
                               fontWeight: 500,
-                              color: "#374151",
+                              color: '#374151',
                             }}
                           >
                             •
@@ -306,8 +316,8 @@ export const UserDropdownMenuInput = ({
                             precision={0.1}
                             sx={{
                               fontSize: pxToRem(14),
-                              "& .MuiRating-iconFilled": {
-                                color: "#FFC107",
+                              '& .MuiRating-iconFilled': {
+                                color: '#FFC107',
                               },
                             }}
                           />
@@ -315,7 +325,7 @@ export const UserDropdownMenuInput = ({
                             sx={{
                               fontSize: pxToRem(12),
                               fontWeight: 500,
-                              color: "#374151",
+                              color: '#374151',
                             }}
                           >
                             {user.rating.toFixed(1)}
@@ -329,7 +339,7 @@ export const UserDropdownMenuInput = ({
                         sx={{
                           fontSize: pxToRem(12),
                           fontWeight: 400,
-                          color: "#9CA3AF",
+                          color: '#9CA3AF',
                         }}
                       >
                         {user.email}
@@ -346,7 +356,7 @@ export const UserDropdownMenuInput = ({
                   sx={{
                     fontSize: pxToRem(16),
                     fontWeight: 400,
-                    textAlign: "center",
+                    textAlign: 'center',
                   }}
                 >
                   No {type}s found

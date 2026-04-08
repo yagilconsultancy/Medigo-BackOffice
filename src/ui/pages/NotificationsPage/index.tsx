@@ -90,32 +90,35 @@ export const NotificationsPage = () => {
     { page: paginationModel.page + 1, page_size: paginationModel.pageSize }
   );
 
-  const statCards = useMemo(() => [
-    {
-      value: (kpisData?.total_sent ?? 0).toString(),
-      label: 'Total Sent',
-      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
-      iconBg: '#FEF3C7',
-    },
-    {
-      value: (kpisData?.category_1_count ?? 0).toString(),
-      label: kpisData?.category_1_label ?? 'Maintenance',
-      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
-      iconBg: '#FEF3C7',
-    },
-    {
-      value: (kpisData?.category_2_count ?? 0).toString(),
-      label: kpisData?.category_2_label ?? 'Policy Updates',
-      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
-      iconBg: '#EEF2FF',
-    },
-    {
-      value: (kpisData?.total_delivered ?? 0).toString(),
-      label: 'Total Delivered',
-      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />,
-      iconBg: '#FFF7ED',
-    },
-  ], [kpisData]);
+  const statCards = useMemo(
+    () => [
+      {
+        value: (kpisData?.total_sent ?? 0).toString(),
+        label: 'Total Sent',
+        icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
+        iconBg: '#FEF3C7',
+      },
+      {
+        value: (kpisData?.category_1_count ?? 0).toString(),
+        label: kpisData?.category_1_label ?? 'Maintenance',
+        icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
+        iconBg: '#FEF3C7',
+      },
+      {
+        value: (kpisData?.category_2_count ?? 0).toString(),
+        label: kpisData?.category_2_label ?? 'Policy Updates',
+        icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
+        iconBg: '#EEF2FF',
+      },
+      {
+        value: (kpisData?.total_delivered ?? 0).toString(),
+        label: 'Total Delivered',
+        icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />,
+        iconBg: '#FFF7ED',
+      },
+    ],
+    [kpisData]
+  );
 
   const notificationsData = useMemo<NotificationRow[]>(() => {
     return (broadcastsData?.items || []).map((broadcast) => ({
@@ -125,14 +128,16 @@ export const NotificationsPage = () => {
       description: broadcast.message,
       recipients: broadcast.audience_segment,
       sentTo: broadcast.sent_to_count,
-      timestamp: new Date(broadcast.sent_at).toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      }).replace(',', ' ·'),
+      timestamp: new Date(broadcast.sent_at)
+        .toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        })
+        .replace(',', ' ·'),
       status: 'Delivered' as const,
     }));
   }, [broadcastsData]);
@@ -286,12 +291,11 @@ export const NotificationsPage = () => {
                   color: '#2F6FED',
                   iconBg: '#EBF2FF',
                 };
-                const icon =
-                  categoryIcons[notification.category] || (
-                    <SettingsOutlinedIcon
-                      sx={{ width: 18, height: 18, color: '#2F6FED' }}
-                    />
-                  );
+                const icon = categoryIcons[notification.category] || (
+                  <SettingsOutlinedIcon
+                    sx={{ width: 18, height: 18, color: '#2F6FED' }}
+                  />
+                );
 
                 return (
                   <NotificationInfoUI

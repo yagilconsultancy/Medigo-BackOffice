@@ -217,15 +217,13 @@ export const DispatchPage = () => {
       destination: ride.destination_address,
       specialNote: ride.special_requirements?.[0],
       specialNoteType: ride.special_requirements?.[0]
-        ? (ride.special_requirements[0]
-            .toLowerCase()
-            .includes('wheelchair')
-            ? 'wheelchair'
-            : ride.special_requirements[0].toLowerCase().includes('care')
-              ? 'careAssistant'
-              : ride.special_requirements[0].toLowerCase().includes('oxygen')
-                ? 'oxygen'
-                : undefined)
+        ? ride.special_requirements[0].toLowerCase().includes('wheelchair')
+          ? 'wheelchair'
+          : ride.special_requirements[0].toLowerCase().includes('care')
+            ? 'careAssistant'
+            : ride.special_requirements[0].toLowerCase().includes('oxygen')
+              ? 'oxygen'
+              : undefined
         : undefined,
       status: index === 0 ? ('urgent' as const) : undefined,
     }));
@@ -468,9 +466,7 @@ export const DispatchPage = () => {
                       justifyContent: 'center',
                     }}
                   >
-                    <EmptyState
-                      emptyState="No Pending Bookings"
-                    />
+                    <EmptyState emptyState="No Pending Bookings" />
                   </Stack>
                 ) : (
                   <Stack
@@ -569,9 +565,7 @@ export const DispatchPage = () => {
                       minHeight: '400px',
                     }}
                   >
-                    <EmptyState
-                      emptyState="No Available Drivers"
-                    />
+                    <EmptyState emptyState="No Available Drivers" />
                   </Stack>
                 ) : (
                   <>

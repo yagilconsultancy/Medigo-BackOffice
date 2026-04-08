@@ -168,15 +168,22 @@ export const SafetyAlertsPage = () => {
   const { acknowledgeAlert } = useAlertsApi();
 
   // Fetch KPIs
-  const { data: kpisData,  } = useResolvedApiQuery(useGetAlertKpis, null);
+  const { data: kpisData } = useResolvedApiQuery(useGetAlertKpis, null);
 
   // Fetch alert feed with filters
   const { data: alertsListData, refetch } = useGetAlertFeed({
     page: currentPage,
     page_size: itemsPerPage,
-    category: filters.category !== 'All' ? categoryMapToApi[filters.category] : undefined,
-    severity: filters.severity !== 'All' ? severityMapToApi[filters.severity] : undefined,
-    status: filters.status !== 'All' ? statusMapToApi[filters.status] : undefined,
+    category:
+      filters.category !== 'All'
+        ? categoryMapToApi[filters.category]
+        : undefined,
+    severity:
+      filters.severity !== 'All'
+        ? severityMapToApi[filters.severity]
+        : undefined,
+    status:
+      filters.status !== 'All' ? statusMapToApi[filters.status] : undefined,
   });
 
   const alertsListDataResolved = useMemo(() => {

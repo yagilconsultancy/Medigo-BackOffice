@@ -107,7 +107,10 @@ const SubjectTypeChangeHandler = ({
   const prevSubjectTypeRef = useRef<string>(subjectType);
 
   useEffect(() => {
-    if (prevSubjectTypeRef.current !== subjectType && prevSubjectTypeRef.current !== '') {
+    if (
+      prevSubjectTypeRef.current !== subjectType &&
+      prevSubjectTypeRef.current !== ''
+    ) {
       // Clear subject fields when type changes
       setFieldValue('subjectName', '');
       setFieldValue('subjectId', '');

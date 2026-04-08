@@ -106,14 +106,16 @@ export const RiderNotificationsPage = () => {
       description: broadcast.message,
       recipients: broadcast.audience_segment,
       sentTo: broadcast.sent_to_count,
-      timestamp: new Date(broadcast.sent_at).toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      }).replace(',', ' ·'),
+      timestamp: new Date(broadcast.sent_at)
+        .toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        })
+        .replace(',', ' ·'),
       status: 'Delivered' as const,
     }));
   }, [broadcastsData]);
@@ -267,12 +269,11 @@ export const RiderNotificationsPage = () => {
                   color: '#2F6FED',
                   iconBg: '#EBF2FF',
                 };
-                const icon =
-                  categoryIcons[notification.category] || (
-                    <SettingsOutlinedIcon
-                      sx={{ width: 18, height: 18, color: '#2F6FED' }}
-                    />
-                  );
+                const icon = categoryIcons[notification.category] || (
+                  <SettingsOutlinedIcon
+                    sx={{ width: 18, height: 18, color: '#2F6FED' }}
+                  />
+                );
 
                 return (
                   <NotificationInfoUI

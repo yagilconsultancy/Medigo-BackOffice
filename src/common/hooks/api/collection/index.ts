@@ -15,3 +15,5 @@ export * from './useAlertsApi';
 export * from './useInvestigationsApi';
 export * from './useDisciplinaryApi';
 export * from './useDispatchApi';
+export * from './usePaymentAdminApi';
+export * from './usePaymentPricingApi';

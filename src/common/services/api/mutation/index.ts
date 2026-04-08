@@ -15,3 +15,5 @@ export * from './alerts';
 export * from './investigations';
 export * from './disciplinary';
 export * from './dispatch';
+export * from './payments-admin';
+export * from './payments-pricing';

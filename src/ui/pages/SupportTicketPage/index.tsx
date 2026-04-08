@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { alpha, Box, Chip, Grid, Stack, Typography } from '@mui/material';
 import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
@@ -16,7 +16,14 @@ import {
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetSupportKpis,
+  useListSupportTickets,
+  useResolvedApiQuery,
+  useSupportApi,
+} from '../../../common';
+import { EmptyState } from '../../modules/blocks';
 import { SupportStatCard, TicketDetailModal } from './ui/components';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -58,119 +65,6 @@ const typeColors: Record<TicketType, { bg: string; color: string }> = {
   'Driver Complaint': { bg: '#EEF2FF', color: '#6366F1' },
 };
 
-// ─── Stat Cards ─────────────────────────────────────────────────────────────
-
-const statCards = [
-  {
-    value: '184',
-    label: 'Total Tickets',
-    icon: (
-      <ConfirmationNumberOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-    ),
-    iconBg: '#EBF2FF',
-  },
-  {
-    value: '42',
-    label: 'Open',
-    icon: <ErrorOutlineOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
-    iconBg: '#FFFBEB',
-  },
-  {
-    value: '128',
-    label: 'Resolved',
-    icon: <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#10B981' }} />,
-    iconBg: '#ECFDF5',
-  },
-  {
-    value: '14',
-    label: 'Ride Disputes',
-    icon: <GavelOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
-    iconBg: '#EEF2FF',
-  },
-];
-
-// ─── Table Data ─────────────────────────────────────────────────────────────
-
-const ticketData: TicketRow[] = [
-  {
-    id: '1',
-    ticketId: 'TKT-8801',
-    type: 'Rider Complaint',
-    subject: "Driver didn't show up",
-    rider: 'Claire Beaumont',
-    driver: "Ryan O'Brien",
-    priority: 'High',
-    date: 'Mar 9, 2026',
-    status: 'Open',
-  },
-  {
-    id: '2',
-    ticketId: 'TKT-8800',
-    type: 'Ride Dispute',
-    subject: 'Incorrect fare charged',
-    rider: 'Joseph Nguyen',
-    driver: 'David Chen',
-    priority: 'Medium',
-    date: 'Mar 8, 2026',
-    status: 'Under Review',
-  },
-  {
-    id: '3',
-    ticketId: 'TKT-8799',
-    type: 'Driver Complaint',
-    subject: 'Passenger was aggressive',
-    rider: 'Gordon MacPherson',
-    driver: 'Anna Kim',
-    priority: 'High',
-    date: 'Mar 8, 2026',
-    status: 'Resolved',
-  },
-  {
-    id: '4',
-    ticketId: 'TKT-8798',
-    type: 'Ride Dispute',
-    subject: 'Refund request for cancelled trip',
-    rider: "Margaret O'Brien",
-    driver: 'Sophie Tremblay',
-    priority: 'Medium',
-    date: 'Mar 7, 2026',
-    status: 'Open',
-  },
-  {
-    id: '5',
-    ticketId: 'TKT-8797',
-    type: 'Rider Complaint',
-    subject: 'Vehicle was not wheelchair accessible',
-    rider: 'Dorothy MacLeod',
-    driver: 'Liam MacDonald',
-    priority: 'High',
-    date: 'Mar 6, 2026',
-    status: 'Resolved',
-  },
-  {
-    id: '6',
-    ticketId: 'TKT-8796',
-    type: 'Rider Complaint',
-    subject: 'App showing wrong pickup location',
-    rider: 'Isabelle C\u00f4t\u00e9',
-    driver: 'Aisha Mensah',
-    priority: 'Low',
-    date: 'Mar 5, 2026',
-    status: 'Resolved',
-  },
-  {
-    id: '7',
-    ticketId: 'TKT-8795',
-    type: 'Ride Dispute',
-    subject: 'Driver marked trip complete prematurely',
-    rider: 'Pierre Tremblay',
-    driver: 'Marc Lefebvre',
-    priority: 'Medium',
-    date: 'Mar 4, 2026',
-    status: 'Under Review',
-  },
-];
-
 // ─── Tab Config ─────────────────────────────────────────────────────────────
 
 const tabs: { label: string; value: TabValue }[] = [
@@ -187,26 +81,98 @@ export const SupportTicketPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTicket, setSelectedTicket] = useState<TicketRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+
+  const { reopenTicket, resolveTicket } = useSupportApi();
+
+  const { data: kpisData } = useResolvedApiQuery(useGetSupportKpis, null);
+  const { data: ticketsData } = useResolvedApiQuery(
+    useListSupportTickets,
+    null,
+    {
+      status: activeTab === 'All' ? null : activeTab,
+      search: searchQuery || null,
+      page: paginationModel.page + 1,
+      page_size: paginationModel.pageSize,
+    }
+  );
+
+  const statCards = useMemo(
+    () => [
+      {
+        value: (kpisData?.total_tickets ?? 0).toString(),
+        label: 'Total Tickets',
+        icon: (
+          <ConfirmationNumberOutlinedIcon
+            sx={{ fontSize: 18, color: '#2F6FED' }}
+          />
+        ),
+        iconBg: '#EBF2FF',
+      },
+      {
+        value: (kpisData?.open ?? 0).toString(),
+        label: 'Open',
+        icon: (
+          <ErrorOutlineOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
+        ),
+        iconBg: '#FFFBEB',
+      },
+      {
+        value: (kpisData?.resolved ?? 0).toString(),
+        label: 'Resolved',
+        icon: (
+          <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#10B981' }} />
+        ),
+        iconBg: '#ECFDF5',
+      },
+      {
+        value: (kpisData?.ride_disputes ?? 0).toString(),
+        label: 'Ride Disputes',
+        icon: <GavelOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
+        iconBg: '#EEF2FF',
+      },
+    ],
+    [kpisData]
+  );
+
+  const ticketRows = useMemo<TicketRow[]>(() => {
+    return (ticketsData?.items || []).map((ticket) => ({
+      id: ticket.id,
+      ticketId: ticket.ticket_id,
+      type: (ticket.ticket_type || 'Unknown') as TicketType,
+      subject: ticket.subject,
+      rider: ticket.rider_name || 'N/A',
+      driver: ticket.driver_name || 'N/A',
+      priority: ticket.priority as TicketPriority,
+      date: new Date(ticket.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      status: ticket.status as TicketStatus,
+    }));
+  }, [ticketsData]);
 
   const tabCounts: Record<TabValue, number> = {
-    All: ticketData.length,
-    Open: ticketData.filter((t) => t.status === 'Open').length,
-    'Under Review': ticketData.filter((t) => t.status === 'Under Review')
-      .length,
-    Resolved: ticketData.filter((t) => t.status === 'Resolved').length,
+    All: kpisData?.total_tickets ?? 0,
+    Open: kpisData?.open ?? 0,
+    'Under Review': 0,
+    Resolved: kpisData?.resolved ?? 0,
   };
 
-  const filteredTickets = ticketData.filter((t) => {
-    if (activeTab !== 'All' && t.status !== activeTab) return false;
-    const q = searchQuery.toLowerCase().trim();
-    return (
-      !q ||
-      t.ticketId.toLowerCase().includes(q) ||
-      t.subject.toLowerCase().includes(q) ||
-      t.rider.toLowerCase().includes(q) ||
-      t.driver.toLowerCase().includes(q)
-    );
-  });
+  const handleResolveTicket = async (ticketId: string) => {
+    const success = await resolveTicket({ ticketId });
+    if (success) {
+      setPaginationModel((prev) => ({ ...prev, page: 0 }));
+    }
+  };
+
+  useEffect(() => {
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, [activeTab, searchQuery]);
 
   const columns: GridColSpec<TicketRow>[] = [
     {
@@ -233,7 +199,10 @@ export const SupportTicketPage = () => {
       flex: 1,
       minWidth: 120,
       renderCell: (params) => {
-        const t = typeColors[params.row.type];
+        const t = typeColors[params.row.type] || {
+          bg: '#EBF2FF',
+          color: '#2F6FED',
+        };
         return (
           <Chip
             label={params.row.type}
@@ -311,7 +280,10 @@ export const SupportTicketPage = () => {
       flex: 0.6,
       minWidth: 80,
       renderCell: (params) => {
-        const p = priorityColors[params.row.priority];
+        const p = priorityColors[params.row.priority] || {
+          bg: '#F3F4F6',
+          color: '#6B7280',
+        };
         return (
           <Box
             sx={{
@@ -358,7 +330,10 @@ export const SupportTicketPage = () => {
       flex: 0.8,
       minWidth: 100,
       renderCell: (params) => {
-        const s = statusColors[params.row.status];
+        const s = statusColors[params.row.status] || {
+          bg: '#F3F4F6',
+          color: '#6B7280',
+        };
         return (
           <Box
             sx={{
@@ -416,6 +391,10 @@ export const SupportTicketPage = () => {
           </AppButton>
           {params.row.status === 'Open' && (
             <AppButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleResolveTicket(params.row.id);
+              }}
               sx={{
                 background: '#ECFDF5',
                 color: '#059669',
@@ -467,9 +446,24 @@ export const SupportTicketPage = () => {
         {/* Table */}
         <AppGridtable
           columns={columns}
-          data={filteredTickets}
+          data={ticketRows}
           initialPageSize={10}
           disableRowClick
+          disableAutoPagination
+          totalRows={ticketsData?.total || 0}
+          onPaginationModelChange={(model) => setPaginationModel(model)}
+          emptyState={
+            <Stack
+              sx={{
+                height: '400px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <EmptyState emptyState="No Support Tickets" />
+            </Stack>
+          }
           sx={{ height: 'auto', width: '100%' }}
         >
           <RowStack justifyContent={'space-between'} width={'100%'}>
