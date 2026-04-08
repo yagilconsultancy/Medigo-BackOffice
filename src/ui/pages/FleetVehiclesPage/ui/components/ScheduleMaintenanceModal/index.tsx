@@ -51,7 +51,7 @@ export const ScheduleMaintenanceModal = ({
       open={open}
       setOpen={() => onClose()}
       label="schedule-maintenance-modal"
-      padding='0px'
+      padding="0px"
       sx={{
         '& .MuiDialog-paper': {
           width: '420px',

@@ -6,6 +6,8 @@ import NotificationsActiveOutlinedIcon from '@mui/icons-material/NotificationsAc
 import AltRouteOutlinedIcon from '@mui/icons-material/AltRouteOutlined';
 import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppButton,
@@ -19,9 +21,17 @@ import {
   FilterSection,
 } from '../../modules/components/AppFilterPopover';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { pxToRem } from '../../../common';
+import { CustomPagination } from '../../modules/components/GridTable/ui/components/DataGridPagination/ui/components/CustomPagination';
+import { EmptyState } from '../../modules/blocks';
+import {
+  pxToRem,
+  useGetAlertKpis,
+  useGetAlertFeed,
+  useResolvedApiQuery,
+  useAlertsApi,
+} from '../../../common';
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+dayjs.extend(relativeTime);
 
 type AlertSeverity = 'High' | 'Medium' | 'Low';
 type AlertCategory =
@@ -45,8 +55,6 @@ type AlertRow = {
   status: AlertStatus;
 };
 
-// ─── Color Maps ─────────────────────────────────────────────────────────────
-
 const severityColors: Record<AlertSeverity, { color: string; bg: string }> = {
   High: { color: '#DC2626', bg: '#FEF2F2' },
   Medium: { color: '#D97706', bg: '#FFFBEB' },
@@ -67,108 +75,49 @@ const statusColors: Record<AlertStatus, string> = {
   Resolved: '#059669',
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
+// API value mappings
+const severityMapFromApi: Record<string, AlertSeverity> = {
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+};
 
-const alertsData: AlertRow[] = [
-  {
-    id: '1',
-    alertId: 'AL-441',
-    severity: 'High',
-    category: 'Route Deviation',
-    description: 'Driver deviated 3.7 km from approved route',
-    driver: 'Liam MacDonald',
-    trip: 'TR-8801',
-    city: 'Toronto, ON',
-    time: '2 min ago',
-    status: 'Acknowledged',
-  },
-  {
-    id: '2',
-    alertId: 'AL-440',
-    severity: 'Medium',
-    category: 'Late Arrival',
-    description: 'Driver running late by 18 minutes — rider waiting',
-    driver: 'Sophie Tremblay',
-    trip: 'TR-8800',
-    city: 'Ottawa, ON',
-    time: '10 min ago',
-    status: 'Active',
-  },
-  {
-    id: '3',
-    alertId: 'AL-439',
-    severity: 'High',
-    category: 'Unexpected Stop',
-    description: 'Vehicle stopped unexpectedly for 8 minutes',
-    driver: 'David Chen',
-    trip: 'TR-8799',
-    city: 'Vancouver, BC',
-    time: '24 min ago',
-    status: 'Active',
-  },
-  {
-    id: '4',
-    alertId: 'AL-438',
-    severity: 'Low',
-    category: 'Speed Violation',
-    description: 'Driver speed slightly above limit (68 km/h in 60 zone)',
-    driver: 'Aisha Mensah',
-    trip: 'TR-8798',
-    city: 'Calgary, AB',
-    time: '35 min ago',
-    status: 'Acknowledged',
-  },
-  {
-    id: '5',
-    alertId: 'AL-437',
-    severity: 'Medium',
-    category: 'Late Arrival',
-    description: 'Passenger not picked up at scheduled time',
-    driver: 'Marc Lefebvre',
-    trip: 'TR-8797',
-    city: 'Montréal, QC',
-    time: '1 hr ago',
-    status: 'Acknowledged',
-  },
-  {
-    id: '6',
-    alertId: 'AL-436',
-    severity: 'High',
-    category: 'Route Deviation',
-    description: 'Route deviation detected — 5.0 km off approved path',
-    driver: 'Anna Kim',
-    trip: 'TR-8796',
-    city: 'Edmonton, AB',
-    time: '1.2 hr ago',
-    status: 'Resolved',
-  },
-  {
-    id: '7',
-    alertId: 'AL-435',
-    severity: 'Low',
-    category: 'Late Arrival',
-    description: 'Driver running late by 5 minutes',
-    driver: "Ryan O'Brien",
-    trip: 'TR-8794',
-    city: 'Winnipeg, MB',
-    time: '2 hrs ago',
-    status: 'Resolved',
-  },
-  {
-    id: '8',
-    alertId: 'AL-434',
-    severity: 'Medium',
-    category: 'Idle Vehicle',
-    description: 'Vehicle idling for more than 15 minutes at pickup',
-    driver: 'Liam MacDonald',
-    trip: 'TR-8790',
-    city: 'Toronto, ON',
-    time: '3 hrs ago',
-    status: 'Resolved',
-  },
-];
+const categoryMapFromApi: Record<string, AlertCategory> = {
+  route_deviation: 'Route Deviation',
+  late_arrival: 'Late Arrival',
+  unexpected_stop: 'Unexpected Stop',
+  speed_violation: 'Speed Violation',
+  idle_vehicle: 'Idle Vehicle',
+};
 
-// ─── Filter Config ──────────────────────────────────────────────────────────
+const statusMapFromApi: Record<string, AlertStatus> = {
+  active: 'Active',
+  acknowledged: 'Acknowledged',
+  resolved: 'Resolved',
+};
+
+const severityMapToApi: Record<string, string> = {
+  All: '',
+  High: 'high',
+  Medium: 'medium',
+  Low: 'low',
+};
+
+const categoryMapToApi: Record<string, string> = {
+  All: '',
+  'Route Deviation': 'route_deviation',
+  'Late Arrival': 'late_arrival',
+  'Unexpected Stop': 'unexpected_stop',
+  'Speed Violation': 'speed_violation',
+  'Idle Vehicle': 'idle_vehicle',
+};
+
+const statusMapToApi: Record<string, string> = {
+  All: '',
+  Active: 'active',
+  Acknowledged: 'acknowledged',
+  Resolved: 'resolved',
+};
 
 const filterSections: FilterSection[] = [
   {
@@ -201,48 +150,82 @@ const defaultFilters: Record<string, string> = {
   status: 'All',
 };
 
-// ─── Component ──────────────────────────────────────────────────────────────
-
 export const SafetyAlertsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState(defaultFilters);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
 
+  const currentPage = useMemo<number>(() => {
+    return paginationModel.page + 1;
+  }, [paginationModel.page]);
+
+  const itemsPerPage = paginationModel.pageSize;
+
+  // Hooks
+  const { acknowledgeAlert } = useAlertsApi();
+
+  // Fetch KPIs
+  const { data: kpisData,  } = useResolvedApiQuery(useGetAlertKpis, null);
+
+  // Fetch alert feed with filters
+  const { data: alertsListData, refetch } = useGetAlertFeed({
+    page: currentPage,
+    page_size: itemsPerPage,
+    category: filters.category !== 'All' ? categoryMapToApi[filters.category] : undefined,
+    severity: filters.severity !== 'All' ? severityMapToApi[filters.severity] : undefined,
+    status: filters.status !== 'All' ? statusMapToApi[filters.status] : undefined,
+  });
+
+  const alertsListDataResolved = useMemo(() => {
+    return alertsListData?.success ? alertsListData.data : null;
+  }, [alertsListData]);
+
+  // Transform API data to UI format
+  const transformedData = useMemo<AlertRow[]>(() => {
+    if (!alertsListData?.success || !alertsListData.data?.items) {
+      return [];
+    }
+
+    return alertsListData.data.items.map((alert) => ({
+      id: alert.id,
+      alertId: `AL-${alert.alert_number}`,
+      severity: severityMapFromApi[alert.severity] || 'Medium',
+      category: categoryMapFromApi[alert.category] || 'Unexpected Stop',
+      description: alert.description || '',
+      driver: alert.driver_name || 'Unknown Driver',
+      trip: alert.trip_display_id || '—',
+      city: alert.city || '—',
+      time: dayjs(alert.created_at).fromNow(),
+      status: statusMapFromApi[alert.status] || 'Active',
+    }));
+  }, [alertsListData]);
+
+  // Client-side search filter
   const filteredData = useMemo(() => {
-    let filtered = alertsData;
-
-    if (filters.severity !== 'All') {
-      filtered = filtered.filter((r) => r.severity === filters.severity);
-    }
-    if (filters.category !== 'All') {
-      filtered = filtered.filter((r) => r.category === filters.category);
-    }
-    if (filters.status !== 'All') {
-      filtered = filtered.filter((r) => r.status === filters.status);
+    if (!searchQuery.trim()) {
+      return transformedData;
     }
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (r) =>
-          r.alertId.toLowerCase().includes(query) ||
-          r.driver.toLowerCase().includes(query) ||
-          r.description.toLowerCase().includes(query) ||
-          r.trip.toLowerCase().includes(query) ||
-          r.city.toLowerCase().includes(query)
-      );
-    }
+    const query = searchQuery.toLowerCase();
+    return transformedData.filter(
+      (r) =>
+        r.alertId.toLowerCase().includes(query) ||
+        r.driver.toLowerCase().includes(query) ||
+        r.description.toLowerCase().includes(query) ||
+        r.trip.toLowerCase().includes(query) ||
+        r.city.toLowerCase().includes(query)
+    );
+  }, [searchQuery, transformedData]);
 
-    return filtered;
-  }, [searchQuery, filters]);
-
-  const activeAlertCount = useMemo(
-    () => alertsData.filter((r) => r.status === 'Active').length,
-    []
-  );
+  const totalCount = alertsListDataResolved?.total || 0;
+  const activeAlertCount = kpisData?.active || 0;
 
   const statCards = [
     {
-      value: '12',
+      value: (kpisData?.active || 0).toString(),
       label: 'Active Alerts',
       icon: (
         <NotificationsActiveOutlinedIcon
@@ -252,24 +235,31 @@ export const SafetyAlertsPage = () => {
       iconBg: '#FEF2F2',
     },
     {
-      value: '4',
+      value: (kpisData?.route_deviations || 0).toString(),
       label: 'Route Deviations',
       icon: <AltRouteOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
       iconBg: '#FFFBEB',
     },
     {
-      value: '6',
+      value: (kpisData?.late_arrivals || 0).toString(),
       label: 'Running Late',
       icon: <ScheduleOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
       iconBg: '#EEF2FF',
     },
     {
-      value: '28',
+      value: (kpisData?.resolved_today || 0).toString(),
       label: 'Resolved Today',
       icon: <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
   ];
+
+  const handleAcknowledge = async (alertId: string) => {
+    const success = await acknowledgeAlert({ alertId });
+    if (success) {
+      refetch();
+    }
+  };
 
   const columns: GridColSpec<AlertRow>[] = [
     {
@@ -459,10 +449,12 @@ export const SafetyAlertsPage = () => {
       sortable: false,
       renderCell: (params) => {
         const status = params.row.status;
+        const alertId = params.row.id;
         if (status === 'Active') {
           return (
             <AppButton
               variant="contained"
+              onClick={() => handleAcknowledge(alertId)}
               sx={{
                 background: '#2F6FED',
                 color: '#FFFFFF',
@@ -590,64 +582,159 @@ export const SafetyAlertsPage = () => {
         </Grid>
 
         {/* Table */}
-        <AppGridtable
-          columns={columns}
-          data={filteredData}
-          initialPageSize={10}
-          disableRowClick
-          sx={{
-            height: 'auto',
-            width: '100%',
-          }}
-        >
-          <Stack spacing={'16px'} width={'100%'}>
-            <RowStack justifyContent={'space-between'} width={'100%'}>
-              <Stack spacing={'2px'}>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(16),
-                    color: '#111827',
-                    lineHeight: '24px',
-                  }}
-                >
-                  Alert Feed
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(12.5),
-                    color: '#6B7280',
-                    lineHeight: '18px',
-                  }}
-                >
-                  All system-generated safety alerts sorted by recency
-                </Typography>
-              </Stack>
-              <RowStack spacing={'10px'}>
-                <AppFilterPopover
-                  sections={filterSections}
-                  filters={filters}
-                  onFilterChange={(key, value) =>
-                    setFilters((prev) => ({ ...prev, [key]: value }))
-                  }
-                  onReset={() => setFilters(defaultFilters)}
-                />
-                <AppSearchField
-                  name="search"
-                  placeholder="Search alerts..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  boxProps={{
-                    sx: { width: '220px' },
-                  }}
-                />
+        {filteredData.length === 0 ? (
+          <Box
+            sx={{
+              background: '#FFFFFF',
+              border: '0.67px solid #F0F4F8',
+              borderRadius: '16px',
+              padding: '24px',
+              boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+            }}
+          >
+            <Stack spacing={'16px'} width={'100%'}>
+              <RowStack justifyContent={'space-between'} width={'100%'}>
+                <Stack spacing={'2px'}>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 600,
+                      fontSize: pxToRem(16),
+                      color: '#111827',
+                      lineHeight: '24px',
+                    }}
+                  >
+                    Alert Feed
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(12.5),
+                      color: '#6B7280',
+                      lineHeight: '18px',
+                    }}
+                  >
+                    All system-generated safety alerts sorted by recency
+                  </Typography>
+                </Stack>
+                <RowStack spacing={'10px'}>
+                  <AppFilterPopover
+                    sections={filterSections}
+                    filters={filters}
+                    onFilterChange={(key, value) =>
+                      setFilters((prev) => ({ ...prev, [key]: value }))
+                    }
+                    onReset={() => setFilters(defaultFilters)}
+                  />
+                  <AppSearchField
+                    name="search"
+                    placeholder="Search alerts..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    boxProps={{
+                      sx: { width: '220px' },
+                    }}
+                  />
+                </RowStack>
               </RowStack>
-            </RowStack>
-          </Stack>
-        </AppGridtable>
+              <EmptyState
+                emptyState={
+                  <Typography
+                    sx={{
+                      fontSize: pxToRem(14),
+                      fontWeight: 400,
+                      color: '#6B7280',
+                      textAlign: 'center',
+                    }}
+                  >
+                    No alerts found
+                  </Typography>
+                }
+              />
+            </Stack>
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              background: '#FFFFFF',
+              border: '0.67px solid #F0F4F8',
+              borderRadius: '16px',
+              boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+              overflow: 'hidden',
+            }}
+          >
+            <Stack spacing={'16px'} sx={{ padding: '24px 24px 0' }}>
+              <RowStack justifyContent={'space-between'} width={'100%'}>
+                <Stack spacing={'2px'}>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 600,
+                      fontSize: pxToRem(16),
+                      color: '#111827',
+                      lineHeight: '24px',
+                    }}
+                  >
+                    Alert Feed
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(12.5),
+                      color: '#6B7280',
+                      lineHeight: '18px',
+                    }}
+                  >
+                    All system-generated safety alerts sorted by recency
+                  </Typography>
+                </Stack>
+                <RowStack spacing={'10px'}>
+                  <AppFilterPopover
+                    sections={filterSections}
+                    filters={filters}
+                    onFilterChange={(key, value) =>
+                      setFilters((prev) => ({ ...prev, [key]: value }))
+                    }
+                    onReset={() => setFilters(defaultFilters)}
+                  />
+                  <AppSearchField
+                    name="search"
+                    placeholder="Search alerts..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    boxProps={{
+                      sx: { width: '220px' },
+                    }}
+                  />
+                </RowStack>
+              </RowStack>
+            </Stack>
+            <AppGridtable
+              columns={columns}
+              data={filteredData}
+              initialPageSize={itemsPerPage}
+              disableRowClick
+              hidePagination
+              sx={{
+                height: 'auto',
+                width: '100%',
+              }}
+            />
+            <CustomPagination
+              count={totalCount}
+              page={paginationModel.page}
+              pageSize={paginationModel.pageSize}
+              onPageChange={(newPage) =>
+                setPaginationModel((prev) => ({ ...prev, page: newPage }))
+              }
+              onPageSizeChange={(newPageSize) =>
+                setPaginationModel({ page: 0, pageSize: newPageSize })
+              }
+            />
+          </Box>
+        )}
       </Stack>
     </AppDashboardLayout>
   );

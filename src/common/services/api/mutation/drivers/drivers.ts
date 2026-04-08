@@ -41,7 +41,9 @@ export const reactivateDriver = async (payload: ReactivateDriverPayload) => {
   >(resolveRoute(ROUTES.reactivateDriver, driverId));
 };
 
-export const resendDriverInvite = async (payload: ResendDriverInvitePayload) => {
+export const resendDriverInvite = async (
+  payload: ResendDriverInvitePayload
+) => {
   const { driverId } = payload;
 
   return await getApiClient().post<

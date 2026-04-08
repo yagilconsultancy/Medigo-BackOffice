@@ -150,10 +150,14 @@ const buildVehicleLabel = (detail: AdminDriverDetailResponse): string => {
 
 const deriveDocsStatus = (documents: DriverDocumentSummary[]): string => {
   if (!documents.length) return 'No Documents';
-  const statuses = documents.map((d) => (d.verification_status || '').toLowerCase());
+  const statuses = documents.map((d) =>
+    (d.verification_status || '').toLowerCase()
+  );
   if (statuses.some((s) => s === 'expired')) return 'Expired';
   if (statuses.some((s) => s === 'rejected')) return 'Rejected';
-  if (statuses.every((s) => s === 'verified' || s === 'valid' || s === 'signed')) {
+  if (
+    statuses.every((s) => s === 'verified' || s === 'valid' || s === 'signed')
+  ) {
     return 'Complete';
   }
   return 'Pending';
@@ -190,7 +194,11 @@ const statusBadgeConfig: Record<
 
 const documentChipStyles = (status: string) => {
   const normalized = status.toLowerCase();
-  if (normalized.includes('verified') || normalized.includes('valid') || normalized.includes('signed')) {
+  if (
+    normalized.includes('verified') ||
+    normalized.includes('valid') ||
+    normalized.includes('signed')
+  ) {
     return { background: '#ECFDF5', color: '#059669' };
   }
   if (normalized.includes('expired') || normalized.includes('rejected')) {
@@ -455,30 +463,21 @@ export const DriverViewDrawer = ({
     resolvedDriverId
   );
 
-  const {
-    data: tripsResponse,
-    isFetching: isFetchingTrips,
-  } = useResolvedApiQuery(
-    useGetDriverTrips,
-    { items: [], total: 0, page: 1, limit: 10 } as any,
-    { driverId: activeTab === 2 ? resolvedDriverId : '', page: 1, limit: 20 }
-  );
+  const { data: tripsResponse, isFetching: isFetchingTrips } =
+    useResolvedApiQuery(
+      useGetDriverTrips,
+      { items: [], total: 0, page: 1, limit: 10 } as any,
+      { driverId: activeTab === 2 ? resolvedDriverId : '', page: 1, limit: 20 }
+    );
 
-  const {
-    data: ratingsResponse,
-    isFetching: isFetchingRatings,
-  } = useResolvedApiQuery(
-    useGetDriverRatings,
-    { items: [] } as any,
-    { driverId: activeTab === 3 ? resolvedDriverId : '', limit: 50 }
-  );
+  const { data: ratingsResponse, isFetching: isFetchingRatings } =
+    useResolvedApiQuery(useGetDriverRatings, { items: [] } as any, {
+      driverId: activeTab === 3 ? resolvedDriverId : '',
+      limit: 50,
+    });
 
-  const {
-    suspendDriver,
-    reactivateDriver,
-    reassignDriver,
-    updateDriver,
-  } = useDriversApi();
+  const { suspendDriver, reactivateDriver, reassignDriver, updateDriver } =
+    useDriversApi();
 
   // ─── Derived values ──────────────────────────────────────────────────────
   const hasDetail = Boolean(detail && detail.user_id);
@@ -493,11 +492,13 @@ export const DriverViewDrawer = ({
   const avatar = hasDetail ? detail.avatar_url || '' : seed?.avatar || '';
   const joinedLabel = hasDetail
     ? formatMonthYear(detail.created_at)
-    : seed?.joinedDate ?? '—';
+    : (seed?.joinedDate ?? '—');
   const fleetLabel = hasDetail
     ? detail.fleet_name || '—'
-    : seed?.fleet ?? '—';
-  const vehicleLabel = hasDetail ? buildVehicleLabel(detail) : seed?.vehicle ?? '—';
+    : (seed?.fleet ?? '—');
+  const vehicleLabel = hasDetail
+    ? buildVehicleLabel(detail)
+    : (seed?.vehicle ?? '—');
   const statusLabel = normalizeStatus(
     hasDetail ? detail.account_status : seed?.status
   );
@@ -511,12 +512,12 @@ export const DriverViewDrawer = ({
 
   const badge = statusBadgeConfig[statusLabel] || statusBadgeConfig.Available;
 
-  const capabilities = hasDetail ? detail.service_capabilities ?? [] : [];
-  const documents = hasDetail ? detail.documents ?? [] : [];
+  const capabilities = hasDetail ? (detail.service_capabilities ?? []) : [];
+  const documents = hasDetail ? (detail.documents ?? []) : [];
   const tripStats = hasDetail
     ? detail.trip_stats
     : { total_trips: 0, hours_online: 0, average_earnings: 0 };
-  const overallRating = hasDetail ? detail.rating ?? 0 : 0;
+  const overallRating = hasDetail ? (detail.rating ?? 0) : 0;
 
   const ratingsList = useMemo<AdminDriverRatingItem[]>(() => {
     const raw = ratingsResponse as any;
@@ -528,7 +529,7 @@ export const DriverViewDrawer = ({
           ? raw
           : [];
     if (fromEndpoint.length) return fromEndpoint;
-    return hasDetail ? detail.ratings ?? [] : [];
+    return hasDetail ? (detail.ratings ?? []) : [];
   }, [ratingsResponse, hasDetail, detail]);
 
   const ratingBreakdown = useMemo(
@@ -810,7 +811,11 @@ export const DriverViewDrawer = ({
         }}
       >
         {isInitialLoading ? (
-          <Stack alignItems="center" justifyContent="center" sx={{ py: '48px' }}>
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            sx={{ py: '48px' }}
+          >
             <CircularProgress size={24} sx={{ color: '#2F6FED' }} />
           </Stack>
         ) : (
@@ -976,7 +981,8 @@ export const DriverViewDrawer = ({
                           >
                             <Typography
                               sx={{
-                                fontFamily: (theme) => theme.typography.fontFamily,
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
                                 fontWeight: 600,
                                 fontSize: pxToRem(12),
                                 color: '#374151',
@@ -1004,7 +1010,8 @@ export const DriverViewDrawer = ({
                           >
                             <Typography
                               sx={{
-                                fontFamily: (theme) => theme.typography.fontFamily,
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
                                 fontWeight: 600,
                                 fontSize: pxToRem(12),
                                 color: '#FFFFFF',
@@ -1087,7 +1094,8 @@ export const DriverViewDrawer = ({
                           >
                             <Typography
                               sx={{
-                                fontFamily: (theme) => theme.typography.fontFamily,
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
                                 fontWeight: 600,
                                 fontSize: pxToRem(12),
                                 color: '#374151',
@@ -1098,7 +1106,9 @@ export const DriverViewDrawer = ({
                           </Box>
                           <Box
                             onClick={
-                              isSubmittingAction ? undefined : handleReassignVehicle
+                              isSubmittingAction
+                                ? undefined
+                                : handleReassignVehicle
                             }
                             sx={{
                               flex: 1,
@@ -1115,7 +1125,8 @@ export const DriverViewDrawer = ({
                           >
                             <Typography
                               sx={{
-                                fontFamily: (theme) => theme.typography.fontFamily,
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
                                 fontWeight: 600,
                                 fontSize: pxToRem(12),
                                 color: '#FFFFFF',
@@ -1151,7 +1162,9 @@ export const DriverViewDrawer = ({
                           />
                         }
                         label={
-                          isSubmittingAction ? 'Reactivating...' : 'Reactivate Driver'
+                          isSubmittingAction
+                            ? 'Reactivating...'
+                            : 'Reactivate Driver'
                         }
                         variant="success"
                         onClick={
@@ -1215,7 +1228,8 @@ export const DriverViewDrawer = ({
                           >
                             <Typography
                               sx={{
-                                fontFamily: (theme) => theme.typography.fontFamily,
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
                                 fontWeight: 600,
                                 fontSize: pxToRem(12),
                                 color: '#374151',
@@ -1243,7 +1257,8 @@ export const DriverViewDrawer = ({
                           >
                             <Typography
                               sx={{
-                                fontFamily: (theme) => theme.typography.fontFamily,
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
                                 fontWeight: 600,
                                 fontSize: pxToRem(12),
                                 color: '#FFFFFF',
@@ -1388,7 +1403,9 @@ export const DriverViewDrawer = ({
                         readOnly
                         precision={0.1}
                         size="small"
-                        icon={<StarIcon sx={{ fontSize: 14, color: '#F59E0B' }} />}
+                        icon={
+                          <StarIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
+                        }
                         emptyIcon={
                           <StarIcon sx={{ fontSize: 14, color: '#E5E7EB' }} />
                         }
@@ -1414,7 +1431,8 @@ export const DriverViewDrawer = ({
                         >
                           <Typography
                             sx={{
-                              fontFamily: (theme) => theme.typography.fontFamily,
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
                               fontWeight: 400,
                               fontSize: pxToRem(11.5),
                               color: '#6B7280',
@@ -1443,7 +1461,8 @@ export const DriverViewDrawer = ({
                           />
                           <Typography
                             sx={{
-                              fontFamily: (theme) => theme.typography.fontFamily,
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
                               fontWeight: 400,
                               fontSize: pxToRem(11),
                               color: '#9CA3AF',
@@ -1482,15 +1501,20 @@ export const DriverViewDrawer = ({
                             precision={0.5}
                             size="small"
                             icon={
-                              <StarIcon sx={{ fontSize: 12, color: '#F59E0B' }} />
+                              <StarIcon
+                                sx={{ fontSize: 12, color: '#F59E0B' }}
+                              />
                             }
                             emptyIcon={
-                              <StarIcon sx={{ fontSize: 12, color: '#E5E7EB' }} />
+                              <StarIcon
+                                sx={{ fontSize: 12, color: '#E5E7EB' }}
+                              />
                             }
                           />
                           <Typography
                             sx={{
-                              fontFamily: (theme) => theme.typography.fontFamily,
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
                               fontWeight: 400,
                               fontSize: pxToRem(10.5),
                               color: '#9CA3AF',
@@ -1502,7 +1526,8 @@ export const DriverViewDrawer = ({
                         {rating.comment && (
                           <Typography
                             sx={{
-                              fontFamily: (theme) => theme.typography.fontFamily,
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
                               fontWeight: 400,
                               fontSize: pxToRem(12),
                               color: '#374151',

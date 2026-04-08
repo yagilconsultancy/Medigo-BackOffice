@@ -133,8 +133,6 @@ const mapIssue = (item: RiderIssueListItem): RiderIssue => ({
   status: normalizeIssueStatus(item.status),
 });
 
-// ─── Component ──────────────────────────────────────────────────────────────
-
 export const RiderIssuesPage = () => {
   const { data: issuesData, refetch } = useResolvedApiQuery(
     useListRiderIssues,

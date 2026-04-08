@@ -21,8 +21,6 @@ export const ROUTES_SPEC = {
   revokeSession: (sessionId: string) =>
     `/${API_VERSION}/users/admin/sessions/${sessionId}`,
 
-  // ====================== ADMIN RIDES ======================
-
   // Get all rides with filters (admin dashboard)
   getAllRides: `/${API_VERSION}/rides/admin/rides`,
 
@@ -32,8 +30,6 @@ export const ROUTES_SPEC = {
   // Admin directly assign driver to a ride
   adminAssignDriver: (rideId: string) =>
     `/${API_VERSION}/rides/admin/rides/${rideId}/assign-driver`,
-
-  // ====================== ADMIN BOOKING MANAGEMENT ======================
 
   // Get all bookings with status, ride type, and search filters
   getAllBookings: `/${API_VERSION}/rides/admin/bookings`,

@@ -729,9 +729,7 @@ export const ServiceProviderPage = () => {
     {
       icon: <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#10B981' }} />,
       iconBg: '#ECFDF5',
-      value: String(
-        driverKpis.available_now ?? driverKpis.online_count ?? 0
-      ),
+      value: String(driverKpis.available_now ?? driverKpis.online_count ?? 0),
       label: 'Available Now',
     },
     {
@@ -759,7 +757,6 @@ export const ServiceProviderPage = () => {
         c.caregiverId.toLowerCase().includes(query)
     );
   }, [caregiverSearchQuery]);
-
 
   const columns: GridColSpec<DriverRow>[] = [
     {
@@ -1002,7 +999,6 @@ export const ServiceProviderPage = () => {
       ),
     },
   ];
-
 
   const caregiverColumns: GridColSpec<CaregiverRow>[] = [
     {

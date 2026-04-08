@@ -236,7 +236,9 @@ export const EditFleetProfileModal = ({
               gap: '6px',
               height: '41px',
               background:
-                isFormValid && !isSaving ? '#2F6FED' : 'rgba(47, 111, 237, 0.5)',
+                isFormValid && !isSaving
+                  ? '#2F6FED'
+                  : 'rgba(47, 111, 237, 0.5)',
               borderRadius: '10px',
               cursor: isFormValid && !isSaving ? 'pointer' : 'default',
               transition: 'all 0.15s ease',

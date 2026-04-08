@@ -29,3 +29,4 @@ export * from './AppFilterPopover';
 export * from './ImageAttachment';
 export * from './AppSelectDropdown';
 export * from './AppNumberField';
+export * from './RideDropdownMenuInput';

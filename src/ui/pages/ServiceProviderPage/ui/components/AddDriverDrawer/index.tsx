@@ -652,529 +652,530 @@ export const AddDriverDrawer = ({
           const vehicleOptions = filteredVehicles.map(buildVehicleLabel);
 
           return (
-          <Form
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%',
-            }}
-          >
-            {/* ─── Header ────────────────────────────────────────── */}
-            <Stack
-              sx={{
-                padding: '20px 24px',
-                borderBottom: '0.67px solid #F0F4F8',
+            <Form
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
               }}
             >
-              <RowStack justifyContent={'space-between'}>
-                <Stack spacing={'4px'}>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 700,
-                      fontSize: pxToRem(18),
-                      color: '#111827',
-                    }}
-                  >
-                    Add New Driver
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(13),
-                      color: '#6B7280',
-                    }}
-                  >
-                    Create a new driver profile and assign them to a fleet and
-                    vehicle.
-                  </Typography>
-                </Stack>
-                <IconButton
-                  onClick={handleClose}
-                  sx={{
-                    width: 30,
-                    height: 30,
-                    background: '#F3F4F6',
-                    border: '0.67px solid #E5E7EB',
-                    borderRadius: '8px',
-                    '&:hover': { background: '#E5E7EB' },
-                  }}
-                >
-                  <CloseIcon sx={{ fontSize: 14, color: '#6B7280' }} />
-                </IconButton>
-              </RowStack>
-            </Stack>
-
-            {/* ─── Scrollable Content ────────────────────────────── */}
-            <Box
-              sx={{
-                flex: 1,
-                overflowY: 'auto',
-                padding: '24px',
-                '::-webkit-scrollbar': { display: 'none' },
-                scrollbarWidth: 'none',
-              }}
-            >
-              <Stack spacing={'20px'}>
-                {/* ═══ Section 1: Personal Information ═══════════ */}
-                <Stack spacing={'16px'}>
-                  <SectionHeader
-                    icon={
-                      <PersonOutlineIcon
-                        sx={{ fontSize: 16, color: '#2F6FED' }}
-                      />
-                    }
-                    title="Personal Information"
-                  />
-
-                  {/* Avatar Upload */}
-                  <RowStack spacing={'16px'}>
-                    <Avatar
-                      src={avatarPreview || undefined}
+              {/* ─── Header ────────────────────────────────────────── */}
+              <Stack
+                sx={{
+                  padding: '20px 24px',
+                  borderBottom: '0.67px solid #F0F4F8',
+                }}
+              >
+                <RowStack justifyContent={'space-between'}>
+                  <Stack spacing={'4px'}>
+                    <Typography
                       sx={{
-                        width: 72,
-                        height: 72,
-                        fontSize: pxToRem(24),
+                        fontFamily: (theme) => theme.typography.fontFamily,
                         fontWeight: 700,
-                        background: '#EBF2FF',
-                        color: '#2F6FED',
+                        fontSize: pxToRem(18),
+                        color: '#111827',
                       }}
                     >
-                      {!avatarPreview && (
-                        <CameraAltOutlinedIcon
-                          sx={{ fontSize: 24, color: '#2F6FED' }}
+                      Add New Driver
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 400,
+                        fontSize: pxToRem(13),
+                        color: '#6B7280',
+                      }}
+                    >
+                      Create a new driver profile and assign them to a fleet and
+                      vehicle.
+                    </Typography>
+                  </Stack>
+                  <IconButton
+                    onClick={handleClose}
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      background: '#F3F4F6',
+                      border: '0.67px solid #E5E7EB',
+                      borderRadius: '8px',
+                      '&:hover': { background: '#E5E7EB' },
+                    }}
+                  >
+                    <CloseIcon sx={{ fontSize: 14, color: '#6B7280' }} />
+                  </IconButton>
+                </RowStack>
+              </Stack>
+
+              {/* ─── Scrollable Content ────────────────────────────── */}
+              <Box
+                sx={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  padding: '24px',
+                  '::-webkit-scrollbar': { display: 'none' },
+                  scrollbarWidth: 'none',
+                }}
+              >
+                <Stack spacing={'20px'}>
+                  {/* ═══ Section 1: Personal Information ═══════════ */}
+                  <Stack spacing={'16px'}>
+                    <SectionHeader
+                      icon={
+                        <PersonOutlineIcon
+                          sx={{ fontSize: 16, color: '#2F6FED' }}
                         />
-                      )}
-                    </Avatar>
-                    <Stack spacing={'6px'}>
-                      <Box
-                        onClick={() => avatarInputRef.current?.click()}
+                      }
+                      title="Personal Information"
+                    />
+
+                    {/* Avatar Upload */}
+                    <RowStack spacing={'16px'}>
+                      <Avatar
+                        src={avatarPreview || undefined}
                         sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          height: '34px',
-                          borderRadius: '8px',
-                          padding: '0 16px',
-                          border: '0.67px solid #E5E7EB',
-                          background: '#FFFFFF',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
-                            borderColor: '#2F6FED',
-                          },
+                          width: 72,
+                          height: 72,
+                          fontSize: pxToRem(24),
+                          fontWeight: 700,
+                          background: '#EBF2FF',
+                          color: '#2F6FED',
                         }}
                       >
+                        {!avatarPreview && (
+                          <CameraAltOutlinedIcon
+                            sx={{ fontSize: 24, color: '#2F6FED' }}
+                          />
+                        )}
+                      </Avatar>
+                      <Stack spacing={'6px'}>
+                        <Box
+                          onClick={() => avatarInputRef.current?.click()}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '34px',
+                            borderRadius: '8px',
+                            padding: '0 16px',
+                            border: '0.67px solid #E5E7EB',
+                            background: '#FFFFFF',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              borderColor: '#2F6FED',
+                            },
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(12.5),
+                              color: '#374151',
+                              '&:hover': { color: '#2F6FED' },
+                            }}
+                          >
+                            {avatarPreview ? 'Replace Photo' : 'Upload Photo'}
+                          </Typography>
+                        </Box>
                         <Typography
                           sx={{
                             fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 600,
-                            fontSize: pxToRem(12.5),
-                            color: '#374151',
-                            '&:hover': { color: '#2F6FED' },
+                            fontWeight: 400,
+                            fontSize: pxToRem(11.5),
+                            color: '#9CA3AF',
                           }}
                         >
-                          {avatarPreview ? 'Replace Photo' : 'Upload Photo'}
+                          Upload a clear headshot. JPG, PNG or WebP, max 5MB
                         </Typography>
-                      </Box>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(11.5),
-                          color: '#9CA3AF',
-                        }}
-                      >
-                        Upload a clear headshot. JPG, PNG or WebP, max 5MB
-                      </Typography>
-                    </Stack>
-                    <input
-                      ref={avatarInputRef}
-                      type="file"
-                      accept=".jpg,.jpeg,.png,.webp"
-                      style={{ display: 'none' }}
-                      onChange={handleAvatarChange}
-                    />
-                  </RowStack>
+                      </Stack>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp"
+                        style={{ display: 'none' }}
+                        onChange={handleAvatarChange}
+                      />
+                    </RowStack>
 
-                  {/* Name Row */}
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '16px',
-                    }}
-                  >
-                    <Stack spacing={'6px'}>
-                      <FieldLabel text="First Name" required />
-                      <FormikAppTextField
-                        name="firstName"
-                        placeholder="e.g. Marcus"
-                      />
-                    </Stack>
-                    <Stack spacing={'6px'}>
-                      <FieldLabel text="Last Name" required />
-                      <FormikAppTextField
-                        name="lastName"
-                        placeholder="e.g. Johnson"
-                      />
-                    </Stack>
-                  </Box>
-
-                  {/* Phone + Email Row */}
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '16px',
-                    }}
-                  >
-                    <Stack spacing={'6px'}>
-                      <FieldLabel text="Phone Number" required />
-                      <FormikAppTextField
-                        name="phone"
-                        placeholder="+1 (555) 000-0000"
-                      />
-                    </Stack>
-                    <Stack spacing={'6px'}>
-                      <FieldLabel text="Email Address" required />
-                      <FormikAppTextField
-                        name="email"
-                        placeholder="driver@example.com"
-                      />
-                    </Stack>
-                  </Box>
-
-                  {/* Date of Birth */}
-                  <FormikDateField name="dateOfBirth" label="Date of Birth" />
-                </Stack>
-
-                {/* ═══ Section 2: Fleet Company ══════════════════ */}
-                <Stack spacing={'16px'}>
-                  <SectionHeader
-                    icon={
-                      <BusinessOutlinedIcon
-                        sx={{ fontSize: 16, color: '#2F6FED' }}
-                      />
-                    }
-                    title="Fleet Company"
-                  />
-                  <FormikDropdownField
-                    name="fleet"
-                    label="Select Fleet"
-                    options={fleetOptions}
-                    placeholder="Independent (MediGo Direct)"
-                    required
-                  />
-                  {values.fleet && (
-                    <RowStack
-                      spacing={'8px'}
+                    {/* Name Row */}
+                    <Box
                       sx={{
-                        padding: '10px 14px',
-                        background: '#EEF3FF',
-                        borderRadius: '10px',
-                        border: '0.67px solid #C7D7F9',
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '16px',
                       }}
                     >
-                      <InfoOutlinedIcon
-                        sx={{ fontSize: 15, color: '#2F6FED' }}
-                      />
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(12),
-                          color: '#374151',
-                        }}
-                      >
-                        This driver will be directly managed by{' '}
-                        <Typography
-                          component="span"
-                          sx={{
-                            fontWeight: 700,
-                            fontSize: pxToRem(12),
-                            color: '#111827',
-                          }}
-                        >
-                          {values.fleet === 'Independent (MediGo Direct)'
-                            ? 'MediGo (Independent)'
-                            : values.fleet}
-                        </Typography>
-                      </Typography>
-                    </RowStack>
-                  )}
-                </Stack>
+                      <Stack spacing={'6px'}>
+                        <FieldLabel text="First Name" required />
+                        <FormikAppTextField
+                          name="firstName"
+                          placeholder="e.g. Marcus"
+                        />
+                      </Stack>
+                      <Stack spacing={'6px'}>
+                        <FieldLabel text="Last Name" required />
+                        <FormikAppTextField
+                          name="lastName"
+                          placeholder="e.g. Johnson"
+                        />
+                      </Stack>
+                    </Box>
 
-                {/* ═══ Section 3: Driver Credentials ═════════════ */}
-                <SectionCard>
-                  <SectionHeader
-                    icon={
-                      <BadgeOutlinedIcon
-                        sx={{ fontSize: 16, color: '#2F6FED' }}
-                      />
-                    }
-                    title="Driver Credentials"
-                  />
+                    {/* Phone + Email Row */}
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '16px',
+                      }}
+                    >
+                      <Stack spacing={'6px'}>
+                        <FieldLabel text="Phone Number" required />
+                        <FormikAppTextField
+                          name="phone"
+                          placeholder="+1 (555) 000-0000"
+                        />
+                      </Stack>
+                      <Stack spacing={'6px'}>
+                        <FieldLabel text="Email Address" required />
+                        <FormikAppTextField
+                          name="email"
+                          placeholder="driver@example.com"
+                        />
+                      </Stack>
+                    </Box>
 
-                  {/* License Number + Expiry */}
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '16px',
-                    }}
-                  >
-                    <Stack spacing={'6px'}>
-                      <FieldLabel text="Driver License Number" required />
-                      <FormikAppTextField
-                        name="licenseNumber"
-                        placeholder="e.g. DL-NY-448821"
-                      />
-                    </Stack>
-                    <FormikDateField
-                      name="licenseExpiry"
-                      label="License Expiry Date"
+                    {/* Date of Birth */}
+                    <FormikDateField name="dateOfBirth" label="Date of Birth" />
+                  </Stack>
+
+                  {/* ═══ Section 2: Fleet Company ══════════════════ */}
+                  <Stack spacing={'16px'}>
+                    <SectionHeader
+                      icon={
+                        <BusinessOutlinedIcon
+                          sx={{ fontSize: 16, color: '#2F6FED' }}
+                        />
+                      }
+                      title="Fleet Company"
+                    />
+                    <FormikDropdownField
+                      name="fleet"
+                      label="Select Fleet"
+                      options={fleetOptions}
+                      placeholder="Independent (MediGo Direct)"
                       required
                     />
-                  </Box>
-
-                  {/* Medical Cert + BG Check */}
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '16px',
-                    }}
-                  >
-                    <Stack spacing={'6px'}>
-                      <FieldLabel text="Medical Transport Certification" />
-                      <FormikAppTextField
-                        name="medicalCertification"
-                        placeholder="Certification ID or reference"
-                      />
-                    </Stack>
-                    <FormikDropdownField
-                      name="bgCheckStatus"
-                      label="Background Check Status"
-                      options={bgCheckOptions}
-                      placeholder="Select status"
-                    />
-                  </Box>
-
-                  {/* License Upload + Cert Upload */}
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '16px',
-                    }}
-                  >
-                    <FileUploadField
-                      label="Driver License Upload"
-                      file={licenseFile}
-                      onFileSelect={setLicenseFile}
-                      onFileClear={() => setLicenseFile(null)}
-                    />
-                    <FileUploadField
-                      label="Certification Upload"
-                      file={certFile}
-                      onFileSelect={setCertFile}
-                      onFileClear={() => setCertFile(null)}
-                    />
-                  </Box>
-                </SectionCard>
-
-                {/* ═══ Section 4: Vehicle Assignment ═════════════ */}
-                <SectionCard>
-                  <SectionHeader
-                    icon={
-                      <DirectionsCarOutlinedIcon
-                        sx={{ fontSize: 16, color: '#2F6FED' }}
-                      />
-                    }
-                    title="Vehicle Assignment"
-                  />
-                  <FormikDropdownField
-                    name="vehicle"
-                    label="Assign Vehicle"
-                    options={vehicleOptions}
-                    placeholder="Select a vehicle"
-                    startIcon={
-                      <DirectionsCarOutlinedIcon
-                        sx={{ fontSize: 16, color: '#9CA3AF' }}
-                      />
-                    }
-                  />
-                  {values.fleet && (
-                    <RowStack
-                      spacing={'8px'}
-                      sx={{
-                        padding: '10px 14px',
-                        background: '#EEF3FF',
-                        borderRadius: '10px',
-                        border: '0.67px solid #C7D7F9',
-                      }}
-                    >
-                      <InfoOutlinedIcon
-                        sx={{ fontSize: 15, color: '#2F6FED' }}
-                      />
-                      <Typography
+                    {values.fleet && (
+                      <RowStack
+                        spacing={'8px'}
                         sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(12),
-                          color: '#374151',
+                          padding: '10px 14px',
+                          background: '#EEF3FF',
+                          borderRadius: '10px',
+                          border: '0.67px solid #C7D7F9',
                         }}
                       >
-                        Showing 3 vehicles for{' '}
+                        <InfoOutlinedIcon
+                          sx={{ fontSize: 15, color: '#2F6FED' }}
+                        />
                         <Typography
-                          component="span"
                           sx={{
-                            fontWeight: 700,
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 400,
                             fontSize: pxToRem(12),
-                            color: '#111827',
+                            color: '#374151',
                           }}
                         >
-                          {values.fleet}
+                          This driver will be directly managed by{' '}
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontWeight: 700,
+                              fontSize: pxToRem(12),
+                              color: '#111827',
+                            }}
+                          >
+                            {values.fleet === 'Independent (MediGo Direct)'
+                              ? 'MediGo (Independent)'
+                              : values.fleet}
+                          </Typography>
                         </Typography>
-                        . Selecting a different fleet above will update this
-                        list.
-                      </Typography>
-                    </RowStack>
-                  )}
-                </SectionCard>
-
-                {/* ═══ Section 5: Service Capabilities ═══════════ */}
-                <SectionCard>
-                  <SectionHeader
-                    icon={
-                      <MedicalServicesOutlinedIcon
-                        sx={{ fontSize: 16, color: '#2F6FED' }}
-                      />
-                    }
-                    title="Service Capabilities"
-                  />
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(12.5),
-                      color: '#6B7280',
-                    }}
-                  >
-                    Select the service types this driver is certified to
-                    provide.
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '12px',
-                    }}
-                  >
-                    {capabilitiesConfig.map((cap) => (
-                      <FormikCheckboxCard
-                        key={cap.name}
-                        name={cap.name}
-                        label={cap.label}
-                      />
-                    ))}
-                  </Box>
-                </SectionCard>
-
-                {/* ═══ Section 6: Account Settings ═══════════════ */}
-                <SectionCard>
-                  <SectionHeader
-                    icon={
-                      <SettingsOutlinedIcon
-                        sx={{ fontSize: 16, color: '#2F6FED' }}
-                      />
-                    }
-                    title="Account Settings"
-                  />
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 700,
-                      fontSize: pxToRem(11),
-                      letterSpacing: '0.6px',
-                      color: '#6B7280',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Create Driver App Login
-                  </Typography>
-                  <Stack spacing={'6px'}>
-                    <FieldLabel text="App Password" />
-                    <FormikAppPasswordField
-                      name="appPassword"
-                      placeholder="Set initial password"
-                    />
+                      </RowStack>
+                    )}
                   </Stack>
-                </SectionCard>
-              </Stack>
-            </Box>
 
-            {/* ─── Footer ────────────────────────────────────────── */}
-            <RowStack
-              justifyContent={'flex-end'}
-              spacing={'12px'}
-              sx={{
-                padding: '16px 24px',
-                borderTop: '0.67px solid #F0F4F8',
-              }}
-            >
-              <Box
-                onClick={isSubmitting ? undefined : handleClose}
+                  {/* ═══ Section 3: Driver Credentials ═════════════ */}
+                  <SectionCard>
+                    <SectionHeader
+                      icon={
+                        <BadgeOutlinedIcon
+                          sx={{ fontSize: 16, color: '#2F6FED' }}
+                        />
+                      }
+                      title="Driver Credentials"
+                    />
+
+                    {/* License Number + Expiry */}
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '16px',
+                      }}
+                    >
+                      <Stack spacing={'6px'}>
+                        <FieldLabel text="Driver License Number" required />
+                        <FormikAppTextField
+                          name="licenseNumber"
+                          placeholder="e.g. DL-NY-448821"
+                        />
+                      </Stack>
+                      <FormikDateField
+                        name="licenseExpiry"
+                        label="License Expiry Date"
+                        required
+                      />
+                    </Box>
+
+                    {/* Medical Cert + BG Check */}
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '16px',
+                      }}
+                    >
+                      <Stack spacing={'6px'}>
+                        <FieldLabel text="Medical Transport Certification" />
+                        <FormikAppTextField
+                          name="medicalCertification"
+                          placeholder="Certification ID or reference"
+                        />
+                      </Stack>
+                      <FormikDropdownField
+                        name="bgCheckStatus"
+                        label="Background Check Status"
+                        options={bgCheckOptions}
+                        placeholder="Select status"
+                      />
+                    </Box>
+
+                    {/* License Upload + Cert Upload */}
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '16px',
+                      }}
+                    >
+                      <FileUploadField
+                        label="Driver License Upload"
+                        file={licenseFile}
+                        onFileSelect={setLicenseFile}
+                        onFileClear={() => setLicenseFile(null)}
+                      />
+                      <FileUploadField
+                        label="Certification Upload"
+                        file={certFile}
+                        onFileSelect={setCertFile}
+                        onFileClear={() => setCertFile(null)}
+                      />
+                    </Box>
+                  </SectionCard>
+
+                  {/* ═══ Section 4: Vehicle Assignment ═════════════ */}
+                  <SectionCard>
+                    <SectionHeader
+                      icon={
+                        <DirectionsCarOutlinedIcon
+                          sx={{ fontSize: 16, color: '#2F6FED' }}
+                        />
+                      }
+                      title="Vehicle Assignment"
+                    />
+                    <FormikDropdownField
+                      name="vehicle"
+                      label="Assign Vehicle"
+                      options={vehicleOptions}
+                      placeholder="Select a vehicle"
+                      startIcon={
+                        <DirectionsCarOutlinedIcon
+                          sx={{ fontSize: 16, color: '#9CA3AF' }}
+                        />
+                      }
+                    />
+                    {values.fleet && (
+                      <RowStack
+                        spacing={'8px'}
+                        sx={{
+                          padding: '10px 14px',
+                          background: '#EEF3FF',
+                          borderRadius: '10px',
+                          border: '0.67px solid #C7D7F9',
+                        }}
+                      >
+                        <InfoOutlinedIcon
+                          sx={{ fontSize: 15, color: '#2F6FED' }}
+                        />
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 400,
+                            fontSize: pxToRem(12),
+                            color: '#374151',
+                          }}
+                        >
+                          Showing 3 vehicles for{' '}
+                          <Typography
+                            component="span"
+                            sx={{
+                              fontWeight: 700,
+                              fontSize: pxToRem(12),
+                              color: '#111827',
+                            }}
+                          >
+                            {values.fleet}
+                          </Typography>
+                          . Selecting a different fleet above will update this
+                          list.
+                        </Typography>
+                      </RowStack>
+                    )}
+                  </SectionCard>
+
+                  {/* ═══ Section 5: Service Capabilities ═══════════ */}
+                  <SectionCard>
+                    <SectionHeader
+                      icon={
+                        <MedicalServicesOutlinedIcon
+                          sx={{ fontSize: 16, color: '#2F6FED' }}
+                        />
+                      }
+                      title="Service Capabilities"
+                    />
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 400,
+                        fontSize: pxToRem(12.5),
+                        color: '#6B7280',
+                      }}
+                    >
+                      Select the service types this driver is certified to
+                      provide.
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '12px',
+                      }}
+                    >
+                      {capabilitiesConfig.map((cap) => (
+                        <FormikCheckboxCard
+                          key={cap.name}
+                          name={cap.name}
+                          label={cap.label}
+                        />
+                      ))}
+                    </Box>
+                  </SectionCard>
+
+                  {/* ═══ Section 6: Account Settings ═══════════════ */}
+                  <SectionCard>
+                    <SectionHeader
+                      icon={
+                        <SettingsOutlinedIcon
+                          sx={{ fontSize: 16, color: '#2F6FED' }}
+                        />
+                      }
+                      title="Account Settings"
+                    />
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 700,
+                        fontSize: pxToRem(11),
+                        letterSpacing: '0.6px',
+                        color: '#6B7280',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Create Driver App Login
+                    </Typography>
+                    <Stack spacing={'6px'}>
+                      <FieldLabel text="App Password" />
+                      <FormikAppPasswordField
+                        name="appPassword"
+                        placeholder="Set initial password"
+                      />
+                    </Stack>
+                  </SectionCard>
+                </Stack>
+              </Box>
+
+              {/* ─── Footer ────────────────────────────────────────── */}
+              <RowStack
+                justifyContent={'flex-end'}
+                spacing={'12px'}
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '40px',
-                  padding: '0 24px',
-                  borderRadius: '10px',
-                  border: '0.67px solid #E8ECF0',
-                  background: '#FFFFFF',
-                  cursor: isSubmitting ? 'default' : 'pointer',
-                  opacity: isSubmitting ? 0.5 : 1,
-                  transition: 'opacity 0.15s ease',
-                  '&:hover': isSubmitting ? {} : { opacity: 0.85 },
+                  padding: '16px 24px',
+                  borderTop: '0.67px solid #F0F4F8',
                 }}
               >
-                <Typography
+                <Box
+                  onClick={isSubmitting ? undefined : handleClose}
                   sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(13),
-                    color: '#374151',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '40px',
+                    padding: '0 24px',
+                    borderRadius: '10px',
+                    border: '0.67px solid #E8ECF0',
+                    background: '#FFFFFF',
+                    cursor: isSubmitting ? 'default' : 'pointer',
+                    opacity: isSubmitting ? 0.5 : 1,
+                    transition: 'opacity 0.15s ease',
+                    '&:hover': isSubmitting ? {} : { opacity: 0.85 },
                   }}
                 >
-                  Cancel
-                </Typography>
-              </Box>
-              <AppButton
-                type="submit"
-                startIcon={
-                  !isSubmitting ? (
-                    <AddOutlinedIcon sx={{ fontSize: 16 }} />
-                  ) : undefined
-                }
-                isLoading={isSubmitting}
-                disabled={!isValid || !dirty}
-                sx={{
-                  height: '40px',
-                  borderRadius: '10px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  fontSize: pxToRem(13),
-                  padding: '0 24px',
-                }}
-              >
-                Add Driver
-              </AppButton>
-            </RowStack>
-          </Form>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 600,
+                      fontSize: pxToRem(13),
+                      color: '#374151',
+                    }}
+                  >
+                    Cancel
+                  </Typography>
+                </Box>
+                <AppButton
+                  type="submit"
+                  startIcon={
+                    !isSubmitting ? (
+                      <AddOutlinedIcon sx={{ fontSize: 16 }} />
+                    ) : undefined
+                  }
+                  isLoading={isSubmitting}
+                  disabled={!isValid || !dirty}
+                  sx={{
+                    height: '40px',
+                    borderRadius: '10px',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: pxToRem(13),
+                    padding: '0 24px',
+                  }}
+                >
+                  Add Driver
+                </AppButton>
+              </RowStack>
+            </Form>
           );
         }}
       </Formik>

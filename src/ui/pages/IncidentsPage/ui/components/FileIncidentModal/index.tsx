@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { AppModal } from '../../../../../modules/components/AppModal';
@@ -11,22 +10,26 @@ import {
   AppButton,
   FormikAppTextField,
   RowStack,
+  RideDropdownMenuInput,
 } from '../../../../../modules/components';
-import { AppDropdownMenu } from '../../../../../modules/components/AppDropdownMenu';
-import { pxToRem } from '../../../../../../common';
+import { AppSelect } from '../../../../../modules/components/AppSelectDropdown';
+import { pxToRem, useIncidentsApi } from '../../../../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type FileIncidentModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: IncidentFormValues) => void;
 };
 
 type IncidentFormValues = {
   incidentType: string;
-  subject: string;
-  filedBy: string;
+  severity: string;
+  subjectName: string;
+  subjectId?: string;
+  subjectType: string;
+  ride_id?: string;
+  rideDisplay?: string;
   description: string;
 };
 
@@ -34,23 +37,50 @@ type IncidentFormValues = {
 
 const validationSchema = Yup.object({
   incidentType: Yup.string().required('Incident type is required'),
-  subject: Yup.string().required('Subject is required'),
-  filedBy: Yup.string().required('Filed by is required'),
-  description: Yup.string().required('Description is required'),
+  severity: Yup.string().required('Severity is required'),
+  subjectName: Yup.string().optional(),
+  subjectId: Yup.string().optional(),
+  subjectType: Yup.string().required('Subject type is required'),
+  ride_id: Yup.string().optional(),
+  description: Yup.string().optional(),
 });
 
 const initialValues: IncidentFormValues = {
   incidentType: '',
-  subject: '',
-  filedBy: '',
+  severity: '',
+  subjectName: '',
+  subjectId: '',
+  subjectType: '',
+  ride_id: '',
+  rideDisplay: '',
   description: '',
 };
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const incidentTypeOptions = ['Driver Complaint', 'Rider Complaint', 'Accident'];
+const severityOptions = ['Low', 'Medium', 'High', 'Critical'];
+const subjectTypeOptions = ['Driver', 'Rider', 'Vehicle'];
 
-// ─── Label Component ────────────────────────────────────────────────────────
+// Map UI values to API values
+const incidentTypeToApi: Record<string, string> = {
+  'Driver Complaint': 'driver_complaint',
+  'Rider Complaint': 'rider_complaint',
+  Accident: 'accident',
+};
+
+const severityToApi: Record<string, string> = {
+  Low: 'low',
+  Medium: 'medium',
+  High: 'high',
+  Critical: 'critical',
+};
+
+const subjectTypeToApi: Record<string, string> = {
+  Driver: 'driver',
+  Rider: 'rider',
+  // Vehicle: 'vehicle',
+};
 
 const FieldLabel = ({ label }: { label: string }) => (
   <Typography
@@ -66,14 +96,55 @@ const FieldLabel = ({ label }: { label: string }) => (
   </Typography>
 );
 
-// ─── Component ──────────────────────────────────────────────────────────────
+// Helper component to clear subject fields when subject type changes
+const SubjectTypeChangeHandler = ({
+  subjectType,
+  setFieldValue,
+}: {
+  subjectType: string;
+  setFieldValue: (field: string, value: any) => void;
+}) => {
+  const prevSubjectTypeRef = useRef<string>(subjectType);
+
+  useEffect(() => {
+    if (prevSubjectTypeRef.current !== subjectType && prevSubjectTypeRef.current !== '') {
+      // Clear subject fields when type changes
+      setFieldValue('subjectName', '');
+      setFieldValue('subjectId', '');
+    }
+    prevSubjectTypeRef.current = subjectType;
+  }, [subjectType, setFieldValue]);
+
+  return null;
+};
 
 export const FileIncidentModal = ({
   open,
   onClose,
-  onSubmit,
 }: FileIncidentModalProps) => {
-  const [typeAnchorEl, setTypeAnchorEl] = useState<null | HTMLElement>(null);
+  const { createIncident } = useIncidentsApi();
+
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    try {
+      const payload = {
+        incident_type: incidentTypeToApi[values.incidentType],
+        severity: severityToApi[values.severity],
+        subject_name: values.subjectName,
+        subject_id: values.subjectId || undefined,
+        subject_type: subjectTypeToApi[values.subjectType],
+        ride_id: values.rideId || undefined,
+        description: values.description,
+      };
+
+      const success = await createIncident(payload);
+      if (success) {
+        resetForm();
+        onClose();
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <AppModal
@@ -94,18 +165,15 @@ export const FileIncidentModal = ({
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
-        onSubmit={async (values, { setSubmitting }) => {
-          try {
-            onSubmit(values);
-          } finally {
-            setSubmitting(false);
-          }
-        }}
+        onSubmit={handleSubmit}
       >
         {({ isSubmitting, isValid, dirty, setFieldValue, values }) => (
           <Form>
+            <SubjectTypeChangeHandler
+              subjectType={values.subjectType}
+              setFieldValue={setFieldValue}
+            />
             <Stack>
-              {/* ── Header ─────────────────────────────────────── */}
               <RowStack
                 justifyContent={'space-between'}
                 alignItems={'center'}
@@ -144,83 +212,105 @@ export const FileIncidentModal = ({
                   <CloseIcon sx={{ fontSize: 14, color: '#6B7280' }} />
                 </Box>
               </RowStack>
-
-              {/* ── Body ──────────────────────────────────────── */}
               <Stack spacing={'16px'} sx={{ padding: '20px 24px' }}>
-                {/* Incident Type (Dropdown) */}
-                <Stack spacing={'6px'}>
-                  <FieldLabel label="Incident Type" />
-                  <Box
-                    onClick={(e) => setTypeAnchorEl(e.currentTarget)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0 14px',
-                      height: 42,
-                      background: '#F7F9FB',
-                      border: '0.67px solid #E8ECF0',
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      '&:hover': { borderColor: '#D1D5DB' },
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 400,
-                        fontSize: pxToRem(13),
-                        color: values.incidentType
-                          ? '#374151'
-                          : 'rgba(55, 65, 81, 0.5)',
+                {/* Incident Type */}
+                <AppSelect
+                  name="incidentType"
+                  label="Incident Type"
+                  options={incidentTypeOptions}
+                  placeholder="Select incident type"
+                  required
+                />
+
+                {/* Severity */}
+                <AppSelect
+                  name="severity"
+                  label="Severity"
+                  options={severityOptions}
+                  placeholder="Select severity level"
+                  required
+                />
+
+                {/* Subject Type */}
+                <AppSelect
+                  name="subjectType"
+                  label="Subject Type"
+                  options={subjectTypeOptions}
+                  placeholder="Select subject type"
+                  required
+                />
+
+                {/* Subject Selection - Dynamic based on Subject Type */}
+                {/* {values.subjectType === 'Driver' && (
+                  <Stack spacing={'6px'}>
+                    <FieldLabel label="Select Driver" />
+                    <UserDropdownMenuInput
+                      type="driver"
+                      selectedUserId={values.subjectId}
+                      selectedUserName={values.subjectName}
+                      handleUserSelected={(user) => {
+                        setFieldValue('subjectId', user.id);
+                        setFieldValue(
+                          'subjectName',
+                          `${user.firstName} ${user.lastName}`
+                        );
                       }}
-                    >
-                      {values.incidentType ||
-                        'Driver Complaint / Rider Complaint / Accident'}
-                    </Typography>
-                    <KeyboardArrowDownIcon
-                      sx={{ fontSize: 18, color: '#9CA3AF' }}
                     />
-                  </Box>
-                  <AppDropdownMenu
-                    open={Boolean(typeAnchorEl)}
-                    anchorEl={typeAnchorEl}
-                    onClose={() => setTypeAnchorEl(null)}
-                    options={incidentTypeOptions}
-                    selectedOption={values.incidentType}
-                    onOptionSelected={(option) => {
-                      setFieldValue('incidentType', option);
-                      setTypeAnchorEl(null);
-                    }}
-                    minWidth="228px"
-                    anchorOrigin={{
-                      vertical: 'bottom',
-                      horizontal: 'left',
-                    }}
-                    transformOrigin={{
-                      vertical: 'top',
-                      horizontal: 'left',
-                    }}
-                  />
-                </Stack>
+                  </Stack>
+                )}
 
-                {/* Subject */}
-                <Stack spacing={'6px'}>
-                  <FieldLabel label="Subject (Name or Vehicle)" />
-                  <FormikAppTextField
-                    name="subject"
-                    placeholder="e.g. Liam MacDonald"
-                    borderRadius="10px"
-                  />
-                </Stack>
+                {values.subjectType === 'Rider' && (
+                  <Stack spacing={'6px'}>
+                    <FieldLabel label="Select Rider" />
+                    <UserDropdownMenuInput
+                      type="rider"
+                      selectedUserId={values.subjectId}
+                      selectedUserName={values.subjectName}
+                      handleUserSelected={(user) => {
+                        setFieldValue('subjectId', user.id);
+                        setFieldValue(
+                          'subjectName',
+                          `${user.firstName} ${user.lastName}`
+                        );
+                      }}
+                    />
+                  </Stack>
+                )}
 
-                {/* Filed By */}
+                {values.subjectType === 'Vehicle' && (
+                  <>
+                    <Stack spacing={'6px'}>
+                      <FieldLabel label="Vehicle/Subject Name" />
+                      <FormikAppTextField
+                        name="subjectName"
+                        placeholder="e.g. Tesla Model 3"
+                        borderRadius="10px"
+                      />
+                    </Stack>
+                    <Stack spacing={'6px'}>
+                      <FieldLabel label="Vehicle ID (Optional)" />
+                      <FormikAppTextField
+                        name="subjectId"
+                        placeholder="e.g. 3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                        borderRadius="10px"
+                      />
+                    </Stack>
+                  </>
+                )} */}
+
+                {/* Ride/Trip Selection (Optional) */}
                 <Stack spacing={'6px'}>
-                  <FieldLabel label="Filed By" />
-                  <FormikAppTextField
-                    name="filedBy"
-                    placeholder="Name of the person filing"
-                    borderRadius="10px"
+                  <FieldLabel label="Ride/Trip" />
+                  <RideDropdownMenuInput
+                    selectedRideId={values.ride_id}
+                    selectedRideDisplay={values.rideDisplay}
+                    handleRideSelected={(ride) => {
+                      setFieldValue('ride_id', ride.id);
+                      setFieldValue(
+                        'rideDisplay',
+                        `${ride.pickup_address.substring(0, 30)}... → ${ride.destination_address.substring(0, 30)}...`
+                      );
+                    }}
                   />
                 </Stack>
 
@@ -236,7 +326,6 @@ export const FileIncidentModal = ({
                   />
                 </Stack>
 
-                {/* ── Footer Buttons ─────────────────────────── */}
                 <RowStack spacing={'12px'} sx={{ pt: '4px' }}>
                   <AppButton
                     variant="contained"

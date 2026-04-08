@@ -62,11 +62,7 @@ const normalizeStatus = (status?: string | null): RideStatus => {
 
 const mapRide = (ride: any): RideEntry => {
   const amount = Number(
-    ride?.fare_total ??
-      ride?.total_amount ??
-      ride?.amount ??
-      ride?.fare ??
-      0
+    ride?.fare_total ?? ride?.total_amount ?? ride?.amount ?? ride?.fare ?? 0
   );
   return {
     id:

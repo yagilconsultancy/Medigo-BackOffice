@@ -11,7 +11,9 @@ import {
   AppButton,
   FormikAppTextField,
   RowStack,
+  AppSelect,
 } from '../../../../../modules/components';
+import { UserDropdownMenuInput } from '../../../../../modules/components/UserDropdownMenuInput';
 import { AppDropdownMenu } from '../../../../../modules/components/AppDropdownMenu';
 import { pxToRem } from '../../../../../../common';
 
@@ -24,6 +26,8 @@ type IssueDisciplinaryActionModalProps = {
 };
 
 type DisciplinaryFormValues = {
+  subjectType: string;
+  subjectId: string;
   subjectName: string;
   incidentReference: string;
   actionType: string;
@@ -34,7 +38,8 @@ type DisciplinaryFormValues = {
 // ─── Validation ─────────────────────────────────────────────────────────────
 
 const validationSchema = Yup.object({
-  subjectName: Yup.string().required('Subject name is required'),
+  subjectType: Yup.string().required('Subject type is required'),
+  subjectName: Yup.string().required('Subject is required'),
   incidentReference: Yup.string().required('Incident reference is required'),
   actionType: Yup.string().required('Action type is required'),
   duration: Yup.string().required('Duration is required'),
@@ -42,6 +47,8 @@ const validationSchema = Yup.object({
 });
 
 const initialValues: DisciplinaryFormValues = {
+  subjectType: '',
+  subjectId: '',
   subjectName: '',
   incidentReference: '',
   actionType: '',
@@ -51,6 +58,8 @@ const initialValues: DisciplinaryFormValues = {
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
+const subjectTypeOptions = ['Driver', 'Rider'];
+
 const actionTypeOptions = [
   'Account Suspension',
   'Driving Suspension',
@@ -58,8 +67,6 @@ const actionTypeOptions = [
   'Account Warning',
   'Driving Ban',
 ];
-
-// ─── Label Component ────────────────────────────────────────────────────────
 
 const FieldLabel = ({ label }: { label: string }) => (
   <Typography
@@ -74,8 +81,6 @@ const FieldLabel = ({ label }: { label: string }) => (
     {label}
   </Typography>
 );
-
-// ─── Component ──────────────────────────────────────────────────────────────
 
 export const IssueDisciplinaryActionModal = ({
   open,
@@ -156,15 +161,51 @@ export const IssueDisciplinaryActionModal = ({
 
               {/* ── Body ──────────────────────────────────────── */}
               <Stack spacing={'16px'} sx={{ padding: '20px 24px' }}>
-                {/* Subject Name */}
-                <Stack spacing={'6px'}>
-                  <FieldLabel label="Subject Name" />
-                  <FormikAppTextField
-                    name="subjectName"
-                    placeholder="Driver or Rider name"
-                    borderRadius="10px"
-                  />
-                </Stack>
+                {/* Subject Type */}
+                <AppSelect
+                  name="subjectType"
+                  label="Subject Type"
+                  options={subjectTypeOptions}
+                  placeholder="Select subject type"
+                  required
+                />
+
+                {/* Subject Selection - Dynamic based on Subject Type */}
+                {values.subjectType === 'Driver' && (
+                  <Stack spacing={'6px'}>
+                    <FieldLabel label="Select Driver" />
+                    <UserDropdownMenuInput
+                      type="driver"
+                      selectedUserId={values.subjectId}
+                      selectedUserName={values.subjectName}
+                      handleUserSelected={(user) => {
+                        setFieldValue('subjectId', user.id);
+                        setFieldValue(
+                          'subjectName',
+                          `${user.firstName} ${user.lastName}`
+                        );
+                      }}
+                    />
+                  </Stack>
+                )}
+
+                {values.subjectType === 'Rider' && (
+                  <Stack spacing={'6px'}>
+                    <FieldLabel label="Select Rider" />
+                    <UserDropdownMenuInput
+                      type="rider"
+                      selectedUserId={values.subjectId}
+                      selectedUserName={values.subjectName}
+                      handleUserSelected={(user) => {
+                        setFieldValue('subjectId', user.id);
+                        setFieldValue(
+                          'subjectName',
+                          `${user.firstName} ${user.lastName}`
+                        );
+                      }}
+                    />
+                  </Stack>
+                )}
 
                 {/* Incident Reference */}
                 <Stack spacing={'6px'}>

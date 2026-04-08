@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import dayjs from 'dayjs';
 import { Box, Chip, Grid, Stack, Typography } from '@mui/material';
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
 import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
@@ -15,8 +16,15 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
+import { CustomPagination } from '../../modules/components/GridTable/ui/components/DataGridPagination/ui/components/CustomPagination';
+import { EmptyState } from '../../modules/blocks';
 import { FileIncidentModal } from './ui/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetIncidentKpis,
+  useListIncidents,
+  useResolvedApiQuery,
+} from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -78,98 +86,34 @@ const statusColors: Record<IncidentStatus, { color: string; bg: string }> = {
   Closed: { color: '#6B7280', bg: '#F3F4F6' },
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
+// ─── API Status Mapping ─────────────────────────────────────────────────────
 
-const incidentsData: IncidentRow[] = [
-  {
-    id: '1',
-    incidentId: 'INC-4401',
-    category: 'Driver Complaint',
-    priority: 'Medium',
-    status: 'Under Investigation',
-    subject: 'Liam MacDonald',
-    filedBy: 'Claire Beaumont',
-    filerRole: 'Rider',
-    date: 'Mar 8, 2026',
-  },
-  {
-    id: '2',
-    incidentId: 'INC-4399',
-    category: 'Rider Complaint',
-    priority: 'High',
-    status: 'Disciplinary Action',
-    subject: 'Gordon MacPherson',
-    filedBy: "Ryan O'Brien",
-    filerRole: 'Driver',
-    date: 'Mar 6, 2026',
-  },
-  {
-    id: '3',
-    incidentId: 'INC-4398',
-    category: 'Accident',
-    priority: 'Critical',
-    status: 'Under Investigation',
-    subject: 'David Chen',
-    filedBy: 'David Chen',
-    filerRole: 'Driver',
-    date: 'Mar 5, 2026',
-  },
-  {
-    id: '4',
-    incidentId: 'INC-4397',
-    category: 'Driver Complaint',
-    priority: 'Low',
-    status: 'Resolved',
-    subject: "Ryan O'Brien",
-    filedBy: "Margaret O'Brien",
-    filerRole: 'Rider',
-    date: 'Mar 3, 2026',
-  },
-  {
-    id: '5',
-    incidentId: 'INC-4395',
-    category: 'Rider Complaint',
-    priority: 'Medium',
-    status: 'Under Investigation',
-    subject: 'Pierre Tremblay',
-    filedBy: 'Anna Kim',
-    filerRole: 'Driver',
-    date: 'Feb 28, 2026',
-  },
-  {
-    id: '6',
-    incidentId: 'INC-4393',
-    category: 'Accident',
-    priority: 'High',
-    status: 'Resolved',
-    subject: 'Sophie Tremblay',
-    filedBy: 'Sophie Tremblay',
-    filerRole: 'Driver',
-    date: 'Feb 25, 2026',
-  },
-  {
-    id: '7',
-    incidentId: 'INC-4391',
-    category: 'Driver Complaint',
-    priority: 'Low',
-    status: 'Resolved',
-    subject: 'Aisha Mensah',
-    filedBy: 'Jean-Paul Fortin',
-    filerRole: 'Rider',
-    date: 'Feb 22, 2026',
-  },
-  {
-    id: '8',
-    incidentId: 'INC-4390',
-    category: 'Rider Complaint',
-    priority: 'Medium',
-    status: 'Closed',
-    subject: 'Marc Lefebvre',
-    filedBy: 'Aisha Mensah',
-    filerRole: 'Driver',
-    date: 'Feb 20, 2026',
-  },
-];
+const apiIncidentTypeToCategory: Record<string, IncidentCategory> = {
+  driver_complaint: 'Driver Complaint',
+  rider_complaint: 'Rider Complaint',
+  accident: 'Accident',
+};
+
+const apiSeverityToPriority: Record<string, IncidentPriority> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  critical: 'Critical',
+};
+
+const apiStatusToUiStatus: Record<string, IncidentStatus> = {
+  open: 'Under Investigation',
+  under_investigation: 'Under Investigation',
+  disciplinary_action: 'Disciplinary Action',
+  resolved: 'Resolved',
+  closed: 'Closed',
+};
+
+const uiCategoryToApiType: Record<string, string> = {
+  'Driver Complaint': 'driver_complaint',
+  'Rider Complaint': 'rider_complaint',
+  Accident: 'accident',
+};
 
 // ─── Tab Config ─────────────────────────────────────────────────────────────
 
@@ -186,30 +130,69 @@ export const IncidentsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<string>('All');
   const [fileModalOpen, setFileModalOpen] = useState(false);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+
+  // Pagination helpers
+  const currentPage = useMemo<number>(() => {
+    return paginationModel.page + 1;
+  }, [paginationModel.page]);
+
+  const itemsPerPage = useMemo<number>(() => {
+    return paginationModel.pageSize || 10;
+  }, [paginationModel.pageSize]);
+
+  // API Hooks
+  const kpisData = useResolvedApiQuery(useGetIncidentKpis, {
+    total: 0,
+    driver_complaints: 0,
+    rider_complaints: 0,
+    accidents: 0,
+  });
+
+  const { data: incidentsListData } = useListIncidents({
+    search: searchQuery || undefined,
+    incident_type:
+      activeTab !== 'All' ? uiCategoryToApiType[activeTab] : undefined,
+    page: currentPage,
+    page_size: itemsPerPage,
+  });
+
+  // Transform API data to UI format
+  const incidentsData = useMemo<IncidentRow[]>(() => {
+    if (!incidentsListData?.success || !incidentsListData?.data?.items)
+      return [];
+    return incidentsListData.data.items.map((item) => ({
+      id: item.id,
+      incidentId: `INC-${item.incident_number}`,
+      category:
+        apiIncidentTypeToCategory[item.incident_type] || 'Driver Complaint',
+      priority: apiSeverityToPriority[item.severity] || 'Medium',
+      status: apiStatusToUiStatus[item.status] || 'Under Investigation',
+      subject: item.subject_name,
+      filedBy: item.filed_by_name,
+      filerRole: item.filed_by_role,
+      date: dayjs(item.created_at).format('MMM D, YYYY'),
+    }));
+  }, [incidentsListData]);
+
+  const KpiResolvedData = useMemo(() => {
+    if (!kpisData) return null;
+    return kpisData.data;
+  }, [kpisData]);
+
+  // @ts-ignore
+  const totalCount = incidentsListData?.data?.total ?? 0;
 
   const filteredData = useMemo(() => {
-    let filtered = incidentsData;
-
-    if (activeTab !== 'All') {
-      filtered = filtered.filter((row) => row.category === activeTab);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (row) =>
-          row.incidentId.toLowerCase().includes(query) ||
-          row.subject.toLowerCase().includes(query) ||
-          row.filedBy.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [searchQuery, activeTab]);
+    return incidentsData;
+  }, [incidentsData]);
 
   const tabCounts = useMemo(() => {
     return {
-      All: incidentsData.length,
+      All: totalCount,
       'Driver Complaint': incidentsData.filter(
         (r) => r.category === 'Driver Complaint'
       ).length,
@@ -218,11 +201,11 @@ export const IncidentsPage = () => {
       ).length,
       Accident: incidentsData.filter((r) => r.category === 'Accident').length,
     };
-  }, []);
+  }, [incidentsData, totalCount]);
 
   const statCards = [
     {
-      value: '38',
+      value: String(KpiResolvedData?.total ?? '--'),
       label: 'Total Reported',
       icon: (
         <ReportProblemOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
@@ -230,7 +213,7 @@ export const IncidentsPage = () => {
       iconBg: '#EEF2FF',
     },
     {
-      value: '14',
+      value: String(KpiResolvedData?.driver_complaints ?? '--'),
       label: 'Driver Complaints',
       icon: (
         <DirectionsCarOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
@@ -238,18 +221,26 @@ export const IncidentsPage = () => {
       iconBg: '#FFFBEB',
     },
     {
-      value: '11',
+      value: String(KpiResolvedData?.rider_complaints ?? '--'),
       label: 'Rider Complaints',
       icon: <PersonOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
       iconBg: '#FEF2F2',
     },
     {
-      value: '4',
+      value: String(KpiResolvedData?.accidents ?? '--'),
       label: 'Accidents Filed',
       icon: <CarCrashOutlinedIcon sx={{ fontSize: 18, color: '#DB2777' }} />,
       iconBg: '#FDF2F8',
     },
   ];
+
+  const handlePageChange = useCallback((newPage: number) => {
+    setPaginationModel((prev) => ({ ...prev, page: newPage }));
+  }, []);
+
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
+    setPaginationModel({ page: 0, pageSize: newPageSize });
+  }, []);
 
   return (
     <AppDashboardLayout>
@@ -440,215 +431,241 @@ export const IncidentsPage = () => {
           </Stack>
 
           {/* Incident Rows */}
-          <Stack>
-            {filteredData.map((incident) => {
-              const catColors = categoryColors[incident.category];
-              const priColors = priorityColors[incident.priority];
-              const statColors = statusColors[incident.status];
-
-              return (
-                <Box
-                  key={incident.id}
+          {filteredData.length === 0 ? (
+            <EmptyState
+              emptyState={
+                <Typography
                   sx={{
-                    borderBottom: `1px solid ${catColors.border}`,
-                    '&:last-child': { borderBottom: 'none' },
+                    color: '#6B7280',
+                    fontSize: pxToRem(14),
+                    fontWeight: 500,
+                    textAlign: 'center',
                   }}
                 >
-                  <RowStack
-                    justifyContent={'space-between'}
-                    sx={{
-                      padding: '18px 24px',
-                    }}
-                  >
-                    {/* Left: Icon + Content */}
-                    <RowStack spacing={'16px'} sx={{ flex: 1 }}>
-                      {/* Warning Icon */}
-                      <Box
+                  No incident reports found
+                </Typography>
+              }
+            />
+          ) : (
+            <>
+              <Stack>
+                {filteredData.map((incident) => {
+                  const catColors = categoryColors[incident.category];
+                  const priColors = priorityColors[incident.priority];
+                  const statColors = statusColors[incident.status];
+
+                  return (
+                    <Box
+                      key={incident.id}
+                      sx={{
+                        borderBottom: `1px solid ${catColors.border}`,
+                        '&:last-child': { borderBottom: 'none' },
+                      }}
+                    >
+                      <RowStack
+                        justifyContent={'space-between'}
                         sx={{
-                          width: 42,
-                          height: 42,
-                          borderRadius: '12px',
-                          background: '#FEF3C7',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
+                          padding: '18px 24px',
                         }}
                       >
-                        <WarningAmberOutlinedIcon
-                          sx={{ fontSize: 20, color: '#D97706' }}
-                        />
-                      </Box>
-
-                      {/* Content */}
-                      <Stack spacing={'6px'}>
-                        {/* Top line: ID + Chips */}
-                        <RowStack spacing={'10px'}>
-                          <Typography
+                        {/* Left: Icon + Content */}
+                        <RowStack spacing={'16px'} sx={{ flex: 1 }}>
+                          {/* Warning Icon */}
+                          <Box
                             sx={{
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              fontWeight: 700,
-                              fontSize: pxToRem(13),
-                              color: '#2F6FED',
+                              width: 42,
+                              height: 42,
+                              borderRadius: '12px',
+                              background: '#FEF3C7',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
                             }}
                           >
-                            {incident.incidentId}
-                          </Typography>
-                          <Chip
-                            label={incident.category}
-                            size="small"
-                            sx={{
-                              background: catColors.bg,
-                              color: catColors.color,
-                              fontWeight: 600,
-                              fontSize: pxToRem(11.5),
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              borderRadius: '16px',
-                              height: '24px',
-                            }}
-                          />
-                          <Chip
-                            label={incident.priority}
-                            size="small"
-                            sx={{
-                              background: priColors.bg,
-                              color: priColors.color,
-                              fontWeight: 600,
-                              fontSize: pxToRem(11.5),
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              borderRadius: '16px',
-                              height: '24px',
-                            }}
-                          />
-                          <Chip
-                            label={incident.status}
-                            size="small"
-                            sx={{
-                              background: statColors.bg,
-                              color: statColors.color,
-                              fontWeight: 600,
-                              fontSize: pxToRem(11.5),
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              borderRadius: '16px',
-                              height: '24px',
-                            }}
-                          />
+                            <WarningAmberOutlinedIcon
+                              sx={{ fontSize: 20, color: '#D97706' }}
+                            />
+                          </Box>
+
+                          {/* Content */}
+                          <Stack spacing={'6px'}>
+                            {/* Top line: ID + Chips */}
+                            <RowStack spacing={'10px'}>
+                              <Typography
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 700,
+                                  fontSize: pxToRem(13),
+                                  color: '#2F6FED',
+                                }}
+                              >
+                                {incident.incidentId}
+                              </Typography>
+                              <Chip
+                                label={incident.category}
+                                size="small"
+                                sx={{
+                                  background: catColors.bg,
+                                  color: catColors.color,
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(11.5),
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  borderRadius: '16px',
+                                  height: '24px',
+                                }}
+                              />
+                              <Chip
+                                label={incident.priority}
+                                size="small"
+                                sx={{
+                                  background: priColors.bg,
+                                  color: priColors.color,
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(11.5),
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  borderRadius: '16px',
+                                  height: '24px',
+                                }}
+                              />
+                              <Chip
+                                label={incident.status}
+                                size="small"
+                                sx={{
+                                  background: statColors.bg,
+                                  color: statColors.color,
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(11.5),
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  borderRadius: '16px',
+                                  height: '24px',
+                                }}
+                              />
+                            </RowStack>
+
+                            {/* Bottom line: Details */}
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(13),
+                                color: '#374151',
+                                lineHeight: '20px',
+                              }}
+                            >
+                              <Typography
+                                component="span"
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 400,
+                                  fontSize: pxToRem(13),
+                                  color: '#6B7280',
+                                }}
+                              >
+                                Subject:{' '}
+                              </Typography>
+                              {incident.subject}
+                              <Typography
+                                component="span"
+                                sx={{
+                                  color: '#D1D5DB',
+                                  mx: '6px',
+                                }}
+                              >
+                                ·
+                              </Typography>
+                              <Typography
+                                component="span"
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(13),
+                                  color: '#374151',
+                                }}
+                              >
+                                Filed by:
+                              </Typography>{' '}
+                              {incident.filedBy} ({incident.filerRole})
+                              <Typography
+                                component="span"
+                                sx={{
+                                  color: '#D1D5DB',
+                                  mx: '6px',
+                                }}
+                              >
+                                ·
+                              </Typography>
+                              <Typography
+                                component="span"
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 400,
+                                  fontSize: pxToRem(13),
+                                  color: '#9CA3AF',
+                                }}
+                              >
+                                {incident.date}
+                              </Typography>
+                            </Typography>
+                          </Stack>
                         </RowStack>
 
-                        {/* Bottom line: Details */}
-                        <Typography
+                        {/* Right: View Button */}
+                        <RowStack
+                          spacing={'5px'}
                           sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 400,
-                            fontSize: pxToRem(13),
-                            color: '#374151',
-                            lineHeight: '20px',
+                            padding: '6px 16px',
+                            borderRadius: '8px',
+                            border: '0.67px solid #E5E7EB',
+                            background: '#FFFFFF',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            '&:hover': { background: '#F7F9FB' },
                           }}
                         >
                           <Typography
-                            component="span"
                             sx={{
                               fontFamily: (theme) =>
                                 theme.typography.fontFamily,
-                              fontWeight: 400,
-                              fontSize: pxToRem(13),
-                              color: '#6B7280',
-                            }}
-                          >
-                            Subject:{' '}
-                          </Typography>
-                          {incident.subject}
-                          <Typography
-                            component="span"
-                            sx={{
-                              color: '#D1D5DB',
-                              mx: '6px',
-                            }}
-                          >
-                            ·
-                          </Typography>
-                          <Typography
-                            component="span"
-                            sx={{
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              fontWeight: 600,
+                              fontWeight: 500,
                               fontSize: pxToRem(13),
                               color: '#374151',
+                              lineHeight: '20px',
                             }}
                           >
-                            Filed by:
-                          </Typography>{' '}
-                          {incident.filedBy} ({incident.filerRole})
-                          <Typography
-                            component="span"
-                            sx={{
-                              color: '#D1D5DB',
-                              mx: '6px',
-                            }}
-                          >
-                            ·
+                            View
                           </Typography>
-                          <Typography
-                            component="span"
-                            sx={{
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              fontWeight: 400,
-                              fontSize: pxToRem(13),
-                              color: '#9CA3AF',
-                            }}
-                          >
-                            {incident.date}
-                          </Typography>
-                        </Typography>
-                      </Stack>
-                    </RowStack>
+                        </RowStack>
+                      </RowStack>
+                    </Box>
+                  );
+                })}
+              </Stack>
 
-                    {/* Right: View Button */}
-                    <RowStack
-                      spacing={'5px'}
-                      sx={{
-                        padding: '6px 16px',
-                        borderRadius: '8px',
-                        border: '0.67px solid #E5E7EB',
-                        background: '#FFFFFF',
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                        '&:hover': { background: '#F7F9FB' },
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 500,
-                          fontSize: pxToRem(13),
-                          color: '#374151',
-                          lineHeight: '20px',
-                        }}
-                      >
-                        View
-                      </Typography>
-                    </RowStack>
-                  </RowStack>
-                </Box>
-              );
-            })}
-          </Stack>
+              {/* Pagination */}
+              <CustomPagination
+                count={totalCount}
+                page={paginationModel.page}
+                pageSize={paginationModel.pageSize}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            </>
+          )}
         </Stack>
       </Stack>
       {/* File Incident Modal */}
       <FileIncidentModal
         open={fileModalOpen}
         onClose={() => setFileModalOpen(false)}
-        onSubmit={(values) => {
-          console.log('File incident:', values);
-          setFileModalOpen(false);
-        }}
       />
     </AppDashboardLayout>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Box, Chip, Grid, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Chip, Grid, Stack, Typography } from '@mui/material';
 import GavelOutlinedIcon from '@mui/icons-material/GavelOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
@@ -9,8 +9,6 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import RestoreOutlinedIcon from '@mui/icons-material/RestoreOutlined';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppButton,
@@ -18,8 +16,17 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import { CustomPagination } from '../../modules/components/GridTable/ui/components/DataGridPagination/ui/components/CustomPagination';
+import { EmptyState } from '../../modules/blocks';
+import {
+  pxToRem,
+  useGetDisciplinaryKpis,
+  useListDisciplinaryActions,
+  useReinstateDisciplinaryAction,
+  useResolvedApiQuery,
+} from '../../../common';
 import { IssueDisciplinaryActionModal } from './ui/components';
+import dayjs from 'dayjs';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -70,183 +77,137 @@ const statusColors: Record<ActionStatus, { color: string; bg: string }> = {
   Reinstated: { color: '#059669', bg: '#ECFDF5' },
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
+const actionTypeMapFromApi: Record<string, ActionType> = {
+  account_suspension: 'Account Suspension',
+  driving_suspension: 'Driving Suspension',
+  written_warning: 'Written Warning',
+  account_warning: 'Account Warning',
+  driving_ban: 'Driving Ban',
+};
 
-const actionsData: DisciplinaryRow[] = [
-  {
-    id: '1',
-    actionId: 'DA-1201',
-    incidentId: 'INC-4399',
-    actionType: 'Account Suspension',
-    severity: 'High',
-    status: 'Active',
-    subjectName: 'Gordon MacPherson',
-    subjectRole: 'Rider',
-    issuedBy: 'John Carter',
-    issuedDate: 'Mar 7, 2026',
-    duration: '7 days',
-    expiresDate: 'Mar 14, 2026',
-  },
-  {
-    id: '2',
-    actionId: 'DA-1200',
-    incidentId: 'INC-4398',
-    actionType: 'Driving Suspension',
-    severity: 'High',
-    status: 'Active',
-    subjectName: 'David Chen',
-    subjectRole: 'Driver',
-    issuedBy: 'Angela Brooks',
-    issuedDate: 'Mar 6, 2026',
-    duration: 'Pending review',
-    expiresDate: 'TBD',
-  },
-  {
-    id: '3',
-    actionId: 'DA-1199',
-    incidentId: 'INC-4400',
-    actionType: 'Written Warning',
-    severity: 'Medium',
-    status: 'Issued',
-    subjectName: 'Sophie Tremblay',
-    subjectRole: 'Driver',
-    issuedBy: 'Angela Brooks',
-    issuedDate: 'Mar 8, 2026',
-    duration: 'On Record',
-    expiresDate: '—',
-  },
-  {
-    id: '4',
-    actionId: 'DA-1198',
-    incidentId: 'INC-4395',
-    actionType: 'Account Warning',
-    severity: 'Medium',
-    status: 'Issued',
-    subjectName: 'Pierre Tremblay',
-    subjectRole: 'Rider',
-    issuedBy: 'Marcus Bell',
-    issuedDate: 'Mar 1, 2026',
-    duration: 'On Record',
-    expiresDate: '—',
-  },
-  {
-    id: '5',
-    actionId: 'DA-1197',
-    incidentId: 'INC-4388',
-    actionType: 'Driving Suspension',
-    severity: 'High',
-    status: 'Expired',
-    subjectName: "Ryan O'Brien",
-    subjectRole: 'Driver',
-    issuedBy: 'John Carter',
-    issuedDate: 'Feb 22, 2026',
-    duration: '14 days',
-    expiresDate: 'Mar 8, 2026',
-  },
-  {
-    id: '6',
-    actionId: 'DA-1196',
-    incidentId: 'INC-4381',
-    actionType: 'Written Warning',
-    severity: 'Low',
-    status: 'Issued',
-    subjectName: 'Marc Lefebvre',
-    subjectRole: 'Driver',
-    issuedBy: 'Sandra Lee',
-    issuedDate: 'Feb 18, 2026',
-    duration: 'On Record',
-    expiresDate: '—',
-  },
-  {
-    id: '7',
-    actionId: 'DA-1195',
-    incidentId: 'INC-4376',
-    actionType: 'Driving Suspension',
-    severity: 'High',
-    status: 'Active',
-    subjectName: 'Amina Osei',
-    subjectRole: 'Driver',
-    issuedBy: 'John Carter',
-    issuedDate: 'Feb 10, 2026',
-    duration: '30 days',
-    expiresDate: 'Mar 12, 2026',
-  },
-  {
-    id: '8',
-    actionId: 'DA-1194',
-    incidentId: 'INC-4372',
-    actionType: 'Written Warning',
-    severity: 'Medium',
-    status: 'Issued',
-    subjectName: 'Jean-Paul Fortin',
-    subjectRole: 'Driver',
-    issuedBy: 'Marcus Bell',
-    issuedDate: 'Feb 5, 2026',
-    duration: 'On Record',
-    expiresDate: '—',
-  },
-];
+const severityMapFromApi: Record<string, ActionSeverity> = {
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+};
 
-// ─── Tab Config ─────────────────────────────────────────────────────────────
+const statusMapFromApi: Record<string, ActionStatus> = {
+  active: 'Active',
+  issued: 'Issued',
+  expired: 'Expired',
+  reinstated: 'Reinstated',
+};
+
+const statusMapToApi: Record<string, string> = {
+  All: '',
+  Active: 'active',
+  Issued: 'issued',
+  Expired: 'expired',
+  Reinstated: 'reinstated',
+};
 
 const statusTabs = ['All', 'Active', 'Issued', 'Expired', 'Reinstated'];
-
-// ─── Component ──────────────────────────────────────────────────────────────
-
-const ROWS_PER_PAGE = 6;
 
 export const DisciplinaryActionsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
-  const [currentPage, setCurrentPage] = useState(0);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 6,
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Hooks
+  const { mutateAsync: reinstateDisciplinaryAction } = useReinstateDisciplinaryAction();
+
+  // Fetch KPIs
+  const { data: kpisData } = useResolvedApiQuery(useGetDisciplinaryKpis, null);
+
+  // Fetch disciplinary actions list
+  const { data: actionsListData, refetch } = useListDisciplinaryActions({
+    page: paginationModel.page + 1,
+    page_size: paginationModel.pageSize,
+    status: activeTab !== 'All' ? statusMapToApi[activeTab] : undefined,
+  });
+
+  // Transform API data to UI format
+  const transformedData = useMemo<DisciplinaryRow[]>(() => {
+    if (!actionsListData?.success || !actionsListData.data?.items) {
+      return [];
+    }
+
+    return actionsListData.data.items.map((action) => {
+      const issuedDate = dayjs(action.issued_at);
+      const expiresDate = action.expires_at ? dayjs(action.expires_at) : null;
+
+      return {
+        id: action.id,
+        actionId: `DA-${action.action_number}`,
+        incidentId: action.incident_number
+          ? `INC-${action.incident_number}`
+          : '—',
+        actionType:
+          actionTypeMapFromApi[action.action_type] || 'Written Warning',
+        severity: severityMapFromApi[action.severity] || 'Medium',
+        status: statusMapFromApi[action.status] || 'Issued',
+        subjectName: action.subject_name || 'Unknown',
+        subjectRole:
+          action.subject_type === 'driver' ? 'Driver' : 'Rider',
+        issuedBy: action.issued_by_name || 'Unknown',
+        issuedDate: issuedDate.format('MMM D, YYYY'),
+        duration: action.duration_text || '—',
+        expiresDate: expiresDate ? expiresDate.format('MMM D, YYYY') : '—',
+      };
+    });
+  }, [actionsListData]);
+
+  // Client-side search filter
   const filteredData = useMemo(() => {
-    let filtered = actionsData;
-
-    if (activeTab !== 'All') {
-      filtered = filtered.filter((r) => r.status === activeTab);
+    if (!searchQuery.trim()) {
+      return transformedData;
     }
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (r) =>
-          r.actionId.toLowerCase().includes(query) ||
-          r.subjectName.toLowerCase().includes(query) ||
-          r.incidentId.toLowerCase().includes(query)
-      );
-    }
+    const query = searchQuery.toLowerCase();
+    return transformedData.filter(
+      (r) =>
+        r.actionId.toLowerCase().includes(query) ||
+        r.subjectName.toLowerCase().includes(query) ||
+        r.incidentId.toLowerCase().includes(query)
+    );
+  }, [searchQuery, transformedData]);
 
-    return filtered;
-  }, [searchQuery, activeTab]);
-
-  const totalPages = Math.ceil(filteredData.length / ROWS_PER_PAGE);
-  const paginatedData = filteredData.slice(
-    currentPage * ROWS_PER_PAGE,
-    (currentPage + 1) * ROWS_PER_PAGE
-  );
+  const paginatedData = filteredData;
+  const totalCount = actionsListData?.data?.total || 0;
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    setCurrentPage(0);
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  };
+
+  const handleReinstate = async (actionId: string) => {
+    try {
+      await reinstateDisciplinaryAction({ actionId });
+      refetch();
+    } catch (error) {
+      console.error('Error reinstating disciplinary action:', error);
+    }
   };
 
   const statCards = [
     {
-      value: '8',
+      value: (kpisData?.total || 0).toString(),
       label: 'Total Actions',
       icon: <GavelOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
       iconBg: '#EEF2FF',
     },
     {
-      value: '3',
+      value: (kpisData?.suspensions || 0).toString(),
       label: 'Suspensions',
       icon: <BlockOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
       iconBg: '#FEF2F2',
     },
     {
-      value: '4',
+      value: (kpisData?.warnings || 0).toString(),
       label: 'Warnings Issued',
       icon: (
         <WarningAmberOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
@@ -254,32 +215,12 @@ export const DisciplinaryActionsPage = () => {
       iconBg: '#FFFBEB',
     },
     {
-      value: '1',
+      value: (kpisData?.reinstated || 0).toString(),
       label: 'Reinstated',
       icon: <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
   ];
-
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    if (totalPages <= 7) {
-      for (let i = 0; i < totalPages; i++) pages.push(i);
-    } else {
-      pages.push(0);
-      if (currentPage > 3) pages.push('...');
-      for (
-        let i = Math.max(1, currentPage - 1);
-        i <= Math.min(totalPages - 2, currentPage + 1);
-        i++
-      ) {
-        pages.push(i);
-      }
-      if (currentPage < totalPages - 4) pages.push('...');
-      pages.push(totalPages - 1);
-    }
-    return pages;
-  };
 
   return (
     <AppDashboardLayout>
@@ -400,8 +341,7 @@ export const DisciplinaryActionsPage = () => {
                 placeholder="Search by ID or subject..."
                 value={searchQuery}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(0);
+                  setSearchQuery(e.target.value)
                 }}
                 boxProps={{
                   sx: { width: '240px' },
@@ -443,8 +383,26 @@ export const DisciplinaryActionsPage = () => {
           </Stack>
 
           {/* Rows */}
-          <Stack>
-            {paginatedData.map((row) => {
+          {paginatedData.length === 0 ? (
+            <Box sx={{ padding: '40px 24px' }}>
+              <EmptyState
+                emptyState={
+                  <Typography
+                    sx={{
+                      fontSize: pxToRem(14),
+                      fontWeight: 400,
+                      color: '#6B7280',
+                      textAlign: 'center',
+                    }}
+                  >
+                    No disciplinary actions found
+                  </Typography>
+                }
+              />
+            </Box>
+          ) : (
+            <Stack>
+              {paginatedData.map((row) => {
               const typeColors = actionTypeColors[row.actionType];
               const sevColors = severityColors[row.severity];
               const statColors2 = statusColors[row.status];
@@ -584,6 +542,7 @@ export const DisciplinaryActionsPage = () => {
                           {isActive && (
                             <RowStack
                               spacing={'4px'}
+                              onClick={() => handleReinstate(row.id)}
                               sx={{
                                 padding: '5px 12px',
                                 borderRadius: '8px',
@@ -727,113 +686,21 @@ export const DisciplinaryActionsPage = () => {
                 </Box>
               );
             })}
-          </Stack>
+            </Stack>
+          )}
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <RowStack
-              justifyContent={'space-between'}
-              sx={{
-                padding: '16px 24px',
-                borderTop: '0.67px solid #F0F4F8',
-              }}
-            >
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(12.5),
-                  color: '#6B7280',
-                }}
-              >
-                Showing {currentPage * ROWS_PER_PAGE + 1}–
-                {Math.min(
-                  (currentPage + 1) * ROWS_PER_PAGE,
-                  filteredData.length
-                )}{' '}
-                of {filteredData.length} actions
-              </Typography>
-
-              <RowStack spacing={'4px'}>
-                <IconButton
-                  onClick={() => setCurrentPage((p) => p - 1)}
-                  disabled={currentPage === 0}
-                  sx={{
-                    background: '#F7F9FB',
-                    width: 30,
-                    height: 30,
-                    borderRadius: '8px',
-                    border: '0.67px solid #E8ECF0',
-                    color: currentPage === 0 ? '#D1D5DB' : '#374151',
-                  }}
-                >
-                  <ChevronLeftIcon sx={{ fontSize: 18 }} />
-                </IconButton>
-
-                {getPageNumbers().map((p, index) =>
-                  p === '...' ? (
-                    <Typography
-                      key={`ellipsis-${index}`}
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontSize: pxToRem(13),
-                        color: '#9CA3AF',
-                        mx: '4px',
-                      }}
-                    >
-                      ...
-                    </Typography>
-                  ) : (
-                    <Box
-                      key={p}
-                      onClick={() => setCurrentPage(Number(p))}
-                      sx={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        background:
-                          currentPage === p ? '#2F6FED' : 'transparent',
-                        '&:hover': {
-                          background: currentPage === p ? '#2F6FED' : '#F7F9FB',
-                        },
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: currentPage === p ? 600 : 400,
-                          fontSize: pxToRem(12.5),
-                          color: currentPage === p ? '#FFFFFF' : '#6B7280',
-                        }}
-                      >
-                        {Number(p) + 1}
-                      </Typography>
-                    </Box>
-                  )
-                )}
-
-                <IconButton
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                  disabled={currentPage >= totalPages - 1}
-                  sx={{
-                    background: '#F7F9FB',
-                    width: 30,
-                    height: 30,
-                    borderRadius: '8px',
-                    border: '0.67px solid #E8ECF0',
-                    color:
-                      currentPage >= totalPages - 1 ? '#D1D5DB' : '#374151',
-                  }}
-                >
-                  <ChevronRightIcon sx={{ fontSize: 18 }} />
-                </IconButton>
-              </RowStack>
-            </RowStack>
-          )}
+          <CustomPagination
+            count={totalCount}
+            page={paginationModel.page}
+            pageSize={paginationModel.pageSize}
+            onPageChange={(newPage) =>
+              setPaginationModel((prev) => ({ ...prev, page: newPage }))
+            }
+            onPageSizeChange={(newPageSize) =>
+              setPaginationModel({ page: 0, pageSize: newPageSize })
+            }
+          />
         </Stack>
       </Stack>
 

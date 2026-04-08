@@ -357,8 +357,7 @@ export const IssueDetailModal = ({
                       <Stack sx={{ flex: 1, minWidth: 0 }}>
                         <Typography
                           sx={{
-                            fontFamily: (theme) =>
-                              theme.typography.fontFamily,
+                            fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 400,
                             fontSize: pxToRem(12.5),
                             color: '#374151',

@@ -83,10 +83,7 @@ export const FleetProfilesPage = () => {
         businessLicense: hasDocument(item.documents ?? [], 'business_license'),
         insuranceCertificate: hasDocument(item.documents ?? [], 'insurance'),
         vehicleFleetList: hasDocument(item.documents ?? [], 'vehicle_fleet'),
-        driverCertifications: hasDocument(
-          item.documents ?? [],
-          'driver_cert'
-        ),
+        driverCertifications: hasDocument(item.documents ?? [], 'driver_cert'),
       },
     }));
   }, [companiesResponse]);
@@ -119,9 +116,7 @@ export const FleetProfilesPage = () => {
                 >
                   No fleet profiles found
                 </Typography>
-                <Typography
-                  sx={{ fontSize: pxToRem(12), color: '#6B7280' }}
-                >
+                <Typography sx={{ fontSize: pxToRem(12), color: '#6B7280' }}>
                   Approved fleet partners will appear here.
                 </Typography>
               </Stack>

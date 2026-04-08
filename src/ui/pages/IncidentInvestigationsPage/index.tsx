@@ -23,11 +23,23 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
+import { EmptyState } from '../../modules/blocks';
 import {
   AppFilterPopover,
   FilterSection,
 } from '../../modules/components/AppFilterPopover';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetInvestigationKpis,
+  useListInvestigations,
+  useAssignInvestigator,
+  useCloseInvestigation,
+  useResolvedApiQuery,
+} from '../../../common';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -63,125 +75,37 @@ const statusColors: Record<CaseStatus, { color: string; bg: string }> = {
   Unassigned: { color: '#EF4444', bg: '#FEF2F2' },
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
+// ─── API Value Mappings ─────────────────────────────────────────────────────
 
-const casesData: CaseRow[] = [
-  {
-    id: '1',
-    caseId: 'INV-2201',
-    incidentId: 'INC-4401',
-    category: 'Driver Complaint',
-    priority: 'Medium',
-    status: 'In Progress',
-    subject: 'Liam MacDonald',
-    assignee: 'Angela Brooks',
-    openedDate: 'Mar 8, 2026',
-    daysAgo: '1d ago',
-    progress: 40,
-    description: 'Interviewing rider witness. GPS data review pending.',
-  },
-  {
-    id: '2',
-    caseId: 'INV-2200',
-    incidentId: 'INC-4398',
-    category: 'Accident',
-    priority: 'High',
-    status: 'In Progress',
-    subject: 'David Chen',
-    assignee: 'John Carter',
-    openedDate: 'Mar 5, 2026',
-    daysAgo: '4d ago',
-    progress: 70,
-    description:
-      'Reviewing dashcam footage and police report. Awaiting insurance adjuster.',
-  },
-  {
-    id: '3',
-    caseId: 'INV-2199',
-    incidentId: 'INC-4395',
-    category: 'Rider Complaint',
-    priority: 'Medium',
-    status: 'In Progress',
-    subject: 'Pierre Tremblay',
-    assignee: 'Marcus Bell',
-    openedDate: 'Feb 28, 2026',
-    daysAgo: '9d ago',
-    progress: 55,
-    description:
-      'Gathering statements from both rider and driver. Reviewing trip logs.',
-  },
-  {
-    id: '4',
-    caseId: 'INV-2198',
-    incidentId: 'INC-4392',
-    category: 'Driver Complaint',
-    priority: 'Low',
-    status: 'Unassigned',
-    subject: 'Marc Lefebvre',
-    assignee: 'Unassigned',
-    openedDate: 'Feb 27, 2026',
-    daysAgo: '10d ago',
-    progress: 10,
-    description: 'Initial report filed. Awaiting assignment for investigation.',
-  },
-  {
-    id: '5',
-    caseId: 'INV-2197',
-    incidentId: 'INC-4390',
-    category: 'Rider Complaint',
-    priority: 'Medium',
-    status: 'In Progress',
-    subject: 'Aisha Mensah',
-    assignee: 'Sandra Lee',
-    openedDate: 'Feb 22, 2026',
-    daysAgo: '15d ago',
-    progress: 90,
-    description:
-      'Final review stage. Resolution recommendation submitted to management.',
-  },
-  {
-    id: '6',
-    caseId: 'INV-2196',
-    incidentId: 'INC-4388',
-    category: 'Accident',
-    priority: 'High',
-    status: 'Unassigned',
-    subject: "Ryan O'Brien",
-    assignee: 'Unassigned',
-    openedDate: 'Feb 20, 2026',
-    daysAgo: '17d ago',
-    progress: 0,
-    description: 'Accident report received. Needs investigator assignment.',
-  },
-  {
-    id: '7',
-    caseId: 'INV-2195',
-    incidentId: 'INC-4385',
-    category: 'Driver Complaint',
-    priority: 'Low',
-    status: 'In Progress',
-    subject: 'Sophie Tremblay',
-    assignee: 'Angela Brooks',
-    openedDate: 'Feb 18, 2026',
-    daysAgo: '19d ago',
-    progress: 80,
-    description: 'Investigation complete. Disciplinary action under review.',
-  },
-  {
-    id: '8',
-    caseId: 'INV-2194',
-    incidentId: 'INC-4381',
-    category: 'Rider Complaint',
-    priority: 'Low',
-    status: 'Unassigned',
-    subject: 'Jean-Paul Fortin',
-    assignee: 'Unassigned',
-    openedDate: 'Feb 15, 2026',
-    daysAgo: '22d ago',
-    progress: 5,
-    description: 'Complaint registered. Pending investigator assignment.',
-  },
-];
+const priorityMapFromApi: Record<string, CasePriority> = {
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+};
+
+const priorityMapToApi: Record<string, string> = {
+  All: '',
+  High: 'high',
+  Medium: 'medium',
+  Low: 'low',
+};
+
+const statusMapFromApi: Record<string, CaseStatus> = {
+  in_progress: 'In Progress',
+  unassigned: 'Unassigned',
+};
+
+const statusMapToApi: Record<string, string> = {
+  All: '',
+  'In Progress': 'in_progress',
+  Unassigned: 'unassigned',
+};
+
+const categoryMapFromApi: Record<string, CaseCategory> = {
+  driver_complaint: 'Driver Complaint',
+  rider_complaint: 'Rider Complaint',
+  accident: 'Accident',
+};
 
 // ─── Filter Config ──────────────────────────────────────────────────────────
 
@@ -203,63 +127,123 @@ const defaultFilters: Record<string, string> = {
   status: 'All',
 };
 
-// ─── Component ──────────────────────────────────────────────────────────────
-
 export const IncidentInvestigationsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState(defaultFilters);
-  const [expandedId, setExpandedId] = useState<string | null>('1');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
 
+  const currentPage = useMemo(
+    () => paginationModel.page + 1,
+    [paginationModel.page]
+  );
+  const itemsPerPage = paginationModel.pageSize;
+
+  // Hooks
+  const { mutateAsync: assignInvestigator } = useAssignInvestigator();
+  const { mutateAsync: closeInvestigation } = useCloseInvestigation();
+
+  // Fetch KPIs
+  const { data: kpisData } = useResolvedApiQuery(useGetInvestigationKpis, null);
+
+  // Fetch investigations list
+  const { data: investigationsData, refetch } = useListInvestigations({
+    page: currentPage,
+    page_size: itemsPerPage,
+    priority:
+      filters.priority !== 'All' ? priorityMapToApi[filters.priority] : undefined,
+    status:
+      filters.status !== 'All' ? statusMapToApi[filters.status] : undefined,
+  });
+
+  // Transform API data to UI format
+  const transformedData = useMemo<CaseRow[]>(() => {
+    if (!investigationsData?.success || !investigationsData.data?.items) {
+      return [];
+    }
+
+    return investigationsData.data.items.map((inv) => {
+      const openedDate = dayjs(inv.opened_at);
+      const isUnassigned = !inv.assigned_to_id;
+
+      return {
+        id: inv.id,
+        caseId: `INV-${inv.investigation_number}`,
+        incidentId: `INC-${inv.incident_number}`,
+        category: categoryMapFromApi[inv.incident_type] || 'Driver Complaint',
+        priority: priorityMapFromApi[inv.priority] || 'Medium',
+        status: isUnassigned ? 'Unassigned' : 'In Progress',
+        subject: inv.subject_name || 'Unknown',
+        assignee: inv.assigned_to_name || 'Unassigned',
+        openedDate: openedDate.format('MMM D, YYYY'),
+        daysAgo: openedDate.fromNow(),
+        progress: inv.progress_percent || 0,
+        description: inv.notes?.[0]?.content || '',
+      };
+    });
+  }, [investigationsData]);
+
+  // Client-side search filter
   const filteredData = useMemo(() => {
-    let filtered = casesData;
-
-    if (filters.priority !== 'All') {
-      filtered = filtered.filter((r) => r.priority === filters.priority);
-    }
-    if (filters.status !== 'All') {
-      filtered = filtered.filter((r) => r.status === filters.status);
+    if (!searchQuery.trim()) {
+      return transformedData;
     }
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (r) =>
-          r.caseId.toLowerCase().includes(query) ||
-          r.incidentId.toLowerCase().includes(query) ||
-          r.subject.toLowerCase().includes(query) ||
-          r.assignee.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [searchQuery, filters]);
+    const query = searchQuery.toLowerCase();
+    return transformedData.filter(
+      (r) =>
+        r.caseId.toLowerCase().includes(query) ||
+        r.incidentId.toLowerCase().includes(query) ||
+        r.subject.toLowerCase().includes(query) ||
+        r.assignee.toLowerCase().includes(query)
+    );
+  }, [searchQuery, transformedData]);
 
   const statCards = [
     {
-      value: '11',
+      value: (kpisData?.active || 0).toString(),
       label: 'Active Investigations',
       icon: <SearchOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
       iconBg: '#EBF2FF',
     },
     {
-      value: '8',
+      value: (kpisData?.assigned || 0).toString(),
       label: 'Assigned',
       icon: <PersonOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
       iconBg: '#ECFDF5',
     },
     {
-      value: '3',
+      value: (kpisData?.unassigned || 0).toString(),
       label: 'Unassigned',
       icon: <PersonOffOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
       iconBg: '#FEF2F2',
     },
     {
-      value: '4.2d',
+      value: `${kpisData?.avg_duration_days?.toFixed(1) || '0'}d`,
       label: 'Avg. Duration',
       icon: <TimerOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
       iconBg: '#FFFBEB',
     },
   ];
+
+  // Handlers
+  const handleAssign = async (investigationId: string) => {
+    // TODO: Open modal to select investigator
+    // For now, just log
+    console.log('Assign investigation:', investigationId);
+  };
+
+  const handleCloseCase = async (investigationId: string) => {
+    try {
+      await closeInvestigation({ invId: investigationId });
+      refetch();
+    } catch (error) {
+      console.error('Error closing investigation:', error);
+    }
+  };
 
   return (
     <AppDashboardLayout>
@@ -372,8 +356,26 @@ export const IncidentInvestigationsPage = () => {
           </Stack>
 
           {/* Case Rows */}
-          <Stack>
-            {filteredData.map((caseRow) => {
+          {filteredData.length === 0 ? (
+            <Box sx={{ padding: '40px 24px' }}>
+              <EmptyState
+                emptyState={
+                  <Typography
+                    sx={{
+                      fontSize: pxToRem(14),
+                      fontWeight: 400,
+                      color: '#6B7280',
+                      textAlign: 'center',
+                    }}
+                  >
+                    No investigations found
+                  </Typography>
+                }
+              />
+            </Box>
+          ) : (
+            <Stack>
+              {filteredData.map((caseRow) => {
               const priColors = priorityColors[caseRow.priority];
               const statColors = statusColors[caseRow.status];
               const isUnassigned = caseRow.status === 'Unassigned';
@@ -549,6 +551,7 @@ export const IncidentInvestigationsPage = () => {
                           {isUnassigned && (
                             <AppButton
                               variant="contained"
+                              onClick={() => handleAssign(caseRow.id)}
                               sx={{
                                 background: '#2F6FED',
                                 color: '#FFFFFF',
@@ -574,6 +577,7 @@ export const IncidentInvestigationsPage = () => {
                           {!isUnassigned && isNearComplete && (
                             <AppButton
                               variant="contained"
+                              onClick={() => handleCloseCase(caseRow.id)}
                               sx={{
                                 background: '#ECFDF5',
                                 color: '#065F46',
@@ -718,7 +722,8 @@ export const IncidentInvestigationsPage = () => {
                 </Box>
               );
             })}
-          </Stack>
+            </Stack>
+          )}
         </Stack>
       </Stack>
     </AppDashboardLayout>
