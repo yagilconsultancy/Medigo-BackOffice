@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -10,7 +10,14 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import { CustomPagination } from '../../modules/components/GridTable/ui/components/DataGridPagination/ui/components/CustomPagination';
+import { EmptyState } from '../../modules/blocks';
+import {
+  pxToRem,
+  useGetSystemBroadcastKpis,
+  useListSystemBroadcasts,
+  useResolvedApiQuery,
+} from '../../../common';
 import { NotificationInfoUI, SendNotificationModal } from './ui/component';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -64,108 +71,73 @@ const categoryIcons: Record<NotificationCategory, React.ReactNode> = {
   ),
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const notificationsData: NotificationRow[] = [
-  {
-    id: '1',
-    title: 'Scheduled Maintenance – Mar 12, 2026',
-    category: 'Maintenance',
-    description:
-      'The dashboard will be unavailable from 2:00 AM – 4:00 AM EST on March 12 for system upgrades. Please plan accordingly.',
-    recipients: 'All Admins',
-    sentTo: 8,
-    timestamp: 'Mar 4, 2026 · 04:00 PM',
-    status: 'Delivered',
-  },
-  {
-    id: '2',
-    title: 'New Admin Login Policy Effective Apr 1',
-    category: 'Policy Update',
-    description:
-      'Starting April 1, all admin accounts will require 2FA enabled. Accounts without 2FA will be locked until compliant.',
-    recipients: 'All Admins',
-    sentTo: 8,
-    timestamp: 'Mar 1, 2026 · 10:00 AM',
-    status: 'Delivered',
-  },
-  {
-    id: '3',
-    title: 'Suspicious Login Attempt Detected',
-    category: 'Security Alert',
-    description:
-      'A failed login was detected from an unrecognized IP (103.45.62.88, Lagos, NG). The attempt was blocked automatically.',
-    recipients: 'Super Admin',
-    sentTo: 2,
-    timestamp: 'Feb 28, 2026 · 09:14 PM',
-    status: 'Delivered',
-  },
-  {
-    id: '4',
-    title: 'Database Backup Completed Successfully',
-    category: 'System Update',
-    description:
-      'The nightly database backup completed without errors. Backup size: 4.2 GB. Storage usage: 38%.',
-    recipients: 'Super Admin',
-    sentTo: 2,
-    timestamp: 'Feb 28, 2026 · 03:00 AM',
-    status: 'Delivered',
-  },
-  {
-    id: '5',
-    title: 'API Rate Limit Warning – Twilio SMS',
-    category: 'System Alert',
-    description:
-      'Twilio SMS API usage reached 85% of the monthly limit. Consider upgrading the plan to avoid service interruptions.',
-    recipients: 'Super Admin',
-    sentTo: 2,
-    timestamp: 'Feb 25, 2026 · 01:18 PM',
-    status: 'Delivered',
-  },
-  {
-    id: '6',
-    title: 'Scheduled Maintenance – Feb 10, 2026',
-    category: 'Maintenance',
-    description:
-      'System downtime scheduled from 1:00 AM – 3:00 AM EST on Feb 10 for infrastructure upgrades.',
-    recipients: 'All Admins',
-    sentTo: 8,
-    timestamp: 'Feb 7, 2026 · 05:00 PM',
-    status: 'Delivered',
-  },
-];
-
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const NotificationsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
 
-  const statCards = [
+  const { data: kpisData } = useResolvedApiQuery(
+    useGetSystemBroadcastKpis,
+    null
+  );
+  const { data: broadcastsData } = useResolvedApiQuery(
+    useListSystemBroadcasts,
+    null,
+    { page: paginationModel.page + 1, page_size: paginationModel.pageSize }
+  );
+
+  const statCards = useMemo(() => [
     {
-      value: '42',
+      value: (kpisData?.total_sent ?? 0).toString(),
       label: 'Total Sent',
       icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
       iconBg: '#FEF3C7',
     },
     {
-      value: '8',
-      label: 'Maintenance',
+      value: (kpisData?.category_1_count ?? 0).toString(),
+      label: kpisData?.category_1_label ?? 'Maintenance',
       icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
       iconBg: '#FEF3C7',
     },
     {
-      value: '3',
-      label: 'Policy Updates',
+      value: (kpisData?.category_2_count ?? 0).toString(),
+      label: kpisData?.category_2_label ?? 'Policy Updates',
       icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
       iconBg: '#EEF2FF',
     },
     {
-      value: '2',
-      label: 'System Alerts',
+      value: (kpisData?.total_delivered ?? 0).toString(),
+      label: 'Total Delivered',
       icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />,
       iconBg: '#FFF7ED',
     },
-  ];
+  ], [kpisData]);
+
+  const notificationsData = useMemo<NotificationRow[]>(() => {
+    return (broadcastsData?.items || []).map((broadcast) => ({
+      id: broadcast.id,
+      title: broadcast.title,
+      category: broadcast.notification_type as NotificationCategory,
+      description: broadcast.message,
+      recipients: broadcast.audience_segment,
+      sentTo: broadcast.sent_to_count,
+      timestamp: new Date(broadcast.sent_at).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }).replace(',', ' ·'),
+      status: 'Delivered' as const,
+    }));
+  }, [broadcastsData]);
+
+  const totalCount = broadcastsData?.total || 0;
 
   return (
     <AppDashboardLayout>
@@ -296,36 +268,66 @@ export const NotificationsPage = () => {
           </Stack>
 
           {/* Notification Rows */}
-          <Stack spacing={2}>
-            {notificationsData.map((notification) => {
-              const catColors = categoryColors[notification.category];
+          {notificationsData.length === 0 ? (
+            <Stack
+              sx={{
+                height: '400px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <EmptyState emptyState="No System Notifications" />
+            </Stack>
+          ) : (
+            <Stack spacing={2}>
+              {notificationsData.map((notification) => {
+                const catColors = categoryColors[notification.category] || {
+                  color: '#2F6FED',
+                  iconBg: '#EBF2FF',
+                };
+                const icon =
+                  categoryIcons[notification.category] || (
+                    <SettingsOutlinedIcon
+                      sx={{ width: 18, height: 18, color: '#2F6FED' }}
+                    />
+                  );
 
-              return (
-                <NotificationInfoUI
-                  key={notification.id}
-                  icon={categoryIcons[notification.category]}
-                  infoBg={catColors.iconBg}
-                  cardTitle={notification.title}
-                  cardChipLabel={notification.category}
-                  chipColor={catColors.color}
-                  cardDesc={notification.description}
-                  admin={notification.recipients}
-                  num={notification.sentTo}
-                  date={notification.timestamp}
-                />
-              );
-            })}
-          </Stack>
+                return (
+                  <NotificationInfoUI
+                    key={notification.id}
+                    icon={icon}
+                    infoBg={catColors.iconBg}
+                    cardTitle={notification.title}
+                    cardChipLabel={notification.category}
+                    chipColor={catColors.color}
+                    cardDesc={notification.description}
+                    admin={notification.recipients}
+                    num={notification.sentTo}
+                    date={notification.timestamp}
+                  />
+                );
+              })}
+            </Stack>
+          )}
+
+          <CustomPagination
+            count={totalCount}
+            page={paginationModel.page}
+            pageSize={paginationModel.pageSize}
+            onPageChange={(newPage) =>
+              setPaginationModel((prev) => ({ ...prev, page: newPage }))
+            }
+            onPageSizeChange={(newPageSize) =>
+              setPaginationModel((prev) => ({ ...prev, pageSize: newPageSize }))
+            }
+          />
         </Stack>
       </Stack>
 
       <SendNotificationModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={(values) => {
-          console.log('Send notification:', values);
-          setIsModalOpen(false);
-        }}
       />
     </AppDashboardLayout>
   );

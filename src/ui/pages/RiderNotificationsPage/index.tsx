@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -10,7 +10,14 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import { CustomPagination } from '../../modules/components/GridTable/ui/components/DataGridPagination/ui/components/CustomPagination';
+import { EmptyState } from '../../modules/blocks';
+import {
+  pxToRem,
+  useGetRiderBroadcastKpis,
+  useListRiderBroadcasts,
+  useResolvedApiQuery,
+} from '../../../common';
 import { NotificationInfoUI } from '../NotificationsPage/ui/component';
 import { SendRiderNotificationModal } from './ui/component';
 
@@ -48,69 +55,70 @@ const categoryIcons: Record<RiderNotificationCategory, React.ReactNode> = {
   ),
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const notificationsData: RiderNotificationRow[] = [
-  {
-    id: '1',
-    title: 'Service Update – March Schedule',
-    category: 'Announcement',
-    description:
-      'We have updated our service hours effective March 10. Visit the app for full details and booking times.',
-    recipients: 'All Riders',
-    sentTo: 1248,
-    timestamp: 'Mar 8, 2026 · 10:00 AM',
-    status: 'Delivered',
-  },
-  {
-    id: '2',
-    title: 'We Miss You! Book & Save 10%',
-    category: 'Promotion',
-    description:
-      "It's been a while since your last ride. Book now and get 10% off your next trip with code WELCOME10.",
-    recipients: 'Inactive Riders (30+ days)',
-    sentTo: 94,
-    timestamp: 'Mar 3, 2026 · 12:00 PM',
-    status: 'Delivered',
-  },
-  {
-    id: '3',
-    title: 'New Wheelchair-Accessible Vehicles',
-    category: 'Announcement',
-    description:
-      "We've added 12 new WAV-equipped vehicles to our fleet. Book a wheelchair-accessible ride directly from the app.",
-    recipients: 'All Riders',
-    sentTo: 1248,
-    timestamp: 'Feb 28, 2026 · 09:00 AM',
-    status: 'Delivered',
-  },
-];
-
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const RiderNotificationsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
 
-  const statCards = [
-    {
-      value: '1,342',
-      label: 'Total Sent',
-      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
-      iconBg: '#EBF2FF',
-    },
-    {
-      value: '18',
-      label: 'Announcements',
-      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
-      iconBg: '#EEF2FF',
-    },
-    {
-      value: '9',
-      label: 'Promotions',
-      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
-      iconBg: '#FFFBEB',
-    },
-  ];
+  const { data: kpisData } = useResolvedApiQuery(
+    useGetRiderBroadcastKpis,
+    null
+  );
+  const { data: broadcastsData } = useResolvedApiQuery(
+    useListRiderBroadcasts,
+    null,
+    { page: paginationModel.page + 1, page_size: paginationModel.pageSize }
+  );
+
+  const statCards = useMemo(
+    () => [
+      {
+        value: (kpisData?.total_sent ?? 0).toString(),
+        label: 'Total Sent',
+        icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
+        iconBg: '#EBF2FF',
+      },
+      {
+        value: (kpisData?.category_1_count ?? 0).toString(),
+        label: kpisData?.category_1_label ?? 'Announcements',
+        icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
+        iconBg: '#EEF2FF',
+      },
+      {
+        value: (kpisData?.category_2_count ?? 0).toString(),
+        label: kpisData?.category_2_label ?? 'Promotions',
+        icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
+        iconBg: '#FFFBEB',
+      },
+    ],
+    [kpisData]
+  );
+
+  const notificationsData = useMemo<RiderNotificationRow[]>(() => {
+    return (broadcastsData?.items || []).map((broadcast) => ({
+      id: broadcast.id,
+      title: broadcast.title,
+      category: broadcast.notification_type as RiderNotificationCategory,
+      description: broadcast.message,
+      recipients: broadcast.audience_segment,
+      sentTo: broadcast.sent_to_count,
+      timestamp: new Date(broadcast.sent_at).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }).replace(',', ' ·'),
+      status: 'Delivered' as const,
+    }));
+  }, [broadcastsData]);
+
+  const totalCount = broadcastsData?.total || 0;
 
   return (
     <AppDashboardLayout>
@@ -241,36 +249,66 @@ export const RiderNotificationsPage = () => {
           </Stack>
 
           {/* Notification Rows */}
-          <Stack spacing={2}>
-            {notificationsData.map((notification) => {
-              const catColors = categoryColors[notification.category];
+          {notificationsData.length === 0 ? (
+            <Stack
+              sx={{
+                height: '400px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <EmptyState emptyState="No Rider Notifications" />
+            </Stack>
+          ) : (
+            <Stack spacing={2}>
+              {notificationsData.map((notification) => {
+                const catColors = categoryColors[notification.category] || {
+                  color: '#2F6FED',
+                  iconBg: '#EBF2FF',
+                };
+                const icon =
+                  categoryIcons[notification.category] || (
+                    <SettingsOutlinedIcon
+                      sx={{ width: 18, height: 18, color: '#2F6FED' }}
+                    />
+                  );
 
-              return (
-                <NotificationInfoUI
-                  key={notification.id}
-                  icon={categoryIcons[notification.category]}
-                  infoBg={catColors.iconBg}
-                  cardTitle={notification.title}
-                  cardChipLabel={notification.category}
-                  chipColor={catColors.color}
-                  cardDesc={notification.description}
-                  admin={notification.recipients}
-                  num={notification.sentTo}
-                  date={notification.timestamp}
-                />
-              );
-            })}
-          </Stack>
+                return (
+                  <NotificationInfoUI
+                    key={notification.id}
+                    icon={icon}
+                    infoBg={catColors.iconBg}
+                    cardTitle={notification.title}
+                    cardChipLabel={notification.category}
+                    chipColor={catColors.color}
+                    cardDesc={notification.description}
+                    admin={notification.recipients}
+                    num={notification.sentTo}
+                    date={notification.timestamp}
+                  />
+                );
+              })}
+            </Stack>
+          )}
+
+          <CustomPagination
+            count={totalCount}
+            page={paginationModel.page}
+            pageSize={paginationModel.pageSize}
+            onPageChange={(newPage) =>
+              setPaginationModel((prev) => ({ ...prev, page: newPage }))
+            }
+            onPageSizeChange={(newPageSize) =>
+              setPaginationModel((prev) => ({ ...prev, pageSize: newPageSize }))
+            }
+          />
         </Stack>
       </Stack>
 
       <SendRiderNotificationModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={(values) => {
-          console.log('Send rider notification:', values);
-          setIsModalOpen(false);
-        }}
       />
     </AppDashboardLayout>
   );

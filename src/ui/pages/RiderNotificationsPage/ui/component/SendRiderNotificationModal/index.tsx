@@ -12,14 +12,11 @@ import {
   FormikAppTextField,
   RowStack,
 } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
-
-// ─── Types ──────────────────────────────────────────────────────────────────
+import { pxToRem, useBroadcastsApi } from '../../../../../../common';
 
 type SendRiderNotificationModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: RiderNotificationFormValues) => void;
 };
 
 type RiderNotificationFormValues = {
@@ -27,8 +24,6 @@ type RiderNotificationFormValues = {
   title: string;
   message: string;
 };
-
-// ─── Validation ─────────────────────────────────────────────────────────────
 
 const validationSchema = Yup.object({
   audienceSegment: Yup.string().required('Audience segment is required'),
@@ -41,8 +36,6 @@ const initialValues: RiderNotificationFormValues = {
   title: '',
   message: '',
 };
-
-// ─── Label Component ────────────────────────────────────────────────────────
 
 const FieldLabel = ({ label }: { label: string }) => (
   <Typography
@@ -60,13 +53,29 @@ const FieldLabel = ({ label }: { label: string }) => (
   </Typography>
 );
 
-// ─── Component ──────────────────────────────────────────────────────────────
-
 export const SendRiderNotificationModal = ({
   open,
   onClose,
-  onSubmit,
 }: SendRiderNotificationModalProps) => {
+  const { sendRiderBroadcast } = useBroadcastsApi();
+
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      const success = await sendRiderBroadcast({
+        notification_type: 'Announcement',
+        title: values.title,
+        message: values.message,
+        audience_segment: values.audienceSegment,
+      });
+
+      if (success) {
+        onClose();
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <AppModal
       open={open}
@@ -86,18 +95,11 @@ export const SendRiderNotificationModal = ({
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
-        onSubmit={async (values, { setSubmitting }) => {
-          try {
-            onSubmit(values);
-          } finally {
-            setSubmitting(false);
-          }
-        }}
+        onSubmit={handleSubmit}
       >
         {({ isSubmitting, isValid, dirty, setFieldValue, values }) => (
           <Form>
             <Stack>
-              {/* ── Header ─────────────────────────────────────── */}
               <RowStack
                 justifyContent={'space-between'}
                 alignItems={'flex-start'}
@@ -148,8 +150,6 @@ export const SendRiderNotificationModal = ({
                   <CloseIcon sx={{ fontSize: 14, color: '#6B7280' }} />
                 </Box>
               </RowStack>
-
-              {/* ── Body ──────────────────────────────────────── */}
               <Stack spacing={'20px'} sx={{ padding: '24px' }}>
                 {/* Audience Segment */}
                 <Stack spacing={'8px'}>
@@ -160,8 +160,6 @@ export const SendRiderNotificationModal = ({
                     borderRadius="10px"
                   />
                 </Stack>
-
-                {/* Title */}
                 <Stack spacing={'8px'}>
                   <FieldLabel label="Title" />
                   <FormikAppTextField
@@ -170,8 +168,6 @@ export const SendRiderNotificationModal = ({
                     borderRadius="10px"
                   />
                 </Stack>
-
-                {/* Message (optional) */}
                 <Stack spacing={'8px'}>
                   <FieldLabel label="Message" />
                   <AppTextField
@@ -184,8 +180,6 @@ export const SendRiderNotificationModal = ({
                     onChange={(e) => setFieldValue('message', e.target.value)}
                   />
                 </Stack>
-
-                {/* ── Footer Buttons ─────────────────────────── */}
                 <RowStack spacing={'12px'} sx={{ pt: '4px' }}>
                   <AppButton
                     variant="contained"

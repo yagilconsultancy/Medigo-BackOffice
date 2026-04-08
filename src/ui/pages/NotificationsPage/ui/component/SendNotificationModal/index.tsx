@@ -12,14 +12,13 @@ import {
   FormikAppTextField,
   RowStack,
 } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import { pxToRem, useBroadcastsApi } from '../../../../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type SendNotificationModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: NotificationFormValues) => void;
 };
 
 type NotificationFormValues = {
@@ -65,8 +64,26 @@ const FieldLabel = ({ label }: { label: string }) => (
 export const SendNotificationModal = ({
   open,
   onClose,
-  onSubmit,
 }: SendNotificationModalProps) => {
+  const { sendSystemBroadcast } = useBroadcastsApi();
+
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      const success = await sendSystemBroadcast({
+        notification_type: values.notificationType,
+        title: values.title,
+        message: values.message,
+        audience_segment: 'All Admins',
+      });
+
+      if (success) {
+        onClose();
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <AppModal
       open={open}
@@ -86,18 +103,11 @@ export const SendNotificationModal = ({
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
-        onSubmit={async (values, { setSubmitting }) => {
-          try {
-            onSubmit(values);
-          } finally {
-            setSubmitting(false);
-          }
-        }}
+        onSubmit={handleSubmit}
       >
         {({ isSubmitting, isValid, dirty, setFieldValue, values }) => (
           <Form>
             <Stack>
-              {/* ── Header ─────────────────────────────────────── */}
               <RowStack
                 justifyContent={'space-between'}
                 alignItems={'flex-start'}
@@ -148,8 +158,6 @@ export const SendNotificationModal = ({
                   <CloseIcon sx={{ fontSize: 14, color: '#6B7280' }} />
                 </Box>
               </RowStack>
-
-              {/* ── Body ──────────────────────────────────────── */}
               <Stack spacing={'20px'} sx={{ padding: '24px' }}>
                 {/* Notification Type */}
                 <Stack spacing={'8px'}>
@@ -184,8 +192,6 @@ export const SendNotificationModal = ({
                     onChange={(e) => setFieldValue('message', e.target.value)}
                   />
                 </Stack>
-
-                {/* ── Footer Buttons ─────────────────────────── */}
                 <RowStack spacing={'12px'} sx={{ pt: '4px' }}>
                   <AppButton
                     variant="contained"

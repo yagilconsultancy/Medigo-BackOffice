@@ -12,14 +12,13 @@ import {
   FormikAppTextField,
   RowStack,
 } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import { pxToRem, useBroadcastsApi } from '../../../../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type SendFleetNotificationModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: FleetNotificationFormValues) => void;
 };
 
 type FleetNotificationFormValues = {
@@ -65,8 +64,26 @@ const FieldLabel = ({ label }: { label: string }) => (
 export const SendFleetNotificationModal = ({
   open,
   onClose,
-  onSubmit,
 }: SendFleetNotificationModalProps) => {
+  const { sendFleetBroadcast } = useBroadcastsApi();
+
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      const success = await sendFleetBroadcast({
+        notification_type: 'Notice',
+        title: values.title,
+        message: values.message,
+        audience_segment: values.fleetAudience,
+      });
+
+      if (success) {
+        onClose();
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <AppModal
       open={open}
@@ -86,13 +103,7 @@ export const SendFleetNotificationModal = ({
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
-        onSubmit={async (values, { setSubmitting }) => {
-          try {
-            onSubmit(values);
-          } finally {
-            setSubmitting(false);
-          }
-        }}
+        onSubmit={handleSubmit}
       >
         {({ isSubmitting, isValid, dirty, setFieldValue, values }) => (
           <Form>

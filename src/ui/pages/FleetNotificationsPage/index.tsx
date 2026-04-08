@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -10,7 +10,14 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import { CustomPagination } from '../../modules/components/GridTable/ui/components/DataGridPagination/ui/components/CustomPagination';
+import { EmptyState } from '../../modules/blocks';
+import {
+  pxToRem,
+  useGetFleetBroadcastKpis,
+  useListFleetBroadcasts,
+  useResolvedApiQuery,
+} from '../../../common';
 import { NotificationInfoUI } from '../NotificationsPage/ui/component';
 import { SendFleetNotificationModal } from './ui/component';
 
@@ -60,108 +67,76 @@ const categoryIcons: Record<FleetNotificationCategory, React.ReactNode> = {
   ),
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const notificationsData: FleetNotificationRow[] = [
-  {
-    id: '1',
-    title: 'Monthly Revenue Report – February 2026',
-    category: 'Report',
-    description:
-      'February 2026 fleet revenue reports are now available in your Fleet Portal. Total trips: 1,288. Total revenue: $94,320. Download your statement.',
-    recipients: 'All Fleet Partners',
-    sentTo: 12,
-    timestamp: 'Mar 5, 2026 · 08:00 AM',
-    status: 'Delivered',
-  },
-  {
-    id: '2',
-    title: 'Fleet Contract Renewal – April 2026',
-    category: 'Action Required',
-    description:
-      'Your fleet contract with Medigo is due for renewal in April 2026. Please review the updated terms and sign the renewal agreement by March 31.',
-    recipients: 'Expiring Contracts (Q2)',
-    sentTo: 4,
-    timestamp: 'Mar 2, 2026 · 10:00 AM',
-    status: 'Delivered',
-  },
-  {
-    id: '3',
-    title: 'New Driver Onboarding Requirements',
-    category: 'Policy Update',
-    description:
-      'Effective March 1, all new drivers added to fleet accounts must complete the updated Medigo Driver Safety Module before activation.',
-    recipients: 'All Fleet Partners',
-    sentTo: 12,
-    timestamp: 'Feb 25, 2026 · 09:00 AM',
-    status: 'Delivered',
-  },
-  {
-    id: '4',
-    title: 'Monthly Revenue Report – January 2026',
-    category: 'Report',
-    description:
-      'January 2026 revenue reports are available in your Fleet Portal. Total trips: 1,104. Total revenue: $88,400. Download your statement.',
-    recipients: 'All Fleet Partners',
-    sentTo: 12,
-    timestamp: 'Feb 5, 2026 · 08:00 AM',
-    status: 'Delivered',
-  },
-  {
-    id: '5',
-    title: 'WAV Fleet Expansion Incentive',
-    category: 'Incentive',
-    description:
-      'Fleet partners adding WAV-certified vehicles by March 31 are eligible for a $500 onboarding bonus per vehicle. Contact your fleet manager for details.',
-    recipients: 'All Fleet Partners',
-    sentTo: 12,
-    timestamp: 'Jan 20, 2026 · 11:00 AM',
-    status: 'Delivered',
-  },
-  {
-    id: '6',
-    title: 'Fleet Performance Review – Q4 2025',
-    category: 'Report',
-    description:
-      'Q4 2025 fleet performance summaries are available. Review your on-time rate, trip completion rate, and driver ratings in the Fleet Portal.',
-    recipients: 'All Fleet Partners',
-    sentTo: 12,
-    timestamp: 'Jan 10, 2026 · 09:30 AM',
-    status: 'Delivered',
-  },
-];
-
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const FleetNotificationsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
 
-  const statCards = [
-    {
-      value: '24',
-      label: 'Total Sent',
-      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />,
-      iconBg: '#FFF7ED',
-    },
-    {
-      value: '8',
-      label: 'Revenue Reports',
-      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
-      iconBg: '#EEF2FF',
-    },
-    {
-      value: '6',
-      label: 'Policy Updates',
-      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
-      iconBg: '#EBF2FF',
-    },
-    {
-      value: '24',
-      label: 'Delivered',
-      icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
-      iconBg: '#ECFDF5',
-    },
-  ];
+  const { data: kpisData } = useResolvedApiQuery(
+    useGetFleetBroadcastKpis,
+    null
+  );
+  const { data: broadcastsData } = useResolvedApiQuery(
+    useListFleetBroadcasts,
+    null,
+    { page: paginationModel.page + 1, page_size: paginationModel.pageSize }
+  );
+
+  const statCards = useMemo(
+    () => [
+      {
+        value: (kpisData?.total_sent ?? 0).toString(),
+        label: 'Total Sent',
+        icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#EA580C' }} />,
+        iconBg: '#FFF7ED',
+      },
+      {
+        value: (kpisData?.category_1_count ?? 0).toString(),
+        label: kpisData?.category_1_label ?? 'Revenue Reports',
+        icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
+        iconBg: '#EEF2FF',
+      },
+      {
+        value: (kpisData?.category_2_count ?? 0).toString(),
+        label: kpisData?.category_2_label ?? 'Policy Updates',
+        icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
+        iconBg: '#EBF2FF',
+      },
+      {
+        value: (kpisData?.total_delivered ?? 0).toString(),
+        label: 'Total Delivered',
+        icon: <SettingsOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
+        iconBg: '#ECFDF5',
+      },
+    ],
+    [kpisData]
+  );
+
+  const notificationsData = useMemo<FleetNotificationRow[]>(() => {
+    return (broadcastsData?.items || []).map((broadcast) => ({
+      id: broadcast.id,
+      title: broadcast.title,
+      category: broadcast.notification_type as FleetNotificationCategory,
+      description: broadcast.message,
+      recipients: broadcast.audience_segment,
+      sentTo: broadcast.sent_to_count,
+      timestamp: new Date(broadcast.sent_at).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }).replace(',', ' ·'),
+      status: 'Delivered' as const,
+    }));
+  }, [broadcastsData]);
+
+  const totalCount = broadcastsData?.total || 0;
 
   return (
     <AppDashboardLayout>
@@ -292,36 +267,66 @@ export const FleetNotificationsPage = () => {
           </Stack>
 
           {/* Notification Rows */}
-          <Stack spacing={2}>
-            {notificationsData.map((notification) => {
-              const catColors = categoryColors[notification.category];
+          {notificationsData.length === 0 ? (
+            <Stack
+              sx={{
+                height: '400px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <EmptyState emptyState="No Fleet Notifications" />
+            </Stack>
+          ) : (
+            <Stack spacing={2}>
+              {notificationsData.map((notification) => {
+                const catColors = categoryColors[notification.category] || {
+                  color: '#059669',
+                  iconBg: '#ECFDF5',
+                };
+                const icon =
+                  categoryIcons[notification.category] || (
+                    <SettingsOutlinedIcon
+                      sx={{ width: 18, height: 18, color: '#059669' }}
+                    />
+                  );
 
-              return (
-                <NotificationInfoUI
-                  key={notification.id}
-                  icon={categoryIcons[notification.category]}
-                  infoBg={catColors.iconBg}
-                  cardTitle={notification.title}
-                  cardChipLabel={notification.category}
-                  chipColor={catColors.color}
-                  cardDesc={notification.description}
-                  admin={notification.recipients}
-                  num={notification.sentTo}
-                  date={notification.timestamp}
-                />
-              );
-            })}
-          </Stack>
+                return (
+                  <NotificationInfoUI
+                    key={notification.id}
+                    icon={icon}
+                    infoBg={catColors.iconBg}
+                    cardTitle={notification.title}
+                    cardChipLabel={notification.category}
+                    chipColor={catColors.color}
+                    cardDesc={notification.description}
+                    admin={notification.recipients}
+                    num={notification.sentTo}
+                    date={notification.timestamp}
+                  />
+                );
+              })}
+            </Stack>
+          )}
+
+          <CustomPagination
+            count={totalCount}
+            page={paginationModel.page}
+            pageSize={paginationModel.pageSize}
+            onPageChange={(newPage) =>
+              setPaginationModel((prev) => ({ ...prev, page: newPage }))
+            }
+            onPageSizeChange={(newPageSize) =>
+              setPaginationModel((prev) => ({ ...prev, pageSize: newPageSize }))
+            }
+          />
         </Stack>
       </Stack>
 
       <SendFleetNotificationModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={(values) => {
-          console.log('Send fleet notification:', values);
-          setIsModalOpen(false);
-        }}
       />
     </AppDashboardLayout>
   );

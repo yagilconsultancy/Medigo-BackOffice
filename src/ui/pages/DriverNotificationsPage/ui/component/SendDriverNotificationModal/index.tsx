@@ -12,14 +12,13 @@ import {
   FormikAppTextField,
   RowStack,
 } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import { pxToRem, useBroadcastsApi } from '../../../../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type SendDriverNotificationModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: DriverNotificationFormValues) => void;
 };
 
 type DriverNotificationFormValues = {
@@ -65,8 +64,26 @@ const FieldLabel = ({ label }: { label: string }) => (
 export const SendDriverNotificationModal = ({
   open,
   onClose,
-  onSubmit,
 }: SendDriverNotificationModalProps) => {
+  const { sendDriverBroadcast } = useBroadcastsApi();
+
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      const success = await sendDriverBroadcast({
+        notification_type: 'Alert',
+        title: values.title,
+        message: values.message,
+        audience_segment: values.audienceSegment,
+      });
+
+      if (success) {
+        onClose();
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <AppModal
       open={open}
@@ -86,13 +103,7 @@ export const SendDriverNotificationModal = ({
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
-        onSubmit={async (values, { setSubmitting }) => {
-          try {
-            onSubmit(values);
-          } finally {
-            setSubmitting(false);
-          }
-        }}
+        onSubmit={handleSubmit}
       >
         {({ isSubmitting, isValid, dirty, setFieldValue, values }) => (
           <Form>
