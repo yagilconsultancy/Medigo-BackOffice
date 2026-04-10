@@ -210,7 +210,7 @@ export const RecurringPackagesPage = () => {
               padding: '0px 20px',
               height: 120,
             }}
-          >
+          > 
             <Stack spacing={'9px'} sx={{ flex: 1 }}>
               <Typography
                 sx={{
