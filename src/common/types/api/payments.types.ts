@@ -358,16 +358,14 @@ export interface ServiceTypeListResponse {
 }
 
 export interface ServiceTypeConfigResponse {
+  id: string;
   service_type: string;
   display_name: string;
+  config: Record<string, any>; // Flexible config structure - can contain any fare configuration data
   is_active: boolean;
-  base_fare: number;
-  per_km: number;
-  per_minute: number;
-  minimum_fare: number;
-  cancellation_fee: number;
-  waiting_time_per_minute: number;
-  metadata?: Record<string, any> | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ServiceTypeConfigUpdate {

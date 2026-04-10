@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Box,
   Chip,
@@ -24,6 +24,8 @@ import { AppDropdownMenu } from '../../modules/components/AppDropdownMenu';
 import { GridColSpec } from '../../modules/components/GridTable';
 import {
   pxToRem,
+  toSnakeCase,
+  useGetServiceTypeConfig,
   useListServiceTypes,
   useResolvedApiQuery,
 } from '../../../common';
@@ -59,7 +61,8 @@ type FareTab = {
     | 'rules'
     | 'stretcherRoute'
     | 'revenueSplit'
-    | 'comparison';
+    | 'comparison'
+    | 'genericTable';
   rateLabels?: { setting?: string; description?: string };
   data: TableRow[];
   sections?: SurchargeSection[];
@@ -932,16 +935,213 @@ const renderSurchargeCell = (
 
 export const FareConfigurationPage = () => {
   const [vehicleType, setVehicleType] = useState('Standard Vehicle');
+  const [selectedServiceType, setSelectedServiceType] = useState('standard');
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [activeTab, setActiveTab] = useState(0);
-  const { data: serviceTypes } = useResolvedApiQuery(useListServiceTypes, null);
+  const { data: serviceTypesData } = useResolvedApiQuery(
+    useListServiceTypes,
+    null
+  );
 
-  const currentStyle =
-    vehicleTypeStyles[vehicleType] || vehicleTypeStyles['Standard Vehicle'];
-  const config =
-    vehicleConfigs[vehicleType] || vehicleConfigs['Standard Vehicle'];
-  const safeTab = Math.min(activeTab, config.tabs.length - 1);
-  const currentTab = config.tabs[safeTab];
+  // Create service types array and mapping
+  const { serviceTypes, serviceTypeMap } = useMemo(() => {
+    const types =
+      serviceTypesData?.service_types?.filter((st) => st.is_active) || [];
+    const displayNames = types.map((st) => st.display_name);
+    const mapping = types.reduce(
+      (acc, st) => {
+        acc[st.display_name] = st.service_type;
+        return acc;
+      },
+      {} as Record<string, string>
+    );
+    return { serviceTypes: displayNames, serviceTypeMap: mapping };
+  }, [serviceTypesData]);
+
+  const { data: serviceTypeConfigResponse, isFetching: serviceConfigLoading } =
+    useGetServiceTypeConfig({ service_type: selectedServiceType });
+
+  const serviceTypeConfigData = useMemo(() => {
+    if (serviceTypeConfigResponse?.success && serviceTypeConfigResponse.data) {
+      return serviceTypeConfigResponse.data;
+    }
+    return null;
+  }, [serviceTypeConfigResponse]);
+
+  // Helper function to convert snake_case to Title Case
+  const toTitleCase = (str: string) => {
+    return str
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Helper function to determine unit based on key name
+  const getUnit = (key: string, value: any): string => {
+    if (typeof value !== 'number') return '';
+    if (
+      key.includes('fare') ||
+      key.includes('fee') ||
+      key.includes('surcharge') ||
+      key.includes('cap')
+    )
+      return '$';
+    if (key.includes('km') || key.includes('distance')) return 'km';
+    if (
+      key.includes('minute') ||
+      (key.includes('time') && !key.includes('rate'))
+    )
+      return 'mins';
+    if (key.includes('per_min') || key.includes('rate')) return '$/min';
+    if (key.includes('per_km')) return '$/km';
+    return '';
+  };
+
+  // Transform API config data into tab structure dynamically
+  const dynamicConfig = useMemo(() => {
+    if (!serviceTypeConfigData?.config) return null;
+
+    const config = serviceTypeConfigData.config;
+    const tabs: FareTab[] = [];
+
+    // Helper to format any object as rate-style rows
+    const objectToRateRows = (obj: Record<string, any>) => {
+      return Object.entries(obj).map(([key, value], index) => ({
+        id: String(index + 1),
+        setting: toTitleCase(key),
+        value: typeof value === 'number' ? String(value) : String(value || ''),
+        unit: getUnit(key, value),
+        description: '',
+      }));
+    };
+
+    // Helper to format nested route objects dynamically
+    const routesToRows = (routes: Record<string, any>) => {
+      return Object.values(routes).map((route: any, index) => {
+        const row: any = { id: String(index + 1) };
+        // Dynamically build columns from the actual keys in each route
+        Object.entries(route).forEach(([key, value]) => {
+          if (typeof value === 'number') {
+            row[key] =
+              key.includes('km') || key.includes('distance')
+                ? `${value} km`
+                : `$${value.toFixed(2)}`;
+          } else {
+            row[key] = value;
+          }
+        });
+        return row;
+      });
+    };
+
+    // Loop through all config keys dynamically
+    Object.entries(config).forEach(([configKey, configValue]) => {
+      if (!configValue || typeof configValue !== 'object') return;
+
+      // Check if this is an object containing only arrays (like surcharges)
+      const hasOnlyArrays =
+        typeof configValue === 'object' &&
+        !Array.isArray(configValue) &&
+        Object.values(configValue).every((v) => Array.isArray(v));
+
+      // Check if this is an object containing nested objects (like route_pricing, toll_charges)
+      const hasNestedObjects =
+        typeof configValue === 'object' &&
+        !Array.isArray(configValue) &&
+        Object.values(configValue).some(
+          (v) => v && typeof v === 'object' && !Array.isArray(v)
+        );
+
+      // Handle array-based sections (like surcharges with multiple sub-arrays)
+      if (hasOnlyArrays) {
+        const sections: SurchargeSection[] = [];
+        const labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+        Object.entries(configValue).forEach(([key, items], index) => {
+          if (!Array.isArray(items) || items.length === 0) return;
+
+          const firstItem = items[0];
+          const columns = Object.keys(firstItem)
+            .filter((k) => k !== 'id')
+            .map((k) => toTitleCase(k));
+
+          const rows = items.map((item: any) =>
+            Object.entries(item)
+              .filter(([k]) => k !== 'id')
+              .map(([k, v]) => {
+                if (typeof v === 'number') {
+                  return k.includes('surcharge') || k.includes('fee')
+                    ? `$${v.toFixed(2)}`
+                    : String(v);
+                }
+                return String(v || '');
+              })
+          );
+
+          sections.push({
+            id: key,
+            label: labels[index] || String.fromCharCode(65 + index),
+            title: toTitleCase(key),
+            subtitle: `${toTitleCase(key)} details`,
+            columns,
+            rows,
+          });
+        });
+
+        if (sections.length > 0) {
+          tabs.push({
+            label: toTitleCase(configKey),
+            title: toTitleCase(configKey),
+            desc: '',
+            columnType: 'rate',
+            sections,
+            data: [],
+          });
+        }
+        return;
+      }
+
+      // Handle nested objects (route_pricing, toll_charges, commission_breakdown)
+      if (hasNestedObjects) {
+        const routes = routesToRows(configValue);
+        tabs.push({
+          label: toTitleCase(configKey),
+          title: toTitleCase(configKey),
+          desc: '',
+          columnType: 'genericTable',
+          data: routes,
+        });
+        return;
+      }
+
+      // Handle simple object configs (rate_components, vendor_terms, rules_and_caps, etc.)
+      if (typeof configValue === 'object' && !Array.isArray(configValue)) {
+        const data = objectToRateRows(configValue);
+        tabs.push({
+          label: toTitleCase(configKey),
+          title: toTitleCase(configKey),
+          desc: '',
+          columnType: 'rate',
+          data,
+        });
+      }
+    });
+
+    return { tabs };
+  }, [serviceTypeConfigData]);
+
+  // Get dynamic style from selected service type or fallback to default
+  const currentStyle = useMemo(() => {
+    if (vehicleType && vehicleTypeStyles[vehicleType]) {
+      return vehicleTypeStyles[vehicleType];
+    }
+    return { color: '#2F6FED', bg: '#EBF2FF' }; // Default blue style
+  }, [vehicleType]);
+
+  // Use only dynamic config from API
+  const config = dynamicConfig;
+  const safeTab = config ? Math.min(activeTab, config.tabs.length - 1) : 0;
+  const currentTab = config?.tabs[safeTab];
   const isStandard = vehicleType === 'Standard Vehicle';
 
   const emptyState = (
@@ -975,13 +1175,8 @@ export const FareConfigurationPage = () => {
     </Stack>
   );
 
-  console.log('serviceTypes', serviceTypes);
-
-  const settingLabel =
-    currentTab.rateLabels?.setting || (isStandard ? 'Setting' : 'Rate Item');
-  const descLabel =
-    currentTab.rateLabels?.description ||
-    (isStandard ? 'Description' : 'Notes');
+  const settingLabel = currentTab?.rateLabels?.setting || 'Setting';
+  const descLabel = currentTab?.rateLabels?.description || 'Description';
 
   const rateColumns: GridColSpec<TableRow>[] = [
     {
@@ -1930,10 +2125,40 @@ export const FareConfigurationPage = () => {
     comparison: comparisonColumns,
   };
 
-  const columns = columnMap[currentTab.columnType] || rateColumns;
-  const hasSections = !!currentTab.sections;
+  // Generate columns dynamically for genericTable type
+  const generateDynamicColumns = (
+    data: TableRow[]
+  ): GridColSpec<TableRow>[] => {
+    if (!data || data.length === 0) return rateColumns;
 
-  // ─── Surcharges Sections Render ────────────────────────────────────────────
+    const firstRow = data[0];
+    const keys = Object.keys(firstRow).filter((k) => k !== 'id');
+
+    return keys.map((key) => ({
+      field: key,
+      headerName: toTitleCase(key),
+      flex: 1,
+      minWidth: 120,
+      renderCell: (params) => (
+        <Typography
+          sx={{
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 500,
+            fontSize: pxToRem(13),
+            color: '#111827',
+          }}
+        >
+          {params.row[key]}
+        </Typography>
+      ),
+    }));
+  };
+
+  const columns =
+    currentTab?.columnType === 'genericTable'
+      ? generateDynamicColumns(currentTab?.data || [])
+      : columnMap[currentTab?.columnType] || rateColumns;
+  const hasSections = !!currentTab?.sections;
 
   const renderSurchargeSections = () => (
     <Box sx={{ padding: '20px 24px' }}>
@@ -1946,7 +2171,7 @@ export const FareConfigurationPage = () => {
             color: '#111827',
           }}
         >
-          {currentTab.title}
+          {currentTab?.title}
         </Typography>
         <Typography
           sx={{
@@ -1956,12 +2181,12 @@ export const FareConfigurationPage = () => {
             color: '#6B7280',
           }}
         >
-          {currentTab.desc}
+          {currentTab?.desc}
         </Typography>
       </Stack>
 
       <Stack spacing="16px">
-        {currentTab.sections!.map((section) => (
+        {currentTab?.sections?.map((section) => (
           <Box key={section.id}>
             {/* Section Header */}
             <Box
@@ -2091,10 +2316,11 @@ export const FareConfigurationPage = () => {
               open={Boolean(anchorEl)}
               anchorEl={anchorEl}
               onClose={() => setAnchorEl(null)}
-              options={vehicleTypes}
+              options={serviceTypes}
               selectedOption={vehicleType}
               onOptionSelected={(option) => {
                 setVehicleType(option);
+                setSelectedServiceType(serviceTypeMap[option] || 'standard');
                 setActiveTab(0);
                 setAnchorEl(null);
               }}
@@ -2112,8 +2338,54 @@ export const FareConfigurationPage = () => {
             borderRadius: '16px',
             boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.06)',
             overflow: 'hidden',
+            position: 'relative',
           }}
         >
+          {/* Loading Overlay */}
+          {serviceConfigLoading && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(2px)',
+                zIndex: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Stack alignItems="center" spacing="12px">
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    border: '3px solid #F3F4F6',
+                    borderTop: `3px solid ${currentStyle.color}`,
+                    borderRadius: '50%',
+                    animation: 'spin 0.8s linear infinite',
+                    '@keyframes spin': {
+                      '0%': { transform: 'rotate(0deg)' },
+                      '100%': { transform: 'rotate(360deg)' },
+                    },
+                  }}
+                />
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(13),
+                    color: '#6B7280',
+                  }}
+                >
+                  Loading fare configuration...
+                </Typography>
+              </Stack>
+            </Box>
+          )}
           {/* Filter Tabs */}
           <Box sx={{ borderBottom: '0.67px solid #F0F4F8' }}>
             <Tabs
@@ -2145,7 +2417,7 @@ export const FareConfigurationPage = () => {
                 },
               }}
             >
-              {config.tabs.map((tab) => (
+              {config?.tabs?.map((tab) => (
                 <Tab key={tab.label} label={tab.label} />
               ))}
             </Tabs>
@@ -2158,7 +2430,7 @@ export const FareConfigurationPage = () => {
             ) : (
               <AppGridtable
                 columns={columns}
-                data={currentTab.data}
+                data={currentTab?.data || []}
                 initialPageSize={10}
                 hidePagination
                 disableRowClick
@@ -2180,7 +2452,7 @@ export const FareConfigurationPage = () => {
                       color: '#111827',
                     }}
                   >
-                    {currentTab.title}
+                    {currentTab?.title}
                   </Typography>
                   <Typography
                     sx={{
@@ -2190,7 +2462,7 @@ export const FareConfigurationPage = () => {
                       color: '#6B7280',
                     }}
                   >
-                    {currentTab.desc}
+                    {currentTab?.desc}
                   </Typography>
                 </Stack>
               </AppGridtable>
@@ -2198,7 +2470,7 @@ export const FareConfigurationPage = () => {
           </Box>
 
           {/* Warning Note (Toll Charges) */}
-          {currentTab.warningNote && currentTab.data.length > 0 && (
+          {currentTab?.warningNote && currentTab?.data?.length > 0 && (
             <Box
               sx={{
                 margin: '0 24px 20px',
@@ -2220,14 +2492,14 @@ export const FareConfigurationPage = () => {
                     color: '#92400E',
                   }}
                 >
-                  {currentTab.warningNote}
+                  {currentTab?.warningNote}
                 </Typography>
               </RowStack>
             </Box>
           )}
 
           {/* Footnote */}
-          {currentTab.footnote && currentTab.data.length > 0 && (
+          {currentTab?.footnote && currentTab?.data?.length > 0 && (
             <Box
               sx={{
                 padding: '16px 24px',
@@ -2244,13 +2516,13 @@ export const FareConfigurationPage = () => {
                   fontStyle: 'italic',
                 }}
               >
-                {currentTab.footnote}
+                {currentTab?.footnote}
               </Typography>
             </Box>
           )}
 
           {/* Surcharges Info (Service Comparison) */}
-          {currentTab.surchargesInfo && currentTab.data.length > 0 && (
+          {currentTab?.surchargesInfo && currentTab?.data?.length > 0 && (
             <Box
               sx={{
                 padding: '20px 24px',
@@ -2266,10 +2538,10 @@ export const FareConfigurationPage = () => {
                   mb: '12px',
                 }}
               >
-                {currentTab.surchargesInfo.title}
+                {currentTab?.surchargesInfo.title}
               </Typography>
               <Stack spacing="8px">
-                {currentTab.surchargesInfo.items.map((item, i) => (
+                {currentTab?.surchargesInfo.items.map((item, i) => (
                   <RowStack key={i} spacing="10px" alignItems="flex-start">
                     <Box
                       sx={{
@@ -2299,7 +2571,7 @@ export const FareConfigurationPage = () => {
           )}
 
           {/* Vendor Terms (Platform Commission) */}
-          {currentTab.vendorTerms && currentTab.data.length > 0 && (
+          {currentTab?.vendorTerms && currentTab?.data?.length > 0 && (
             <Box
               sx={{
                 padding: '20px 24px',
@@ -2315,10 +2587,10 @@ export const FareConfigurationPage = () => {
                   mb: '12px',
                 }}
               >
-                {currentTab.vendorTermsTitle || 'WAV Vendor Terms'}
+                {currentTab?.vendorTermsTitle || 'WAV Vendor Terms'}
               </Typography>
               <Stack spacing="8px">
-                {currentTab.vendorTerms.map((term, i) => (
+                {currentTab?.vendorTerms?.map((term, i) => (
                   <RowStack key={i} spacing="10px" alignItems="flex-start">
                     <Box
                       sx={{

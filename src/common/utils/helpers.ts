@@ -306,3 +306,7 @@ export const getAuthToken = () => {
 export const removeAuthToken = () => {
   Cookies.remove('medi_auth');
 };
+
+export const toSnakeCase = (value: string): string => {
+  return value.trim().toLowerCase().replace(/\s+/g, '_');
+};

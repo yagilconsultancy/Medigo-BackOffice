@@ -24,14 +24,15 @@ export const useListServiceTypes = () => {
   });
 };
 
-export const useGetServiceTypeConfig = (serviceType: string) => {
+export const useGetServiceTypeConfig = (payload: { service_type: string }) => {
   return useQuery({
     queryKey: [
-      resolveRoute(ROUTES.getServiceTypeConfig, serviceType),
-      serviceType,
+      resolveRoute(ROUTES.getServiceTypeConfig, payload.service_type),
+      payload.service_type,
     ],
-    queryFn: () => getServiceTypeConfig(serviceType).then((res) => res.data),
-    enabled: !!serviceType,
+    queryFn: () =>
+      getServiceTypeConfig(payload.service_type).then((res) => res.data),
+    enabled: !!payload.service_type,
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {
       if (error && typeof error === 'object' && 'response' in error) {
