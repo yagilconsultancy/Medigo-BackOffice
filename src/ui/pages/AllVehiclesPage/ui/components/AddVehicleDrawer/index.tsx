@@ -34,8 +34,15 @@ import {
   AppDatePickerPopover,
   FormikAppTextField,
   AppSelect,
+  UserDropdownMenuInput,
+  UserInputData,
 } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import {
+  pxToRem,
+  useFleetVehiclesApi,
+  useResolvedApiQuery,
+  useGetUserProfile,
+} from '../../../../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -95,19 +102,6 @@ const fleetOptions = [
   'Apex Medical Rides',
 ];
 
-const driverOptions = [
-  'Marcus Johnson',
-  'Sarah Williams',
-  'David Chen',
-  'Emily Rodriguez',
-  'James Thompson',
-  'Anna Kim',
-  'Tom Roberts',
-  'Grace Miller',
-  'Leon Price',
-  'Unassigned',
-];
-
 // ─── Validation Schema ──────────────────────────────────────────────────────
 
 const validationSchema = Yup.object().shape({
@@ -119,11 +113,8 @@ const validationSchema = Yup.object().shape({
   color: Yup.string(),
   capacity: Yup.string(),
   fleet: Yup.string().required('Fleet company is required'),
-  driver: Yup.string(),
   insuranceProvider: Yup.string(),
-  insuranceExpiry: Yup.string(),
   regAuthority: Yup.string(),
-  registrationExpiry: Yup.string(),
   mileage: Yup.string(),
   notes: Yup.string(),
 });
@@ -137,11 +128,8 @@ const initialValues = {
   color: '',
   capacity: '',
   fleet: '',
-  driver: '',
   insuranceProvider: '',
-  insuranceExpiry: '',
   regAuthority: '',
-  registrationExpiry: '',
   mileage: '',
   notes: '',
 };
@@ -153,6 +141,11 @@ export const AddVehicleDrawer = ({
   onClose,
   onAdd,
 }: AddVehicleDrawerProps) => {
+  // Hooks
+  const { createVehicle } = useFleetVehiclesApi();
+  const { data: userProfile } = useResolvedApiQuery(useGetUserProfile, null);
+
+  // State
   const [category, setCategory] = useState<VehicleCategory | ''>('');
   const [wavRamp, setWavRamp] = useState(false);
   const [stretcherMount, setStretcherMount] = useState(false);
@@ -160,9 +153,16 @@ export const AddVehicleDrawer = ({
     'Active'
   );
   const [lastInspection, setLastInspection] = useState<Dayjs | null>(null);
+  const [insuranceExpiry, setInsuranceExpiry] = useState<Dayjs | null>(null);
+  const [registrationExpiry, setRegistrationExpiry] = useState<Dayjs | null>(
+    null
+  );
   const [insuranceFile, setInsuranceFile] = useState<File | null>(null);
   const [registrationFile, setRegistrationFile] = useState<File | null>(null);
   const [inspectionFile, setInspectionFile] = useState<File | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<UserInputData | null>(
+    null
+  );
   const insuranceInputRef = useRef<HTMLInputElement | null>(null);
   const registrationInputRef = useRef<HTMLInputElement | null>(null);
   const inspectionInputRef = useRef<HTMLInputElement | null>(null);
@@ -182,18 +182,75 @@ export const AddVehicleDrawer = ({
     Inactive: { color: '#6B7280', bg: '#F3F4F6', border: '#6B7280' },
   };
 
-  const handleSubmit = async () => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    onAdd();
-    setCategory('');
-    setWavRamp(false);
-    setStretcherMount(false);
-    setStatus('Active');
-    setLastInspection(null);
-    setInsuranceFile(null);
-    setRegistrationFile(null);
-    setInspectionFile(null);
+  const handleSubmit = async (values: typeof initialValues) => {
+    // if (!category) {
+    //   console.log('Category is required but not selected');
+    //   return;
+    // }
+
+    // if (!userProfile?.id) {
+    //   console.log('User profile not loaded yet');
+    //   return;
+    // }
+
+    // Build special equipment array
+    const specialEquipment: string[] = [];
+    if (wavRamp) specialEquipment.push('WAV Ramp/Lift');
+    if (stretcherMount) specialEquipment.push('Stretcher Mount');
+
+    // Build payload
+    const payload = {
+      business_id: userProfile.id,
+      driver_profile_id: selectedDriver?.id || null,
+      vehicle_name: `${values.year} ${values.make} ${values.model}`.trim(),
+      make: values.make,
+      model: values.model,
+      year: values.year ? parseInt(values.year, 10) : new Date().getFullYear(),
+      plate_number: values.plate,
+      color: values.color || null,
+      vin: values.vin || null,
+      category,
+      mileage: values.mileage ? parseInt(values.mileage, 10) : null,
+      insurance_expiry: insuranceExpiry
+        ? insuranceExpiry.format('YYYY-MM-DD')
+        : null,
+      registration_expiry: registrationExpiry
+        ? registrationExpiry.format('YYYY-MM-DD')
+        : null,
+      passenger_capacity: values.capacity
+        ? parseInt(values.capacity, 10)
+        : null,
+      special_equipment: specialEquipment.length > 0 ? specialEquipment : [],
+      insurance_provider: values.insuranceProvider || null,
+      registration_authority: values.regAuthority || null,
+      last_inspection_date: lastInspection
+        ? lastInspection.format('YYYY-MM-DD')
+        : null,
+      internal_notes: values.notes || null,
+      insurance_file: insuranceFile,
+      registration_file: registrationFile,
+      inspection_file: inspectionFile,
+    };
+
+    const success = await createVehicle(payload);
+
+    console.log('Create vehicle result:', success);
+
+    if (success) {
+      onAdd();
+      // Reset form state
+      setCategory('');
+      setWavRamp(false);
+      setStretcherMount(false);
+      setStatus('Active');
+      setLastInspection(null);
+      setInsuranceExpiry(null);
+      setRegistrationExpiry(null);
+      setInsuranceFile(null);
+      setRegistrationFile(null);
+      setInspectionFile(null);
+      setSelectedDriver(null);
+    }
   };
 
   return (
@@ -508,12 +565,18 @@ export const AddVehicleDrawer = ({
                     options={fleetOptions}
                     placeholder="Select fleet"
                   />
-                  <AppSelect
-                    name="driver"
-                    label="Assigned Driver"
-                    options={driverOptions}
-                    placeholder="Select driver"
-                  />
+                  <FormField label="Assigned Driver">
+                    <UserDropdownMenuInput
+                      type="driver"
+                      handleUserSelected={(user) => setSelectedDriver(user)}
+                      selectedUserId={selectedDriver?.id}
+                      selectedUserName={
+                        selectedDriver
+                          ? `${selectedDriver.firstName} ${selectedDriver.lastName}`
+                          : undefined
+                      }
+                    />
+                  </FormField>
                 </Box>
                 <RowStack
                   spacing={'8px'}
@@ -538,8 +601,8 @@ export const AddVehicleDrawer = ({
                   >
                     This vehicle will be registered under{' '}
                     {values.fleet || 'MediGo'} with{' '}
-                    {values.driver && values.driver !== 'Unassigned'
-                      ? `${values.driver} assigned`
+                    {selectedDriver
+                      ? `${selectedDriver.firstName} ${selectedDriver.lastName} assigned`
                       : 'no driver assigned yet'}
                     .
                   </Typography>
@@ -571,10 +634,26 @@ export const AddVehicleDrawer = ({
                     />
                   </FormField>
                   <FormField label="Insurance Expiry">
-                    <FormikAppTextField
-                      name="insuranceExpiry"
-                      placeholder="e.g. April 2026"
-                      borderRadius="10px"
+                    <AppDatePickerPopover
+                      value={insuranceExpiry}
+                      onChange={setInsuranceExpiry}
+                      minDate={dayjs()}
+                      format="MMM DD, YYYY"
+                      buttonSx={{
+                        height: 39,
+                        borderRadius: '10px',
+                        background: '#F7F9FB',
+                        border: '0.67px solid #E8ECF0',
+                        boxShadow: 'none',
+                        justifyContent: 'flex-start',
+                      }}
+                      textSx={{
+                        fontWeight: insuranceExpiry ? 500 : 400,
+                        fontSize: pxToRem(13),
+                        color: insuranceExpiry
+                          ? '#111827'
+                          : 'rgba(55, 65, 81, 0.5)',
+                      }}
                     />
                   </FormField>
                 </Box>
@@ -593,10 +672,26 @@ export const AddVehicleDrawer = ({
                     />
                   </FormField>
                   <FormField label="Registration Expiry">
-                    <FormikAppTextField
-                      name="registrationExpiry"
-                      placeholder="e.g. April 2026"
-                      borderRadius="10px"
+                    <AppDatePickerPopover
+                      value={registrationExpiry}
+                      onChange={setRegistrationExpiry}
+                      minDate={dayjs()}
+                      format="MMM DD, YYYY"
+                      buttonSx={{
+                        height: 39,
+                        borderRadius: '10px',
+                        background: '#F7F9FB',
+                        border: '0.67px solid #E8ECF0',
+                        boxShadow: 'none',
+                        justifyContent: 'flex-start',
+                      }}
+                      textSx={{
+                        fontWeight: registrationExpiry ? 500 : 400,
+                        fontSize: pxToRem(13),
+                        color: registrationExpiry
+                          ? '#111827'
+                          : 'rgba(55, 65, 81, 0.5)',
+                      }}
                     />
                   </FormField>
                 </Box>
@@ -772,7 +867,7 @@ export const AddVehicleDrawer = ({
                 <AppButton
                   type="submit"
                   isLoading={isSubmitting}
-                  disabled={!isValid || !dirty}
+                  disabled={!isValid || !dirty || !category}
                   startIcon={
                     !isSubmitting ? (
                       <AddOutlinedIcon
@@ -784,7 +879,9 @@ export const AddVehicleDrawer = ({
                     height: 40,
                     padding: '0 20px',
                     background:
-                      isValid && dirty ? '#2F6FED' : 'rgba(47, 111, 237, 0.5)',
+                      isValid && dirty && category
+                        ? '#2F6FED'
+                        : 'rgba(47, 111, 237, 0.5)',
                     borderRadius: '10px',
                     textTransform: 'none',
                     fontFamily: (theme) => theme.typography.fontFamily,

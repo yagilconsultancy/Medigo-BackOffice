@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Grid, Stack, Typography } from '@mui/material';
 import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -9,10 +9,16 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
+import { EmptyState } from '../../modules/blocks';
 import { DocumentViewModal } from './ui/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useResolvedApiQuery,
+  useGetFleetVehicleDocumentOverview,
+} from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -149,201 +155,6 @@ const getActionButtons = (status: DocStatus) => {
   }
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const vehiclesData: VehicleDocRow[] = [
-  {
-    id: '1',
-    vehicle: '2022 Toyota Sienna',
-    plate: 'ABC-1234',
-    fleet: 'MediGo',
-    iconColor: '#2F6FED',
-    iconBg: 'rgba(47, 111, 237, 0.09)',
-    registration: {
-      type: 'Registration',
-      status: 'Valid',
-      expiry: 'Nov 2026',
-      fileName: 'reg_toyota_sienna.pdf',
-      docId: 'REG-NY-448821',
-      issueDate: 'Nov 15, 2024',
-      authority: 'NY DMV',
-      subtitle: 'VEHICLE REGISTRATION',
-    },
-    insurance: {
-      type: 'Insurance',
-      status: 'Valid',
-      expiry: 'Dec 2026',
-      fileName: 'ins_toyota_sienna.pdf',
-      docId: 'INS-SF-88421',
-      issueDate: 'Dec 10, 2024',
-      authority: 'State Farm',
-      subtitle: 'COMMERCIAL AUTO POLICY',
-    },
-    inspection: {
-      type: 'Safety Inspection',
-      status: 'Valid',
-      expiry: 'Sep 2026',
-      fileName: 'insp_toyota_sienna.pdf',
-      docId: 'INSP-NY-7741',
-      issueDate: 'Sep 5, 2025',
-      authority: 'NY STATE INSPECTION',
-      subtitle: 'SAFETY INSPECTION CERTIFICATE',
-    },
-  },
-  {
-    id: '2',
-    vehicle: '2021 Honda Odyssey',
-    plate: 'DEF-5678',
-    fleet: 'MedRide Express',
-    iconColor: '#6366F1',
-    iconBg: 'rgba(99, 102, 241, 0.09)',
-    registration: {
-      type: 'Registration',
-      status: 'Valid',
-      expiry: 'Jun 2026',
-      fileName: 'reg_honda_odyssey.pdf',
-      docId: 'REG-NY-557732',
-      issueDate: 'Jun 20, 2024',
-      authority: 'NY DMV',
-      subtitle: 'VEHICLE REGISTRATION',
-    },
-    insurance: {
-      type: 'Insurance',
-      status: 'Valid',
-      expiry: 'Mar 2027',
-      fileName: 'ins_honda_odyssey.pdf',
-      docId: 'INS-AL-66130',
-      issueDate: 'Mar 15, 2025',
-      authority: 'Allstate',
-      subtitle: 'COMMERCIAL AUTO POLICY',
-    },
-    inspection: {
-      type: 'Safety Inspection',
-      status: 'Expiring',
-      expiry: 'Apr 2026',
-      fileName: 'insp_honda_odyssey.pdf',
-      docId: 'INSP-NY-5529',
-      issueDate: 'Apr 10, 2024',
-      authority: 'NY STATE INSPECTION',
-      subtitle: 'SAFETY INSPECTION CERTIFICATE',
-    },
-  },
-  {
-    id: '3',
-    vehicle: '2023 Ford Escape',
-    plate: 'GHI-9012',
-    fleet: 'MediGo',
-    iconColor: '#F59E0B',
-    iconBg: 'rgba(245, 158, 11, 0.09)',
-    registration: {
-      type: 'Registration',
-      status: 'Valid',
-      expiry: 'Aug 2026',
-      fileName: 'reg_ford_escape.pdf',
-      docId: 'REG-NJ-339941',
-      issueDate: 'Aug 1, 2024',
-      authority: 'NJ DMV',
-      subtitle: 'VEHICLE REGISTRATION',
-    },
-    insurance: {
-      type: 'Insurance',
-      status: 'Valid',
-      expiry: 'Sep 2026',
-      fileName: 'ins_ford_escape.pdf',
-      docId: 'INS-PG-44520',
-      issueDate: 'Sep 20, 2024',
-      authority: 'Progressive',
-      subtitle: 'COMMERCIAL AUTO POLICY',
-    },
-    inspection: {
-      type: 'Safety Inspection',
-      status: 'Valid',
-      expiry: 'Oct 2026',
-      fileName: 'insp_ford_escape.pdf',
-      docId: 'INSP-NJ-3318',
-      issueDate: 'Oct 15, 2024',
-      authority: 'NJ STATE INSPECTION',
-      subtitle: 'SAFETY INSPECTION CERTIFICATE',
-    },
-  },
-  {
-    id: '4',
-    vehicle: '2020 Chrysler Pacifica',
-    plate: 'JKL-3456',
-    fleet: 'CareTransit Co.',
-    iconColor: '#EC4899',
-    iconBg: 'rgba(236, 72, 153, 0.09)',
-    registration: {
-      type: 'Registration',
-      status: 'Expiring',
-      expiry: 'Apr 2026',
-      fileName: 'reg_chrysler_pacifica.pdf',
-      docId: 'REG-CT-228830',
-      issueDate: 'Apr 5, 2024',
-      authority: 'CT DMV',
-      subtitle: 'VEHICLE REGISTRATION',
-    },
-    insurance: {
-      type: 'Insurance',
-      status: 'Valid',
-      expiry: 'Dec 2026',
-      fileName: 'ins_chrysler_pacifica.pdf',
-      docId: 'INS-NW-77219',
-      issueDate: 'Dec 1, 2024',
-      authority: 'Nationwide',
-      subtitle: 'COMMERCIAL AUTO POLICY',
-    },
-    inspection: {
-      type: 'Safety Inspection',
-      status: 'Valid',
-      expiry: 'Jul 2026',
-      fileName: 'insp_chrysler_pacifica.pdf',
-      docId: 'INSP-CT-2207',
-      issueDate: 'Jul 20, 2024',
-      authority: 'CT STATE INSPECTION',
-      subtitle: 'SAFETY INSPECTION CERTIFICATE',
-    },
-  },
-  {
-    id: '5',
-    vehicle: '2020 Kia Sedona',
-    plate: 'STU-5678',
-    fleet: 'SafeRide Medical',
-    iconColor: '#0EA5E9',
-    iconBg: 'rgba(14, 165, 233, 0.09)',
-    registration: {
-      type: 'Registration',
-      status: 'Valid',
-      expiry: 'Jan 2027',
-      fileName: 'reg_kia_sedona.pdf',
-      docId: 'REG-MA-117729',
-      issueDate: 'Jan 10, 2025',
-      authority: 'MA DMV',
-      subtitle: 'VEHICLE REGISTRATION',
-    },
-    insurance: {
-      type: 'Insurance',
-      status: 'Expired',
-      expiry: 'Jan 2026',
-      fileName: 'ins_kia_sedona.pdf',
-      docId: 'INS-LM-55318',
-      issueDate: 'Jan 15, 2024',
-      authority: 'Liberty Mutual',
-      subtitle: 'COMMERCIAL AUTO POLICY',
-    },
-    inspection: {
-      type: 'Safety Inspection',
-      status: 'Expired',
-      expiry: 'Dec 2025',
-      fileName: 'insp_kia_sedona.pdf',
-      docId: 'INSP-MA-8805',
-      issueDate: 'Dec 1, 2023',
-      authority: 'MA STATE INSPECTION',
-      subtitle: 'SAFETY INSPECTION CERTIFICATE',
-    },
-  },
-];
-
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const VehicleDocumentsPage = () => {
@@ -352,23 +163,138 @@ export const VehicleDocumentsPage = () => {
     null
   );
   const [modalOpen, setModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Fetch vehicle documents data from API
+  const { data: documentsResponse } = useResolvedApiQuery(
+    useGetFleetVehicleDocumentOverview,
+    null,
+    {
+      page,
+      limit: pageSize,
+    }
+  );
+
+  // Map API response to UI format
+  const vehiclesData = useMemo<VehicleDocRow[]>(() => {
+    if (!documentsResponse?.vehicles) return [];
+
+    return documentsResponse.vehicles.map((vehicle) => {
+      // Helper to get document info by type
+      const getDocInfo = (
+        docType: string
+      ): DocumentInfo => {
+        const doc = vehicle.documents.find((d) => d.document_type === docType);
+
+        // Map status from API to UI
+        const mapStatus = (apiStatus?: string): DocStatus => {
+          if (!apiStatus) return 'Expired';
+          if (apiStatus.toLowerCase() === 'valid') return 'Valid';
+          if (apiStatus.toLowerCase() === 'expiring_soon') return 'Expiring';
+          return 'Expired';
+        };
+
+        // Format expiry date
+        const formatExpiry = (expiresAt?: string | null): string => {
+          if (!expiresAt) return 'N/A';
+          const date = new Date(expiresAt);
+          return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        };
+
+        const status = mapStatus(doc?.status);
+
+        return {
+          type: docType === 'registration' ? 'Registration' :
+                docType === 'insurance' ? 'Insurance' : 'Safety Inspection',
+          status,
+          expiry: formatExpiry(doc?.expires_at),
+          fileName: doc?.file_name || 'N/A',
+          docId: doc?.doc_id || 'N/A',
+          issueDate: 'N/A', // Not provided by API
+          authority: 'N/A', // Not provided by API
+          subtitle: docType === 'registration' ? 'VEHICLE REGISTRATION' :
+                    docType === 'insurance' ? 'COMMERCIAL AUTO POLICY' :
+                    'SAFETY INSPECTION CERTIFICATE',
+        };
+      };
+
+      // Generate consistent colors based on vehicle_id hash
+      const colors = [
+        { color: '#2F6FED', bg: 'rgba(47, 111, 237, 0.09)' },
+        { color: '#6366F1', bg: 'rgba(99, 102, 241, 0.09)' },
+        { color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.09)' },
+        { color: '#EC4899', bg: 'rgba(236, 72, 153, 0.09)' },
+        { color: '#0EA5E9', bg: 'rgba(14, 165, 233, 0.09)' },
+      ];
+      const colorIndex = parseInt(vehicle.vehicle_id.substring(0, 2), 16) % colors.length;
+      const vehicleColor = colors[colorIndex];
+
+      return {
+        id: vehicle.vehicle_id,
+        vehicle: vehicle.vehicle_name || `${vehicle.make} ${vehicle.model}`,
+        plate: vehicle.plate_number,
+        fleet: vehicle.fleet_name || 'Unknown Fleet',
+        iconColor: vehicleColor.color,
+        iconBg: vehicleColor.bg,
+        registration: getDocInfo('registration'),
+        insurance: getDocInfo('insurance'),
+        inspection: getDocInfo('inspection'),
+      };
+    });
+  }, [documentsResponse]);
 
   const filterCounts = useMemo(() => {
-    let valid = 0;
-    let expiring = 0;
-    let expired = 0;
-    vehiclesData.forEach((v) => {
-      const statuses = [
-        v.registration.status,
-        v.insurance.status,
-        v.inspection.status,
-      ];
-      if (statuses.every((s) => s === 'Valid')) valid++;
-      if (statuses.includes('Expiring')) expiring++;
-      if (statuses.includes('Expired')) expired++;
-    });
-    return { valid, expiring, expired };
-  }, []);
+    if (!documentsResponse?.kpis) {
+      return { valid: 0, expiring: 0, expired: 0 };
+    }
+
+    return {
+      valid: documentsResponse.kpis.valid_count || 0,
+      expiring: documentsResponse.kpis.expiring_soon_count || 0,
+      expired: documentsResponse.kpis.expired_count || 0,
+    };
+  }, [documentsResponse]);
+
+  const statCards = useMemo(() => {
+    const kpis = documentsResponse?.kpis || {
+      total_documents: 0,
+      valid_count: 0,
+      expiring_soon_count: 0,
+      expired_count: 0,
+    };
+
+    return [
+      {
+        value: String(kpis.total_documents),
+        label: 'Total Documents',
+        valueColor: '#2F6FED',
+        icon: <DescriptionOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
+        iconBg: '#EBF2FF',
+      },
+      {
+        value: String(kpis.valid_count),
+        label: 'Valid',
+        valueColor: '#10B981',
+        icon: <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#10B981' }} />,
+        iconBg: '#ECFDF5',
+      },
+      {
+        value: String(kpis.expiring_soon_count),
+        label: 'Expiring Soon',
+        valueColor: '#D97706',
+        icon: <WarningAmberIcon sx={{ fontSize: 18, color: '#D97706' }} />,
+        iconBg: '#FFFBEB',
+      },
+      {
+        value: String(kpis.expired_count),
+        label: 'Expired',
+        valueColor: '#EF4444',
+        icon: <ErrorOutlineIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
+        iconBg: '#FEF2F2',
+      },
+    ];
+  }, [documentsResponse]);
 
   const attentionCount = useMemo(() => {
     return vehiclesData.filter((v) => {
@@ -462,6 +388,60 @@ export const VehicleDocumentsPage = () => {
           </RowStack>
         </RowStack>
 
+        {/* KPI Cards */}
+        <Grid container spacing={'16px'}>
+          {statCards.map((card, index) => (
+            <Grid key={index} size={{ xs: 6, lg: 3 }}>
+              <Stack
+                sx={{
+                  background: '#FFFFFF',
+                  border: '0.67px solid #E8ECF0',
+                  borderRadius: '14px',
+                  padding: '16px 20px',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '10px',
+                    background: card.iconBg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '12px',
+                  }}
+                >
+                  {card.icon}
+                </Box>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 700,
+                    fontSize: pxToRem(24),
+                    lineHeight: '1.3em',
+                    color: card.valueColor,
+                  }}
+                >
+                  {card.value}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 500,
+                    fontSize: pxToRem(12.5),
+                    lineHeight: '1.5em',
+                    color: '#6B7280',
+                    marginTop: '2px',
+                  }}
+                >
+                  {card.label}
+                </Typography>
+              </Stack>
+            </Grid>
+          ))}
+        </Grid>
+
         {/* Alert Banner */}
         {attentionCount > 0 && (
           <RowStack
@@ -526,78 +506,96 @@ export const VehicleDocumentsPage = () => {
           </RowStack>
 
           {/* Table Rows */}
-          {filteredVehicles.map((vehicle) => (
-            <RowStack
-              key={vehicle.id}
-              sx={{
-                padding: '16px 24px',
-                borderBottom: '0.67px solid rgba(0,0,0,0.05)',
-                alignItems: 'flex-start',
-                '&:last-child': { borderBottom: 'none' },
-              }}
-            >
-              {/* Vehicle column */}
+          {filteredVehicles.length > 0 ? (
+            filteredVehicles.map((vehicle) => (
               <RowStack
-                spacing={'12px'}
-                sx={{ width: '240px', minWidth: '240px', pt: '8px' }}
+                key={vehicle.id}
+                sx={{
+                  padding: '16px 24px',
+                  borderBottom: '0.67px solid rgba(0,0,0,0.05)',
+                  alignItems: 'flex-start',
+                  '&:last-child': { borderBottom: 'none' },
+                }}
               >
-                <Box
-                  sx={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: '10px',
-                    background: vehicle.iconBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
+                {/* Vehicle column */}
+                <RowStack
+                  spacing={'12px'}
+                  sx={{ width: '240px', minWidth: '240px', pt: '8px' }}
                 >
-                  <DirectionsCarOutlinedIcon
-                    sx={{ fontSize: 18, color: vehicle.iconColor }}
-                  />
-                </Box>
-                <Stack spacing={'2px'}>
-                  <Typography
+                  <Box
                     sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 600,
-                      fontSize: pxToRem(13),
-                      color: '#111827',
-                      lineHeight: '1.5em',
+                      width: 38,
+                      height: 38,
+                      borderRadius: '10px',
+                      background: vehicle.iconBg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
-                    {vehicle.vehicle}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(11),
-                      color: '#9CA3AF',
-                      lineHeight: '1.5em',
-                    }}
-                  >
-                    {vehicle.plate} · {vehicle.fleet}
-                  </Typography>
-                </Stack>
-              </RowStack>
+                    <DirectionsCarOutlinedIcon
+                      sx={{ fontSize: 18, color: vehicle.iconColor }}
+                    />
+                  </Box>
+                  <Stack spacing={'2px'}>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 600,
+                        fontSize: pxToRem(13),
+                        color: '#111827',
+                        lineHeight: '1.5em',
+                      }}
+                    >
+                      {vehicle.vehicle}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 400,
+                        fontSize: pxToRem(11),
+                        color: '#9CA3AF',
+                        lineHeight: '1.5em',
+                      }}
+                    >
+                      {vehicle.plate} · {vehicle.fleet}
+                    </Typography>
+                  </Stack>
+                </RowStack>
 
-              {/* Doc Cards */}
-              {[
-                vehicle.registration,
-                vehicle.insurance,
-                vehicle.inspection,
-              ].map((doc, idx) => (
-                <Box key={idx} sx={{ flex: 1, minWidth: '240px', px: '6px' }}>
-                  <DocCard
-                    doc={doc}
-                    onView={() => handleViewDoc(vehicle, doc)}
-                  />
-                </Box>
-              ))}
-            </RowStack>
-          ))}
+                {/* Doc Cards */}
+                {[
+                  vehicle.registration,
+                  vehicle.insurance,
+                  vehicle.inspection,
+                ].map((doc, idx) => (
+                  <Box key={idx} sx={{ flex: 1, minWidth: '240px', px: '6px' }}>
+                    <DocCard
+                      doc={doc}
+                      onView={() => handleViewDoc(vehicle, doc)}
+                    />
+                  </Box>
+                ))}
+              </RowStack>
+            ))
+          ) : (
+            <Box sx={{ py: 6 }}>
+              <EmptyState
+                emptyState={
+                  <Typography
+                    sx={{
+                      fontSize: pxToRem(16),
+                      fontWeight: 400,
+                      textAlign: 'center',
+                    }}
+                  >
+                    No vehicle documents found
+                  </Typography>
+                }
+              />
+            </Box>
+          )}
         </Box>
       </Stack>
 

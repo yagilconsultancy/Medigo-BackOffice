@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Box, Chip, Grid, Stack, Typography } from '@mui/material';
 import LocalTaxiOutlinedIcon from '@mui/icons-material/LocalTaxiOutlined';
 import AccessibleOutlinedIcon from '@mui/icons-material/AccessibleOutlined';
@@ -8,9 +9,14 @@ import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutl
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import { EmptyState } from '../../modules/blocks';
+import {
+  pxToRem,
+  useResolvedApiQuery,
+  useGetFleetComposition,
+} from '../../../common';
 
-// ─── Data ────────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type CategoryData = {
   name: string;
@@ -27,98 +33,95 @@ type CategoryData = {
   commonVehicles: string[];
 };
 
-const categories: CategoryData[] = [
-  {
-    name: 'Standard Medical Ride',
-    badge: 'Standard',
-    vehicleCount: 142,
-    percentage: 50,
-    color: '#2F6FED',
-    bgLight: '#EBF2FF',
-    icon: <LocalTaxiOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
-    description:
-      'Regular sedan or minivan for ambulatory patients who can walk independently.',
-    baseFare: '$8.00',
-    perMile: '$2.20',
-    requirements: [
-      'Valid driver license',
-      'Clean driving record',
-      'Vehicle ≤ 8 years old',
-    ],
-    commonVehicles: ['Toyota Camry', 'Honda Civic', 'Ford Fusion'],
-  },
-  {
-    name: 'Wheelchair Accessible (WAV)',
-    badge: 'WAV',
-    vehicleCount: 68,
-    percentage: 24,
-    color: '#059669',
-    bgLight: '#ECFDF5',
-    icon: <AccessibleOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
-    description:
-      'Specially equipped vehicles with ramps or lifts for wheelchair users.',
-    baseFare: '$12.00',
-    perMile: '$2.80',
-    requirements: [
-      'WAV equipment certified',
-      'Driver lift-assist training',
-      'Annual vehicle inspection',
-    ],
-    commonVehicles: [
-      'Toyota Sienna WAV',
-      'Chrysler Pacifica Mobility',
-      'Ford Transit ADA',
-    ],
-  },
-  {
-    name: 'Assisted Ride',
-    badge: 'Assist',
-    vehicleCount: 54,
-    percentage: 19,
-    color: '#D97706',
-    bgLight: '#FFFBEB',
-    icon: (
-      <VolunteerActivismOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />
-    ),
-    description:
-      'Driver provides door-to-door assistance for patients who need help getting to/from the vehicle.',
-    baseFare: '$14.00',
-    perMile: '$3.00',
-    requirements: [
-      'First aid certified',
-      'Mobility assistance training',
-      'Background check',
-    ],
-    commonVehicles: ['Minivans', 'SUVs', 'Accessible sedans'],
-  },
-  {
-    name: 'Stretcher Transport',
-    badge: 'Stretcher',
-    vehicleCount: 20,
-    percentage: 7,
-    color: '#EF4444',
-    bgLight: '#FEF2F2',
-    icon: (
-      <MedicalServicesOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
-    ),
-    description:
-      'For non-ambulatory patients who must remain lying down during transport.',
-    baseFare: '$22.00',
-    perMile: '$4.50',
-    requirements: [
-      'EMT or equivalent certification',
-      'Stretcher-equipped vehicle',
-      'Two-person crew required',
-    ],
-    commonVehicles: ['Ram ProMaster', 'Ford Transit', 'Mercedes Sprinter'],
-  },
-];
+// ─── Category Configuration ─────────────────────────────────────────────────
 
-const totalVehicles = categories.reduce((sum, c) => sum + c.vehicleCount, 0);
+const getCategoryConfig = (category: string) => {
+  const categoryLower = category.toLowerCase();
+
+  if (categoryLower.includes('standard')) {
+    return {
+      badge: 'Standard',
+      color: '#2F6FED',
+      bgLight: '#EBF2FF',
+      icon: <LocalTaxiOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
+      description: 'Regular sedan or minivan for ambulatory patients who can walk independently.',
+    };
+  }
+
+  if (categoryLower.includes('wheelchair') || categoryLower.includes('wav')) {
+    return {
+      badge: 'WAV',
+      color: '#059669',
+      bgLight: '#ECFDF5',
+      icon: <AccessibleOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
+      description: 'Specially equipped vehicles with ramps or lifts for wheelchair users.',
+    };
+  }
+
+  if (categoryLower.includes('assist')) {
+    return {
+      badge: 'Assist',
+      color: '#D97706',
+      bgLight: '#FFFBEB',
+      icon: <VolunteerActivismOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
+      description: 'Driver provides door-to-door assistance for patients who need help getting to/from the vehicle.',
+    };
+  }
+
+  if (categoryLower.includes('stretcher')) {
+    return {
+      badge: 'Stretcher',
+      color: '#EF4444',
+      bgLight: '#FEF2F2',
+      icon: <MedicalServicesOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
+      description: 'For non-ambulatory patients who must remain lying down during transport.',
+    };
+  }
+
+  // Default
+  return {
+    badge: 'Other',
+    color: '#6B7280',
+    bgLight: '#F3F4F6',
+    icon: <LocalTaxiOutlinedIcon sx={{ fontSize: 18, color: '#6B7280' }} />,
+    description: 'Medical transportation service.',
+  };
+};
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export const VehicleCategoriesPage = () => {
+  // Fetch fleet composition data from API
+  const { data: compositionResponse } = useResolvedApiQuery(
+    useGetFleetComposition,
+    null
+  );
+
+  // Map API response to UI format
+  const categories = useMemo<CategoryData[]>(() => {
+    if (!compositionResponse?.breakdown) return [];
+
+    return compositionResponse.breakdown.map((item) => {
+      const config = getCategoryConfig(item.category);
+
+      return {
+        name: item.display_name || item.category,
+        badge: config.badge,
+        vehicleCount: item.count,
+        percentage: Math.round(item.percentage),
+        color: config.color,
+        bgLight: config.bgLight,
+        icon: config.icon,
+        description: config.description,
+        baseFare: 'N/A', // Not provided by API
+        perMile: 'N/A', // Not provided by API
+        requirements: [], // Not provided by API
+        commonVehicles: [], // Not provided by API
+      };
+    });
+  }, [compositionResponse]);
+
+  const totalVehicles = compositionResponse?.total_vehicles || 0;
   return (
     <AppDashboardLayout>
       <Stack spacing={'24px'}>
@@ -129,7 +132,8 @@ export const VehicleCategoriesPage = () => {
         />
 
         {/* Fleet Composition Card */}
-        <Stack
+        {categories.length > 0 && (
+          <Stack
           spacing={'16px'}
           sx={{
             background: '#FFFFFF',
@@ -224,13 +228,15 @@ export const VehicleCategoriesPage = () => {
               </RowStack>
             ))}
           </RowStack>
-        </Stack>
+          </Stack>
+        )}
 
         {/* Category Cards Grid */}
-        <Grid container spacing={'20px'}>
-          {categories.map((cat) => (
-            <Grid key={cat.name} size={{ xs: 12, md: 6 }}>
-              <Stack
+        {categories.length > 0 ? (
+          <Grid container spacing={'20px'}>
+            {categories.map((cat) => (
+              <Grid key={cat.name} size={{ xs: 12, md: 6 }}>
+                <Stack
                 spacing={'20px'}
                 sx={{
                   background: '#FFFFFF',
@@ -310,7 +316,8 @@ export const VehicleCategoriesPage = () => {
                 </Typography>
 
                 {/* Pricing Row */}
-                <RowStack spacing={'12px'}>
+                {cat.baseFare !== 'N/A' && cat.perMile !== 'N/A' && (
+                  <RowStack spacing={'12px'}>
                   <Stack
                     sx={{
                       flex: 1,
@@ -371,10 +378,12 @@ export const VehicleCategoriesPage = () => {
                       Per Mile
                     </Typography>
                   </Stack>
-                </RowStack>
+                  </RowStack>
+                )}
 
                 {/* Requirements */}
-                <Stack spacing={'10px'}>
+                {cat.requirements.length > 0 && (
+                  <Stack spacing={'10px'}>
                   <Typography
                     sx={{
                       fontFamily: (theme) => theme.typography.fontFamily,
@@ -404,10 +413,12 @@ export const VehicleCategoriesPage = () => {
                       </Typography>
                     </RowStack>
                   ))}
-                </Stack>
+                  </Stack>
+                )}
 
                 {/* Common Vehicles */}
-                <Stack spacing={'10px'}>
+                {cat.commonVehicles.length > 0 && (
+                  <Stack spacing={'10px'}>
                   <Typography
                     sx={{
                       fontFamily: (theme) => theme.typography.fontFamily,
@@ -440,11 +451,29 @@ export const VehicleCategoriesPage = () => {
                       />
                     ))}
                   </RowStack>
-                </Stack>
+                  </Stack>
+                )}
               </Stack>
             </Grid>
           ))}
-        </Grid>
+          </Grid>
+        ) : (
+          <Box sx={{ py: 6 }}>
+            <EmptyState
+              emptyState={
+                <Typography
+                  sx={{
+                    fontSize: pxToRem(16),
+                    fontWeight: 400,
+                    textAlign: 'center',
+                  }}
+                >
+                  No vehicle categories found
+                </Typography>
+              }
+            />
+          </Box>
+        )}
       </Stack>
     </AppDashboardLayout>
   );

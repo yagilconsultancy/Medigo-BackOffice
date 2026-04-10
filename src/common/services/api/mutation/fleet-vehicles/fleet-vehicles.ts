@@ -18,10 +18,46 @@ import {
 } from '../../../../types';
 
 export const createFleetVehicle = async (payload: VehicleCreate) => {
+  const {
+    insurance_file,
+    registration_file,
+    inspection_file,
+    special_equipment,
+    ...rest
+  } = payload;
+
+  const data = new FormData();
+
+  // Append all non-file fields
+  Object.entries(rest).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      data.append(key, String(value));
+    }
+  });
+
+  // Append special_equipment array as JSON string
+  if (special_equipment && special_equipment.length > 0) {
+    data.append('special_equipment', JSON.stringify(special_equipment));
+  }
+
+  // Append files if they exist
+  if (insurance_file) {
+    data.append('insurance_file', insurance_file);
+  }
+  if (registration_file) {
+    data.append('registration_file', registration_file);
+  }
+  if (inspection_file) {
+    data.append('inspection_file', inspection_file);
+  }
+
   return await getApiClient().post<
     ApiVehicleResponse,
-    AxiosResponse<ApiVehicleResponse>
-  >(resolveRoute(ROUTES.fleetVehicles), payload);
+    AxiosResponse<ApiVehicleResponse>,
+    FormData
+  >(resolveRoute(ROUTES.fleetVehicles), data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 };
 
 export const updateFleetVehicle = async (payload: UpdateVehiclePayload) => {

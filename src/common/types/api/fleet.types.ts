@@ -196,6 +196,7 @@ export interface VehicleDetailResponse {
 
 export interface VehicleCreate {
   business_id: string;
+  driver_profile_id?: string | null;
   vehicle_name?: string | null;
   make: string;
   model: string;
@@ -213,6 +214,9 @@ export interface VehicleCreate {
   registration_authority?: string | null;
   last_inspection_date?: string | null;
   internal_notes?: string | null;
+  insurance_file?: File | null;
+  registration_file?: File | null;
+  inspection_file?: File | null;
 }
 
 export interface VehicleKPIs {

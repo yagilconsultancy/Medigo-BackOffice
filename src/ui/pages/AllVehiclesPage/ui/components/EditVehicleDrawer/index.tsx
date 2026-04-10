@@ -20,9 +20,6 @@ import AccessibleOutlinedIcon from '@mui/icons-material/AccessibleOutlined';
 import EscalatorWarningOutlinedIcon from '@mui/icons-material/EscalatorWarningOutlined';
 import LocalHospitalOutlinedIcon from '@mui/icons-material/LocalHospitalOutlined';
 import CheckIcon from '@mui/icons-material/Check';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { Formik, Form, useField } from 'formik';
 import * as Yup from 'yup';
@@ -34,9 +31,15 @@ import {
   AppDatePickerPopover,
   FormikAppTextField,
   AppSelect,
+  UserDropdownMenuInput,
+  UserInputData,
 } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
-import type { VehicleRow } from '../../..';
+import {
+  pxToRem,
+  useFleetVehiclesApi,
+  useResolvedApiQuery,
+  useGetFleetVehicleById,
+} from '../../../../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -49,7 +52,7 @@ type VehicleCategory =
 type EditVehicleDrawerProps = {
   open: boolean;
   onClose: () => void;
-  vehicle: VehicleRow | null;
+  vehicleId: string | null;
   onSave: () => void;
 };
 
@@ -97,19 +100,6 @@ const fleetOptions = [
   'Apex Medical Rides',
 ];
 
-const driverOptions = [
-  'Marcus Johnson',
-  'Sarah Williams',
-  'David Chen',
-  'Emily Rodriguez',
-  'James Thompson',
-  'Anna Kim',
-  'Tom Roberts',
-  'Grace Miller',
-  'Leon Price',
-  'Unassigned',
-];
-
 // ─── Validation Schema ──────────────────────────────────────────────────────
 
 const validationSchema = Yup.object().shape({
@@ -120,97 +110,112 @@ const validationSchema = Yup.object().shape({
   vin: Yup.string(),
   color: Yup.string(),
   capacity: Yup.string(),
-  fleet: Yup.string().required('Fleet company is required'),
-  driver: Yup.string(),
+  fleet: Yup.string(),
   insuranceProvider: Yup.string(),
-  insuranceExpiry: Yup.string(),
   regAuthority: Yup.string(),
-  registrationExpiry: Yup.string(),
   mileage: Yup.string(),
   notes: Yup.string(),
 });
+
+const initialValues = {
+  make: '',
+  model: '',
+  year: '',
+  plate: '',
+  vin: '',
+  color: '',
+  capacity: '',
+  fleet: '',
+  insuranceProvider: '',
+  regAuthority: '',
+  mileage: '',
+  notes: '',
+};
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const EditVehicleDrawer = ({
   open,
   onClose,
-  vehicle,
+  vehicleId,
   onSave,
 }: EditVehicleDrawerProps) => {
+  // Hooks
+  const { updateVehicle } = useFleetVehiclesApi();
+  const { data: vehicleData } = useResolvedApiQuery(
+    useGetFleetVehicleById,
+    null,
+    vehicleId || ''
+  );
+
+  // State
   const [category, setCategory] = useState<VehicleCategory | ''>('');
   const [wavRamp, setWavRamp] = useState(false);
   const [stretcherMount, setStretcherMount] = useState(false);
-  const [status, setStatus] = useState<'Active' | 'Maintenance' | 'Inactive'>(
-    'Active'
-  );
   const [lastInspection, setLastInspection] = useState<Dayjs | null>(null);
-  const [insuranceFile, setInsuranceFile] = useState<File | null>(null);
-  const [registrationFile, setRegistrationFile] = useState<File | null>(null);
-  const [inspectionFile, setInspectionFile] = useState<File | null>(null);
-  const insuranceInputRef = useRef<HTMLInputElement | null>(null);
-  const registrationInputRef = useRef<HTMLInputElement | null>(null);
-  const inspectionInputRef = useRef<HTMLInputElement | null>(null);
+  const [insuranceExpiry, setInsuranceExpiry] = useState<Dayjs | null>(null);
+  const [registrationExpiry, setRegistrationExpiry] = useState<Dayjs | null>(
+    null
+  );
+  const [selectedDriver, setSelectedDriver] = useState<UserInputData | null>(
+    null
+  );
+  const [formValues, setFormValues] = useState(initialValues);
 
-  const [initialValues, setInitialValues] = useState({
-    make: '',
-    model: '',
-    year: '',
-    plate: '',
-    vin: '',
-    color: '',
-    capacity: '',
-    fleet: '',
-    driver: '',
-    insuranceProvider: '',
-    insuranceExpiry: '',
-    regAuthority: '',
-    registrationExpiry: '',
-    mileage: '',
-    notes: '',
-  });
-
-  // Auto-fill from vehicle when opened
+  // Prefill form when vehicle data loads
   useEffect(() => {
-    if (open && vehicle) {
-      const parts = vehicle.vehicle.split(' ');
-      const yearVal = parts.length >= 1 ? parts[0] : '';
-      const makeVal = parts.length >= 2 ? parts[1] : '';
-      const modelVal = parts.length >= 3 ? parts.slice(2).join(' ') : '';
-
-      setInitialValues({
-        make: makeVal,
-        model: modelVal,
-        year: yearVal,
-        plate: vehicle.plate,
-        vin: vehicle.vin,
-        color: vehicle.color || '',
-        capacity: String(vehicle.capacity),
-        fleet:
-          vehicle.fleet === 'MediGo'
-            ? 'Independent (MediGo Direct)'
-            : vehicle.fleet,
-        driver: vehicle.driver,
-        insuranceProvider: 'State Farm',
-        insuranceExpiry: vehicle.insuranceExpiry || '',
-        regAuthority: 'NY DMV',
-        registrationExpiry: vehicle.registrationExpiry || '',
-        mileage: vehicle.mileage,
-        notes: '',
+    if (vehicleData && open) {
+      setFormValues({
+        make: vehicleData.make || '',
+        model: vehicleData.model || '',
+        year: vehicleData.year?.toString() || '',
+        plate: vehicleData.plate_number || '',
+        vin: vehicleData.vin || '',
+        color: vehicleData.color || '',
+        capacity: vehicleData.passenger_capacity?.toString() || '',
+        fleet: vehicleData.fleet_name || '',
+        insuranceProvider: vehicleData.insurance_provider || '',
+        regAuthority: vehicleData.registration_authority || '',
+        mileage: vehicleData.mileage?.toString() || '',
+        notes: vehicleData.internal_notes || '',
       });
-      setCategory(vehicle.category as VehicleCategory);
-      setWavRamp(
-        vehicle.category === 'Wheelchair Accessible' ||
-          vehicle.category === 'Stretcher Transport'
+
+      setCategory((vehicleData.category as VehicleCategory) || '');
+
+      // Set special equipment
+      const equipment = vehicleData.special_equipment || [];
+      setWavRamp(equipment.includes('WAV Ramp/Lift'));
+      setStretcherMount(equipment.includes('Stretcher Mount'));
+
+      // Set dates
+      setLastInspection(
+        vehicleData.last_inspection_date
+          ? dayjs(vehicleData.last_inspection_date)
+          : null
       );
-      setStretcherMount(vehicle.category === 'Stretcher Transport');
-      setStatus(vehicle.status);
-      setLastInspection(null);
-      setInsuranceFile(null);
-      setRegistrationFile(null);
-      setInspectionFile(null);
+      setInsuranceExpiry(
+        vehicleData.insurance_expiry ? dayjs(vehicleData.insurance_expiry) : null
+      );
+      setRegistrationExpiry(
+        vehicleData.registration_expiry
+          ? dayjs(vehicleData.registration_expiry)
+          : null
+      );
+
+      // Set driver if available
+      if (vehicleData.driver_name && vehicleData.driver_profile_id) {
+        const names = vehicleData.driver_name.split(' ');
+        setSelectedDriver({
+          id: vehicleData.driver_profile_id,
+          firstName: names[0] || '',
+          lastName: names.slice(1).join(' ') || '',
+          role: 'driver',
+        });
+      } else {
+        setSelectedDriver(null);
+      }
     }
-  }, [open, vehicle]);
+  }, [vehicleData, open]);
 
   const statusOptions: ('Active' | 'Maintenance' | 'Inactive')[] = [
     'Active',
@@ -227,12 +232,53 @@ export const EditVehicleDrawer = ({
     Inactive: { color: '#6B7280', bg: '#F3F4F6', border: '#6B7280' },
   };
 
-  const handleSubmit = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    onSave();
-  };
+  const handleSubmit = async (values: typeof initialValues) => {
+    if (!vehicleId) {
+      console.log('Vehicle ID is missing');
+      return;
+    }
 
-  if (!vehicle) return null;
+    // Build special equipment array
+    const specialEquipment: string[] = [];
+    if (wavRamp) specialEquipment.push('WAV Ramp/Lift');
+    if (stretcherMount) specialEquipment.push('Stretcher Mount');
+
+    // Build payload
+    const payload = {
+      vehicleId,
+      vehicle_name: `${values.year} ${values.make} ${values.model}`.trim(),
+      make: values.make,
+      model: values.model,
+      year: values.year ? parseInt(values.year, 10) : null,
+      plate_number: values.plate,
+      color: values.color || null,
+      vin: values.vin || null,
+      category: category || null,
+      mileage: values.mileage ? parseInt(values.mileage, 10) : null,
+      insurance_expiry: insuranceExpiry
+        ? insuranceExpiry.format('YYYY-MM-DD')
+        : null,
+      registration_expiry: registrationExpiry
+        ? registrationExpiry.format('YYYY-MM-DD')
+        : null,
+      passenger_capacity: values.capacity
+        ? parseInt(values.capacity, 10)
+        : null,
+      special_equipment: specialEquipment.length > 0 ? specialEquipment : null,
+      insurance_provider: values.insuranceProvider || null,
+      registration_authority: values.regAuthority || null,
+      last_inspection_date: lastInspection
+        ? lastInspection.format('YYYY-MM-DD')
+        : null,
+      internal_notes: values.notes || null,
+    };
+
+    const success = await updateVehicle(payload);
+
+    if (success) {
+      onSave();
+    }
+  };
 
   return (
     <AppModal
@@ -242,7 +288,7 @@ export const EditVehicleDrawer = ({
       padding="0px"
     >
       <Formik
-        initialValues={initialValues}
+        initialValues={formValues}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
         enableReinitialize
@@ -279,8 +325,7 @@ export const EditVehicleDrawer = ({
                     lineHeight: '1.5em',
                   }}
                 >
-                  Update vehicle information, fleet assignment, and registration
-                  documents.
+                  Update vehicle information and settings.
                 </Typography>
               </Stack>
               <IconButton
@@ -543,16 +588,22 @@ export const EditVehicleDrawer = ({
                 >
                   <AppSelect
                     name="fleet"
-                    label="Fleet Company*"
+                    label="Fleet Company"
                     options={fleetOptions}
                     placeholder="Select fleet"
                   />
-                  <AppSelect
-                    name="driver"
-                    label="Assigned Driver"
-                    options={driverOptions}
-                    placeholder="Select driver"
-                  />
+                  <FormField label="Assigned Driver">
+                    <UserDropdownMenuInput
+                      type="driver"
+                      handleUserSelected={(user) => setSelectedDriver(user)}
+                      selectedUserId={selectedDriver?.id}
+                      selectedUserName={
+                        selectedDriver
+                          ? `${selectedDriver.firstName} ${selectedDriver.lastName}`
+                          : undefined
+                      }
+                    />
+                  </FormField>
                 </Box>
                 <RowStack
                   spacing={'8px'}
@@ -575,10 +626,11 @@ export const EditVehicleDrawer = ({
                       color: '#0C4A6E',
                     }}
                   >
-                    Registered under {values.fleet || 'MediGo'} · assigned to{' '}
-                    {values.driver && values.driver !== 'Unassigned'
-                      ? `${values.driver}`
-                      : 'no driver'}
+                    This vehicle is registered under{' '}
+                    {values.fleet || 'MediGo'} with{' '}
+                    {selectedDriver
+                      ? `${selectedDriver.firstName} ${selectedDriver.lastName} assigned`
+                      : 'no driver assigned yet'}
                     .
                   </Typography>
                 </RowStack>
@@ -609,10 +661,26 @@ export const EditVehicleDrawer = ({
                     />
                   </FormField>
                   <FormField label="Insurance Expiry">
-                    <FormikAppTextField
-                      name="insuranceExpiry"
-                      placeholder="e.g. April 2026"
-                      borderRadius="10px"
+                    <AppDatePickerPopover
+                      value={insuranceExpiry}
+                      onChange={setInsuranceExpiry}
+                      minDate={dayjs()}
+                      format="MMM DD, YYYY"
+                      buttonSx={{
+                        height: 39,
+                        borderRadius: '10px',
+                        background: '#F7F9FB',
+                        border: '0.67px solid #E8ECF0',
+                        boxShadow: 'none',
+                        justifyContent: 'flex-start',
+                      }}
+                      textSx={{
+                        fontWeight: insuranceExpiry ? 500 : 400,
+                        fontSize: pxToRem(13),
+                        color: insuranceExpiry
+                          ? '#111827'
+                          : 'rgba(55, 65, 81, 0.5)',
+                      }}
                     />
                   </FormField>
                 </Box>
@@ -631,10 +699,26 @@ export const EditVehicleDrawer = ({
                     />
                   </FormField>
                   <FormField label="Registration Expiry">
-                    <FormikAppTextField
-                      name="registrationExpiry"
-                      placeholder="e.g. April 2026"
-                      borderRadius="10px"
+                    <AppDatePickerPopover
+                      value={registrationExpiry}
+                      onChange={setRegistrationExpiry}
+                      minDate={dayjs()}
+                      format="MMM DD, YYYY"
+                      buttonSx={{
+                        height: 39,
+                        borderRadius: '10px',
+                        background: '#F7F9FB',
+                        border: '0.67px solid #E8ECF0',
+                        boxShadow: 'none',
+                        justifyContent: 'flex-start',
+                      }}
+                      textSx={{
+                        fontWeight: registrationExpiry ? 500 : 400,
+                        fontSize: pxToRem(13),
+                        color: registrationExpiry
+                          ? '#111827'
+                          : 'rgba(55, 65, 81, 0.5)',
+                      }}
                     />
                   </FormField>
                 </Box>
@@ -661,91 +745,16 @@ export const EditVehicleDrawer = ({
                     }}
                   />
                 </FormField>
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr 1fr',
-                    gap: '12px',
-                  }}
-                >
-                  <FileUploadZone
-                    label="Insurance Certificate"
-                    file={insuranceFile}
-                    inputRef={insuranceInputRef}
-                    onFileChange={setInsuranceFile}
-                  />
-                  <FileUploadZone
-                    label="Registration Document"
-                    file={registrationFile}
-                    inputRef={registrationInputRef}
-                    onFileChange={setRegistrationFile}
-                  />
-                  <FileUploadZone
-                    label="Inspection Report"
-                    file={inspectionFile}
-                    inputRef={inspectionInputRef}
-                    onFileChange={setInspectionFile}
-                  />
-                </Box>
               </SectionCard>
 
-              {/* Section 5: Status & Operational Info */}
+              {/* Section 5: Operational Info */}
               <SectionCard
                 icon={
                   <TuneOutlinedIcon sx={{ fontSize: 16, color: '#EF4444' }} />
                 }
                 iconBg="#FEF2F2"
-                title="Status & Operational Info"
+                title="Operational Info"
               >
-                <Stack spacing={'6px'}>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 600,
-                      fontSize: pxToRem(12),
-                      color: '#374151',
-                    }}
-                  >
-                    Vehicle Status
-                  </Typography>
-                  <RowStack spacing={'8px'}>
-                    {statusOptions.map((opt) => {
-                      const isActive = status === opt;
-                      const config = statusColors[opt];
-                      return (
-                        <Box
-                          key={opt}
-                          onClick={() => setStatus(opt)}
-                          sx={{
-                            flex: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: 36,
-                            background: isActive ? config.bg : '#FFFFFF',
-                            border: `0.67px solid ${isActive ? config.border : '#E8ECF0'}`,
-                            borderRadius: '9px',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease',
-                            '&:hover': { opacity: 0.85 },
-                          }}
-                        >
-                          <Typography
-                            sx={{
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              fontWeight: 600,
-                              fontSize: pxToRem(12.5),
-                              color: isActive ? config.color : '#6B7280',
-                            }}
-                          >
-                            {opt}
-                          </Typography>
-                        </Box>
-                      );
-                    })}
-                  </RowStack>
-                </Stack>
                 <FormField label="Current Mileage">
                   <FormikAppTextField
                     name="mileage"
@@ -810,7 +819,7 @@ export const EditVehicleDrawer = ({
                 <AppButton
                   type="submit"
                   isLoading={isSubmitting}
-                  disabled={!isValid}
+                  disabled={!isValid || !dirty}
                   startIcon={
                     !isSubmitting ? (
                       <SaveOutlinedIcon
@@ -821,7 +830,8 @@ export const EditVehicleDrawer = ({
                   sx={{
                     height: 40,
                     padding: '0 20px',
-                    background: isValid ? '#2F6FED' : 'rgba(47, 111, 237, 0.5)',
+                    background:
+                      isValid && dirty ? '#2F6FED' : 'rgba(47, 111, 237, 0.5)',
                     borderRadius: '10px',
                     textTransform: 'none',
                     fontFamily: (theme) => theme.typography.fontFamily,
@@ -1012,112 +1022,3 @@ const ChipCheckbox = ({
     </Typography>
   </RowStack>
 );
-
-const FileUploadZone = ({
-  label,
-  file,
-  inputRef,
-  onFileChange,
-}: {
-  label: string;
-  file: File | null;
-  inputRef: React.RefObject<HTMLInputElement | null>;
-  onFileChange: (file: File | null) => void;
-}) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f) onFileChange(f);
-    e.target.value = '';
-  };
-
-  return (
-    <Stack spacing={'6px'}>
-      <Typography
-        sx={{
-          fontFamily: (theme) => theme.typography.fontFamily,
-          fontWeight: 700,
-          fontSize: pxToRem(12),
-          color: '#374151',
-        }}
-      >
-        {label}
-      </Typography>
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".pdf,image/*"
-        hidden
-        onChange={handleChange}
-      />
-      <Box
-        onClick={() => inputRef.current?.click()}
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '4px',
-          padding: '16px 12px',
-          background: file ? '#EEF3FF' : '#FAFBFC',
-          border: `1px dashed ${file ? '#2F6FED' : '#D1D5DB'}`,
-          borderRadius: '10px',
-          cursor: 'pointer',
-          transition: 'all 0.15s ease',
-          '&:hover': {
-            borderColor: '#2F6FED',
-            background: file ? '#EEF3FF' : '#F0F4F8',
-          },
-        }}
-      >
-        {file ? (
-          <>
-            <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 600,
-                fontSize: pxToRem(11.5),
-                color: '#2F6FED',
-                textAlign: 'center',
-              }}
-            >
-              File selected
-            </Typography>
-            <RowStack spacing={'4px'}>
-              <AttachFileIcon sx={{ fontSize: 11, color: '#6B7280' }} />
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(10.5),
-                  color: '#6B7280',
-                  maxWidth: '120px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {file.name}
-              </Typography>
-            </RowStack>
-          </>
-        ) : (
-          <>
-            <CloudUploadOutlinedIcon sx={{ fontSize: 20, color: '#9CA3AF' }} />
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 600,
-                fontSize: pxToRem(11.5),
-                color: '#374151',
-                textAlign: 'center',
-              }}
-            >
-              Upload PDF or image
-            </Typography>
-          </>
-        )}
-      </Box>
-    </Stack>
-  );
-};

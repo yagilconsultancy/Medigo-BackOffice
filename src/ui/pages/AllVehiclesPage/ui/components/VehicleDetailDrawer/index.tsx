@@ -14,8 +14,13 @@ import EventOutlinedIcon from '@mui/icons-material/EventOutlined';
 import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { AppModal, RowStack } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import {
+  pxToRem,
+  useResolvedApiQuery,
+  useGetFleetVehicleById,
+} from '../../../../../../common';
 import type { VehicleRow } from '../../..';
+import { useMemo } from 'react';
 
 // ─── Status Config ──────────────────────────────────────────────────────────
 
@@ -32,7 +37,7 @@ const statusConfig: Record<VehicleStatus, { color: string; bg: string }> = {
 type VehicleDetailDrawerProps = {
   open: boolean;
   onClose: () => void;
-  vehicle: VehicleRow | null;
+  vehicleId: string | null;
   onEditVehicle: () => void;
   onScheduleService: () => void;
 };
@@ -40,10 +45,58 @@ type VehicleDetailDrawerProps = {
 export const VehicleDetailDrawer = ({
   open,
   onClose,
-  vehicle,
+  vehicleId,
   onEditVehicle,
   onScheduleService,
 }: VehicleDetailDrawerProps) => {
+  // Fetch vehicle details from API
+  const { data: vehicleDetailResponse } = useResolvedApiQuery(
+    useGetFleetVehicleById,
+    null,
+    vehicleId
+  );
+
+  // Map API response to UI format
+  const vehicle = useMemo((): VehicleRow | null => {
+    if (!vehicleDetailResponse) return null;
+
+    const v = vehicleDetailResponse;
+    const getDocValidity = (
+      expiryDate?: string | null
+    ): 'Valid' | 'Expiring' | 'Expired' => {
+      if (!expiryDate) return 'Valid';
+      const expiry = new Date(expiryDate);
+      const now = new Date();
+      const daysUntilExpiry = Math.ceil(
+        (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      if (daysUntilExpiry < 0) return 'Expired';
+      if (daysUntilExpiry <= 30) return 'Expiring';
+      return 'Valid';
+    };
+
+    return {
+      id: v.id,
+      vehicleId: v.id.substring(0, 8).toUpperCase(),
+      vehicle: v.vehicle_name || `${v.year} ${v.make} ${v.model}`,
+      plate: v.plate_number,
+      category: v.category as VehicleRow['category'],
+      fleet: v.fleet_name || 'Unknown Fleet',
+      driver: v.driver_name || 'Unassigned',
+      status: v.status as VehicleStatus,
+      insurance: getDocValidity(v.insurance_expiry),
+      registration: getDocValidity(v.registration_expiry),
+      mileage: v.mileage ? `${v.mileage.toLocaleString()} mi` : 'N/A',
+      vin: v.vin || 'N/A',
+      capacity: v.passenger_capacity || 0,
+      lastService: v.last_inspection_date || 'N/A',
+      nextService: 'N/A', // TODO: Calculate from maintenance_logs
+      color: v.color || 'Unknown',
+      insuranceExpiry: v.insurance_expiry || undefined,
+      registrationExpiry: v.registration_expiry || undefined,
+    };
+  }, [vehicleDetailResponse]);
+
   if (!vehicle) return null;
 
   const currentStatus = statusConfig[vehicle.status];

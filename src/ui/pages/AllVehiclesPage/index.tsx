@@ -27,6 +27,7 @@ import {
   RowStack,
   AppButton,
 } from '../../modules/components';
+import { EmptyState } from '../../modules/blocks';
 import { GridColSpec } from '../../modules/components/GridTable';
 import {
   VehicleDetailDrawer,
@@ -34,7 +35,12 @@ import {
   AddVehicleDrawer,
   ScheduleServiceModal,
 } from './ui/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useResolvedApiQuery,
+  useGetFleetVehicleKpi,
+  useGetFleetVehicles,
+} from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -98,216 +104,17 @@ const categoryFilters: string[] = [
   'Stretcher Transport',
 ];
 
-// ─── Sample Data (from Figma) ───────────────────────────────────────────────
-
-const vehiclesData: VehicleRow[] = [
-  {
-    id: '1',
-    vehicleId: 'VH-001',
-    vehicle: '2022 Toyota Sienna',
-    plate: 'ABC-1234',
-    category: 'Wheelchair Accessible',
-    fleet: 'MediGo',
-    driver: 'Marcus Johnson',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '48,200 mi',
-    vin: '4T1BF1FK5CU521001',
-    capacity: 4,
-    lastService: 'Feb 10, 2026',
-    nextService: 'May 10, 2026',
-    color: 'White',
-    insuranceExpiry: 'Dec 15, 2026',
-    registrationExpiry: 'Aug 20, 2026',
-  },
-  {
-    id: '2',
-    vehicleId: 'VH-002',
-    vehicle: '2021 Honda Odyssey',
-    plate: 'DEF-5678',
-    category: 'Standard Ride',
-    fleet: 'MedRide Express',
-    driver: 'Sarah Williams',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '62,400 mi',
-    vin: '5FNRL6H74MB049002',
-    capacity: 6,
-    lastService: 'Jan 22, 2026',
-    nextService: 'Apr 22, 2026',
-    color: 'Silver',
-    insuranceExpiry: 'Nov 30, 2026',
-    registrationExpiry: 'Jul 15, 2026',
-  },
-  {
-    id: '3',
-    vehicleId: 'VH-003',
-    vehicle: '2023 Ford Escape',
-    plate: 'GHI-9012',
-    category: 'Assisted Ride',
-    fleet: 'MediGo',
-    driver: 'David Chen',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '21,800 mi',
-    vin: '1FMCU9J94NUA03003',
-    capacity: 4,
-    lastService: 'Mar 1, 2026',
-    nextService: 'Jun 1, 2026',
-    color: 'Blue',
-    insuranceExpiry: 'Jan 20, 2027',
-    registrationExpiry: 'Sep 10, 2026',
-  },
-  {
-    id: '4',
-    vehicleId: 'VH-004',
-    vehicle: '2020 Chrysler Pacifica',
-    plate: 'JKL-3456',
-    category: 'Wheelchair Accessible',
-    fleet: 'CareTransit Co.',
-    driver: 'Emily Rodriguez',
-    status: 'Maintenance',
-    insurance: 'Valid',
-    registration: 'Expiring',
-    mileage: '89,100 mi',
-    vin: '2C4RC1BG5LR104004',
-    capacity: 5,
-    lastService: 'Feb 28, 2026',
-    nextService: 'Mar 28, 2026',
-    color: 'Black',
-    insuranceExpiry: 'Oct 5, 2026',
-    registrationExpiry: 'Apr 2, 2026',
-  },
-  {
-    id: '5',
-    vehicleId: 'VH-005',
-    vehicle: '2021 Dodge Grand Caravan',
-    plate: 'MNO-7890',
-    category: 'Standard Ride',
-    fleet: 'HealthHaul LLC',
-    driver: 'James Thompson',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '54,600 mi',
-    vin: '2C4RDGCG1LR105005',
-    capacity: 6,
-    lastService: 'Jan 15, 2026',
-    nextService: 'Apr 15, 2026',
-    color: 'Gray',
-    insuranceExpiry: 'Dec 1, 2026',
-    registrationExpiry: 'Aug 30, 2026',
-  },
-  {
-    id: '6',
-    vehicleId: 'VH-006',
-    vehicle: '2022 Ram ProMaster',
-    plate: 'PQR-1234',
-    category: 'Stretcher Transport',
-    fleet: 'MediGo',
-    driver: 'Anna Kim',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '31,900 mi',
-    vin: '3C6TRVDG5NE106006',
-    capacity: 2,
-    lastService: 'Feb 20, 2026',
-    nextService: 'May 20, 2026',
-    color: 'White',
-    insuranceExpiry: 'Nov 15, 2026',
-    registrationExpiry: 'Jul 25, 2026',
-  },
-  {
-    id: '7',
-    vehicleId: 'VH-007',
-    vehicle: '2020 Kia Sedona',
-    plate: 'STU-5678',
-    category: 'Standard Ride',
-    fleet: 'SafeRide Medical',
-    driver: 'Tom Roberts',
-    status: 'Inactive',
-    insurance: 'Expired',
-    registration: 'Valid',
-    mileage: '74,200 mi',
-    vin: 'KNDMC5C16L6107007',
-    capacity: 6,
-    lastService: 'Dec 5, 2025',
-    nextService: 'Overdue',
-    color: 'Red',
-    insuranceExpiry: 'Expired',
-    registrationExpiry: 'Jun 10, 2026',
-  },
-  {
-    id: '8',
-    vehicleId: 'VH-008',
-    vehicle: '2021 Buick Enclave',
-    plate: 'VWX-9012',
-    category: 'Assisted Ride',
-    fleet: 'MobCare Transport',
-    driver: 'Grace Miller',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '42,700 mi',
-    vin: '5GAEVCKW1MJ108008',
-    capacity: 4,
-    lastService: 'Feb 15, 2026',
-    nextService: 'May 15, 2026',
-    color: 'Champagne',
-    insuranceExpiry: 'Jan 10, 2027',
-    registrationExpiry: 'Sep 5, 2026',
-  },
-  {
-    id: '9',
-    vehicleId: 'VH-009',
-    vehicle: '2023 Ford Transit',
-    plate: 'YZA-3456',
-    category: 'Stretcher Transport',
-    fleet: 'MediGo',
-    driver: 'Unassigned',
-    status: 'Active',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '12,400 mi',
-    vin: '1FTBW2CM3NKA09009',
-    capacity: 2,
-    lastService: 'Mar 5, 2026',
-    nextService: 'Jun 5, 2026',
-    color: 'White',
-    insuranceExpiry: 'Feb 28, 2027',
-    registrationExpiry: 'Oct 15, 2026',
-  },
-  {
-    id: '10',
-    vehicleId: 'VH-010',
-    vehicle: '2022 Toyota Camry',
-    plate: 'BCD-7890',
-    category: 'Standard Ride',
-    fleet: 'Apex Medical Rides',
-    driver: 'Leon Price',
-    status: 'Maintenance',
-    insurance: 'Valid',
-    registration: 'Valid',
-    mileage: '58,300 mi',
-    vin: '4T1BF1FK5CU510010',
-    capacity: 4,
-    lastService: 'Mar 10, 2026',
-    nextService: 'Mar 25, 2026',
-    color: 'Dark Gray',
-    insuranceExpiry: 'Nov 20, 2026',
-    registrationExpiry: 'Aug 1, 2026',
-  },
-];
-
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const AllVehiclesPage = () => {
+  // State
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState('All');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
+    null
+  );
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleRow | null>(
     null
   );
@@ -318,38 +125,78 @@ export const AllVehiclesPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
+  // Fetch data from API
+  const { data: kpiData } = useResolvedApiQuery(useGetFleetVehicleKpi, null);
+
+  const { data: vehiclesResponse } = useResolvedApiQuery(
+    useGetFleetVehicles,
+    null,
+    {
+      page,
+      limit: pageSize,
+      category: activeCategoryFilter !== 'All' ? activeCategoryFilter : '',
+      search: searchQuery.trim() || '',
+    }
+  );
+
+  // Map API response to UI format
+  const vehiclesData = useMemo(() => {
+    return (
+      vehiclesResponse?.map((vehicle): VehicleRow => {
+        // Helper to determine document validity
+        const getDocValidity = (expiryDate?: string | null): DocValidity => {
+          if (!expiryDate) return 'Valid';
+          const expiry = new Date(expiryDate);
+          const now = new Date();
+          const daysUntilExpiry = Math.ceil(
+            (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (daysUntilExpiry < 0) return 'Expired';
+          if (daysUntilExpiry <= 30) return 'Expiring';
+          return 'Valid';
+        };
+
+        return {
+          id: vehicle.id,
+          vehicleId: vehicle.id.substring(0, 8).toUpperCase(),
+          vehicle:
+            vehicle.vehicle_name ||
+            `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+          plate: vehicle.plate_number,
+          category: vehicle.category as VehicleCategory,
+          fleet: vehicle.fleet_name || 'Unknown Fleet',
+          driver: vehicle.driver_name || 'Unassigned',
+          status: vehicle.status as VehicleStatus,
+          insurance: getDocValidity(vehicle.insurance_expiry),
+          registration: getDocValidity(vehicle.registration_expiry),
+          mileage: vehicle.mileage
+            ? `${vehicle.mileage.toLocaleString()} mi`
+            : 'N/A',
+          vin: vehicle.vin || 'N/A',
+          capacity: vehicle.passenger_capacity || 0,
+          lastService: vehicle.last_inspection_date || 'N/A',
+          nextService: 'N/A', // TODO: Calculate from maintenance schedule
+          color: vehicle.color || 'Unknown',
+          insuranceExpiry: vehicle.insurance_expiry || undefined,
+          registrationExpiry: vehicle.registration_expiry || undefined,
+        };
+      }) || []
+    );
+  }, [vehiclesResponse]);
+
   const filteredVehicles = useMemo(() => {
-    let filtered = vehiclesData;
-
-    if (activeCategoryFilter !== 'All') {
-      filtered = filtered.filter((v) => v.category === activeCategoryFilter);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (v) =>
-          v.vehicleId.toLowerCase().includes(query) ||
-          v.vehicle.toLowerCase().includes(query) ||
-          v.plate.toLowerCase().includes(query) ||
-          v.fleet.toLowerCase().includes(query) ||
-          v.driver.toLowerCase().includes(query) ||
-          v.category.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [searchQuery, activeCategoryFilter]);
+    // Filtering is handled by API params, return mapped data
+    return vehiclesData;
+  }, [vehiclesData]);
 
   const statusCounts = useMemo(() => {
     return {
-      total: vehiclesData.length,
-      active: vehiclesData.filter((v) => v.status === 'Active').length,
-      maintenance: vehiclesData.filter((v) => v.status === 'Maintenance')
-        .length,
-      inactive: vehiclesData.filter((v) => v.status === 'Inactive').length,
+      total: kpiData?.total_vehicles || 0,
+      active: kpiData?.active || 0,
+      maintenance: kpiData?.maintenance || 0,
+      inactive: kpiData?.inactive || 0,
     };
-  }, []);
+  }, [kpiData]);
 
   const statCards = [
     {
@@ -388,6 +235,7 @@ export const AllVehiclesPage = () => {
 
   const handleRowClick = useCallback((row: VehicleRow) => {
     setSelectedVehicle(row);
+    setSelectedVehicleId(row.vehicleId);
     setDetailDrawerOpen(true);
   }, []);
 
@@ -784,64 +632,68 @@ export const AllVehiclesPage = () => {
           ))}
         </RowStack>
 
-        {/* Table */}
-        <AppGridtable
-          columns={columns}
-          data={filteredVehicles}
-          initialPageSize={10}
-          onRowClick={(row) => handleRowClick(row)}
-          sx={{
-            height: 'auto',
-            width: '100%',
-          }}
-        >
-          <RowStack justifyContent={'space-between'} width={'100%'}>
-            <RowStack spacing={'8px'}>
-              <DirectionsCarOutlinedIcon
-                sx={{
-                  fontSize: 20,
-                  color: (theme) => theme.palette.primary.main,
+        {/* Table or Empty State */}
+        {filteredVehicles.length === 0 ? (
+          <EmptyState animationSrc="/empty.json" />
+        ) : (
+          <AppGridtable
+            columns={columns}
+            data={filteredVehicles}
+            initialPageSize={10}
+            onRowClick={(row) => handleRowClick(row)}
+            sx={{
+              height: 'auto',
+              width: '100%',
+            }}
+          >
+            <RowStack justifyContent={'space-between'} width={'100%'}>
+              <RowStack spacing={'8px'}>
+                <DirectionsCarOutlinedIcon
+                  sx={{
+                    fontSize: 20,
+                    color: (theme) => theme.palette.primary.main,
+                  }}
+                />
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(16),
+                    color: '#111827',
+                  }}
+                >
+                  Vehicle Fleet
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 400,
+                    fontSize: pxToRem(13),
+                    color: '#9CA3AF',
+                  }}
+                >
+                  {filteredVehicles.length} vehicles
+                </Typography>
+              </RowStack>
+              <AppSearchField
+                name="search"
+                placeholder="Search vehicles..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                boxProps={{
+                  sx: { width: '240px' },
                 }}
               />
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(16),
-                  color: '#111827',
-                }}
-              >
-                Vehicle Fleet
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(13),
-                  color: '#9CA3AF',
-                }}
-              >
-                {filteredVehicles.length} vehicles
-              </Typography>
             </RowStack>
-            <AppSearchField
-              name="search"
-              placeholder="Search vehicles..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              boxProps={{
-                sx: { width: '240px' },
-              }}
-            />
-          </RowStack>
-        </AppGridtable>
+          </AppGridtable>
+        )}
       </Stack>
 
       {/* Vehicle Detail Drawer */}
       <VehicleDetailDrawer
         open={detailDrawerOpen}
         onClose={() => setDetailDrawerOpen(false)}
-        vehicle={selectedVehicle}
+        vehicleId={selectedVehicleId}
         onEditVehicle={handleEditVehicle}
         onScheduleService={handleScheduleService}
       />
@@ -857,7 +709,7 @@ export const AllVehiclesPage = () => {
       <EditVehicleDrawer
         open={editDrawerOpen}
         onClose={() => setEditDrawerOpen(false)}
-        vehicle={selectedVehicle}
+        vehicleId={selectedVehicleId}
         onSave={handleSaveVehicle}
       />
 
