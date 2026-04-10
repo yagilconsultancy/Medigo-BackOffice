@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { Formik, Form, FormikHelpers } from 'formik';
 import { Box, Grid, Stack, Typography } from '@mui/material';
 import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
-import SpeedOutlinedIcon from '@mui/icons-material/SpeedOutlined';
 import BoltOutlinedIcon from '@mui/icons-material/BoltOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import StraightenOutlinedIcon from '@mui/icons-material/StraightenOutlined';
@@ -19,17 +19,17 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetConfigKpis,
+  useGetCurrentConfig,
+  useResolvedApiQuery,
+  usePaymentPricingApi,
+  CreateRateCardRequest,
+} from '../../../common';
 import { ReactNode } from 'react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
-
-type StatCard = {
-  icon: ReactNode;
-  iconBg: string;
-  value: string;
-  label: string;
-};
 
 type FareRule = {
   id: string;
@@ -43,34 +43,16 @@ type FareRule = {
   max?: number;
 };
 
-// ─── Stat Cards Config ──────────────────────────────────────────────────────
-
-const statCards: StatCard[] = [
-  {
-    icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-    value: '$34.20',
-    label: 'Avg Trip Fare',
-  },
-  {
-    icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />,
-    iconBg: '#ECFDF5',
-    value: '$8.00',
-    label: 'Base Fare (Global)',
-  },
-  {
-    icon: <BoltOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
-    iconBg: '#FFFBEB',
-    value: '1.5×',
-    label: 'Surge Multiplier',
-  },
-  {
-    icon: <BlockOutlinedIcon sx={{ fontSize: 20, color: '#EF4444' }} />,
-    iconBg: '#FEF2F2',
-    value: '$5.00',
-    label: 'Cancellation Fee',
-  },
-];
+type PricingFormValues = {
+  base_fare: number;
+  distance_rate: number;
+  time_rate: number;
+  surge_multiplier: number;
+  surge_threshold: number;
+  cancellation_fee: number;
+  no_show_fee: number;
+  minimum_fare: number;
+};
 
 // ─── Fare Rules Config ──────────────────────────────────────────────────────
 
@@ -162,108 +144,214 @@ const fareRulesConfig: FareRule[] = [
   },
 ];
 
-const defaultValues: Record<string, number> = {
-  base_fare: 8.0,
-  distance_rate: 1.8,
-  time_rate: 0.18,
-  surge_multiplier: 1.5,
-  surge_threshold: 85,
-  cancellation_fee: 5.0,
-  no_show_fee: 8.0,
-  minimum_fare: 12.0,
-};
-
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const PricingConfigurationPage = () => {
-  const [fareValues, setFareValues] =
-    useState<Record<string, number>>(defaultValues);
+  const { saveConfiguration } = usePaymentPricingApi();
+  const { data: kpisData } = useResolvedApiQuery(useGetConfigKpis, null);
+  const { data: configData } = useResolvedApiQuery(
+    useGetCurrentConfig,
+    null
+  );
 
-  const handleValueChange = (id: string, value: number) => {
-    setFareValues((prev) => ({ ...prev, [id]: value }));
+  const initialValues: PricingFormValues = useMemo(() => {
+    const config = configData?.config;
+
+    return {
+      base_fare: config?.base_fare?.flat_rate ?? 12.0,
+      distance_rate: config?.base_fare?.per_km_beyond_threshold ?? 0.75,
+      time_rate: config?.wait_time?.per_minute_after_free ?? 0.5,
+      surge_multiplier: kpisData?.surge_multiplier ?? 1.0,
+      surge_threshold: 85,
+      cancellation_fee: kpisData?.cancellation_fee_avg ?? 0,
+      no_show_fee: 8.0,
+      minimum_fare: config?.base_fare?.flat_rate ?? 12.0,
+    };
+  }, [configData, kpisData]);
+
+  const handleSubmit = async (
+    values: PricingFormValues,
+    { setSubmitting }: FormikHelpers<PricingFormValues>
+  ) => {
+    setSubmitting(true);
+
+    // Build the payload with the nested structure expected by the API
+    // Preserve existing config values and only update the fields from the form
+    const payload: CreateRateCardRequest = {
+      name: configData?.name || 'Global Pricing Configuration',
+      config: {
+        timezone: configData?.config?.timezone || 'America/Toronto',
+        base_fare: {
+          flat_rate: values.base_fare,
+          distance_threshold_km: configData?.config?.base_fare?.distance_threshold_km || 10.0,
+          per_km_beyond_threshold: values.distance_rate,
+        },
+        fees: configData?.config?.fees || {
+          surcharge_flat_per_trip: 0.06,
+          insurance_payment_gateway_fee: 1.5,
+        },
+        wait_time: {
+          free_minutes: configData?.config?.wait_time?.free_minutes || 10,
+          per_minute_after_free: values.time_rate,
+        },
+        max_surcharge_cap: configData?.config?.max_surcharge_cap || 18.0,
+        platform_fee_percent: configData?.config?.platform_fee_percent || 0.2,
+        weather_surcharges: configData?.config?.weather_surcharges || {
+          light_snow: 3.0,
+          heavy_snow: 5.0,
+          post_storm: 3.0,
+        },
+        rush_hour_surcharges: configData?.config?.rush_hour_surcharges || [],
+        time_of_day_surcharges: configData?.config?.time_of_day_surcharges || [],
+        weekend_surcharges: configData?.config?.weekend_surcharges || {
+          saturday: 3.0,
+          sunday: 4.0,
+        },
+        holiday_surcharge: configData?.config?.holiday_surcharge || 5.0,
+        highway_407_tolls: configData?.config?.highway_407_tolls || {
+          milton_oakville: 8.0,
+          milton_brampton: 9.0,
+          milton_mississauga: 10.0,
+        },
+      },
+      notes: configData?.notes,
+    };
+
+    await saveConfiguration(payload);
+    setSubmitting(false);
+  };
+
+  const fareRulesMapping: Record<string, keyof PricingFormValues> = {
+    base_fare: 'base_fare',
+    distance_rate: 'distance_rate',
+    time_rate: 'time_rate',
+    surge_multiplier: 'surge_multiplier',
+    surge_threshold: 'surge_threshold',
+    cancellation_fee: 'cancellation_fee',
+    no_show_fee: 'no_show_fee',
+    minimum_fare: 'minimum_fare',
   };
 
   return (
     <AppDashboardLayout>
-      <Stack spacing={'24px'}>
-        {/* Header */}
-        <RowStack justifyContent="space-between">
-          <DashboardTitleAndDesc
-            title="Pricing Configuration"
-            desc="Set global fare rules, surge pricing thresholds, and fee structures"
-          />
-          <AppButton
-            variant="contained"
-            sx={{
-              background: '#2F6FED',
-              borderRadius: '14px',
-              padding: '10px 20px',
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: pxToRem(13),
-              '&:hover': { background: '#1E4FD9' },
-            }}
-          >
-            Save Changes
-          </AppButton>
-        </RowStack>
-
-        {/* Stat Cards */}
-        <Grid container spacing={'20px'}>
-          {statCards.map((card, index) => (
-            <Grid key={index} size={{ xs: 6, lg: 3 }}>
-              <Stack
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #F0F4F8',
-                  borderRadius: '16px',
-                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-                  padding: '20px',
-                  height: '100%',
-                }}
-              >
-                <Box
+      <Formik<PricingFormValues>
+        initialValues={initialValues}
+        enableReinitialize
+        onSubmit={handleSubmit}
+      >
+        {({ values, dirty, isSubmitting, setFieldValue }) => (
+          <Form>
+            <Stack spacing={'24px'}>
+              {/* Header */}
+              <RowStack justifyContent="space-between">
+                <DashboardTitleAndDesc
+                  title="Pricing Configuration"
+                  desc="Set global fare rules, surge pricing thresholds, and fee structures"
+                />
+                <AppButton
+                  type="submit"
+                  variant="contained"
+                  disabled={!dirty || isSubmitting}
+                  isLoading={isSubmitting}
                   sx={{
-                    width: 44,
-                    height: 44,
+                    background: '#2F6FED',
                     borderRadius: '14px',
-                    background: card.iconBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {card.icon}
-                </Box>
-
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 700,
-                    fontSize: pxToRem(28),
-                    lineHeight: '1em',
-                    color: '#111827',
-                    marginTop: '16px',
-                  }}
-                >
-                  {card.value}
-                </Typography>
-
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
+                    padding: '10px 20px',
+                    textTransform: 'none',
+                    fontWeight: 600,
                     fontSize: pxToRem(13),
-                    color: '#6B7280',
-                    marginTop: '12px',
+                    '&:hover': { background: '#1E4FD9' },
+                    '&.Mui-disabled': {
+                      background: '#93B4F5',
+                      color: '#FFFFFF',
+                    },
                   }}
                 >
-                  {card.label}
-                </Typography>
-              </Stack>
-            </Grid>
-          ))}
-        </Grid>
+                  Save Changes
+                </AppButton>
+              </RowStack>
+
+              {/* Stat Cards */}
+              <Grid container spacing={'20px'}>
+                {[
+                  {
+                    icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+                    iconBg: '#EBF2FF',
+                    value: kpisData?.avg_trip_fare ? `$${kpisData.avg_trip_fare.toFixed(2)}` : '$0.00',
+                    label: 'Avg Trip Fare',
+                  },
+                  {
+                    icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />,
+                    iconBg: '#ECFDF5',
+                    value: `$${values.base_fare.toFixed(2)}`,
+                    label: 'Base Fare (Global)',
+                  },
+                  {
+                    icon: <BoltOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
+                    iconBg: '#FFFBEB',
+                    value: `${values.surge_multiplier.toFixed(1)}×`,
+                    label: 'Surge Multiplier',
+                  },
+                  {
+                    icon: <BlockOutlinedIcon sx={{ fontSize: 20, color: '#EF4444' }} />,
+                    iconBg: '#FEF2F2',
+                    value: `$${values.cancellation_fee.toFixed(2)}`,
+                    label: 'Cancellation Fee',
+                  },
+                ].map((card, index) => (
+                  <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                    <Stack
+                      sx={{
+                        background: '#FFFFFF',
+                        border: '0.67px solid #F0F4F8',
+                        borderRadius: '16px',
+                        boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                        padding: '20px',
+                        height: '100%',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: '14px',
+                          background: card.iconBg,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {card.icon}
+                      </Box>
+
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 700,
+                          fontSize: pxToRem(28),
+                          lineHeight: '1em',
+                          color: '#111827',
+                          marginTop: '16px',
+                        }}
+                      >
+                        {card.value}
+                      </Typography>
+
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 400,
+                          fontSize: pxToRem(13),
+                          color: '#6B7280',
+                          marginTop: '12px',
+                        }}
+                      >
+                        {card.label}
+                      </Typography>
+                    </Stack>
+                  </Grid>
+                ))}
+              </Grid>
 
         {/* Fare & Fee Rules Card */}
         <Stack
@@ -362,8 +450,8 @@ export const PricingConfigurationPage = () => {
 
                 {/* Right: Number Field */}
                 <AppNumberField
-                  value={fareValues[rule.id]}
-                  onChange={(val) => handleValueChange(rule.id, val)}
+                  value={values[fareRulesMapping[rule.id]]}
+                  onChange={(val) => setFieldValue(fareRulesMapping[rule.id], val)}
                   unit={rule.unit}
                   step={rule.step}
                   decimalPlaces={rule.decimalPlaces}
@@ -396,7 +484,10 @@ export const PricingConfigurationPage = () => {
               ride type
             </Typography>
             <AppButton
+              type="submit"
               variant="contained"
+              disabled={!dirty || isSubmitting}
+              isLoading={isSubmitting}
               sx={{
                 background: '#2F6FED',
                 borderRadius: '14px',
@@ -405,13 +496,20 @@ export const PricingConfigurationPage = () => {
                 fontWeight: 600,
                 fontSize: pxToRem(13),
                 '&:hover': { background: '#1E4FD9' },
+                '&.Mui-disabled': {
+                  background: '#93B4F5',
+                  color: '#FFFFFF',
+                },
               }}
             >
               Save Changes
             </AppButton>
           </RowStack>
         </Stack>
-      </Stack>
+              </Stack>
+            </Form>
+          )}
+        </Formik>
     </AppDashboardLayout>
   );
 };

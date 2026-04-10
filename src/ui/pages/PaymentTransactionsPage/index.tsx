@@ -32,7 +32,14 @@ import {
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetTransactionKpis,
+  useGetPaymentMethodBreakdown,
+  useGetAllTransactions,
+  useResolvedApiQuery,
+} from '../../../common';
+import { EmptyState } from '../../modules/blocks';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -68,250 +75,6 @@ const statusConfig: Record<
   Failed: { dot: '#EF4444', bg: '#FEF2F2', color: '#EF4444' },
 };
 
-// ─── Stat Cards Config ──────────────────────────────────────────────────────
-
-const statCards = [
-  {
-    icon: <SwapHorizOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
-    value: '4,821',
-    label: 'Total Transactions',
-    subtext: 'This month',
-  },
-  {
-    icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />,
-    value: '$284,720',
-    label: 'Total Collected',
-    subtext: '+18.4% vs last month',
-  },
-  {
-    icon: <CheckCircleOutlinedIcon sx={{ fontSize: 20, color: '#059669' }} />,
-    value: '4,604',
-    label: 'Settled',
-    subtext: '95.5% success rate',
-  },
-  {
-    icon: <WarningAmberOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />,
-    value: '217',
-    label: 'Pending',
-    subtext: 'Awaiting settlement',
-  },
-];
-
-// ─── Payment Method Breakdown Config ────────────────────────────────────────
-
-const paymentMethods = [
-  {
-    label: 'Medicare',
-    color: '#2F6FED',
-    amount: '$74,892',
-    detail: '1284 rides · 26%',
-    progress: 26,
-  },
-  {
-    label: 'Medicaid',
-    color: '#6366F1',
-    amount: '$48,240',
-    detail: '968 rides · 17%',
-    progress: 17,
-  },
-  {
-    label: 'Private Insurance',
-    color: '#10B981',
-    amount: '$86,256',
-    detail: '1441 rides · 30%',
-    progress: 30,
-  },
-  {
-    label: 'Credit / Debit Card',
-    color: '#F59E0B',
-    amount: '$57,736',
-    detail: '820 rides · 20%',
-    progress: 20,
-  },
-  {
-    label: 'Direct Pay',
-    color: '#EC4899',
-    amount: '$17,596',
-    detail: '308 rides · 7%',
-    progress: 7,
-  },
-];
-
-// ─── Mock Data ──────────────────────────────────────────────────────────────
-
-const transactionsData: Transaction[] = [
-  {
-    id: '1',
-    txnId: 'TXN-88401',
-    bookingRef: 'BK-20501',
-    rider: 'Patricia Clark',
-    driver: 'Marcus Johnson',
-    rideType: 'Standard Medical',
-    amount: '$43.50',
-    paymentMethod: 'Visa ••4521',
-    date: 'Mar 9, 2026',
-    time: '09:14 AM',
-    status: 'Settled',
-    distance: '3.2 mi',
-    duration: '14 min',
-    pickup: '145 W 53rd St, NYC',
-    dropoff: 'NewYork-Presbyterian Hospital',
-  },
-  {
-    id: '2',
-    txnId: 'TXN-88400',
-    bookingRef: 'BK-20500',
-    rider: 'Helen Moore',
-    driver: 'Sarah Williams',
-    rideType: 'Wheelchair Accessible',
-    amount: '$62.00',
-    paymentMethod: 'Mastercard ••8832',
-    date: 'Mar 9, 2026',
-    time: '08:47 AM',
-    status: 'Settled',
-    distance: '5.1 mi',
-    duration: '22 min',
-    pickup: '820 Park Ave, NYC',
-    dropoff: 'Mount Sinai Hospital',
-  },
-  {
-    id: '3',
-    txnId: 'TXN-88399',
-    bookingRef: 'BK-20499',
-    rider: 'Daniel Martinez',
-    driver: 'David Chen',
-    rideType: 'Assisted Ride',
-    amount: '$38.75',
-    paymentMethod: 'Medicaid',
-    date: 'Mar 9, 2026',
-    time: '08:22 AM',
-    status: 'Pending',
-    distance: '2.8 mi',
-    duration: '19 min',
-    pickup: '402 E 10th St, NYC',
-    dropoff: 'Bellevue Hospital Center',
-  },
-  {
-    id: '4',
-    txnId: 'TXN-88398',
-    bookingRef: 'BK-20498',
-    rider: 'Nancy White',
-    driver: 'Emily Rodriguez',
-    rideType: 'Standard Medical',
-    amount: '$29.00',
-    paymentMethod: 'Medicare',
-    date: 'Mar 8, 2026',
-    time: '05:58 PM',
-    status: 'Settled',
-    distance: '1.9 mi',
-    duration: '11 min',
-    pickup: '301 E 17th St, NYC',
-    dropoff: 'Beth Israel Medical Center',
-  },
-  {
-    id: '5',
-    txnId: 'TXN-88397',
-    bookingRef: 'BK-20497',
-    rider: 'Robert Garcia',
-    driver: 'James Thompson',
-    rideType: 'Stretcher Transport',
-    amount: '$91.25',
-    paymentMethod: 'Aetna Direct',
-    date: 'Mar 8, 2026',
-    time: '04:30 PM',
-    status: 'Settled',
-    distance: '7.4 mi',
-    duration: '35 min',
-    pickup: '525 E 68th St, NYC',
-    dropoff: 'Weill Cornell Medical Center',
-  },
-  {
-    id: '6',
-    txnId: 'TXN-88396',
-    bookingRef: 'BK-20496',
-    rider: 'George Lewis',
-    driver: 'Anna Kim',
-    rideType: 'Standard Medical',
-    amount: '$47.00',
-    paymentMethod: 'Visa ••7744',
-    date: 'Mar 8, 2026',
-    time: '02:12 PM',
-    status: 'Settled',
-    distance: '4.2 mi',
-    duration: '18 min',
-    pickup: '1275 York Ave, NYC',
-    dropoff: 'Memorial Sloan Kettering',
-  },
-  {
-    id: '7',
-    txnId: 'TXN-88395',
-    bookingRef: 'BK-20495',
-    rider: 'Lisa Anderson',
-    driver: 'Tom Roberts',
-    rideType: 'Wheelchair Accessible',
-    amount: '$78.50',
-    paymentMethod: 'BlueCare',
-    date: 'Mar 8, 2026',
-    time: '11:05 AM',
-    status: 'Settled',
-    distance: '6.1 mi',
-    duration: '28 min',
-    pickup: '462 1st Ave, NYC',
-    dropoff: 'NYU Langone Health',
-  },
-  {
-    id: '8',
-    txnId: 'TXN-88394',
-    bookingRef: 'BK-20494',
-    rider: 'Dorothy Harris',
-    driver: 'Kevin Park',
-    rideType: 'Assisted Ride',
-    amount: '$32.00',
-    paymentMethod: 'Medicaid',
-    date: 'Mar 8, 2026',
-    time: '09:30 AM',
-    status: 'Pending',
-    distance: '2.3 mi',
-    duration: '15 min',
-    pickup: '177 Fort Washington Ave, NYC',
-    dropoff: 'Columbia Presbyterian',
-  },
-  {
-    id: '9',
-    txnId: 'TXN-88393',
-    bookingRef: 'BK-20493',
-    rider: 'James Wilson',
-    driver: 'Sofia Reyes',
-    rideType: 'Standard Medical',
-    amount: '$52.75',
-    paymentMethod: 'Cigna Direct',
-    date: 'Mar 7, 2026',
-    time: '03:45 PM',
-    status: 'Settled',
-    distance: '4.8 mi',
-    duration: '20 min',
-    pickup: '560 1st Ave, NYC',
-    dropoff: 'VA Medical Center',
-  },
-  {
-    id: '10',
-    txnId: 'TXN-88392',
-    bookingRef: 'BK-20492',
-    rider: 'Barbara Martin',
-    driver: 'Marcus Johnson',
-    rideType: 'Standard Medical',
-    amount: '$26.50',
-    paymentMethod: 'UnitedHealth',
-    date: 'Mar 7, 2026',
-    time: '01:20 PM',
-    status: 'Settled',
-    distance: '1.5 mi',
-    duration: '9 min',
-    pickup: '550 1st Ave, NYC',
-    dropoff: 'Bellevue Hospital Center',
-  },
-];
-
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const PaymentTransactionsPage = () => {
@@ -319,44 +82,132 @@ export const PaymentTransactionsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTxn, setSelectedTxn] = useState<Transaction | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+
+  // API Integration
+  const { data: kpisData } = useResolvedApiQuery(useGetTransactionKpis, null);
+  const { data: paymentMethodData } = useResolvedApiQuery(
+    useGetPaymentMethodBreakdown,
+    null
+  );
+  const { data: transactionsData } = useResolvedApiQuery(
+    useGetAllTransactions,
+    null,
+    {
+      status: activeTab === 'All' ? null : activeTab,
+      search: searchQuery || null,
+      page: paginationModel.page + 1,
+      limit: paginationModel.pageSize,
+    }
+  );
+
+  // Transform API data
+  const statCards = useMemo(() => {
+    const kpis = kpisData || {};
+    return [
+      {
+        icon: <SwapHorizOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+        value: kpis.total_transactions?.toLocaleString() || '0',
+        label: 'Total Transactions',
+        subtext: 'This month',
+      },
+      {
+        icon: (
+          <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />
+        ),
+        value: `$${kpis.total_amount?.toLocaleString() || '0'}`,
+        label: 'Total Collected',
+        subtext: '+18.4% vs last month',
+      },
+      {
+        icon: (
+          <CheckCircleOutlinedIcon sx={{ fontSize: 20, color: '#059669' }} />
+        ),
+        value: kpis.completed_transactions?.toLocaleString() || '0',
+        label: 'Settled',
+        subtext: '95.5% success rate',
+      },
+      {
+        icon: (
+          <WarningAmberOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />
+        ),
+        value: kpis.pending_transactions?.toLocaleString() || '0',
+        label: 'Pending',
+        subtext: 'Awaiting settlement',
+      },
+    ];
+  }, [kpisData]);
+
+  const paymentMethods = useMemo(() => {
+    const methods = paymentMethodData || [];
+    const methodColors: Record<
+      string,
+      { color: string; label?: string }
+    > = {
+      medicare: { color: '#2F6FED', label: 'Medicare' },
+      medicaid: { color: '#6366F1', label: 'Medicaid' },
+      private_insurance: { color: '#10B981', label: 'Private Insurance' },
+      credit_debit: { color: '#F59E0B', label: 'Credit / Debit Card' },
+      direct_pay: { color: '#EC4899', label: 'Direct Pay' },
+    };
+
+    return methods.map((pm: any) => {
+      const colorConfig =
+        methodColors[pm.method?.toLowerCase().replace(/\s+/g, '_')] || {
+          color: '#6B7280',
+          label: pm.method,
+        };
+      return {
+        label: colorConfig.label || pm.method || 'Unknown',
+        color: colorConfig.color,
+        amount: `$${pm.total_amount?.toLocaleString() || '0'}`,
+        detail: `${pm.count || 0} rides · ${pm.percentage || 0}%`,
+        progress: pm.percentage || 0,
+      };
+    });
+  }, [paymentMethodData]);
+
+  const transactionRows = useMemo<Transaction[]>(() => {
+    const items = transactionsData?.items || [];
+    return items.map((txn: any) => ({
+      id: txn.id,
+      txnId: txn.transaction_id,
+      bookingRef: txn.booking_id || 'N/A',
+      rider: txn.metadata?.rider_name || 'Unknown',
+      driver: txn.metadata?.driver_name || 'Unknown',
+      rideType: txn.metadata?.ride_type || 'Standard Medical',
+      amount: `$${txn.amount?.toFixed(2) || '0.00'}`,
+      paymentMethod: txn.payment_method || 'N/A',
+      date: new Date(txn.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      time: new Date(txn.created_at).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      status: (txn.status?.charAt(0).toUpperCase() +
+        txn.status?.slice(1)) as TransactionStatus,
+      distance: txn.metadata?.distance || 'N/A',
+      duration: txn.metadata?.duration || 'N/A',
+      pickup: txn.metadata?.pickup_address || 'N/A',
+      dropoff: txn.metadata?.dropoff_address || 'N/A',
+    }));
+  }, [transactionsData]);
 
   const tabCounts = useMemo(() => {
-    const settled = transactionsData.filter(
-      (t) => t.status === 'Settled'
-    ).length;
-    const pending = transactionsData.filter(
-      (t) => t.status === 'Pending'
-    ).length;
-    const failed = transactionsData.filter((t) => t.status === 'Failed').length;
+    const kpis = kpisData || {};
     return {
-      All: transactionsData.length,
-      Settled: settled,
-      Pending: pending,
-      Failed: failed,
+      All: kpis.total_transactions || 0,
+      Settled: kpis.completed_transactions || 0,
+      Pending: kpis.pending_transactions || 0,
+      Failed: kpis.failed_transactions || 0,
     };
-  }, []);
-
-  const filteredTransactions = useMemo(() => {
-    let data = transactionsData;
-
-    if (activeTab !== 'All') {
-      data = data.filter((t) => t.status === activeTab);
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      data = data.filter(
-        (t) =>
-          t.txnId.toLowerCase().includes(q) ||
-          t.rider.toLowerCase().includes(q) ||
-          t.driver.toLowerCase().includes(q) ||
-          t.paymentMethod.toLowerCase().includes(q) ||
-          t.amount.toLowerCase().includes(q)
-      );
-    }
-
-    return data;
-  }, [activeTab, searchQuery]);
+  }, [kpisData]);
 
   const handleViewTransaction = (txn: Transaction) => {
     setSelectedTxn(txn);
@@ -638,88 +489,113 @@ export const PaymentTransactionsPage = () => {
             Payment Method Breakdown
           </Typography>
 
-          <Grid container spacing={'12px'}>
-            {paymentMethods.map((pm) => (
-              <Grid key={pm.label} size={{ xs: 6, md: 4, lg: 2.4 }}>
-                <Stack
-                  sx={{
-                    background: '#F7F9FB',
-                    border: '0.67px solid #F0F4F8',
-                    borderRadius: '14px',
-                    padding: '16px',
-                    gap: '12px',
-                  }}
-                >
-                  <RowStack spacing={'8px'}>
-                    <Box
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: '50%',
-                        background: pm.color,
-                        flexShrink: 0,
-                      }}
-                    />
+          {paymentMethods.length === 0 ? (
+            <Stack
+              sx={{
+                height: '200px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <EmptyState emptyState="No Payment Methods" />
+            </Stack>
+          ) : (
+            <Grid container spacing={'12px'}>
+              {paymentMethods.map((pm) => (
+                <Grid key={pm.label} size={{ xs: 6, md: 4, lg: 2.4 }}>
+                  <Stack
+                    sx={{
+                      background: '#F7F9FB',
+                      border: '0.67px solid #F0F4F8',
+                      borderRadius: '14px',
+                      padding: '16px',
+                      gap: '12px',
+                    }}
+                  >
+                    <RowStack spacing={'8px'}>
+                      <Box
+                        sx={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          background: pm.color,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 600,
+                          fontSize: pxToRem(12.5),
+                          color: '#374151',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {pm.label}
+                      </Typography>
+                    </RowStack>
+
                     <Typography
                       sx={{
                         fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 600,
-                        fontSize: pxToRem(12.5),
-                        color: '#374151',
-                        whiteSpace: 'nowrap',
+                        fontWeight: 700,
+                        fontSize: pxToRem(20),
+                        color: '#111827',
                       }}
                     >
-                      {pm.label}
+                      {pm.amount}
                     </Typography>
-                  </RowStack>
 
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 700,
-                      fontSize: pxToRem(20),
-                      color: '#111827',
-                    }}
-                  >
-                    {pm.amount}
-                  </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 400,
+                        fontSize: pxToRem(12),
+                        color: '#9CA3AF',
+                      }}
+                    >
+                      {pm.detail}
+                    </Typography>
 
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(12),
-                      color: '#9CA3AF',
-                    }}
-                  >
-                    {pm.detail}
-                  </Typography>
-
-                  <LinearProgress
-                    variant="determinate"
-                    value={pm.progress}
-                    sx={{
-                      height: 4,
-                      borderRadius: '100px',
-                      backgroundColor: '#E8ECF0',
-                      '& .MuiLinearProgress-bar': {
+                    <LinearProgress
+                      variant="determinate"
+                      value={pm.progress}
+                      sx={{
+                        height: 4,
                         borderRadius: '100px',
-                        backgroundColor: pm.color,
-                      },
-                    }}
-                  />
-                </Stack>
-              </Grid>
-            ))}
-          </Grid>
+                        backgroundColor: '#E8ECF0',
+                        '& .MuiLinearProgress-bar': {
+                          borderRadius: '100px',
+                          backgroundColor: pm.color,
+                        },
+                      }}
+                    />
+                  </Stack>
+                </Grid>
+              ))}
+            </Grid>
+          )}
         </Stack>
 
         {/* All Transactions Table */}
         <AppGridtable
           columns={columns}
-          data={filteredTransactions}
-          initialPageSize={8}
+          data={transactionRows}
+          initialPageSize={paginationModel.pageSize}
           onRowClick={(row) => handleViewTransaction(row)}
+          emptyState={
+            <Stack
+              sx={{
+                height: '400px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <EmptyState emptyState="No Transactions" />
+            </Stack>
+          }
           sx={{
             height: 'auto',
             width: '100%',
@@ -752,7 +628,7 @@ export const PaymentTransactionsPage = () => {
                   color: '#9CA3AF',
                 }}
               >
-                {filteredTransactions.length} transactions
+                {transactionRows.length} transactions
               </Typography>
             </RowStack>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Box, Chip, Grid, IconButton, Stack, Typography } from '@mui/material';
 import LoopOutlinedIcon from '@mui/icons-material/LoopOutlined';
 import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined';
@@ -19,12 +19,18 @@ import {
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { FilterSection } from '../../modules/components/AppFilterPopover';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetRefundKpis,
+  useGetRefundRequests,
+  useResolvedApiQuery,
+} from '../../../common';
 import {
   RefundDetailModal,
   ApproveRefundModal,
   RejectRefundModal,
 } from './ui/components';
+import { EmptyState } from '../../modules/blocks';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -48,38 +54,6 @@ type RefundRow = {
   description: string;
 };
 
-// ─── Stat Cards ─────────────────────────────────────────────────────────────
-
-const statCards = [
-  {
-    icon: <LoopOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-    value: '84',
-    label: 'Total Refund Requests',
-    subtext: 'This month',
-  },
-  {
-    icon: <ScheduleOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />,
-    iconBg: '#FFFBEB',
-    value: '22',
-    label: 'Pending Review',
-    subtext: 'Awaiting decision',
-  },
-  {
-    icon: <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#059669' }} />,
-    iconBg: '#ECFDF5',
-    value: '56',
-    label: 'Approved',
-    subtext: '$18,240 issued',
-  },
-  {
-    icon: <CancelOutlinedIcon sx={{ fontSize: 20, color: '#EF4444' }} />,
-    iconBg: '#FEF2F2',
-    value: '6',
-    label: 'Rejected',
-    subtext: 'Insufficient reason',
-  },
-];
 
 // ─── Category Colors ────────────────────────────────────────────────────────
 
@@ -115,145 +89,6 @@ const filterSections: FilterSection[] = [
   },
 ];
 
-// ─── Table Data ─────────────────────────────────────────────────────────────
-
-const refundData: RefundRow[] = [
-  {
-    id: '1',
-    refundId: 'REF-1201',
-    booking: 'BK-20488',
-    riderName: 'George Lewis',
-    driverName: 'Anna Kim',
-    category: 'Driver No-Show',
-    reason: 'Driver no-show',
-    amount: '$47.00',
-    amountValue: 47,
-    requested: 'Mar 8, 2026',
-    status: 'Pending',
-    paymentMethod: 'Visa ••7744',
-    rideType: 'Standard Medical',
-    description:
-      'Driver accepted the booking but never arrived. I waited 35 minutes before cancelling.',
-  },
-  {
-    id: '2',
-    refundId: 'REF-1200',
-    booking: 'BK-20481',
-    riderName: 'Patricia Clark',
-    driverName: 'Tom Roberts',
-    category: 'Service Issue',
-    reason: 'Wrong destination',
-    amount: '$52.00',
-    amountValue: 52,
-    requested: 'Mar 7, 2026',
-    status: 'Pending',
-    paymentMethod: 'Mastercard ••3291',
-    rideType: 'Standard Medical',
-    description:
-      'Driver took me to the wrong medical facility. Had to rebook another ride.',
-  },
-  {
-    id: '3',
-    refundId: 'REF-1199',
-    booking: 'BK-20475',
-    riderName: 'Nancy White',
-    driverName: 'James Thompson',
-    category: 'Billing Error',
-    reason: 'Double charge',
-    amount: '$29.00',
-    amountValue: 29,
-    requested: 'Mar 6, 2026',
-    status: 'Approved',
-    paymentMethod: 'Visa ••8812',
-    rideType: 'Wheelchair Accessible',
-    description: 'I was charged twice for the same trip on March 5th.',
-  },
-  {
-    id: '4',
-    refundId: 'REF-1198',
-    booking: 'BK-20469',
-    riderName: 'Robert Garcia',
-    driverName: 'Kevin Park',
-    category: 'Service Issue',
-    reason: 'Excessive wait time',
-    amount: '$91.25',
-    amountValue: 91.25,
-    requested: 'Mar 5, 2026',
-    status: 'Approved',
-    paymentMethod: 'Visa ••5501',
-    rideType: 'Standard Medical',
-    description:
-      'Driver was 45 minutes late to pickup. Almost missed my appointment.',
-  },
-  {
-    id: '5',
-    refundId: 'REF-1197',
-    booking: 'BK-20461',
-    riderName: 'Helen Moore',
-    driverName: 'David Chen',
-    category: 'Vehicle Mismatch',
-    reason: 'Vehicle not equipped',
-    amount: '$62.00',
-    amountValue: 62,
-    requested: 'Mar 4, 2026',
-    status: 'Approved',
-    paymentMethod: 'Mastercard ••4420',
-    rideType: 'Wheelchair Accessible',
-    description:
-      'Booked a wheelchair accessible vehicle but a standard sedan arrived.',
-  },
-  {
-    id: '6',
-    refundId: 'REF-1196',
-    booking: 'BK-20453',
-    riderName: 'Daniel Martinez',
-    driverName: 'Sarah Williams',
-    category: 'Technical Issue',
-    reason: 'App error',
-    amount: '$38.75',
-    amountValue: 38.75,
-    requested: 'Mar 3, 2026',
-    status: 'Rejected',
-    paymentMethod: 'Visa ••9913',
-    rideType: 'Standard Medical',
-    description:
-      'App crashed during the ride and I was charged even though the trip was incomplete.',
-  },
-  {
-    id: '7',
-    refundId: 'REF-1195',
-    booking: 'BK-20446',
-    riderName: 'Lisa Anderson',
-    driverName: 'Emily Rodriguez',
-    category: 'Driver Behavior',
-    reason: 'Unsatisfactory service',
-    amount: '$78.50',
-    amountValue: 78.5,
-    requested: 'Mar 2, 2026',
-    status: 'Pending',
-    paymentMethod: 'Visa ••6677',
-    rideType: 'Standard Medical',
-    description:
-      'Driver was rude and took an unnecessarily long route to increase the fare.',
-  },
-  {
-    id: '8',
-    refundId: 'REF-1194',
-    booking: 'BK-20438',
-    riderName: 'James Wilson',
-    driverName: 'Marcus Johnson',
-    category: 'Billing Error',
-    reason: 'Cancelled trip charge',
-    amount: '$43.50',
-    amountValue: 43.5,
-    requested: 'Mar 1, 2026',
-    status: 'Approved',
-    paymentMethod: 'Mastercard ••2208',
-    rideType: 'Standard Medical',
-    description:
-      'I cancelled the trip well within the free cancellation window but was still charged.',
-  },
-];
 
 // ─── Tab Config ─────────────────────────────────────────────────────────────
 
@@ -277,6 +112,92 @@ export const RefundManagementPage = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 8,
+  });
+
+  // API Integration
+  const { data: kpisData } = useResolvedApiQuery(useGetRefundKpis, null);
+  const { data: refundsData } = useResolvedApiQuery(
+    useGetRefundRequests,
+    null,
+    {
+      status: activeTab === 'All' ? null : activeTab,
+      search: searchQuery || null,
+      page: paginationModel.page + 1,
+      limit: paginationModel.pageSize,
+    }
+  );
+
+  // Transform API data
+  const statCards = useMemo(() => {
+    const kpis = kpisData || {};
+    return [
+      {
+        icon: <LoopOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+        iconBg: '#EBF2FF',
+        value: kpis.total_refunds?.toLocaleString() || '0',
+        label: 'Total Refund Requests',
+        subtext: 'This month',
+      },
+      {
+        icon: <ScheduleOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />,
+        iconBg: '#FFFBEB',
+        value: kpis.pending_refunds?.toLocaleString() || '0',
+        label: 'Pending Review',
+        subtext: 'Awaiting decision',
+      },
+      {
+        icon: <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#059669' }} />,
+        iconBg: '#ECFDF5',
+        value: kpis.approved_refunds?.toLocaleString() || '0',
+        label: 'Approved',
+        subtext: `$${kpis.total_refund_amount?.toLocaleString() || '0'} issued`,
+      },
+      {
+        icon: <CancelOutlinedIcon sx={{ fontSize: 20, color: '#EF4444' }} />,
+        iconBg: '#FEF2F2',
+        value: kpis.rejected_refunds?.toLocaleString() || '0',
+        label: 'Rejected',
+        subtext: 'Insufficient reason',
+      },
+    ];
+  }, [kpisData]);
+
+  const refundRows = useMemo(() => {
+    const items = refundsData?.items || [];
+    return items.map((item: any) => ({
+      id: item.id,
+      refundId: item.refund_id || '',
+      booking: item.booking_id || '',
+      riderName: item.user_name || '',
+      driverName: '',
+      category: item.category || 'Other',
+      reason: item.reason || '',
+      amount: `$${item.amount?.toFixed(2) || '0.00'}`,
+      amountValue: item.amount || 0,
+      requested: new Date(item.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+      status: item.status || 'Pending',
+      paymentMethod: '',
+      rideType: '',
+      description: item.reason || '',
+    }));
+  }, [refundsData]);
+
+  const tabCounts: Record<TabValue, number> = useMemo(() => {
+    const kpis = kpisData || {};
+    return {
+      All: kpis.total_refunds || 0,
+      Pending: kpis.pending_refunds || 0,
+      Approved: kpis.approved_refunds || 0,
+      Rejected: kpis.rejected_refunds || 0,
+    };
+  }, [kpisData]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -285,32 +206,6 @@ export const RefundManagementPage = () => {
   const handleFilterReset = () => {
     setFilters({ category: 'All', status: 'All' });
   };
-
-  // Tab counts
-  const tabCounts: Record<TabValue, number> = {
-    All: refundData.length,
-    Pending: refundData.filter((r) => r.status === 'Pending').length,
-    Approved: refundData.filter((r) => r.status === 'Approved').length,
-    Rejected: refundData.filter((r) => r.status === 'Rejected').length,
-  };
-
-  const filteredRefunds = refundData.filter((r) => {
-    // Tab filter
-    if (activeTab !== 'All' && r.status !== activeTab) return false;
-    // Search
-    const q = searchQuery.toLowerCase().trim();
-    const matchesSearch =
-      !q ||
-      r.refundId.toLowerCase().includes(q) ||
-      r.riderName.toLowerCase().includes(q) ||
-      r.booking.toLowerCase().includes(q);
-    // Filter popover
-    const matchesCategory =
-      filters.category === 'All' || r.category === filters.category;
-    const matchesStatus =
-      filters.status === 'All' || r.status === filters.status;
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
 
   const openApprove = (row: RefundRow) => {
     setSelectedRefund(row);
@@ -657,9 +552,20 @@ export const RefundManagementPage = () => {
         {/* ── Table ──────────────────────────────────────────────────── */}
         <AppGridtable
           columns={columns}
-          data={filteredRefunds}
+          data={refundRows}
           initialPageSize={8}
           disableRowClick
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          rowCount={refundsData?.total || 0}
+          paginationMode="server"
+          emptyState={
+            <EmptyState
+              title="No refund requests found"
+              description="There are no refund requests matching your current filters"
+              height={400}
+            />
+          }
           sx={{ height: 'auto', width: '100%' }}
         >
           <Stack spacing={'16px'} width={'100%'}>
@@ -696,7 +602,10 @@ export const RefundManagementPage = () => {
                   return (
                     <Box
                       key={tab.value}
-                      onClick={() => setActiveTab(tab.value)}
+                      onClick={() => {
+                        setActiveTab(tab.value);
+                        setPaginationModel({ page: 0, pageSize: 8 });
+                      }}
                       sx={{
                         display: 'flex',
                         alignItems: 'center',

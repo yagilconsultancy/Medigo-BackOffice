@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Box,
   Grid,
@@ -23,7 +23,13 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetCommissionKpis,
+  useGetCommissionConfig,
+  useCommissionApi,
+  useResolvedApiQuery,
+} from '../../../common';
 import { ReactNode } from 'react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -131,15 +137,53 @@ const statCardsConfig: StatCard[] = [
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const CommissionSettingsPage = () => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const { updateConfig } = useCommissionApi();
+  const { data: kpisData } = useResolvedApiQuery(useGetCommissionKpis, null);
+  const { data: configData } = useResolvedApiQuery(
+    useGetCommissionConfig,
+    null
+  );
+
   const [values, setValues] = useState<Record<string, number>>(
     Object.fromEntries(commissionSlices.map((s) => [s.id, s.defaultValue]))
   );
+
+  // Update values when config data is loaded
+  useMemo(() => {
+    if (configData) {
+      setValues({
+        platform: parseFloat(configData.platform_percent as any) || 18,
+        driver: parseFloat(configData.driver_percent as any) || 47,
+        fleet: parseFloat(configData.fleet_percent as any) || 20,
+        caregiver: parseFloat(configData.caregiver_percent as any) || 10,
+        reserve: parseFloat(configData.reserve_percent as any) || 5,
+      });
+    }
+  }, [configData]);
 
   const total = Object.values(values).reduce((sum, v) => sum + v, 0);
   const isValid = total === 100;
 
   const handleValueChange = (id: string, value: number) => {
     setValues((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSave = async () => {
+    if (!isValid) {
+      return;
+    }
+
+    setIsSaving(true);
+    const success = await updateConfig({
+      platform_percent: values.platform,
+      driver_percent: values.driver,
+      fleet_percent: values.fleet,
+      caregiver_percent: values.caregiver,
+      reserve_percent: values.reserve,
+    });
+    setIsSaving(false);
   };
 
   return (
@@ -153,6 +197,9 @@ export const CommissionSettingsPage = () => {
           />
           <AppButton
             variant="contained"
+            onClick={handleSave}
+            isLoading={isSaving}
+            disabled={!isValid || isSaving}
             sx={{
               background: '#2F6FED',
               borderRadius: '14px',
@@ -161,6 +208,10 @@ export const CommissionSettingsPage = () => {
               fontWeight: 600,
               fontSize: pxToRem(13),
               '&:hover': { background: '#1E4FD9' },
+              '&:disabled': {
+                background: '#9CA3AF',
+                color: '#FFFFFF',
+              },
             }}
           >
             Save Changes

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import dayjs from 'dayjs';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppButton,
@@ -12,9 +13,13 @@ import {
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { pxToRem } from '../../../common';
-
-// ─── Types ──────────────────────────────────────────────────────────────────
+import {
+  pxToRem,
+  useListPricingLogs,
+  useExportPricingLogs,
+  useResolvedApiQuery,
+  PricingLog,
+} from '../../../common';
 
 type LogRow = {
   id: string;
@@ -31,195 +36,94 @@ type LogRow = {
   timestamp: string;
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const logsData: LogRow[] = [
-  {
-    id: '1',
-    logId: 'PL-0021',
-    adminName: 'Marcus Bell',
-    adminAvatar: 'MB',
-    category: 'Fare',
-    categoryColor: '#2F6FED',
-    categoryBg: '#EBF2FF',
-    city: 'Milton',
-    change: 'Base fare updated',
-    before: '$8.00',
-    after: '$9.50',
-    timestamp: 'Mar 28, 2026 · 2:14 PM',
-  },
-  {
-    id: '2',
-    logId: 'PL-0020',
-    adminName: 'Angela Brooks',
-    adminAvatar: 'AB',
-    category: 'Surcharge',
-    categoryColor: '#D97706',
-    categoryBg: '#FFFBEB',
-    city: 'Oakville',
-    change: 'Peak multiplier changed',
-    before: '1.4×',
-    after: '1.5×',
-    timestamp: 'Mar 27, 2026 · 4:45 PM',
-  },
-  {
-    id: '3',
-    logId: 'PL-0019',
-    adminName: 'Kevin Walsh',
-    adminAvatar: 'KW',
-    category: 'Package',
-    categoryColor: '#6366F1',
-    categoryBg: '#EEF2FF',
-    city: 'Burlington',
-    change: 'Dialysis pkg price set',
-    before: '$220.00',
-    after: '$245.00',
-    timestamp: 'Mar 27, 2026 · 11:30 AM',
-  },
-  {
-    id: '4',
-    logId: 'PL-0018',
-    adminName: 'Marcus Bell',
-    adminAvatar: 'MB',
-    category: 'Fare',
-    categoryColor: '#2F6FED',
-    categoryBg: '#EBF2FF',
-    city: 'Brampton',
-    change: 'Per-km rate adjusted',
-    before: '$1.80',
-    after: '$2.00',
-    timestamp: 'Mar 26, 2026 · 3:20 PM',
-  },
-  {
-    id: '5',
-    logId: 'PL-0017',
-    adminName: 'Angela Brooks',
-    adminAvatar: 'AB',
-    category: 'Surcharge',
-    categoryColor: '#D97706',
-    categoryBg: '#FFFBEB',
-    city: 'Milton',
-    change: 'Night surcharge enabled',
-    before: 'Disabled',
-    after: '1.25×',
-    timestamp: 'Mar 25, 2026 · 9:15 AM',
-  },
-  {
-    id: '6',
-    logId: 'PL-0016',
-    adminName: 'Kevin Walsh',
-    adminAvatar: 'KW',
-    category: 'Fare',
-    categoryColor: '#2F6FED',
-    categoryBg: '#EBF2FF',
-    city: 'Mississauga',
-    change: 'Cancellation fee updated',
-    before: '$5.00',
-    after: '$6.00',
-    timestamp: 'Mar 24, 2026 · 1:50 PM',
-  },
-  {
-    id: '7',
-    logId: 'PL-0015',
-    adminName: 'Marcus Bell',
-    adminAvatar: 'MB',
-    category: 'Package',
-    categoryColor: '#6366F1',
-    categoryBg: '#EEF2FF',
-    city: 'Georgetown',
-    change: 'Hospital discharge pkg added',
-    before: '—',
-    after: '$185.00',
-    timestamp: 'Mar 23, 2026 · 10:00 AM',
-  },
-  {
-    id: '8',
-    logId: 'PL-0014',
-    adminName: 'Angela Brooks',
-    adminAvatar: 'AB',
-    category: 'Surcharge',
-    categoryColor: '#D97706',
-    categoryBg: '#FFFBEB',
-    city: 'Oakville',
-    change: 'Holiday pricing multiplier',
-    before: '1.5×',
-    after: '1.6×',
-    timestamp: 'Mar 22, 2026 · 5:30 PM',
-  },
-  {
-    id: '9',
-    logId: 'PL-0013',
-    adminName: 'Kevin Walsh',
-    adminAvatar: 'KW',
-    category: 'Fare',
-    categoryColor: '#2F6FED',
-    categoryBg: '#EBF2FF',
-    city: 'Milton',
-    change: 'Minimum fare increased',
-    before: '$10.00',
-    after: '$12.00',
-    timestamp: 'Mar 21, 2026 · 2:00 PM',
-  },
-  {
-    id: '10',
-    logId: 'PL-0012',
-    adminName: 'Marcus Bell',
-    adminAvatar: 'MB',
-    category: 'Fare',
-    categoryColor: '#2F6FED',
-    categoryBg: '#EBF2FF',
-    city: 'Burlington',
-    change: 'Time rate per minute',
-    before: '$0.15',
-    after: '$0.18',
-    timestamp: 'Mar 20, 2026 · 11:45 AM',
-  },
-  {
-    id: '11',
-    logId: 'PL-0011',
-    adminName: 'Angela Brooks',
-    adminAvatar: 'AB',
-    category: 'Package',
-    categoryColor: '#6366F1',
-    categoryBg: '#EEF2FF',
-    city: 'Brampton',
-    change: 'Chemo transport pkg updated',
-    before: '$180.00',
-    after: '$195.00',
-    timestamp: 'Mar 19, 2026 · 4:10 PM',
-  },
-  {
-    id: '12',
-    logId: 'PL-0010',
-    adminName: 'Kevin Walsh',
-    adminAvatar: 'KW',
-    category: 'Surcharge',
-    categoryColor: '#D97706',
-    categoryBg: '#FFFBEB',
-    city: 'Mississauga',
-    change: 'Weather surcharge toggled',
-    before: 'Disabled',
-    after: '1.3×',
-    timestamp: 'Mar 18, 2026 · 9:00 AM',
-  },
-];
-
-// ─── Component ──────────────────────────────────────────────────────────────
-
 export const PricingLogsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
 
-  const filteredLogs = logsData.filter((log) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      log.logId.toLowerCase().includes(query) ||
-      log.adminName.toLowerCase().includes(query) ||
-      log.category.toLowerCase().includes(query) ||
-      log.city.toLowerCase().includes(query) ||
-      log.change.toLowerCase().includes(query)
-    );
-  });
+  const { mutateAsync: exportLogs, isPending: isExporting } =
+    useExportPricingLogs();
+
+  const { data: logsData } = useResolvedApiQuery(
+    useListPricingLogs,
+    null,
+    {
+      page,
+      page_size: pageSize,
+      search: searchQuery || null,
+    }
+  );
+
+  const handleExport = async () => {
+    try {
+      const response = await exportLogs({
+        search: searchQuery || null,
+      });
+
+      if (response.data.success && response.data.data) {
+        const { download_url } = response.data.data;
+
+        // Fetch the file and download it
+        const fileResponse = await fetch(download_url);
+        const blob = await fileResponse.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = download_url.split('/').pop() ?? 'pricing-logs.csv';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(blobUrl);
+      }
+    } catch (err) {
+      console.error('Failed to download export', err);
+    }
+  };
+
+  // Helper function to map category to colors
+  const getCategoryStyle = (category: string) => {
+    const categoryLower = category.toLowerCase();
+    if (categoryLower.includes('fare')) {
+      return { color: '#2F6FED', bg: '#EBF2FF' };
+    } else if (categoryLower.includes('surcharge')) {
+      return { color: '#D97706', bg: '#FFFBEB' };
+    } else if (categoryLower.includes('package')) {
+      return { color: '#6366F1', bg: '#EEF2FF' };
+    }
+    return { color: '#6B7280', bg: '#F3F4F6' };
+  };
+
+  const mappedLogs: LogRow[] = useMemo(() => {
+    if (!logsData?.items) return [];
+
+    return logsData.items.map((log: PricingLog) => {
+      const style = getCategoryStyle(log.category);
+      const initials = log.admin_name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+
+      return {
+        id: log.id,
+        logId: log.id.slice(0, 8),
+        adminName: log.admin_name,
+        adminAvatar: initials,
+        category: log.category,
+        categoryColor: style.color,
+        categoryBg: style.bg,
+        city: log.city || 'N/A',
+        change: log.change_description,
+        before: log.before_value || '—',
+        after: log.after_value || '—',
+        timestamp: dayjs(log.created_at).format('MMM DD, YYYY · h:mm A'),
+      };
+    });
+  }, [logsData]);
 
   const columns: GridColSpec<LogRow>[] = [
     {
@@ -397,6 +301,9 @@ export const PricingLogsPage = () => {
           <AppButton
             variant="contained"
             startIcon={<FileDownloadOutlinedIcon sx={{ fontSize: 18 }} />}
+            onClick={handleExport}
+            isLoading={isExporting}
+            disabled={isExporting}
             sx={{
               background: '#FFFFFF',
               border: '0.67px solid #E8ECF0',
@@ -420,9 +327,13 @@ export const PricingLogsPage = () => {
         {/* Table */}
         <AppGridtable
           columns={columns}
-          data={filteredLogs}
-          initialPageSize={12}
+          data={mappedLogs}
+          initialPageSize={pageSize}
           disableRowClick
+          totalRows={logsData?.total || 0}
+          page={page}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
           sx={{
             height: 'auto',
             width: '100%',

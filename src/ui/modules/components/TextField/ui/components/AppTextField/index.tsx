@@ -31,6 +31,12 @@ export const AppTextField = (props: AppTextFieldProps) => {
     },
     errorMessage,
     endIcon,
+    borderRadius,
+    borderTopLeftRadius,
+    borderBottomLeftRadius,
+    borderWidth,
+    padding,
+    fontSize,
     ...rest
   } = props;
   const styles = useTextFieldStyles(props);

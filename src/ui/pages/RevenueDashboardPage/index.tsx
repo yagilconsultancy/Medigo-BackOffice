@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Box, Grid, LinearProgress, Stack, Typography } from '@mui/material';
 import {
   BarChart,
@@ -26,7 +26,15 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetRevenueKpis,
+  useGetRevenueTrend,
+  useGetRevenueByRideType,
+  useGetRevenueByCity,
+  useGetRevenueDistribution,
+} from '../../../common';
+import { EmptyState } from '../../modules/blocks';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -396,6 +404,136 @@ export const RevenueDashboardPage = () => {
     dayjs('2026-03-10')
   );
 
+  // API Integration
+  const { data: kpisData } = useResolvedApiQuery(useGetRevenueKpis, null);
+  const { data: trendData } = useResolvedApiQuery(
+    useGetRevenueTrend,
+    null,
+    { period: activeTab.toLowerCase() }
+  );
+  const { data: rideTypeData } = useResolvedApiQuery(
+    useGetRevenueByRideType,
+    null
+  );
+  const { data: cityData } = useResolvedApiQuery(useGetRevenueByCity, null);
+  const { data: distributionData } = useResolvedApiQuery(
+    useGetRevenueDistribution,
+    null
+  );
+
+  const rideTypes = useMemo(() => {
+    const items = rideTypeData || [];
+    const colors = ['#2F6FED', '#6366F1', '#10B981', '#F59E0B', '#EC4899'];
+    return items.map((rt: any, idx: number) => ({
+      label: rt.ride_type || 'Unknown',
+      revenue: `$${rt.revenue?.toLocaleString() || '0'}`,
+      percent: `${rt.percentage || 0}%`,
+      trips: `${rt.rides || rt.trip_count || 0} trips`,
+      color: colors[idx % colors.length],
+      progress: rt.percentage || 0,
+    }));
+  }, [rideTypeData]);
+
+  const cities = useMemo(() => {
+    const items = cityData || [];
+    return items.map((c: any, idx: number) => ({
+      rank: idx + 1,
+      city: c.city || 'Unknown',
+      trips: `${c.rides || c.trip_count || 0} trips`,
+      revenue: `$${c.revenue?.toLocaleString() || '0'}`,
+      growth: c.percentage ? `+${c.percentage}%` : '+0%',
+    }));
+  }, [cityData]);
+
+  const distribution = useMemo(() => {
+    if (!distributionData) return [];
+
+    const total =
+      (distributionData.driver_earnings || 0) +
+      (distributionData.platform_fees || 0) +
+      (distributionData.taxes || 0) +
+      (distributionData.other || 0);
+
+    return [
+      {
+        label: 'Driver Earnings',
+        amount: `$${(distributionData.driver_earnings || 0).toLocaleString()}`,
+        color: '#10B981',
+        progress: total > 0 ? ((distributionData.driver_earnings || 0) / total) * 100 : 0,
+        isNegative: false,
+      },
+      {
+        label: 'Platform Fees',
+        amount: `$${(distributionData.platform_fees || 0).toLocaleString()}`,
+        color: '#6366F1',
+        progress: total > 0 ? ((distributionData.platform_fees || 0) / total) * 100 : 0,
+        isNegative: false,
+      },
+      {
+        label: 'Taxes',
+        amount: `$${(distributionData.taxes || 0).toLocaleString()}`,
+        color: '#F59E0B',
+        progress: total > 0 ? ((distributionData.taxes || 0) / total) * 100 : 0,
+        isNegative: false,
+      },
+      {
+        label: 'Other',
+        amount: `$${(distributionData.other || 0).toLocaleString()}`,
+        color: '#EC4899',
+        progress: total > 0 ? ((distributionData.other || 0) / total) * 100 : 0,
+        isNegative: false,
+      },
+    ];
+  }, [distributionData]);
+
+  const chartData = useMemo(() => {
+    const items = trendData || [];
+    return items.map((item: any) => ({
+      name: item.period || '',
+      revenue: item.revenue || 0,
+    }));
+  }, [trendData]);
+
+  const statCards = useMemo(() => {
+    const kpis = kpisData || {};
+    return [
+      {
+        icon: (
+          <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
+        ),
+        iconBg: '#EBF2FF',
+        value: `$${kpis.total_revenue?.toLocaleString() || '0'}`,
+        label: 'Total Revenue',
+        subtext: activeTab + ' view',
+      },
+      {
+        icon: <ShowChartOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
+        iconBg: '#EEF2FF',
+        value: `$${kpis.average_transaction?.toLocaleString() || '0'}`,
+        label: 'Average Revenue',
+        subtext: 'Per period',
+      },
+      {
+        icon: (
+          <CalendarTodayOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />
+        ),
+        iconBg: '#ECFDF5',
+        value: kpis.total_rides?.toLocaleString() || '0',
+        label: 'Total Rides',
+        subtext: 'Completed rides',
+      },
+      {
+        icon: (
+          <TrendingUpOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />
+        ),
+        iconBg: '#FFFBEB',
+        value: kpis.growth_percentage ? `+${kpis.growth_percentage}%` : '+0%',
+        label: 'Growth Rate',
+        subtext: 'vs prior period',
+      },
+    ];
+  }, [kpisData, activeTab]);
+
   const config = tabConfigs[activeTab];
   const tabs: PeriodTab[] = ['Daily', 'Monthly', 'Yearly'];
 
@@ -460,7 +598,7 @@ export const RevenueDashboardPage = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={'20px'}>
-          {config.stats.map((card) => (
+          {statCards.map((card) => (
             <Grid key={card.label} size={{ xs: 6, lg: 3 }}>
               <Stack
                 sx={{
@@ -603,7 +741,7 @@ export const RevenueDashboardPage = () => {
                 <ResponsiveContainer width="100%" height={310}>
                   {config.chartType === 'bar' ? (
                     <BarChart
-                      data={config.chartData}
+                      data={chartData}
                       margin={{ top: 5, right: 5, left: -10, bottom: 0 }}
                     >
                       <CartesianGrid
@@ -650,7 +788,7 @@ export const RevenueDashboardPage = () => {
                     </BarChart>
                   ) : (
                     <AreaChart
-                      data={config.chartData}
+                      data={chartData}
                       margin={{ top: 5, right: 5, left: -10, bottom: 0 }}
                     >
                       <defs>
@@ -754,8 +892,21 @@ export const RevenueDashboardPage = () => {
                 Revenue by Ride Type
               </Typography>
 
-              {rideTypes.map((rt) => (
-                <Stack key={rt.label} spacing={'6px'}>
+              {rideTypes.length === 0 ? (
+                <Stack
+                  sx={{
+                    height: '200px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <EmptyState emptyState="No Ride Type Data" />
+                </Stack>
+              ) : (
+                <>
+                  {rideTypes.map((rt) => (
+                    <Stack key={rt.label} spacing={'6px'}>
                   <RowStack justifyContent={'space-between'}>
                     <RowStack spacing={'8px'}>
                       <Box
@@ -830,6 +981,8 @@ export const RevenueDashboardPage = () => {
                   </Typography>
                 </Stack>
               ))}
+                </>
+              )}
             </Stack>
           </Grid>
         </Grid>
@@ -860,8 +1013,21 @@ export const RevenueDashboardPage = () => {
                 Revenue by City
               </Typography>
 
-              {cities.map((c) => (
-                <RowStack
+              {cities.length === 0 ? (
+                <Stack
+                  sx={{
+                    height: '200px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <EmptyState emptyState="No City Data" />
+                </Stack>
+              ) : (
+                <>
+                  {cities.map((c) => (
+                    <RowStack
                   key={c.rank}
                   justifyContent={'space-between'}
                   sx={{
@@ -940,6 +1106,8 @@ export const RevenueDashboardPage = () => {
                   </Stack>
                 </RowStack>
               ))}
+                </>
+              )}
             </Stack>
           </Grid>
 
@@ -966,8 +1134,21 @@ export const RevenueDashboardPage = () => {
                 Revenue Distribution (March 2026)
               </Typography>
 
-              {distribution.map((d) => (
-                <Stack key={d.label} spacing={'6px'}>
+              {distribution.length === 0 ? (
+                <Stack
+                  sx={{
+                    height: '200px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <EmptyState emptyState="No Distribution Data" />
+                </Stack>
+              ) : (
+                <>
+                  {distribution.map((d) => (
+                    <Stack key={d.label} spacing={'6px'}>
                   <RowStack justifyContent={'space-between'}>
                     <RowStack spacing={'8px'}>
                       <Box
@@ -1018,6 +1199,8 @@ export const RevenueDashboardPage = () => {
                   />
                 </Stack>
               ))}
+                </>
+              )}
             </Stack>
           </Grid>
         </Grid>

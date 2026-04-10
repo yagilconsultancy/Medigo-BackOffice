@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
 import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
@@ -10,7 +11,12 @@ import AccessibleOutlinedIcon from '@mui/icons-material/AccessibleOutlined';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetCancellationKpis,
+  useGetCancellationPolicies,
+  useResolvedApiQuery,
+} from '../../../common';
 import { ReactNode } from 'react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -274,18 +280,192 @@ const feeCellSx = {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const CancellationPolicyPage = () => {
+  const { data: kpisData } = useResolvedApiQuery(
+    useGetCancellationKpis,
+    null
+  );
+  const { data: policiesData } = useResolvedApiQuery(
+    useGetCancellationPolicies,
+    null
+  );
+
+  // Helper to format fee
+  const formatFee = (fee: string | number) => {
+    const feeNum = parseFloat(fee as any);
+    return feeNum === 0 ? 'FREE' : `$${feeNum.toFixed(2)}`;
+  };
+
+  // Helper to map cancellation window to display text
+  const mapWindowToDisplay = (window: string) => {
+    const mapping: Record<string, string> = {
+      '24_hours_plus': '24 hours or more before',
+      '2_24_hours': '2–24 hrs before pickup',
+      'under_2_hours': 'Under 2 hours before',
+      'after_dispatch': 'After driver dispatched',
+      'no_show': 'No-Show',
+    };
+    return mapping[window] || window;
+  };
+
+  // Build overview fees table from API data
+  const dynamicOverviewFees: OverviewFeeRow[] = useMemo(() => {
+    if (!policiesData?.by_service_type) return overviewFees;
+
+    const windows = [
+      '24_hours_plus',
+      '2_24_hours',
+      'under_2_hours',
+      'after_dispatch',
+      'no_show',
+    ];
+
+    return windows.map((window) => {
+      const ambulatoryPolicy = policiesData.by_service_type
+        .find((st) => st.service_type === 'ambulatory')
+        ?.policies.find((p) => p.cancellation_window === window);
+
+      const wheelchairPolicy = policiesData.by_service_type
+        .find((st) => st.service_type === 'wheelchair_wav')
+        ?.policies.find((p) => p.cancellation_window === window);
+
+      const stretcherPolicy = policiesData.by_service_type
+        .find((st) => st.service_type === 'stretcher')
+        ?.policies.find((p) => p.cancellation_window === window);
+
+      return {
+        window: mapWindowToDisplay(window),
+        ambulatory: formatFee(ambulatoryPolicy?.fee || '0'),
+        wheelchair: formatFee(wheelchairPolicy?.fee || '0'),
+        stretcher: formatFee(stretcherPolicy?.fee || '0'),
+      };
+    });
+  }, [policiesData]);
+
+  // Build service breakdowns from API data
+  const dynamicServiceBreakdowns: ServiceBreakdown[] = useMemo(() => {
+    if (!policiesData?.by_service_type) return serviceBreakdowns;
+
+    const serviceTypeMap: Record<
+      string,
+      {
+        title: string;
+        description: string;
+        icon: ReactNode;
+        iconBg: string;
+        color: string;
+        footnote: string;
+      }
+    > = {
+      ambulatory: {
+        title: '3. Ambulatory — Cancellation Fee Breakdown',
+        description:
+          'Standard sedan or SUV service. Lowest cancellation fees reflect lower deployment cost and ease of redeployment to another booking.',
+        icon: <DirectionsCarOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+        iconBg: '#EBF2FF',
+        color: '#2F6FED',
+        footnote:
+          '* Driver receives 80% of late cancellation and no-show fees as direct compensation for lost trip income.',
+      },
+      wheelchair_wav: {
+        title: '4. Wheelchair (WAV) — Cancellation Fee Breakdown',
+        description:
+          'Wheelchair accessible vehicle service managed by platform vendors. Higher fees reflect specialized vehicle preparation, ramp/lift setup, and securement equipment staging required before each trip.',
+        icon: <AccessibleOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
+        iconBg: '#EEF2FF',
+        color: '#6366F1',
+        footnote:
+          '* WAV vendor receives 82% of cancellation and no-show fees in line with the standard platform commission split.',
+      },
+      stretcher: {
+        title: '5. Stretcher — Cancellation Fee Breakdown',
+        description:
+          'Highest fees across all service types. Every stretcher trip requires two crew members — driver and attendant — both of whom are compensated for their time on a no-show or late cancellation.',
+        icon: (
+          <MedicalServicesOutlinedIcon sx={{ fontSize: 20, color: '#DC2626' }} />
+        ),
+        iconBg: '#FEF2F2',
+        color: '#DC2626',
+        footnote:
+          '* Stretcher cancellation fees are split 50/50 between Cynthia and her stretcher vehicle partner after deducting any direct crew costs.',
+      },
+    };
+
+    return policiesData.by_service_type.map((serviceType) => {
+      const config = serviceTypeMap[serviceType.service_type];
+      if (!config) return null;
+
+      const rows: BreakdownRow[] = serviceType.policies.map((policy) => ({
+        window: mapWindowToDisplay(policy.cancellation_window),
+        fee: formatFee(policy.fee),
+        whoReceives: policy.who_receives
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, (l) => l.toUpperCase())
+          .replace('Medigo Platform', 'Medigo platform')
+          .replace('Driver 80 Medigo 20', 'Driver (80%) + Medigo (20%)')
+          .replace('Vendor 82 Medigo 18', 'Vendor (82%) + Medigo (18%)')
+          .replace('Partnership 50 50', 'Partnership split (50/50)')
+          .replace('None', 'No cancellation fee applied'),
+        notes: policy.notes,
+      }));
+
+      return {
+        ...config,
+        rows,
+      };
+    }).filter(Boolean) as ServiceBreakdown[];
+  }, [policiesData]);
+
+  // Update stat cards with real data
+  const dynamicStatCards: StatCard[] = useMemo(() => {
+    const serviceTypes = policiesData?.by_service_type?.length || 3;
+    const maxFee =
+      policiesData?.matrix
+        ?.reduce(
+          (max, policy) => Math.max(max, parseFloat(policy.fee as any)),
+          0
+        )
+        .toFixed(0) || '85';
+
+    return [
+      {
+        value: serviceTypes.toString(),
+        label: 'Service Types',
+        iconBg: '#EBF2FF',
+        icon: <CategoryOutlinedIcon sx={{ fontSize: 19, color: '#2F6FED' }} />,
+      },
+      {
+        value: '5',
+        label: 'Fee Tiers',
+        iconBg: '#EEF2FF',
+        icon: <LayersOutlinedIcon sx={{ fontSize: 19, color: '#6366F1' }} />,
+      },
+      {
+        value: `$${maxFee}`,
+        label: 'Max No-Show Fee',
+        iconBg: '#FEF2F2',
+        icon: <MoneyOffOutlinedIcon sx={{ fontSize: 19, color: '#EF4444' }} />,
+      },
+      {
+        value: '24h+',
+        label: 'Free Window',
+        iconBg: '#ECFDF5',
+        icon: <AccessTimeOutlinedIcon sx={{ fontSize: 19, color: '#10B981' }} />,
+      },
+    ];
+  }, [policiesData]);
+
   return (
     <AppDashboardLayout>
       <Stack spacing={'24px'}>
         {/* Header */}
         <DashboardTitleAndDesc
           title="Cancellation Policy"
-          desc="Configure how each trip fare is split between the platform, drivers, fleets, and reserve"
+          desc="Configure cancellation fees and policies across all service types to protect drivers and vendors from last-minute cancellations"
         />
 
         {/* Stat Cards */}
         <RowStack spacing={'12px'}>
-          {statCards.map((card) => (
+          {dynamicStatCards.map((card) => (
             <RowStack
               key={card.label}
               spacing={'12px'}
@@ -491,12 +671,12 @@ export const CancellationPolicyPage = () => {
             </RowStack>
 
             {/* Body */}
-            {overviewFees.map((row, i) => (
+            {dynamicOverviewFees.map((row, i) => (
               <RowStack
                 key={i}
                 sx={{
                   borderBottom:
-                    i < overviewFees.length - 1
+                    i < dynamicOverviewFees.length - 1
                       ? '0.67px solid #F0F4F8'
                       : 'none',
                   padding: '14px 20px',
@@ -553,7 +733,7 @@ export const CancellationPolicyPage = () => {
         </Stack>
 
         {/* Sections 3–5: Service Breakdowns */}
-        {serviceBreakdowns.map((service) => (
+        {dynamicServiceBreakdowns.map((service) => (
           <Stack
             key={service.title}
             spacing={'20px'}

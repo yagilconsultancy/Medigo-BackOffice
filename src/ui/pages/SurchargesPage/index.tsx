@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Box, Grid, Stack, Switch, Typography, styled } from '@mui/material';
 import BoltOutlinedIcon from '@mui/icons-material/BoltOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
@@ -10,10 +10,27 @@ import AcUnitOutlinedIcon from '@mui/icons-material/AcUnitOutlined';
 import WbTwilightOutlinedIcon from '@mui/icons-material/WbTwilightOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
+import AddIcon from '@mui/icons-material/Add';
+import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { Formik, Form, FormikHelpers } from 'formik';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  AppButton,
+  AppModal,
+  DashboardTitleAndDesc,
+  RowStack,
+} from '../../modules/components';
+import {
+  pxToRem,
+  useGetSurchargeKpis,
+  useListSurchargeRules,
+  useResolvedApiQuery,
+  useSurchargeApi,
+} from '../../../common';
 import { ReactNode } from 'react';
+import { toast } from 'sonner';
+import { CreateSurchargeModal } from './CreateSurchargeModal';
 
 // ─── iOS Switch ─────────────────────────────────────────────────────────────
 
@@ -67,102 +84,261 @@ type Surcharge = {
   active: boolean;
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const initialSurcharges: Surcharge[] = [
-  {
-    id: 'peak_hours',
-    title: 'Peak Hours',
-    description: 'Weekdays 7–9 AM & 4–7 PM',
-    icon: <BoltOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-    multiplier: '1.4×',
-    multiplierColor: '#2F6FED',
-    appliesTo: 'All ride types',
-    active: true,
-  },
-  {
-    id: 'night_surcharge',
-    title: 'Night Surcharge',
-    description: '10 PM – 5 AM daily',
-    icon: <DarkModeOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
-    iconBg: '#EEF2FF',
-    multiplier: '1.25×',
-    multiplierColor: '#6366F1',
-    appliesTo: 'Standard, Medical',
-    active: true,
-  },
-  {
-    id: 'weather_rain',
-    title: 'Weather – Rain',
-    description: 'Active when weather alert is issued',
-    icon: <WaterDropOutlinedIcon sx={{ fontSize: 20, color: '#0EA5E9' }} />,
-    iconBg: '#E0F2FE',
-    multiplier: '1.3×',
-    multiplierColor: '#0EA5E9',
-    appliesTo: 'Standard only',
-    active: true,
-  },
-  {
-    id: 'holiday_pricing',
-    title: 'Holiday Pricing',
-    description: 'Statutory holidays — national & provincial',
-    icon: <CelebrationOutlinedIcon sx={{ fontSize: 20, color: '#EC4899' }} />,
-    iconBg: '#FDF2F8',
-    multiplier: '1.6×',
-    multiplierColor: '#EC4899',
-    appliesTo: 'All ride types',
-    active: true,
-  },
-  {
-    id: 'winter_weather',
-    title: 'Winter Weather',
-    description: 'Snow / ice storm warnings',
-    icon: <AcUnitOutlinedIcon sx={{ fontSize: 20, color: '#9CA3AF' }} />,
-    iconBg: '#F3F4F6',
-    multiplier: '1.5×',
-    multiplierColor: '#9CA3AF',
-    appliesTo: 'All ride types',
-    active: false,
-  },
-  {
-    id: 'early_morning',
-    title: 'Early Morning',
-    description: '5 AM – 7 AM (pre-peak demand boost)',
-    icon: <WbTwilightOutlinedIcon sx={{ fontSize: 20, color: '#9CA3AF' }} />,
-    iconBg: '#F3F4F6',
-    multiplier: '1.15×',
-    multiplierColor: '#9CA3AF',
-    appliesTo: 'Standard, Shared Ride',
-    active: false,
-  },
-];
+interface SurchargeFormValues {
+  rules: Array<{
+    id: string;
+    is_active: boolean;
+  }>;
+}
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const SurchargesPage = () => {
-  const [surcharges, setSurcharges] = useState<Surcharge[]>(initialSurcharges);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [deleteModalState, setDeleteModalState] = useState<{
+    open: boolean;
+    ruleId: string | null;
+    ruleName: string | null;
+  }>({ open: false, ruleId: null, ruleName: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const activeCount = surcharges.filter((s) => s.active).length;
-  const inactiveCount = surcharges.filter((s) => !s.active).length;
+  const { updateSurchargeRule, deleteSurchargeRule } = useSurchargeApi();
+  const { data: kpisData } = useResolvedApiQuery(useGetSurchargeKpis, null);
+  const { data: rulesData, refetch } = useResolvedApiQuery(
+    useListSurchargeRules,
+    null
+  );
 
-  const handleToggle = (id: string) => {
-    setSurcharges((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, active: !s.active } : s))
-    );
+  const rules = rulesData?.rules || [];
+
+  const handleDeleteClick = (ruleId: string, ruleName: string) => {
+    setDeleteModalState({ open: true, ruleId, ruleName });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModalState.ruleId) return;
+
+    setIsDeleting(true);
+    const success = await deleteSurchargeRule(deleteModalState.ruleId);
+
+    if (success) {
+      refetch();
+      setDeleteModalState({ open: false, ruleId: null, ruleName: null });
+    }
+
+    setIsDeleting(false);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalState({ open: false, ruleId: null, ruleName: null });
+  };
+
+  const initialValues: SurchargeFormValues = useMemo(() => {
+    return {
+      rules: rules.map((rule) => ({
+        id: rule.id,
+        is_active: rule.is_active,
+      })),
+    };
+  }, [rules]);
+
+  const handleSubmit = async (
+    values: SurchargeFormValues,
+    { setSubmitting }: FormikHelpers<SurchargeFormValues>
+  ) => {
+    setSubmitting(true);
+
+    // Update all rules in parallel
+    const updates = values.rules.map((formRule) => {
+      const originalRule = rules.find((r) => r.id === formRule.id);
+      if (!originalRule) {
+        console.error('Original rule not found for ID:', formRule.id);
+        return Promise.resolve(false);
+      }
+
+      const updateData = {
+        name: originalRule.name,
+        surcharge_type: originalRule.surcharge_type,
+        multiplier: parseFloat(originalRule.multiplier),
+        flat_amount: parseFloat(originalRule.flat_amount),
+        schedule: originalRule.schedule || null,
+        applies_to: originalRule.applies_to,
+        is_active: formRule.is_active,
+        ...(originalRule.description && { description: originalRule.description }),
+        ...(originalRule.sort_order !== undefined && {
+          sort_order: originalRule.sort_order,
+        }),
+      };
+
+      console.log('Sending update for rule:', formRule.id, updateData);
+
+      return updateSurchargeRule({
+        ruleId: formRule.id,
+        data: updateData,
+      });
+    });
+
+    const results = await Promise.all(updates);
+
+    // Check if all updates succeeded
+    if (results.every((success) => success)) {
+      toast.success('Surcharges updated successfully');
+      refetch();
+    }
+
+    setSubmitting(false);
   };
 
   return (
     <AppDashboardLayout>
-      <Stack spacing={'24px'}>
+      <Formik<SurchargeFormValues>
+        initialValues={initialValues}
+        enableReinitialize
+        onSubmit={handleSubmit}
+      >
+        {({ values, dirty, isSubmitting, setFieldValue }) => {
+          const iconMap: Record<string, ReactNode> = {
+            peakhours: <BoltOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+            night: <DarkModeOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
+            overnight: <DarkModeOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
+            earlymorning: <WbTwilightOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
+            weatherlightsnow: <WaterDropOutlinedIcon sx={{ fontSize: 20, color: '#0EA5E9' }} />,
+            weatherheavysnow: <AcUnitOutlinedIcon sx={{ fontSize: 20, color: '#0EA5E9' }} />,
+            weatherpoststorm: <WaterDropOutlinedIcon sx={{ fontSize: 20, color: '#0EA5E9' }} />,
+            weekendsaturday: <BoltOutlinedIcon sx={{ fontSize: 20, color: '#8B5CF6' }} />,
+            weekendsunday: <BoltOutlinedIcon sx={{ fontSize: 20, color: '#8B5CF6' }} />,
+            holiday: <CelebrationOutlinedIcon sx={{ fontSize: 20, color: '#EC4899' }} />,
+          };
+
+          const colorMap: Record<string, { iconBg: string; color: string }> = {
+            peakhours: { iconBg: '#EBF2FF', color: '#2F6FED' },
+            night: { iconBg: '#EEF2FF', color: '#6366F1' },
+            overnight: { iconBg: '#EEF2FF', color: '#6366F1' },
+            earlymorning: { iconBg: '#FEF3C7', color: '#F59E0B' },
+            weatherlightsnow: { iconBg: '#E0F2FE', color: '#0EA5E9' },
+            weatherheavysnow: { iconBg: '#E0F2FE', color: '#0EA5E9' },
+            weatherpoststorm: { iconBg: '#E0F2FE', color: '#0EA5E9' },
+            weekendsaturday: { iconBg: '#F5F3FF', color: '#8B5CF6' },
+            weekendsunday: { iconBg: '#F5F3FF', color: '#8B5CF6' },
+            holiday: { iconBg: '#FDF2F8', color: '#EC4899' },
+          };
+
+          const surcharges = rules.map((rule) => {
+            const formRule = values.rules.find((r) => r.id === rule.id);
+            const ruleType = (rule.surcharge_type || 'peak_hours')
+              .toLowerCase()
+              .replace(/_/g, '');
+            const style = colorMap[ruleType] || colorMap.peakhours;
+            const icon = iconMap[ruleType] || iconMap.peakhours;
+
+            // Extract time from schedule periods if available
+            let timeDescription = 'No time restriction';
+            if (rule.schedule?.periods && rule.schedule.periods.length > 0) {
+              const firstPeriod = rule.schedule.periods[0];
+              timeDescription = `${firstPeriod.start} - ${firstPeriod.end}`;
+            } else if (rule.description) {
+              timeDescription = rule.description;
+            }
+
+            return {
+              id: rule.id,
+              title: rule.name,
+              description: timeDescription,
+              icon,
+              iconBg: style.iconBg,
+              multiplier: `$${parseFloat(rule.flat_amount).toFixed(2)}`,
+              multiplierColor: style.color,
+              appliesTo: rule.applies_to?.join(', ') || 'All ride types',
+              active: formRule?.is_active ?? rule.is_active,
+            };
+          });
+
+          const activeCount = surcharges.filter((s) => s.active).length;
+          const inactiveCount = surcharges.filter((s) => !s.active).length;
+          const totalCount = surcharges.length;
+
+          const handleToggle = (id: string) => {
+            const ruleIndex = values.rules.findIndex((r) => r.id === id);
+            if (ruleIndex !== -1) {
+              setFieldValue(
+                `rules.${ruleIndex}.is_active`,
+                !values.rules[ruleIndex].is_active
+              );
+            }
+          };
+
+          return (
+            <Form>
+              <Stack spacing={'24px'}>
         {/* Header */}
-        <DashboardTitleAndDesc
-          title="Surcharges"
-          desc="Configure additional charges applied during peak periods, special conditions, or extra service requests."
-        />
+        <RowStack justifyContent="space-between">
+          <DashboardTitleAndDesc
+            title="Surcharges"
+            desc="Configure additional charges applied during peak periods, special conditions, or extra service requests."
+          />
+          <AppButton
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            Create Surcharge
+          </AppButton>
+        </RowStack>
 
         {/* Stat Cards */}
         <RowStack spacing={'12px'}>
+          {/* Total Surcharges */}
+          <RowStack
+            spacing={'12px'}
+            sx={{
+              flex: 1,
+              background: '#FFFFFF',
+              border: '0.67px solid #F0F4F8',
+              borderRadius: '16px',
+              boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+              padding: '0px 20px',
+              height: 120,
+            }}
+          >
+            <Stack spacing={'9px'} sx={{ flex: 1 }}>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 400,
+                  fontSize: pxToRem(12),
+                  color: '#6B7280',
+                }}
+              >
+                Total surcharges
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 700,
+                  fontSize: pxToRem(26),
+                  lineHeight: '0.85em',
+                  color: '#111827',
+                }}
+              >
+                {kpisData?.total_rules || totalCount}
+              </Typography>
+            </Stack>
+            <Box
+              sx={{
+                width: 42,
+                height: 42,
+                borderRadius: '16px',
+                background: '#EBF2FF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <AttachMoneyOutlinedIcon sx={{ fontSize: 19, color: '#2F6FED' }} />
+            </Box>
+          </RowStack>
+
           {/* Active Surcharges */}
           <RowStack
             spacing={'12px'}
@@ -196,7 +372,7 @@ export const SurchargesPage = () => {
                   color: '#111827',
                 }}
               >
-                {activeCount}
+                {kpisData?.active_rules || activeCount}
               </Typography>
             </Stack>
             <Box
@@ -270,16 +446,120 @@ export const SurchargesPage = () => {
 
         {/* Surcharge Cards Grid */}
         <Grid container spacing={'20px'}>
-          {surcharges.map((surcharge) => (
-            <Grid key={surcharge.id} size={{ xs: 12, md: 6 }}>
-              <SurchargeCard
-                surcharge={surcharge}
-                onToggle={() => handleToggle(surcharge.id)}
-              />
-            </Grid>
-          ))}
+          {surcharges.map((surcharge) => {
+            const originalRule = rules.find((r) => r.id === surcharge.id);
+            return (
+              <Grid key={surcharge.id} size={{ xs: 12, md: 6 }}>
+                <SurchargeCard
+                  surcharge={surcharge}
+                  onToggle={() => handleToggle(surcharge.id)}
+                  onDelete={() => handleDeleteClick(surcharge.id, originalRule?.name || surcharge.title)}
+                />
+              </Grid>
+            );
+          })}
         </Grid>
-      </Stack>
+
+                {/* Save Button */}
+                <RowStack justifyContent="flex-end">
+                  <AppButton
+                    type="submit"
+                    variant="contained"
+                    isLoading={isSubmitting}
+                    disabled={!dirty || isSubmitting}
+                  >
+                    Save Changes
+                  </AppButton>
+                </RowStack>
+              </Stack>
+            </Form>
+          );
+        }}
+      </Formik>
+
+      {/* Create Surcharge Modal */}
+      <CreateSurchargeModal
+        open={isCreateModalOpen}
+        setOpen={setIsCreateModalOpen}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <AppModal
+        open={deleteModalState.open}
+        setOpen={(open) => {
+          if (!open) handleDeleteCancel();
+        }}
+        label="delete-surcharge-modal"
+        sx={{
+          '& .MuiDialog-paper': {
+            width: '440px',
+          },
+        }}
+      >
+        <Stack spacing={'24px'}>
+          {/* Header */}
+          <Box>
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 700,
+                fontSize: pxToRem(20),
+                color: '#111827',
+                marginBottom: '8px',
+              }}
+            >
+              Delete Surcharge
+            </Typography>
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 400,
+                fontSize: pxToRem(14),
+                color: '#6B7280',
+              }}
+            >
+              Are you sure you want to delete{' '}
+              <Typography
+                component="span"
+                sx={{
+                  fontWeight: 600,
+                  color: '#111827',
+                }}
+              >
+                {deleteModalState.ruleName}
+              </Typography>
+              ? This action cannot be undone.
+            </Typography>
+          </Box>
+
+          {/* Actions */}
+          <RowStack spacing={'12px'} justifyContent="flex-end">
+            <AppButton
+              variant="contained"
+              color="secondary"
+              onClick={handleDeleteCancel}
+              disabled={isDeleting}
+            >
+              Cancel
+            </AppButton>
+            <AppButton
+              variant="contained"
+              color="primary"
+              onClick={handleDeleteConfirm}
+              isLoading={isDeleting}
+              disabled={isDeleting}
+              sx={{
+                backgroundColor: '#EF4444',
+                '&:hover': {
+                  backgroundColor: '#DC2626',
+                },
+              }}
+            >
+              Delete
+            </AppButton>
+          </RowStack>
+        </Stack>
+      </AppModal>
     </AppDashboardLayout>
   );
 };
@@ -289,9 +569,11 @@ export const SurchargesPage = () => {
 const SurchargeCard = ({
   surcharge,
   onToggle,
+  onDelete,
 }: {
   surcharge: Surcharge;
   onToggle: () => void;
+  onDelete: () => void;
 }) => {
   const isInactive = !surcharge.active;
 
@@ -305,10 +587,39 @@ const SurchargeCard = ({
         boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
         padding: '20px',
         opacity: isInactive ? 0.75 : 1,
+        position: 'relative',
       }}
     >
+      {/* Delete Icon */}
+      <Box
+        onClick={onDelete}
+        sx={{
+          position: 'absolute',
+          top: '16px',
+          right: '16px',
+          width: '32px',
+          height: '32px',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.2s',
+          '&:hover': {
+            backgroundColor: '#FEE2E2',
+          },
+        }}
+      >
+        <DeleteOutlineIcon
+          sx={{
+            fontSize: 18,
+            color: '#EF4444',
+          }}
+        />
+      </Box>
+
       {/* Top Row: Icon + Title/Desc + Switch */}
-      <RowStack justifyContent="space-between">
+      <RowStack justifyContent="space-between" sx={{ paddingRight: '40px' }}>
         <RowStack spacing={'12px'}>
           <Box
             sx={{

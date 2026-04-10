@@ -297,22 +297,31 @@ export type ApiRefundDetailResponse = ApiResponse<RefundDetailResponse>;
 // ====================== PRICING DASHBOARD ======================
 
 export interface PricingDashboardKPIs {
-  total_fare_configs?: number;
-  active_surcharges?: number;
-  active_packages?: number;
-  recent_changes?: number;
+  monthly_revenue?: string;
+  avg_trip_fare?: string;
+  active_service_types?: number;
+  premium_ride_percent?: string;
 }
 
 export interface RouteComparisonItem {
-  route_name: string;
-  base_fare: number;
-  per_km: number;
-  per_minute: number;
-  total_trips?: number;
+  route: string;
+  standard: number | null;
+  wheelchair_wav: number | null;
+  stretcher: number | null;
 }
 
 export interface RouteComparisonResponse {
   routes: RouteComparisonItem[];
+}
+
+export interface PricingHealthItem {
+  label: string;
+  status: string;
+  detail: string;
+}
+
+export interface PricingHealthResponse {
+  items: PricingHealthItem[];
 }
 
 export interface RecentPricingChange {
@@ -327,13 +336,6 @@ export interface RecentPricingChange {
 export interface RecentChangesResponse {
   changes: RecentPricingChange[];
   total: number;
-}
-
-export interface PricingHealthResponse {
-  status: string;
-  issues: string[];
-  warnings: string[];
-  last_check: string;
 }
 
 export interface RecentChangesQueryPayload {
@@ -416,14 +418,21 @@ export interface SurchargeKPIs {
 export interface SurchargeRule {
   id: string;
   name: string;
-  type: string;
-  value: number;
-  is_percentage: boolean;
+  description?: string;
+  surcharge_type: string;
+  multiplier: string;
+  flat_amount: string;
+  schedule?: {
+    periods: Array<{
+      start: string;
+      end: string;
+      days: number[];
+      amount?: number;
+    }>;
+  } | null;
+  applies_to: string[];
   is_active: boolean;
-  start_time?: string | null;
-  end_time?: string | null;
-  days_of_week?: string[] | null;
-  applicable_to?: string[] | null;
+  sort_order?: number;
   created_at: string;
   updated_at: string;
 }
@@ -434,26 +443,40 @@ export interface SurchargeRuleListResponse {
 
 export interface SurchargeRuleCreate {
   name: string;
-  type: string;
-  value: number;
-  is_percentage: boolean;
+  description?: string;
+  surcharge_type: string;
+  multiplier: number;
+  flat_amount: number;
+  schedule?: {
+    periods: Array<{
+      start: string;
+      end: string;
+      days: number[];
+      amount?: number;
+    }>;
+  } | null;
+  applies_to: string[];
   is_active?: boolean;
-  start_time?: string | null;
-  end_time?: string | null;
-  days_of_week?: string[] | null;
-  applicable_to?: string[] | null;
+  sort_order?: number;
 }
 
 export interface SurchargeRuleUpdate {
   name?: string;
-  type?: string;
-  value?: number;
-  is_percentage?: boolean;
+  description?: string;
+  surcharge_type?: string;
+  multiplier?: number;
+  flat_amount?: number;
+  schedule?: {
+    periods: Array<{
+      start: string;
+      end: string;
+      days: number[];
+      amount?: number;
+    }>;
+  } | null;
+  applies_to?: string[];
   is_active?: boolean;
-  start_time?: string | null;
-  end_time?: string | null;
-  days_of_week?: string[] | null;
-  applicable_to?: string[] | null;
+  sort_order?: number;
 }
 
 export interface SurchargeRuleResponse {
@@ -519,46 +542,128 @@ export interface PackageListQueryPayload {
 
 export interface RateCardResponse {
   id?: string;
-  config_name: string;
-  base_fare: number;
-  per_km: number;
-  per_minute: number;
-  minimum_fare: number;
-  cancellation_fee: number;
-  waiting_time_per_minute: number;
+  version?: number;
+  name: string;
+  config: {
+    fees: {
+      surcharge_flat_per_trip: number;
+      insurance_payment_gateway_fee: number;
+    };
+    timezone: string;
+    base_fare: {
+      flat_rate: number;
+      distance_threshold_km: number;
+      per_km_beyond_threshold: number;
+    };
+    wait_time: {
+      free_minutes: number;
+      per_minute_after_free: number;
+    };
+    highway_407_tolls: {
+      milton_brampton: number;
+      milton_oakville: number;
+      milton_mississauga: number;
+    };
+    holiday_surcharge: number;
+    max_surcharge_cap: number;
+    weather_surcharges: {
+      heavy_snow: number;
+      light_snow: number;
+      post_storm: number;
+    };
+    weekend_surcharges: {
+      sunday: number;
+      saturday: number;
+    };
+    platform_fee_percent: number;
+    rush_hour_surcharges: Array<{
+      end: string;
+      days: number[];
+      name: string;
+      start: string;
+      amount: number;
+    }>;
+    time_of_day_surcharges: Array<{
+      end: string;
+      name: string;
+      start: string;
+      amount: number;
+    }>;
+  };
   is_active: boolean;
-  metadata?: Record<string, any> | null;
+  created_by?: string;
+  notes?: string;
   created_at?: string;
-  updated_at?: string;
 }
 
 export interface CreateRateCardRequest {
-  config_name: string;
-  base_fare: number;
-  per_km: number;
-  per_minute: number;
-  minimum_fare: number;
-  cancellation_fee: number;
-  waiting_time_per_minute: number;
-  is_active?: boolean;
-  metadata?: Record<string, any> | null;
+  name: string;
+  config: {
+    timezone: string;
+    base_fare: {
+      flat_rate: number;
+      distance_threshold_km: number;
+      per_km_beyond_threshold: number;
+    };
+    fees: {
+      surcharge_flat_per_trip: number;
+      insurance_payment_gateway_fee: number;
+    };
+    wait_time: {
+      free_minutes: number;
+      per_minute_after_free: number;
+    };
+    max_surcharge_cap: number;
+    platform_fee_percent: number;
+    weather_surcharges: {
+      light_snow: number;
+      heavy_snow: number;
+      post_storm: number;
+    };
+    rush_hour_surcharges: Array<{
+      end: string;
+      days: number[];
+      name: string;
+      start: string;
+      amount: number;
+    }>;
+    time_of_day_surcharges: Array<{
+      end: string;
+      name: string;
+      start: string;
+      amount: number;
+    }>;
+    weekend_surcharges: {
+      saturday: number;
+      sunday: number;
+    };
+    holiday_surcharge: number;
+    highway_407_tolls: {
+      milton_oakville: number;
+      milton_brampton: number;
+      milton_mississauga: number;
+    };
+  };
+  notes?: string;
 }
 
 // ====================== PRICING LOGS ======================
 
 export interface PricingLog {
   id: string;
-  category: string;
-  action: string;
-  description: string;
+  log_number: number;
   admin_id: string;
   admin_name: string;
-  metadata?: Record<string, any> | null;
+  category: string;
+  city: string | null;
+  change_description: string;
+  before_value: string | null;
+  after_value: string | null;
   created_at: string;
 }
 
 export interface PricingLogListResponse {
-  logs: PricingLog[];
+  items: PricingLog[];
   total: number;
   page: number;
   page_size: number;
@@ -585,25 +690,29 @@ export interface PricingLogsExportQueryPayload {
 export interface CommissionKPIs {
   platform_commission?: number;
   driver_earnings?: number;
+  fleet_commission?: number;
+  caregiver_payout?: number;
+  reserve_buffer?: number;
   total_transactions?: number;
 }
 
 export interface CommissionConfigResponse {
-  platform_commission_percentage: number;
-  driver_earnings_percentage: number;
-  minimum_commission_amount?: number | null;
-  maximum_commission_amount?: number | null;
+  platform_percent: number | string;
+  driver_percent: number | string;
+  fleet_percent: number | string;
+  caregiver_percent: number | string;
+  reserve_percent: number | string;
   is_active: boolean;
   updated_at: string;
   updated_by?: string | null;
 }
 
 export interface CommissionConfigUpdate {
-  platform_commission_percentage?: number;
-  driver_earnings_percentage?: number;
-  minimum_commission_amount?: number | null;
-  maximum_commission_amount?: number | null;
-  is_active?: boolean;
+  platform_percent: number;
+  driver_percent: number;
+  fleet_percent: number;
+  caregiver_percent: number;
+  reserve_percent: number;
 }
 
 // ====================== CANCELLATION POLICY ======================
@@ -615,14 +724,24 @@ export interface CancellationKPIs {
 }
 
 export interface CancellationPolicyItem {
-  user_type: string;
-  time_before_pickup_minutes: number;
-  fee_percentage: number;
-  fee_amount?: number | null;
+  id: string;
+  service_type: string;
+  cancellation_window: string;
+  fee: string | number;
+  who_receives: string;
+  notes: string;
+  sort_order: number;
+  is_active: boolean;
+}
+
+export interface CancellationPolicyByServiceType {
+  service_type: string;
+  policies: CancellationPolicyItem[];
 }
 
 export interface CancellationPolicyResponse {
-  policies: CancellationPolicyItem[];
+  matrix: CancellationPolicyItem[];
+  by_service_type: CancellationPolicyByServiceType[];
 }
 
 export interface CancellationPolicyBulkUpdate {

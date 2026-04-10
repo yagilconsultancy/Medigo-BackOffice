@@ -6,11 +6,16 @@ import { PayoutKpisQueryPayload } from '../../../../../types';
 
 export const useGetPayoutKpis = (payload?: PayoutKpisQueryPayload) => {
   return useQuery({
-    queryKey: [resolveRoute(ROUTES.getPayoutKpis), JSON.stringify(payload)],
-    queryFn: () => getPayoutKpis(payload),
+    queryKey: [resolveRoute(ROUTES.getPayoutKpis), payload],
+    queryFn: () => getPayoutKpis(payload).then((res) => res.data),
     placeholderData: (previousData) => previousData,
-    retry: (failureCount, error: any) => {
-      if (error?.response?.status === 403) return false;
+    retry: (failureCount, error) => {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as any;
+        if (axiosError.response?.status === 403) {
+          return false;
+        }
+      }
       return failureCount < 3;
     },
   });

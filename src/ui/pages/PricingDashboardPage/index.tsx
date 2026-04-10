@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Box, Grid, Stack, Typography } from '@mui/material';
 import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
 import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
@@ -19,7 +20,15 @@ import {
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetPricingDashboardKpis,
+  useGetRouteComparison,
+  useGetRecentPricingChanges,
+  useGetPricingHealth,
+  useResolvedApiQuery,
+} from '../../../common';
+import { EmptyState } from '../../modules/blocks';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -51,183 +60,115 @@ type HealthItem = {
   type: 'ok' | 'warning';
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const routeData: RouteRow[] = [
-  {
-    id: '1',
-    route: 'Local (Milton)',
-    standard: '$14.56',
-    wheelchair: '$54.56',
-    stretcher: '$131.56',
-  },
-  {
-    id: '2',
-    route: 'Georgetown',
-    standard: '$22.06',
-    wheelchair: '$55.36',
-    stretcher: '$149.56',
-  },
-  {
-    id: '3',
-    route: 'Oakville',
-    standard: '$35.56',
-    wheelchair: '$72.16',
-    stretcher: '$177.56',
-  },
-  {
-    id: '4',
-    route: 'Burlington',
-    standard: '$40.06',
-    wheelchair: '$78.76',
-    stretcher: '$192.06',
-  },
-  {
-    id: '5',
-    route: 'Brampton',
-    standard: '$44.56',
-    wheelchair: '$85.36',
-    stretcher: '$205.56',
-  },
-  {
-    id: '6',
-    route: 'Mississauga',
-    standard: '$57.31',
-    wheelchair: '$105.06',
-    stretcher: '$236.31',
-  },
-];
-
-const priceChanges: PriceChange[] = [
-  {
-    id: '1',
-    title: 'Base Fare (≤10 km)',
-    category: 'Standard',
-    categoryColor: '#2F6FED',
-    categoryBg: '#EBF2FF',
-    iconBg: '#EBF2FF',
-    date: 'Mar 20 · 2:10 PM',
-    status: 'Active',
-    changedBy: 'Marcus Bell',
-    oldPrice: '$11.00',
-    newPrice: '$12.00',
-  },
-  {
-    id: '2',
-    title: 'Accessibility Fee',
-    category: 'Wheelchair (WAV)',
-    categoryColor: '#6366F1',
-    categoryBg: '#EEF2FF',
-    iconBg: '#EEF2FF',
-    date: 'Mar 19 · 10:30 AM',
-    status: 'Active',
-    changedBy: 'Angela Brooks',
-    oldPrice: '$12.00',
-    newPrice: '$15.00',
-  },
-  {
-    id: '3',
-    title: 'Per-km Rate (>10 km)',
-    category: 'Standard',
-    categoryColor: '#2F6FED',
-    categoryBg: '#EBF2FF',
-    iconBg: '#EBF2FF',
-    date: 'Mar 18 · 4:45 PM',
-    status: 'Active',
-    changedBy: 'Marcus Bell',
-    oldPrice: '$1.80',
-    newPrice: '$2.00',
-  },
-  {
-    id: '4',
-    title: 'Stretcher Surcharge',
-    category: 'Stretcher',
-    categoryColor: '#EF4444',
-    categoryBg: '#FEF2F2',
-    iconBg: '#FEF2F2',
-    date: 'Mar 17 · 9:15 AM',
-    status: 'Active',
-    changedBy: 'Kevin Walsh',
-    oldPrice: '$80.00',
-    newPrice: '$85.00',
-  },
-  {
-    id: '5',
-    title: 'Wait Time Rate',
-    category: 'Wheelchair (WAV)',
-    categoryColor: '#6366F1',
-    categoryBg: '#EEF2FF',
-    iconBg: '#EEF2FF',
-    date: 'Mar 16 · 1:00 PM',
-    status: 'Active',
-    changedBy: 'Angela Brooks',
-    oldPrice: '$0.40',
-    newPrice: '$0.50',
-  },
-];
-
-const healthItems: HealthItem[] = [
-  {
-    id: '1',
-    text: 'Standard Vehicle fares configured (Milton area)',
-    type: 'ok',
-  },
-  { id: '2', text: 'WAV accessibility fee set ($15.00)', type: 'ok' },
-  { id: '3', text: 'WAV minimum fare protection active ($45.00)', type: 'ok' },
-  { id: '4', text: 'Stretcher attendant fee configured ($35.00)', type: 'ok' },
-  { id: '5', text: 'Surge rules set for all service types', type: 'ok' },
-  {
-    id: '6',
-    text: 'PSW Caregiver rates defined ($38/hr → $34/hr)',
-    type: 'ok',
-  },
-  { id: '7', text: 'Toll charges confirmed for Hwy 407 routes', type: 'ok' },
-  {
-    id: '8',
-    text: 'Hospital Discharge Package — pending launch review (Apr 2026)',
-    type: 'warning',
-  },
-  { id: '9', text: 'Dialysis monthly packages — renewal due', type: 'warning' },
-];
-
-// ─── Stat Cards Config ──────────────────────────────────────────────────────
-
-const statCards = [
-  {
-    icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 22, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-    value: '$1.24M',
-    label: 'Monthly Revenue',
-    badge: '+14.2%',
-  },
-  {
-    icon: <TrendingUpOutlinedIcon sx={{ fontSize: 22, color: '#10B981' }} />,
-    iconBg: '#ECFDF5',
-    value: '$42.80',
-    label: 'Avg. Trip Value',
-    badge: '+8.5%',
-  },
-  {
-    icon: <CategoryOutlinedIcon sx={{ fontSize: 22, color: '#6366F1' }} />,
-    iconBg: '#EEF2FF',
-    value: '5',
-    label: 'Active Service Types',
-    badge: '12 zones',
-  },
-  {
-    icon: (
-      <WorkspacePremiumOutlinedIcon sx={{ fontSize: 22, color: '#F59E0B' }} />
-    ),
-    iconBg: '#FFFBEB',
-    value: '38%',
-    label: 'Premium Services',
-    badge: '+3.2%',
-  },
-];
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const PricingDashboardPage = () => {
+  // API Integration
+  const { data: kpisData } = useResolvedApiQuery(
+    useGetPricingDashboardKpis,
+    null
+  );
+  const { data: routeComparisonData } = useResolvedApiQuery(
+    useGetRouteComparison,
+    null
+  );
+  const { data: recentChangesData } = useResolvedApiQuery(
+    useGetRecentPricingChanges,
+    null,
+    { limit: 5 }
+  );
+  const { data: healthData } = useResolvedApiQuery(useGetPricingHealth, null);
+
+  // Transform API data
+  const statCards = useMemo(() => {
+    const kpis = kpisData || {};
+    return [
+      {
+        icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 22, color: '#2F6FED' }} />,
+        iconBg: '#EBF2FF',
+        value: `$${parseFloat(kpis.monthly_revenue || '0').toLocaleString()}`,
+        label: 'Monthly Revenue',
+        badge: 'This month',
+      },
+      {
+        icon: <TrendingUpOutlinedIcon sx={{ fontSize: 22, color: '#10B981' }} />,
+        iconBg: '#ECFDF5',
+        value: `$${parseFloat(kpis.avg_trip_fare || '0').toFixed(2)}`,
+        label: 'Avg. Trip Fare',
+        badge: 'Per ride',
+      },
+      {
+        icon: <CategoryOutlinedIcon sx={{ fontSize: 22, color: '#6366F1' }} />,
+        iconBg: '#EEF2FF',
+        value: kpis.active_service_types?.toLocaleString() || '0',
+        label: 'Active Service Types',
+        badge: 'Configured',
+      },
+      {
+        icon: (
+          <WorkspacePremiumOutlinedIcon sx={{ fontSize: 22, color: '#F59E0B' }} />
+        ),
+        iconBg: '#FFFBEB',
+        value: `${kpis.premium_ride_percent || '0'}%`,
+        label: 'Premium Services',
+        badge: 'Of total rides',
+      },
+    ];
+  }, [kpisData]);
+
+  const routeRows = useMemo(() => {
+    const routes = routeComparisonData?.routes || [];
+    return routes.map((route: any, index: number) => ({
+      id: `${index + 1}`,
+      route: route.route || '',
+      standard: `$${(route.standard ?? 0).toFixed(2)}`,
+      wheelchair: `$${(route.wheelchair_wav ?? 0).toFixed(2)}`,
+      stretcher: `$${(route.stretcher ?? 0).toFixed(2)}`,
+    }));
+  }, [routeComparisonData]);
+
+  const priceChanges = useMemo(() => {
+    const changes = recentChangesData?.changes || [];
+    const categoryColorMap: Record<string, { color: string; bg: string }> = {
+      Standard: { color: '#2F6FED', bg: '#EBF2FF' },
+      'Wheelchair (WAV)': { color: '#6366F1', bg: '#EEF2FF' },
+      Stretcher: { color: '#EF4444', bg: '#FEF2F2' },
+      Package: { color: '#10B981', bg: '#ECFDF5' },
+    };
+
+    return changes.map((change: any) => {
+      const categoryStyle =
+        categoryColorMap[change.category] || categoryColorMap.Standard;
+      return {
+        id: change.id,
+        title: change.description || change.change_type || '',
+        category: change.category || 'Standard',
+        categoryColor: categoryStyle.color,
+        categoryBg: categoryStyle.bg,
+        iconBg: categoryStyle.bg,
+        date: new Date(change.created_at).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
+        status: 'Active' as const,
+        changedBy: change.admin_name || 'Admin',
+        oldPrice: '',
+        newPrice: '',
+      };
+    });
+  }, [recentChangesData]);
+
+  const healthItems = useMemo(() => {
+    const items = healthData?.items || [];
+
+    return items.map((item: any, index: number) => ({
+      id: `${index}`,
+      text: `${item.label} - ${item.detail}`,
+      type: item.status === 'ok' ? ('ok' as const) : ('warning' as const),
+    }));
+  }, [healthData]);
+
   const columns: GridColSpec<RouteRow>[] = [
     {
       field: 'route',
@@ -405,10 +346,17 @@ export const PricingDashboardPage = () => {
         {/* Route Pricing Comparison Table */}
         <AppGridtable
           columns={columns}
-          data={routeData}
+          data={routeRows}
           initialPageSize={10}
           hidePagination
           disableRowClick
+          emptyState={
+            <EmptyState
+              title="No route pricing data available"
+              description="Route comparison data will appear here once configured"
+              height={200}
+            />
+          }
           sx={{
             height: 'auto',
             width: '100%',
@@ -482,9 +430,17 @@ export const PricingDashboardPage = () => {
             </Stack>
 
             <Stack spacing={'12px'} sx={{ padding: '24px' }}>
-              {priceChanges.map((change) => (
-                <PriceChangeCard key={change.id} change={change} />
-              ))}
+              {priceChanges.length > 0 ? (
+                priceChanges.map((change) => (
+                  <PriceChangeCard key={change.id} change={change} />
+                ))
+              ) : (
+                <EmptyState
+                  title="No recent pricing changes"
+                  description="Pricing change history will appear here"
+                  height={200}
+                />
+              )}
             </Stack>
           </Stack>
 
@@ -530,9 +486,17 @@ export const PricingDashboardPage = () => {
             </Stack>
 
             <Stack spacing={'10px'} sx={{ padding: '20px' }}>
-              {healthItems.map((item) => (
-                <HealthCheckItem key={item.id} item={item} />
-              ))}
+              {healthItems.length > 0 ? (
+                healthItems.map((item) => (
+                  <HealthCheckItem key={item.id} item={item} />
+                ))
+              ) : (
+                <EmptyState
+                  title="No health data available"
+                  description="Pricing health information will appear here"
+                  height={200}
+                />
+              )}
             </Stack>
           </Stack>
         </Stack>
