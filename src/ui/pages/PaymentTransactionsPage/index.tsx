@@ -143,10 +143,7 @@ export const PaymentTransactionsPage = () => {
 
   const paymentMethods = useMemo(() => {
     const methods = paymentMethodData || [];
-    const methodColors: Record<
-      string,
-      { color: string; label?: string }
-    > = {
+    const methodColors: Record<string, { color: string; label?: string }> = {
       medicare: { color: '#2F6FED', label: 'Medicare' },
       medicaid: { color: '#6366F1', label: 'Medicaid' },
       private_insurance: { color: '#10B981', label: 'Private Insurance' },
@@ -155,11 +152,12 @@ export const PaymentTransactionsPage = () => {
     };
 
     return methods.map((pm: any) => {
-      const colorConfig =
-        methodColors[pm.method?.toLowerCase().replace(/\s+/g, '_')] || {
-          color: '#6B7280',
-          label: pm.method,
-        };
+      const colorConfig = methodColors[
+        pm.method?.toLowerCase().replace(/\s+/g, '_')
+      ] || {
+        color: '#6B7280',
+        label: pm.method,
+      };
       return {
         label: colorConfig.label || pm.method || 'Unknown',
         color: colorConfig.color,

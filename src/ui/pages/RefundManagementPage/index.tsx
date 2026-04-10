@@ -54,7 +54,6 @@ type RefundRow = {
   description: string;
 };
 
-
 // ─── Category Colors ────────────────────────────────────────────────────────
 
 const categoryColors: Record<string, { bg: string; color: string }> = {
@@ -88,7 +87,6 @@ const filterSections: FilterSection[] = [
     options: ['All', 'Pending', 'Approved', 'Rejected'],
   },
 ];
-
 
 // ─── Tab Config ─────────────────────────────────────────────────────────────
 
@@ -149,7 +147,9 @@ export const RefundManagementPage = () => {
         subtext: 'Awaiting decision',
       },
       {
-        icon: <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#059669' }} />,
+        icon: (
+          <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#059669' }} />
+        ),
         iconBg: '#ECFDF5',
         value: kpis.approved_refunds?.toLocaleString() || '0',
         label: 'Approved',

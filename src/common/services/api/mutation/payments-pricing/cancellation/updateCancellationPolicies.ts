@@ -1,6 +1,9 @@
 import { AxiosResponse } from 'axios';
 import { getApiClient, resolveRoute, ROUTES } from '../../../../..';
-import { ApiResponse, CancellationPolicyBulkUpdate } from '../../../../../types';
+import {
+  ApiResponse,
+  CancellationPolicyBulkUpdate,
+} from '../../../../../types';
 
 export const updateCancellationPolicies = async (
   payload: CancellationPolicyBulkUpdate

@@ -1,5 +1,9 @@
 import { toast } from 'sonner';
-import { useCreateSurchargeRule, useUpdateSurchargeRule, useDeleteSurchargeRule } from '../../mutation';
+import {
+  useCreateSurchargeRule,
+  useUpdateSurchargeRule,
+  useDeleteSurchargeRule,
+} from '../../mutation';
 import { SurchargeRuleCreate, SurchargeRuleUpdate } from '../../../../types';
 import { extractResponseErrors, tryExecute } from '../../../../utils';
 

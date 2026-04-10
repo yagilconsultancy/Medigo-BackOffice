@@ -310,9 +310,7 @@ export const usePaymentPricingApi = () => {
         }
       },
       async () => {
-        toast.error(
-          'An error occurred while updating cancellation policies'
-        );
+        toast.error('An error occurred while updating cancellation policies');
       }
     );
 

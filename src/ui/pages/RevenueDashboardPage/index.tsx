@@ -406,11 +406,9 @@ export const RevenueDashboardPage = () => {
 
   // API Integration
   const { data: kpisData } = useResolvedApiQuery(useGetRevenueKpis, null);
-  const { data: trendData } = useResolvedApiQuery(
-    useGetRevenueTrend,
-    null,
-    { period: activeTab.toLowerCase() }
-  );
+  const { data: trendData } = useResolvedApiQuery(useGetRevenueTrend, null, {
+    period: activeTab.toLowerCase(),
+  });
   const { data: rideTypeData } = useResolvedApiQuery(
     useGetRevenueByRideType,
     null
@@ -459,14 +457,18 @@ export const RevenueDashboardPage = () => {
         label: 'Driver Earnings',
         amount: `$${(distributionData.driver_earnings || 0).toLocaleString()}`,
         color: '#10B981',
-        progress: total > 0 ? ((distributionData.driver_earnings || 0) / total) * 100 : 0,
+        progress:
+          total > 0
+            ? ((distributionData.driver_earnings || 0) / total) * 100
+            : 0,
         isNegative: false,
       },
       {
         label: 'Platform Fees',
         amount: `$${(distributionData.platform_fees || 0).toLocaleString()}`,
         color: '#6366F1',
-        progress: total > 0 ? ((distributionData.platform_fees || 0) / total) * 100 : 0,
+        progress:
+          total > 0 ? ((distributionData.platform_fees || 0) / total) * 100 : 0,
         isNegative: false,
       },
       {
@@ -907,80 +909,83 @@ export const RevenueDashboardPage = () => {
                 <>
                   {rideTypes.map((rt) => (
                     <Stack key={rt.label} spacing={'6px'}>
-                  <RowStack justifyContent={'space-between'}>
-                    <RowStack spacing={'8px'}>
-                      <Box
+                      <RowStack justifyContent={'space-between'}>
+                        <RowStack spacing={'8px'}>
+                          <Box
+                            sx={{
+                              width: 16,
+                              height: 16,
+                              borderRadius: '50%',
+                              background: rt.color,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(12.5),
+                              color: '#374151',
+                            }}
+                          >
+                            {rt.label}
+                          </Typography>
+                        </RowStack>
+                        <RowStack spacing={'6px'}>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 700,
+                              fontSize: pxToRem(13),
+                              color: '#111827',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {rt.revenue}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(12),
+                              color: '#9CA3AF',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {rt.percent}
+                          </Typography>
+                        </RowStack>
+                      </RowStack>
+
+                      <LinearProgress
+                        variant="determinate"
+                        value={rt.progress}
                         sx={{
-                          width: 16,
-                          height: 16,
-                          borderRadius: '50%',
-                          background: rt.color,
-                          flexShrink: 0,
+                          height: 5,
+                          borderRadius: '100px',
+                          backgroundColor: '#F0F4F8',
+                          '& .MuiLinearProgress-bar': {
+                            borderRadius: '100px',
+                            backgroundColor: rt.color,
+                          },
                         }}
                       />
+
                       <Typography
                         sx={{
                           fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 400,
-                          fontSize: pxToRem(12.5),
-                          color: '#374151',
-                        }}
-                      >
-                        {rt.label}
-                      </Typography>
-                    </RowStack>
-                    <RowStack spacing={'6px'}>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 700,
-                          fontSize: pxToRem(13),
-                          color: '#111827',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {rt.revenue}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(12),
+                          fontSize: pxToRem(11),
                           color: '#9CA3AF',
-                          whiteSpace: 'nowrap',
                         }}
                       >
-                        {rt.percent}
+                        {rt.trips}
                       </Typography>
-                    </RowStack>
-                  </RowStack>
-
-                  <LinearProgress
-                    variant="determinate"
-                    value={rt.progress}
-                    sx={{
-                      height: 5,
-                      borderRadius: '100px',
-                      backgroundColor: '#F0F4F8',
-                      '& .MuiLinearProgress-bar': {
-                        borderRadius: '100px',
-                        backgroundColor: rt.color,
-                      },
-                    }}
-                  />
-
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(11),
-                      color: '#9CA3AF',
-                    }}
-                  >
-                    {rt.trips}
-                  </Typography>
-                </Stack>
-              ))}
+                    </Stack>
+                  ))}
                 </>
               )}
             </Stack>
@@ -1028,84 +1033,87 @@ export const RevenueDashboardPage = () => {
                 <>
                   {cities.map((c) => (
                     <RowStack
-                  key={c.rank}
-                  justifyContent={'space-between'}
-                  sx={{
-                    padding: '8px 0',
-                  }}
-                >
-                  <RowStack spacing={'12px'}>
-                    <Box
+                      key={c.rank}
+                      justifyContent={'space-between'}
                       sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '14px',
-                        background: '#F7F9FB',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
+                        padding: '8px 0',
                       }}
                     >
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 700,
-                          fontSize: pxToRem(12),
-                          color: '#6B7280',
-                        }}
-                      >
-                        {c.rank}
-                      </Typography>
-                    </Box>
-                    <Stack spacing={'2px'}>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 600,
-                          fontSize: pxToRem(13),
-                          color: '#111827',
-                        }}
-                      >
-                        {c.city}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(11.5),
-                          color: '#9CA3AF',
-                        }}
-                      >
-                        {c.trips}
-                      </Typography>
-                    </Stack>
-                  </RowStack>
+                      <RowStack spacing={'12px'}>
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: '14px',
+                            background: '#F7F9FB',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 700,
+                              fontSize: pxToRem(12),
+                              color: '#6B7280',
+                            }}
+                          >
+                            {c.rank}
+                          </Typography>
+                        </Box>
+                        <Stack spacing={'2px'}>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(13),
+                              color: '#111827',
+                            }}
+                          >
+                            {c.city}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(11.5),
+                              color: '#9CA3AF',
+                            }}
+                          >
+                            {c.trips}
+                          </Typography>
+                        </Stack>
+                      </RowStack>
 
-                  <Stack alignItems={'flex-end'} spacing={'2px'}>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 700,
-                        fontSize: pxToRem(14),
-                        color: '#111827',
-                      }}
-                    >
-                      {c.revenue}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 600,
-                        fontSize: pxToRem(11.5),
-                        color: '#059669',
-                      }}
-                    >
-                      {c.growth}
-                    </Typography>
-                  </Stack>
-                </RowStack>
-              ))}
+                      <Stack alignItems={'flex-end'} spacing={'2px'}>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 700,
+                            fontSize: pxToRem(14),
+                            color: '#111827',
+                          }}
+                        >
+                          {c.revenue}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 600,
+                            fontSize: pxToRem(11.5),
+                            color: '#059669',
+                          }}
+                        >
+                          {c.growth}
+                        </Typography>
+                      </Stack>
+                    </RowStack>
+                  ))}
                 </>
               )}
             </Stack>
@@ -1149,56 +1157,57 @@ export const RevenueDashboardPage = () => {
                 <>
                   {distribution.map((d) => (
                     <Stack key={d.label} spacing={'6px'}>
-                  <RowStack justifyContent={'space-between'}>
-                    <RowStack spacing={'8px'}>
-                      <Box
+                      <RowStack justifyContent={'space-between'}>
+                        <RowStack spacing={'8px'}>
+                          <Box
+                            sx={{
+                              width: 16,
+                              height: 16,
+                              borderRadius: '50%',
+                              background: d.color,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(12.5),
+                              color: '#374151',
+                            }}
+                          >
+                            {d.label}
+                          </Typography>
+                        </RowStack>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 700,
+                            fontSize: pxToRem(13),
+                            color: d.isNegative ? '#EF4444' : '#111827',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {d.amount}
+                        </Typography>
+                      </RowStack>
+
+                      <LinearProgress
+                        variant="determinate"
+                        value={d.progress}
                         sx={{
-                          width: 16,
-                          height: 16,
-                          borderRadius: '50%',
-                          background: d.color,
-                          flexShrink: 0,
+                          height: 5,
+                          borderRadius: '100px',
+                          backgroundColor: '#F0F4F8',
+                          '& .MuiLinearProgress-bar': {
+                            borderRadius: '100px',
+                            backgroundColor: d.color,
+                          },
                         }}
                       />
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(12.5),
-                          color: '#374151',
-                        }}
-                      >
-                        {d.label}
-                      </Typography>
-                    </RowStack>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 700,
-                        fontSize: pxToRem(13),
-                        color: d.isNegative ? '#EF4444' : '#111827',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {d.amount}
-                    </Typography>
-                  </RowStack>
-
-                  <LinearProgress
-                    variant="determinate"
-                    value={d.progress}
-                    sx={{
-                      height: 5,
-                      borderRadius: '100px',
-                      backgroundColor: '#F0F4F8',
-                      '& .MuiLinearProgress-bar': {
-                        borderRadius: '100px',
-                        backgroundColor: d.color,
-                      },
-                    }}
-                  />
-                </Stack>
-              ))}
+                    </Stack>
+                  ))}
                 </>
               )}
             </Stack>

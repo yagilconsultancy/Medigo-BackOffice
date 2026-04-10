@@ -149,10 +149,7 @@ const fareRulesConfig: FareRule[] = [
 export const PricingConfigurationPage = () => {
   const { saveConfiguration } = usePaymentPricingApi();
   const { data: kpisData } = useResolvedApiQuery(useGetConfigKpis, null);
-  const { data: configData } = useResolvedApiQuery(
-    useGetCurrentConfig,
-    null
-  );
+  const { data: configData } = useResolvedApiQuery(useGetCurrentConfig, null);
 
   const initialValues: PricingFormValues = useMemo(() => {
     const config = configData?.config;
@@ -183,7 +180,8 @@ export const PricingConfigurationPage = () => {
         timezone: configData?.config?.timezone || 'America/Toronto',
         base_fare: {
           flat_rate: values.base_fare,
-          distance_threshold_km: configData?.config?.base_fare?.distance_threshold_km || 10.0,
+          distance_threshold_km:
+            configData?.config?.base_fare?.distance_threshold_km || 10.0,
           per_km_beyond_threshold: values.distance_rate,
         },
         fees: configData?.config?.fees || {
@@ -202,7 +200,8 @@ export const PricingConfigurationPage = () => {
           post_storm: 3.0,
         },
         rush_hour_surcharges: configData?.config?.rush_hour_surcharges || [],
-        time_of_day_surcharges: configData?.config?.time_of_day_surcharges || [],
+        time_of_day_surcharges:
+          configData?.config?.time_of_day_surcharges || [],
         weekend_surcharges: configData?.config?.weekend_surcharges || {
           saturday: 3.0,
           sunday: 4.0,
@@ -275,25 +274,43 @@ export const PricingConfigurationPage = () => {
               <Grid container spacing={'20px'}>
                 {[
                   {
-                    icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+                    icon: (
+                      <AttachMoneyOutlinedIcon
+                        sx={{ fontSize: 20, color: '#2F6FED' }}
+                      />
+                    ),
                     iconBg: '#EBF2FF',
-                    value: kpisData?.avg_trip_fare ? `$${kpisData.avg_trip_fare.toFixed(2)}` : '$0.00',
+                    value: kpisData?.avg_trip_fare
+                      ? `$${kpisData.avg_trip_fare.toFixed(2)}`
+                      : '$0.00',
                     label: 'Avg Trip Fare',
                   },
                   {
-                    icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />,
+                    icon: (
+                      <AttachMoneyOutlinedIcon
+                        sx={{ fontSize: 20, color: '#10B981' }}
+                      />
+                    ),
                     iconBg: '#ECFDF5',
                     value: `$${values.base_fare.toFixed(2)}`,
                     label: 'Base Fare (Global)',
                   },
                   {
-                    icon: <BoltOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
+                    icon: (
+                      <BoltOutlinedIcon
+                        sx={{ fontSize: 20, color: '#F59E0B' }}
+                      />
+                    ),
                     iconBg: '#FFFBEB',
                     value: `${values.surge_multiplier.toFixed(1)}×`,
                     label: 'Surge Multiplier',
                   },
                   {
-                    icon: <BlockOutlinedIcon sx={{ fontSize: 20, color: '#EF4444' }} />,
+                    icon: (
+                      <BlockOutlinedIcon
+                        sx={{ fontSize: 20, color: '#EF4444' }}
+                      />
+                    ),
                     iconBg: '#FEF2F2',
                     value: `$${values.cancellation_fee.toFixed(2)}`,
                     label: 'Cancellation Fee',
@@ -353,163 +370,167 @@ export const PricingConfigurationPage = () => {
                 ))}
               </Grid>
 
-        {/* Fare & Fee Rules Card */}
-        <Stack
-          sx={{
-            background: '#FFFFFF',
-            border: '0.67px solid #F0F4F8',
-            borderRadius: '16px',
-            boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Card Header */}
-          <Stack
-            spacing={'4px'}
-            sx={{
-              padding: '16px 24px',
-              borderBottom: '0.67px solid #F0F4F8',
-            }}
-          >
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 500,
-                fontSize: pxToRem(18),
-                color: '#111827',
-              }}
-            >
-              Fare & Fee Rules
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
-                fontSize: pxToRem(13),
-                color: '#6B7280',
-              }}
-            >
-              Adjust values and click Save Changes — affects all ride types
-              globally
-            </Typography>
-          </Stack>
-
-          {/* Fare Rules List */}
-          <Stack spacing={'12px'} sx={{ padding: '24px' }}>
-            {fareRulesConfig.map((rule) => (
-              <RowStack
-                key={rule.id}
-                justifyContent="space-between"
+              {/* Fare & Fee Rules Card */}
+              <Stack
                 sx={{
-                  background: '#F7F9FB',
+                  background: '#FFFFFF',
                   border: '0.67px solid #F0F4F8',
                   borderRadius: '16px',
-                  padding: '0px 20px',
-                  height: 80,
+                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                  overflow: 'hidden',
                 }}
               >
-                {/* Left: Icon + Text */}
-                <RowStack spacing={'16px'}>
-                  <Box
+                {/* Card Header */}
+                <Stack
+                  spacing={'4px'}
+                  sx={{
+                    padding: '16px 24px',
+                    borderBottom: '0.67px solid #F0F4F8',
+                  }}
+                >
+                  <Typography
                     sx={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: '14px',
-                      background: '#EBF2FF',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 500,
+                      fontSize: pxToRem(18),
+                      color: '#111827',
                     }}
                   >
-                    {rule.icon}
-                  </Box>
-                  <Stack>
-                    <Typography
+                    Fare & Fee Rules
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(13),
+                      color: '#6B7280',
+                    }}
+                  >
+                    Adjust values and click Save Changes — affects all ride
+                    types globally
+                  </Typography>
+                </Stack>
+
+                {/* Fare Rules List */}
+                <Stack spacing={'12px'} sx={{ padding: '24px' }}>
+                  {fareRulesConfig.map((rule) => (
+                    <RowStack
+                      key={rule.id}
+                      justifyContent="space-between"
                       sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 600,
-                        fontSize: pxToRem(13.5),
-                        color: '#111827',
+                        background: '#F7F9FB',
+                        border: '0.67px solid #F0F4F8',
+                        borderRadius: '16px',
+                        padding: '0px 20px',
+                        height: 80,
                       }}
                     >
-                      {rule.title}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 400,
-                        fontSize: pxToRem(12),
-                        color: '#9CA3AF',
-                      }}
-                    >
-                      {rule.description}
-                    </Typography>
-                  </Stack>
+                      {/* Left: Icon + Text */}
+                      <RowStack spacing={'16px'}>
+                        <Box
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: '14px',
+                            background: '#EBF2FF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {rule.icon}
+                        </Box>
+                        <Stack>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(13.5),
+                              color: '#111827',
+                            }}
+                          >
+                            {rule.title}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(12),
+                              color: '#9CA3AF',
+                            }}
+                          >
+                            {rule.description}
+                          </Typography>
+                        </Stack>
+                      </RowStack>
+
+                      {/* Right: Number Field */}
+                      <AppNumberField
+                        value={values[fareRulesMapping[rule.id]]}
+                        onChange={(val) =>
+                          setFieldValue(fareRulesMapping[rule.id], val)
+                        }
+                        unit={rule.unit}
+                        step={rule.step}
+                        decimalPlaces={rule.decimalPlaces}
+                        min={rule.min}
+                        max={rule.max}
+                      />
+                    </RowStack>
+                  ))}
+                </Stack>
+
+                {/* Card Footer */}
+                <RowStack
+                  justifyContent="space-between"
+                  sx={{
+                    padding: '0px 24px',
+                    height: 56,
+                    background: '#FAFBFC',
+                    borderTop: '0.67px solid #F0F4F8',
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(12.5),
+                      color: '#9CA3AF',
+                    }}
+                  >
+                    Changes apply globally to all ride types unless overridden
+                    per ride type
+                  </Typography>
+                  <AppButton
+                    type="submit"
+                    variant="contained"
+                    disabled={!dirty || isSubmitting}
+                    isLoading={isSubmitting}
+                    sx={{
+                      background: '#2F6FED',
+                      borderRadius: '14px',
+                      padding: '10px 24px',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      fontSize: pxToRem(13),
+                      '&:hover': { background: '#1E4FD9' },
+                      '&.Mui-disabled': {
+                        background: '#93B4F5',
+                        color: '#FFFFFF',
+                      },
+                    }}
+                  >
+                    Save Changes
+                  </AppButton>
                 </RowStack>
-
-                {/* Right: Number Field */}
-                <AppNumberField
-                  value={values[fareRulesMapping[rule.id]]}
-                  onChange={(val) => setFieldValue(fareRulesMapping[rule.id], val)}
-                  unit={rule.unit}
-                  step={rule.step}
-                  decimalPlaces={rule.decimalPlaces}
-                  min={rule.min}
-                  max={rule.max}
-                />
-              </RowStack>
-            ))}
-          </Stack>
-
-          {/* Card Footer */}
-          <RowStack
-            justifyContent="space-between"
-            sx={{
-              padding: '0px 24px',
-              height: 56,
-              background: '#FAFBFC',
-              borderTop: '0.67px solid #F0F4F8',
-            }}
-          >
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
-                fontSize: pxToRem(12.5),
-                color: '#9CA3AF',
-              }}
-            >
-              Changes apply globally to all ride types unless overridden per
-              ride type
-            </Typography>
-            <AppButton
-              type="submit"
-              variant="contained"
-              disabled={!dirty || isSubmitting}
-              isLoading={isSubmitting}
-              sx={{
-                background: '#2F6FED',
-                borderRadius: '14px',
-                padding: '10px 24px',
-                textTransform: 'none',
-                fontWeight: 600,
-                fontSize: pxToRem(13),
-                '&:hover': { background: '#1E4FD9' },
-                '&.Mui-disabled': {
-                  background: '#93B4F5',
-                  color: '#FFFFFF',
-                },
-              }}
-            >
-              Save Changes
-            </AppButton>
-          </RowStack>
-        </Stack>
               </Stack>
-            </Form>
-          )}
-        </Formik>
+            </Stack>
+          </Form>
+        )}
+      </Formik>
     </AppDashboardLayout>
   );
 };

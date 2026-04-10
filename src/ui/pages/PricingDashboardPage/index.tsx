@@ -60,7 +60,6 @@ type HealthItem = {
   type: 'ok' | 'warning';
 };
 
-
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const PricingDashboardPage = () => {
@@ -85,14 +84,18 @@ export const PricingDashboardPage = () => {
     const kpis = kpisData || {};
     return [
       {
-        icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 22, color: '#2F6FED' }} />,
+        icon: (
+          <AttachMoneyOutlinedIcon sx={{ fontSize: 22, color: '#2F6FED' }} />
+        ),
         iconBg: '#EBF2FF',
         value: `$${parseFloat(kpis.monthly_revenue || '0').toLocaleString()}`,
         label: 'Monthly Revenue',
         badge: 'This month',
       },
       {
-        icon: <TrendingUpOutlinedIcon sx={{ fontSize: 22, color: '#10B981' }} />,
+        icon: (
+          <TrendingUpOutlinedIcon sx={{ fontSize: 22, color: '#10B981' }} />
+        ),
         iconBg: '#ECFDF5',
         value: `$${parseFloat(kpis.avg_trip_fare || '0').toFixed(2)}`,
         label: 'Avg. Trip Fare',
@@ -107,7 +110,9 @@ export const PricingDashboardPage = () => {
       },
       {
         icon: (
-          <WorkspacePremiumOutlinedIcon sx={{ fontSize: 22, color: '#F59E0B' }} />
+          <WorkspacePremiumOutlinedIcon
+            sx={{ fontSize: 22, color: '#F59E0B' }}
+          />
         ),
         iconBg: '#FFFBEB',
         value: `${kpis.premium_ride_percent || '0'}%`,

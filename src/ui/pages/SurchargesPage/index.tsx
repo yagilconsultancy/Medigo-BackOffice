@@ -164,7 +164,9 @@ export const SurchargesPage = () => {
         schedule: originalRule.schedule || null,
         applies_to: originalRule.applies_to,
         is_active: formRule.is_active,
-        ...(originalRule.description && { description: originalRule.description }),
+        ...(originalRule.description && {
+          description: originalRule.description,
+        }),
         ...(originalRule.sort_order !== undefined && {
           sort_order: originalRule.sort_order,
         }),
@@ -198,16 +200,38 @@ export const SurchargesPage = () => {
       >
         {({ values, dirty, isSubmitting, setFieldValue }) => {
           const iconMap: Record<string, ReactNode> = {
-            peakhours: <BoltOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
-            night: <DarkModeOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
-            overnight: <DarkModeOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
-            earlymorning: <WbTwilightOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
-            weatherlightsnow: <WaterDropOutlinedIcon sx={{ fontSize: 20, color: '#0EA5E9' }} />,
-            weatherheavysnow: <AcUnitOutlinedIcon sx={{ fontSize: 20, color: '#0EA5E9' }} />,
-            weatherpoststorm: <WaterDropOutlinedIcon sx={{ fontSize: 20, color: '#0EA5E9' }} />,
-            weekendsaturday: <BoltOutlinedIcon sx={{ fontSize: 20, color: '#8B5CF6' }} />,
-            weekendsunday: <BoltOutlinedIcon sx={{ fontSize: 20, color: '#8B5CF6' }} />,
-            holiday: <CelebrationOutlinedIcon sx={{ fontSize: 20, color: '#EC4899' }} />,
+            peakhours: (
+              <BoltOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
+            ),
+            night: (
+              <DarkModeOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />
+            ),
+            overnight: (
+              <DarkModeOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />
+            ),
+            earlymorning: (
+              <WbTwilightOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />
+            ),
+            weatherlightsnow: (
+              <WaterDropOutlinedIcon sx={{ fontSize: 20, color: '#0EA5E9' }} />
+            ),
+            weatherheavysnow: (
+              <AcUnitOutlinedIcon sx={{ fontSize: 20, color: '#0EA5E9' }} />
+            ),
+            weatherpoststorm: (
+              <WaterDropOutlinedIcon sx={{ fontSize: 20, color: '#0EA5E9' }} />
+            ),
+            weekendsaturday: (
+              <BoltOutlinedIcon sx={{ fontSize: 20, color: '#8B5CF6' }} />
+            ),
+            weekendsunday: (
+              <BoltOutlinedIcon sx={{ fontSize: 20, color: '#8B5CF6' }} />
+            ),
+            holiday: (
+              <CelebrationOutlinedIcon
+                sx={{ fontSize: 20, color: '#EC4899' }}
+              />
+            ),
           };
 
           const colorMap: Record<string, { iconBg: string; color: string }> = {
@@ -270,195 +294,208 @@ export const SurchargesPage = () => {
           return (
             <Form>
               <Stack spacing={'24px'}>
-        {/* Header */}
-        <RowStack justifyContent="space-between">
-          <DashboardTitleAndDesc
-            title="Surcharges"
-            desc="Configure additional charges applied during peak periods, special conditions, or extra service requests."
-          />
-          <AppButton
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            Create Surcharge
-          </AppButton>
-        </RowStack>
+                {/* Header */}
+                <RowStack justifyContent="space-between">
+                  <DashboardTitleAndDesc
+                    title="Surcharges"
+                    desc="Configure additional charges applied during peak periods, special conditions, or extra service requests."
+                  />
+                  <AppButton
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setIsCreateModalOpen(true)}
+                  >
+                    Create Surcharge
+                  </AppButton>
+                </RowStack>
 
-        {/* Stat Cards */}
-        <RowStack spacing={'12px'}>
-          {/* Total Surcharges */}
-          <RowStack
-            spacing={'12px'}
-            sx={{
-              flex: 1,
-              background: '#FFFFFF',
-              border: '0.67px solid #F0F4F8',
-              borderRadius: '16px',
-              boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-              padding: '0px 20px',
-              height: 120,
-            }}
-          >
-            <Stack spacing={'9px'} sx={{ flex: 1 }}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(12),
-                  color: '#6B7280',
-                }}
-              >
-                Total surcharges
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 700,
-                  fontSize: pxToRem(26),
-                  lineHeight: '0.85em',
-                  color: '#111827',
-                }}
-              >
-                {kpisData?.total_rules || totalCount}
-              </Typography>
-            </Stack>
-            <Box
-              sx={{
-                width: 42,
-                height: 42,
-                borderRadius: '16px',
-                background: '#EBF2FF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <AttachMoneyOutlinedIcon sx={{ fontSize: 19, color: '#2F6FED' }} />
-            </Box>
-          </RowStack>
+                {/* Stat Cards */}
+                <RowStack spacing={'12px'}>
+                  {/* Total Surcharges */}
+                  <RowStack
+                    spacing={'12px'}
+                    sx={{
+                      flex: 1,
+                      background: '#FFFFFF',
+                      border: '0.67px solid #F0F4F8',
+                      borderRadius: '16px',
+                      boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                      padding: '0px 20px',
+                      height: 120,
+                    }}
+                  >
+                    <Stack spacing={'9px'} sx={{ flex: 1 }}>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 400,
+                          fontSize: pxToRem(12),
+                          color: '#6B7280',
+                        }}
+                      >
+                        Total surcharges
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 700,
+                          fontSize: pxToRem(26),
+                          lineHeight: '0.85em',
+                          color: '#111827',
+                        }}
+                      >
+                        {kpisData?.total_rules || totalCount}
+                      </Typography>
+                    </Stack>
+                    <Box
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: '16px',
+                        background: '#EBF2FF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <AttachMoneyOutlinedIcon
+                        sx={{ fontSize: 19, color: '#2F6FED' }}
+                      />
+                    </Box>
+                  </RowStack>
 
-          {/* Active Surcharges */}
-          <RowStack
-            spacing={'12px'}
-            sx={{
-              flex: 1,
-              background: '#FFFFFF',
-              border: '0.67px solid #F0F4F8',
-              borderRadius: '16px',
-              boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-              padding: '0px 20px',
-              height: 120,
-            }}
-          >
-            <Stack spacing={'9px'} sx={{ flex: 1 }}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(12),
-                  color: '#6B7280',
-                }}
-              >
-                Active surcharges
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 700,
-                  fontSize: pxToRem(26),
-                  lineHeight: '0.85em',
-                  color: '#111827',
-                }}
-              >
-                {kpisData?.active_rules || activeCount}
-              </Typography>
-            </Stack>
-            <Box
-              sx={{
-                width: 42,
-                height: 42,
-                borderRadius: '16px',
-                background: '#ECFDF5',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <CheckCircleOutlineIcon sx={{ fontSize: 19, color: '#059669' }} />
-            </Box>
-          </RowStack>
+                  {/* Active Surcharges */}
+                  <RowStack
+                    spacing={'12px'}
+                    sx={{
+                      flex: 1,
+                      background: '#FFFFFF',
+                      border: '0.67px solid #F0F4F8',
+                      borderRadius: '16px',
+                      boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                      padding: '0px 20px',
+                      height: 120,
+                    }}
+                  >
+                    <Stack spacing={'9px'} sx={{ flex: 1 }}>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 400,
+                          fontSize: pxToRem(12),
+                          color: '#6B7280',
+                        }}
+                      >
+                        Active surcharges
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 700,
+                          fontSize: pxToRem(26),
+                          lineHeight: '0.85em',
+                          color: '#111827',
+                        }}
+                      >
+                        {kpisData?.active_rules || activeCount}
+                      </Typography>
+                    </Stack>
+                    <Box
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: '16px',
+                        background: '#ECFDF5',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <CheckCircleOutlineIcon
+                        sx={{ fontSize: 19, color: '#059669' }}
+                      />
+                    </Box>
+                  </RowStack>
 
-          {/* Inactive Surcharges */}
-          <RowStack
-            spacing={'12px'}
-            sx={{
-              flex: 1,
-              background: '#FFFFFF',
-              border: '0.67px solid #F0F4F8',
-              borderRadius: '16px',
-              boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-              padding: '0px 20px',
-              height: 120,
-            }}
-          >
-            <Stack spacing={'9px'} sx={{ flex: 1 }}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(12),
-                  color: '#6B7280',
-                }}
-              >
-                Inactive surcharges
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 700,
-                  fontSize: pxToRem(26),
-                  lineHeight: '0.85em',
-                  color: '#111827',
-                }}
-              >
-                {inactiveCount}
-              </Typography>
-            </Stack>
-            <Box
-              sx={{
-                width: 42,
-                height: 42,
-                borderRadius: '16px',
-                background: '#F3F4F6',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <BlockOutlinedIcon sx={{ fontSize: 19, color: '#9CA3AF' }} />
-            </Box>
-          </RowStack>
-        </RowStack>
+                  {/* Inactive Surcharges */}
+                  <RowStack
+                    spacing={'12px'}
+                    sx={{
+                      flex: 1,
+                      background: '#FFFFFF',
+                      border: '0.67px solid #F0F4F8',
+                      borderRadius: '16px',
+                      boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                      padding: '0px 20px',
+                      height: 120,
+                    }}
+                  >
+                    <Stack spacing={'9px'} sx={{ flex: 1 }}>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 400,
+                          fontSize: pxToRem(12),
+                          color: '#6B7280',
+                        }}
+                      >
+                        Inactive surcharges
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 700,
+                          fontSize: pxToRem(26),
+                          lineHeight: '0.85em',
+                          color: '#111827',
+                        }}
+                      >
+                        {inactiveCount}
+                      </Typography>
+                    </Stack>
+                    <Box
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: '16px',
+                        background: '#F3F4F6',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <BlockOutlinedIcon
+                        sx={{ fontSize: 19, color: '#9CA3AF' }}
+                      />
+                    </Box>
+                  </RowStack>
+                </RowStack>
 
-        {/* Surcharge Cards Grid */}
-        <Grid container spacing={'20px'}>
-          {surcharges.map((surcharge) => {
-            const originalRule = rules.find((r) => r.id === surcharge.id);
-            return (
-              <Grid key={surcharge.id} size={{ xs: 12, md: 6 }}>
-                <SurchargeCard
-                  surcharge={surcharge}
-                  onToggle={() => handleToggle(surcharge.id)}
-                  onDelete={() => handleDeleteClick(surcharge.id, originalRule?.name || surcharge.title)}
-                />
-              </Grid>
-            );
-          })}
-        </Grid>
+                {/* Surcharge Cards Grid */}
+                <Grid container spacing={'20px'}>
+                  {surcharges.map((surcharge) => {
+                    const originalRule = rules.find(
+                      (r) => r.id === surcharge.id
+                    );
+                    return (
+                      <Grid key={surcharge.id} size={{ xs: 12, md: 6 }}>
+                        <SurchargeCard
+                          surcharge={surcharge}
+                          onToggle={() => handleToggle(surcharge.id)}
+                          onDelete={() =>
+                            handleDeleteClick(
+                              surcharge.id,
+                              originalRule?.name || surcharge.title
+                            )
+                          }
+                        />
+                      </Grid>
+                    );
+                  })}
+                </Grid>
 
                 {/* Save Button */}
                 <RowStack justifyContent="flex-end">

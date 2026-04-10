@@ -280,10 +280,7 @@ const feeCellSx = {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const CancellationPolicyPage = () => {
-  const { data: kpisData } = useResolvedApiQuery(
-    useGetCancellationKpis,
-    null
-  );
+  const { data: kpisData } = useResolvedApiQuery(useGetCancellationKpis, null);
   const { data: policiesData } = useResolvedApiQuery(
     useGetCancellationPolicies,
     null
@@ -300,9 +297,9 @@ export const CancellationPolicyPage = () => {
     const mapping: Record<string, string> = {
       '24_hours_plus': '24 hours or more before',
       '2_24_hours': '2–24 hrs before pickup',
-      'under_2_hours': 'Under 2 hours before',
-      'after_dispatch': 'After driver dispatched',
-      'no_show': 'No-Show',
+      under_2_hours: 'Under 2 hours before',
+      after_dispatch: 'After driver dispatched',
+      no_show: 'No-Show',
     };
     return mapping[window] || window;
   };
@@ -360,7 +357,9 @@ export const CancellationPolicyPage = () => {
         title: '3. Ambulatory — Cancellation Fee Breakdown',
         description:
           'Standard sedan or SUV service. Lowest cancellation fees reflect lower deployment cost and ease of redeployment to another booking.',
-        icon: <DirectionsCarOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+        icon: (
+          <DirectionsCarOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
+        ),
         iconBg: '#EBF2FF',
         color: '#2F6FED',
         footnote:
@@ -370,7 +369,9 @@ export const CancellationPolicyPage = () => {
         title: '4. Wheelchair (WAV) — Cancellation Fee Breakdown',
         description:
           'Wheelchair accessible vehicle service managed by platform vendors. Higher fees reflect specialized vehicle preparation, ramp/lift setup, and securement equipment staging required before each trip.',
-        icon: <AccessibleOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
+        icon: (
+          <AccessibleOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />
+        ),
         iconBg: '#EEF2FF',
         color: '#6366F1',
         footnote:
@@ -381,7 +382,9 @@ export const CancellationPolicyPage = () => {
         description:
           'Highest fees across all service types. Every stretcher trip requires two crew members — driver and attendant — both of whom are compensated for their time on a no-show or late cancellation.',
         icon: (
-          <MedicalServicesOutlinedIcon sx={{ fontSize: 20, color: '#DC2626' }} />
+          <MedicalServicesOutlinedIcon
+            sx={{ fontSize: 20, color: '#DC2626' }}
+          />
         ),
         iconBg: '#FEF2F2',
         color: '#DC2626',
@@ -390,29 +393,31 @@ export const CancellationPolicyPage = () => {
       },
     };
 
-    return policiesData.by_service_type.map((serviceType) => {
-      const config = serviceTypeMap[serviceType.service_type];
-      if (!config) return null;
+    return policiesData.by_service_type
+      .map((serviceType) => {
+        const config = serviceTypeMap[serviceType.service_type];
+        if (!config) return null;
 
-      const rows: BreakdownRow[] = serviceType.policies.map((policy) => ({
-        window: mapWindowToDisplay(policy.cancellation_window),
-        fee: formatFee(policy.fee),
-        whoReceives: policy.who_receives
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (l) => l.toUpperCase())
-          .replace('Medigo Platform', 'Medigo platform')
-          .replace('Driver 80 Medigo 20', 'Driver (80%) + Medigo (20%)')
-          .replace('Vendor 82 Medigo 18', 'Vendor (82%) + Medigo (18%)')
-          .replace('Partnership 50 50', 'Partnership split (50/50)')
-          .replace('None', 'No cancellation fee applied'),
-        notes: policy.notes,
-      }));
+        const rows: BreakdownRow[] = serviceType.policies.map((policy) => ({
+          window: mapWindowToDisplay(policy.cancellation_window),
+          fee: formatFee(policy.fee),
+          whoReceives: policy.who_receives
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, (l) => l.toUpperCase())
+            .replace('Medigo Platform', 'Medigo platform')
+            .replace('Driver 80 Medigo 20', 'Driver (80%) + Medigo (20%)')
+            .replace('Vendor 82 Medigo 18', 'Vendor (82%) + Medigo (18%)')
+            .replace('Partnership 50 50', 'Partnership split (50/50)')
+            .replace('None', 'No cancellation fee applied'),
+          notes: policy.notes,
+        }));
 
-      return {
-        ...config,
-        rows,
-      };
-    }).filter(Boolean) as ServiceBreakdown[];
+        return {
+          ...config,
+          rows,
+        };
+      })
+      .filter(Boolean) as ServiceBreakdown[];
   }, [policiesData]);
 
   // Update stat cards with real data
@@ -449,7 +454,9 @@ export const CancellationPolicyPage = () => {
         value: '24h+',
         label: 'Free Window',
         iconBg: '#ECFDF5',
-        icon: <AccessTimeOutlinedIcon sx={{ fontSize: 19, color: '#10B981' }} />,
+        icon: (
+          <AccessTimeOutlinedIcon sx={{ fontSize: 19, color: '#10B981' }} />
+        ),
       },
     ];
   }, [policiesData]);

@@ -44,15 +44,11 @@ export const PricingLogsPage = () => {
   const { mutateAsync: exportLogs, isPending: isExporting } =
     useExportPricingLogs();
 
-  const { data: logsData } = useResolvedApiQuery(
-    useListPricingLogs,
-    null,
-    {
-      page,
-      page_size: pageSize,
-      search: searchQuery || null,
-    }
-  );
+  const { data: logsData } = useResolvedApiQuery(useListPricingLogs, null, {
+    page,
+    page_size: pageSize,
+    search: searchQuery || null,
+  });
 
   const handleExport = async () => {
     try {

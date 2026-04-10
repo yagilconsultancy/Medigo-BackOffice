@@ -23,7 +23,13 @@ import {
   FormikAppTextField,
   RowStack,
 } from '../../../modules/components';
-import { SurchargeRuleCreate, pxToRem, useSurchargeApi, ROUTES, resolveRoute } from '../../../../common';
+import {
+  SurchargeRuleCreate,
+  pxToRem,
+  useSurchargeApi,
+  ROUTES,
+  resolveRoute,
+} from '../../../../common';
 
 // ─── iOS Switch ─────────────────────────────────────────────────────────────
 
@@ -209,157 +215,161 @@ export const CreateSurchargeModal = ({
 
               {/* Content */}
               <Box sx={{ padding: '24px' }}>
-              <Stack spacing={'20px'}>
-                {/* Name and Surcharge Type */}
-                <Grid container spacing={'16px'}>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <FormikAppTextField
-                      name="name"
-                      label="Name"
-                      placeholder="Enter surcharge name"
-                      required
-                    />
+                <Stack spacing={'20px'}>
+                  {/* Name and Surcharge Type */}
+                  <Grid container spacing={'16px'}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <FormikAppTextField
+                        name="name"
+                        label="Name"
+                        placeholder="Enter surcharge name"
+                        required
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <FormikAppTextField
+                        name="surcharge_type"
+                        label="Surcharge Type"
+                        select
+                        required
+                      >
+                        {SURCHARGE_TYPES.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </FormikAppTextField>
+                    </Grid>
                   </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <FormikAppTextField
-                      name="surcharge_type"
-                      label="Surcharge Type"
-                      select
-                      required
+
+                  {/* Description */}
+                  <FormikAppTextField
+                    name="description"
+                    label="Description"
+                    placeholder="Enter description (optional)"
+                    multiline
+                    rows={3}
+                  />
+
+                  {/* Multiplier and Flat Amount */}
+                  <Grid container spacing={'16px'}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <FormikAppTextField
+                        name="multiplier"
+                        label="Multiplier"
+                        type="number"
+                        placeholder="1"
+                        required
+                        inputProps={{ min: 0, step: 0.01 }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <FormikAppTextField
+                        name="flat_amount"
+                        label="Flat Amount ($)"
+                        type="number"
+                        placeholder="0"
+                        required
+                        inputProps={{ min: 0, step: 0.01 }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  {/* Applies To */}
+                  <FormControl
+                    fullWidth
+                    error={touched.applies_to && Boolean(errors.applies_to)}
+                  >
+                    <InputLabel>Applies To *</InputLabel>
+                    <Select
+                      multiple
+                      value={values.applies_to}
+                      onChange={(e) =>
+                        setFieldValue('applies_to', e.target.value)
+                      }
+                      input={<OutlinedInput label="Applies To *" />}
+                      renderValue={(selected) => (
+                        <Box
+                          sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}
+                        >
+                          {selected.map((value) => (
+                            <Chip
+                              key={value}
+                              label={
+                                APPLIES_TO_OPTIONS.find(
+                                  (opt) => opt.value === value
+                                )?.label || value
+                              }
+                              size="small"
+                            />
+                          ))}
+                        </Box>
+                      )}
+                      sx={{
+                        borderRadius: '10px',
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#E8ECF0',
+                        },
+                      }}
                     >
-                      {SURCHARGE_TYPES.map((option) => (
+                      {APPLIES_TO_OPTIONS.map((option) => (
                         <MenuItem key={option.value} value={option.value}>
                           {option.label}
                         </MenuItem>
                       ))}
-                    </FormikAppTextField>
-                  </Grid>
-                </Grid>
-
-                {/* Description */}
-                <FormikAppTextField
-                  name="description"
-                  label="Description"
-                  placeholder="Enter description (optional)"
-                  multiline
-                  rows={3}
-                />
-
-                {/* Multiplier and Flat Amount */}
-                <Grid container spacing={'16px'}>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <FormikAppTextField
-                      name="multiplier"
-                      label="Multiplier"
-                      type="number"
-                      placeholder="1"
-                      required
-                      inputProps={{ min: 0, step: 0.01 }}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <FormikAppTextField
-                      name="flat_amount"
-                      label="Flat Amount ($)"
-                      type="number"
-                      placeholder="0"
-                      required
-                      inputProps={{ min: 0, step: 0.01 }}
-                    />
-                  </Grid>
-                </Grid>
-
-                {/* Applies To */}
-                <FormControl
-                  fullWidth
-                  error={touched.applies_to && Boolean(errors.applies_to)}
-                >
-                  <InputLabel>Applies To *</InputLabel>
-                  <Select
-                    multiple
-                    value={values.applies_to}
-                    onChange={(e) =>
-                      setFieldValue('applies_to', e.target.value)
-                    }
-                    input={<OutlinedInput label="Applies To *" />}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => (
-                          <Chip
-                            key={value}
-                            label={
-                              APPLIES_TO_OPTIONS.find((opt) => opt.value === value)
-                                ?.label || value
-                            }
-                            size="small"
-                          />
-                        ))}
-                      </Box>
+                    </Select>
+                    {touched.applies_to && errors.applies_to && (
+                      <Typography
+                        sx={{
+                          color: '#EF4444',
+                          fontSize: pxToRem(12),
+                          marginTop: '4px',
+                          marginLeft: '14px',
+                        }}
+                      >
+                        {errors.applies_to}
+                      </Typography>
                     )}
-                    sx={{
-                      borderRadius: '10px',
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#E8ECF0',
-                      },
-                    }}
-                  >
-                    {APPLIES_TO_OPTIONS.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {touched.applies_to && errors.applies_to && (
-                    <Typography
-                      sx={{
-                        color: '#EF4444',
-                        fontSize: pxToRem(12),
-                        marginTop: '4px',
-                        marginLeft: '14px',
-                      }}
-                    >
-                      {errors.applies_to}
-                    </Typography>
-                  )}
-                </FormControl>
+                  </FormControl>
 
-                {/* Sort Order and Active Status */}
-                <Grid container spacing={'16px'} alignItems="center">
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <FormikAppTextField
-                      name="sort_order"
-                      label="Sort Order"
-                      type="number"
-                      placeholder="0"
-                      inputProps={{ min: 0, step: 1 }}
-                    />
+                  {/* Sort Order and Active Status */}
+                  <Grid container spacing={'16px'} alignItems="center">
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <FormikAppTextField
+                        name="sort_order"
+                        label="Sort Order"
+                        type="number"
+                        placeholder="0"
+                        inputProps={{ min: 0, step: 1 }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <FormControlLabel
+                        control={
+                          <IOSSwitch
+                            checked={values.is_active}
+                            onChange={(e) =>
+                              setFieldValue('is_active', e.target.checked)
+                            }
+                          />
+                        }
+                        label={
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 500,
+                              fontSize: pxToRem(14),
+                              color: '#374151',
+                            }}
+                          >
+                            Active
+                          </Typography>
+                        }
+                      />
+                    </Grid>
                   </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <FormControlLabel
-                      control={
-                        <IOSSwitch
-                          checked={values.is_active}
-                          onChange={(e) =>
-                            setFieldValue('is_active', e.target.checked)
-                          }
-                        />
-                      }
-                      label={
-                        <Typography
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 500,
-                            fontSize: pxToRem(14),
-                            color: '#374151',
-                          }}
-                        >
-                          Active
-                        </Typography>
-                      }
-                    />
-                  </Grid>
-                </Grid>
-              </Stack>
+                </Stack>
               </Box>
 
               {/* Actions */}
@@ -387,7 +397,7 @@ export const CreateSurchargeModal = ({
                   >
                     Create Surcharge
                   </AppButton>
-              </RowStack>
+                </RowStack>
               </Box>
             </Stack>
           </Form>

@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { resolveRoute, ROUTES, getCancellationPolicies } from '../../../../../..';
+import {
+  resolveRoute,
+  ROUTES,
+  getCancellationPolicies,
+} from '../../../../../..';
 
 export const useGetCancellationPolicies = () => {
   return useQuery({
