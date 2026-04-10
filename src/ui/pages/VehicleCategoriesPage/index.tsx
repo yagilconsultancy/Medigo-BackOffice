@@ -44,7 +44,8 @@ const getCategoryConfig = (category: string) => {
       color: '#2F6FED',
       bgLight: '#EBF2FF',
       icon: <LocalTaxiOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
-      description: 'Regular sedan or minivan for ambulatory patients who can walk independently.',
+      description:
+        'Regular sedan or minivan for ambulatory patients who can walk independently.',
     };
   }
 
@@ -54,7 +55,8 @@ const getCategoryConfig = (category: string) => {
       color: '#059669',
       bgLight: '#ECFDF5',
       icon: <AccessibleOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
-      description: 'Specially equipped vehicles with ramps or lifts for wheelchair users.',
+      description:
+        'Specially equipped vehicles with ramps or lifts for wheelchair users.',
     };
   }
 
@@ -63,8 +65,13 @@ const getCategoryConfig = (category: string) => {
       badge: 'Assist',
       color: '#D97706',
       bgLight: '#FFFBEB',
-      icon: <VolunteerActivismOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
-      description: 'Driver provides door-to-door assistance for patients who need help getting to/from the vehicle.',
+      icon: (
+        <VolunteerActivismOutlinedIcon
+          sx={{ fontSize: 18, color: '#D97706' }}
+        />
+      ),
+      description:
+        'Driver provides door-to-door assistance for patients who need help getting to/from the vehicle.',
     };
   }
 
@@ -73,8 +80,11 @@ const getCategoryConfig = (category: string) => {
       badge: 'Stretcher',
       color: '#EF4444',
       bgLight: '#FEF2F2',
-      icon: <MedicalServicesOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
-      description: 'For non-ambulatory patients who must remain lying down during transport.',
+      icon: (
+        <MedicalServicesOutlinedIcon sx={{ fontSize: 18, color: '#EF4444' }} />
+      ),
+      description:
+        'For non-ambulatory patients who must remain lying down during transport.',
     };
   }
 
@@ -134,100 +144,100 @@ export const VehicleCategoriesPage = () => {
         {/* Fleet Composition Card */}
         {categories.length > 0 && (
           <Stack
-          spacing={'16px'}
-          sx={{
-            background: '#FFFFFF',
-            border: '0.67px solid #F0F4F8',
-            borderRadius: '16px',
-            boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-            padding: '24px',
-          }}
-        >
-          <Stack spacing={'2px'}>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 700,
-                fontSize: pxToRem(15),
-                color: '#111827',
-              }}
-            >
-              Fleet Composition
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
-                fontSize: pxToRem(12.5),
-                color: '#9CA3AF',
-              }}
-            >
-              {totalVehicles} vehicles across all categories
-            </Typography>
-          </Stack>
-
-          {/* Stacked Bar */}
-          <RowStack
+            spacing={'16px'}
             sx={{
-              width: '100%',
-              height: 10,
-              borderRadius: '100px',
-              overflow: 'hidden',
-              gap: '3px',
+              background: '#FFFFFF',
+              border: '0.67px solid #F0F4F8',
+              borderRadius: '16px',
+              boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+              padding: '24px',
             }}
           >
-            {categories.map((cat) => (
-              <Box
-                key={cat.name}
+            <Stack spacing={'2px'}>
+              <Typography
                 sx={{
-                  width: `${cat.percentage}%`,
-                  height: '100%',
-                  background: cat.color,
-                  borderRadius: '100px',
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 700,
+                  fontSize: pxToRem(15),
+                  color: '#111827',
                 }}
-              />
-            ))}
-          </RowStack>
+              >
+                Fleet Composition
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 400,
+                  fontSize: pxToRem(12.5),
+                  color: '#9CA3AF',
+                }}
+              >
+                {totalVehicles} vehicles across all categories
+              </Typography>
+            </Stack>
 
-          {/* Legend */}
-          <RowStack spacing={'24px'} sx={{ flexWrap: 'wrap', gap: '12px' }}>
-            {categories.map((cat) => (
-              <RowStack key={cat.name} spacing={'8px'}>
+            {/* Stacked Bar */}
+            <RowStack
+              sx={{
+                width: '100%',
+                height: 10,
+                borderRadius: '100px',
+                overflow: 'hidden',
+                gap: '3px',
+              }}
+            >
+              {categories.map((cat) => (
                 <Box
+                  key={cat.name}
                   sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
+                    width: `${cat.percentage}%`,
+                    height: '100%',
                     background: cat.color,
-                    flexShrink: 0,
+                    borderRadius: '100px',
                   }}
                 />
-                {cat.icon}
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 500,
-                    fontSize: pxToRem(12.5),
-                    color: '#374151',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {cat.name}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(12.5),
-                    color: '#9CA3AF',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {cat.vehicleCount} · {cat.percentage}%
-                </Typography>
-              </RowStack>
-            ))}
-          </RowStack>
+              ))}
+            </RowStack>
+
+            {/* Legend */}
+            <RowStack spacing={'24px'} sx={{ flexWrap: 'wrap', gap: '12px' }}>
+              {categories.map((cat) => (
+                <RowStack key={cat.name} spacing={'8px'}>
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: cat.color,
+                      flexShrink: 0,
+                    }}
+                  />
+                  {cat.icon}
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 500,
+                      fontSize: pxToRem(12.5),
+                      color: '#374151',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {cat.name}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(12.5),
+                      color: '#9CA3AF',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {cat.vehicleCount} · {cat.percentage}%
+                  </Typography>
+                </RowStack>
+              ))}
+            </RowStack>
           </Stack>
         )}
 
@@ -237,225 +247,226 @@ export const VehicleCategoriesPage = () => {
             {categories.map((cat) => (
               <Grid key={cat.name} size={{ xs: 12, md: 6 }}>
                 <Stack
-                spacing={'20px'}
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #F0F4F8',
-                  borderRadius: '16px',
-                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-                  padding: '24px',
-                  height: '100%',
-                }}
-              >
-                {/* Card Header */}
-                <Stack spacing={'4px'}>
-                  <RowStack spacing={'12px'}>
-                    <Box
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: '10px',
-                        background: cat.bgLight,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {cat.icon}
-                    </Box>
+                  spacing={'20px'}
+                  sx={{
+                    background: '#FFFFFF',
+                    border: '0.67px solid #F0F4F8',
+                    borderRadius: '16px',
+                    boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                    padding: '24px',
+                    height: '100%',
+                  }}
+                >
+                  {/* Card Header */}
+                  <Stack spacing={'4px'}>
+                    <RowStack spacing={'12px'}>
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '10px',
+                          background: cat.bgLight,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {cat.icon}
+                      </Box>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 700,
+                          fontSize: pxToRem(15),
+                          color: '#111827',
+                        }}
+                      >
+                        {cat.name}
+                      </Typography>
+                      <Chip
+                        label={cat.badge}
+                        size="small"
+                        sx={{
+                          background: cat.bgLight,
+                          color: cat.color,
+                          fontFamily: 'Inter, sans-serif',
+                          fontWeight: 600,
+                          fontSize: pxToRem(11),
+                          height: '24px',
+                          borderRadius: '100px',
+                          '& .MuiChip-label': { px: '10px' },
+                        }}
+                      />
+                    </RowStack>
                     <Typography
                       sx={{
                         fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 700,
-                        fontSize: pxToRem(15),
-                        color: '#111827',
+                        fontWeight: 400,
+                        fontSize: pxToRem(12.5),
+                        color: '#9CA3AF',
+                        pl: '52px',
                       }}
                     >
-                      {cat.name}
+                      {cat.vehicleCount} vehicles in fleet
                     </Typography>
-                    <Chip
-                      label={cat.badge}
-                      size="small"
-                      sx={{
-                        background: cat.bgLight,
-                        color: cat.color,
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: pxToRem(11),
-                        height: '24px',
-                        borderRadius: '100px',
-                        '& .MuiChip-label': { px: '10px' },
-                      }}
-                    />
-                  </RowStack>
+                  </Stack>
+
+                  {/* Description */}
                   <Typography
                     sx={{
                       fontFamily: (theme) => theme.typography.fontFamily,
                       fontWeight: 400,
-                      fontSize: pxToRem(12.5),
-                      color: '#9CA3AF',
-                      pl: '52px',
+                      fontSize: pxToRem(13),
+                      lineHeight: '1.6em',
+                      color: '#374151',
                     }}
                   >
-                    {cat.vehicleCount} vehicles in fleet
+                    {cat.description}
                   </Typography>
-                </Stack>
 
-                {/* Description */}
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(13),
-                    lineHeight: '1.6em',
-                    color: '#374151',
-                  }}
-                >
-                  {cat.description}
-                </Typography>
+                  {/* Pricing Row */}
+                  {cat.baseFare !== 'N/A' && cat.perMile !== 'N/A' && (
+                    <RowStack spacing={'12px'}>
+                      <Stack
+                        sx={{
+                          flex: 1,
+                          background: '#F7F9FB',
+                          border: '0.67px solid #E8ECF0',
+                          borderRadius: '14px',
+                          padding: '16px',
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 700,
+                            fontSize: pxToRem(22),
+                            color: '#111827',
+                          }}
+                        >
+                          {cat.baseFare}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 400,
+                            fontSize: pxToRem(12),
+                            color: '#9CA3AF',
+                          }}
+                        >
+                          Base Fare
+                        </Typography>
+                      </Stack>
+                      <Stack
+                        sx={{
+                          flex: 1,
+                          background: '#F7F9FB',
+                          border: '0.67px solid #E8ECF0',
+                          borderRadius: '14px',
+                          padding: '16px',
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 700,
+                            fontSize: pxToRem(22),
+                            color: '#111827',
+                          }}
+                        >
+                          {cat.perMile}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 400,
+                            fontSize: pxToRem(12),
+                            color: '#9CA3AF',
+                          }}
+                        >
+                          Per Mile
+                        </Typography>
+                      </Stack>
+                    </RowStack>
+                  )}
 
-                {/* Pricing Row */}
-                {cat.baseFare !== 'N/A' && cat.perMile !== 'N/A' && (
-                  <RowStack spacing={'12px'}>
-                  <Stack
-                    sx={{
-                      flex: 1,
-                      background: '#F7F9FB',
-                      border: '0.67px solid #E8ECF0',
-                      borderRadius: '14px',
-                      padding: '16px',
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 700,
-                        fontSize: pxToRem(22),
-                        color: '#111827',
-                      }}
-                    >
-                      {cat.baseFare}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 400,
-                        fontSize: pxToRem(12),
-                        color: '#9CA3AF',
-                      }}
-                    >
-                      Base Fare
-                    </Typography>
-                  </Stack>
-                  <Stack
-                    sx={{
-                      flex: 1,
-                      background: '#F7F9FB',
-                      border: '0.67px solid #E8ECF0',
-                      borderRadius: '14px',
-                      padding: '16px',
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 700,
-                        fontSize: pxToRem(22),
-                        color: '#111827',
-                      }}
-                    >
-                      {cat.perMile}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 400,
-                        fontSize: pxToRem(12),
-                        color: '#9CA3AF',
-                      }}
-                    >
-                      Per Mile
-                    </Typography>
-                  </Stack>
-                  </RowStack>
-                )}
-
-                {/* Requirements */}
-                {cat.requirements.length > 0 && (
-                  <Stack spacing={'10px'}>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 600,
-                      fontSize: pxToRem(10),
-                      color: '#9CA3AF',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.8px',
-                    }}
-                  >
-                    Requirements
-                  </Typography>
-                  {cat.requirements.map((req) => (
-                    <RowStack key={req} spacing={'8px'}>
-                      <CheckCircleOutlinedIcon
-                        sx={{ fontSize: 14, color: cat.color }}
-                      />
+                  {/* Requirements */}
+                  {cat.requirements.length > 0 && (
+                    <Stack spacing={'10px'}>
                       <Typography
                         sx={{
                           fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(13),
-                          color: '#374151',
+                          fontWeight: 600,
+                          fontSize: pxToRem(10),
+                          color: '#9CA3AF',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.8px',
                         }}
                       >
-                        {req}
+                        Requirements
                       </Typography>
-                    </RowStack>
-                  ))}
-                  </Stack>
-                )}
+                      {cat.requirements.map((req) => (
+                        <RowStack key={req} spacing={'8px'}>
+                          <CheckCircleOutlinedIcon
+                            sx={{ fontSize: 14, color: cat.color }}
+                          />
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(13),
+                              color: '#374151',
+                            }}
+                          >
+                            {req}
+                          </Typography>
+                        </RowStack>
+                      ))}
+                    </Stack>
+                  )}
 
-                {/* Common Vehicles */}
-                {cat.commonVehicles.length > 0 && (
-                  <Stack spacing={'10px'}>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 600,
-                      fontSize: pxToRem(10),
-                      color: '#9CA3AF',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.8px',
-                    }}
-                  >
-                    Common Vehicles
-                  </Typography>
-                  <RowStack spacing={'8px'} sx={{ flexWrap: 'wrap' }}>
-                    {cat.commonVehicles.map((v) => (
-                      <Chip
-                        key={v}
-                        label={v}
-                        variant="outlined"
-                        size="small"
+                  {/* Common Vehicles */}
+                  {cat.commonVehicles.length > 0 && (
+                    <Stack spacing={'10px'}>
+                      <Typography
                         sx={{
-                          color: cat.color,
-                          borderColor: cat.color,
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: 500,
-                          fontSize: pxToRem(12),
-                          height: '28px',
-                          borderRadius: '100px',
-                          '& .MuiChip-label': { px: '12px' },
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 600,
+                          fontSize: pxToRem(10),
+                          color: '#9CA3AF',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.8px',
                         }}
-                      />
-                    ))}
-                  </RowStack>
-                  </Stack>
-                )}
-              </Stack>
-            </Grid>
-          ))}
+                      >
+                        Common Vehicles
+                      </Typography>
+                      <RowStack spacing={'8px'} sx={{ flexWrap: 'wrap' }}>
+                        {cat.commonVehicles.map((v) => (
+                          <Chip
+                            key={v}
+                            label={v}
+                            variant="outlined"
+                            size="small"
+                            sx={{
+                              color: cat.color,
+                              borderColor: cat.color,
+                              fontFamily: 'Inter, sans-serif',
+                              fontWeight: 500,
+                              fontSize: pxToRem(12),
+                              height: '28px',
+                              borderRadius: '100px',
+                              '& .MuiChip-label': { px: '12px' },
+                            }}
+                          />
+                        ))}
+                      </RowStack>
+                    </Stack>
+                  )}
+                </Stack>
+              </Grid>
+            ))}
           </Grid>
         ) : (
           <Box sx={{ py: 6 }}>

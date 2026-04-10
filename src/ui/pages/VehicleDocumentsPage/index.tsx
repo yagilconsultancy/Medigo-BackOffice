@@ -182,9 +182,7 @@ export const VehicleDocumentsPage = () => {
 
     return documentsResponse.vehicles.map((vehicle) => {
       // Helper to get document info by type
-      const getDocInfo = (
-        docType: string
-      ): DocumentInfo => {
+      const getDocInfo = (docType: string): DocumentInfo => {
         const doc = vehicle.documents.find((d) => d.document_type === docType);
 
         // Map status from API to UI
@@ -199,23 +197,33 @@ export const VehicleDocumentsPage = () => {
         const formatExpiry = (expiresAt?: string | null): string => {
           if (!expiresAt) return 'N/A';
           const date = new Date(expiresAt);
-          return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            year: 'numeric',
+          });
         };
 
         const status = mapStatus(doc?.status);
 
         return {
-          type: docType === 'registration' ? 'Registration' :
-                docType === 'insurance' ? 'Insurance' : 'Safety Inspection',
+          type:
+            docType === 'registration'
+              ? 'Registration'
+              : docType === 'insurance'
+                ? 'Insurance'
+                : 'Safety Inspection',
           status,
           expiry: formatExpiry(doc?.expires_at),
           fileName: doc?.file_name || 'N/A',
           docId: doc?.doc_id || 'N/A',
           issueDate: 'N/A', // Not provided by API
           authority: 'N/A', // Not provided by API
-          subtitle: docType === 'registration' ? 'VEHICLE REGISTRATION' :
-                    docType === 'insurance' ? 'COMMERCIAL AUTO POLICY' :
-                    'SAFETY INSPECTION CERTIFICATE',
+          subtitle:
+            docType === 'registration'
+              ? 'VEHICLE REGISTRATION'
+              : docType === 'insurance'
+                ? 'COMMERCIAL AUTO POLICY'
+                : 'SAFETY INSPECTION CERTIFICATE',
         };
       };
 
@@ -227,7 +235,8 @@ export const VehicleDocumentsPage = () => {
         { color: '#EC4899', bg: 'rgba(236, 72, 153, 0.09)' },
         { color: '#0EA5E9', bg: 'rgba(14, 165, 233, 0.09)' },
       ];
-      const colorIndex = parseInt(vehicle.vehicle_id.substring(0, 2), 16) % colors.length;
+      const colorIndex =
+        parseInt(vehicle.vehicle_id.substring(0, 2), 16) % colors.length;
       const vehicleColor = colors[colorIndex];
 
       return {
@@ -269,14 +278,18 @@ export const VehicleDocumentsPage = () => {
         value: String(kpis.total_documents),
         label: 'Total Documents',
         valueColor: '#2F6FED',
-        icon: <DescriptionOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
+        icon: (
+          <DescriptionOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
+        ),
         iconBg: '#EBF2FF',
       },
       {
         value: String(kpis.valid_count),
         label: 'Valid',
         valueColor: '#10B981',
-        icon: <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#10B981' }} />,
+        icon: (
+          <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#10B981' }} />
+        ),
         iconBg: '#ECFDF5',
       },
       {

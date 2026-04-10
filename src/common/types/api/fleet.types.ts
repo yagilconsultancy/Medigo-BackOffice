@@ -703,6 +703,7 @@ export interface FleetVehicleListPayload {
   page?: number;
   limit?: number;
   category?: string;
+  fleet_id?: string;
   search?: string;
   status?: string;
 }

@@ -194,7 +194,9 @@ export const EditVehicleDrawer = ({
           : null
       );
       setInsuranceExpiry(
-        vehicleData.insurance_expiry ? dayjs(vehicleData.insurance_expiry) : null
+        vehicleData.insurance_expiry
+          ? dayjs(vehicleData.insurance_expiry)
+          : null
       );
       setRegistrationExpiry(
         vehicleData.registration_expiry
@@ -626,8 +628,8 @@ export const EditVehicleDrawer = ({
                       color: '#0C4A6E',
                     }}
                   >
-                    This vehicle is registered under{' '}
-                    {values.fleet || 'MediGo'} with{' '}
+                    This vehicle is registered under {values.fleet || 'MediGo'}{' '}
+                    with{' '}
                     {selectedDriver
                       ? `${selectedDriver.firstName} ${selectedDriver.lastName} assigned`
                       : 'no driver assigned yet'}
