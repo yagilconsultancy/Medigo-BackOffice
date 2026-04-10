@@ -9,16 +9,12 @@ import {
 } from '@mui/material';
 import { AdminInfo, Header } from './ui/components';
 import { SidebarLinks, SidebarLinksProps } from './ui/blocks';
-import userIcon from './ui/assets/icons/user.svg';
 
 // Sidebar icons
 import dashboardIcon from './ui/assets/icons/dashboard-icon.svg';
 import bookingIcon from './ui/assets/icons/booking-icon.svg';
 import dispatchIcon from './ui/assets/icons/dispatch-Icon.svg';
-import gpsIcon from './ui/assets/icons/gps-Icon.svg';
 import fleetIcon from './ui/assets/icons/fleet-Icon.svg';
-import driverManagementIcon from './ui/assets/icons/drivermanagement-Icon.svg';
-import driverPerformanceIcon from './ui/assets/icons/driverperformanceIcon.svg';
 import riderManagementIcon from './ui/assets/icons/ridermanagementIcon.svg';
 import vehicleIcon from './ui/assets/icons/vihicle-Icon.svg';
 import paymentIcon from './ui/assets/icons/payment-Icon.svg';
@@ -295,12 +291,7 @@ export function AppDashboardSideBar({
               borderTop: '0.67px solid #E8ECF0',
             }}
           >
-            <AdminInfo
-              userName="Admin User"
-              userMail="admin@medigotransport.com"
-              icon={userIcon}
-              isSideBarOpen={open}
-            />
+            <AdminInfo isSideBarOpen={open} />
           </Box>
         </Stack>
       </Drawer>

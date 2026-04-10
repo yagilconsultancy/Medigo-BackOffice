@@ -7,6 +7,7 @@ export const ROUTES_SPEC = {
 
   // System logs
   adminLogin: `/${API_VERSION}/auth/admin/login`,
+  getUserProfile: `/${API_VERSION}/users/me`,
   getActivityKPI: `/${API_VERSION}/auth/admin/activity-logs/kpis`,
   getActivityList: `/${API_VERSION}/auth/admin/activity-logs`,
   getExportActivity: `/${API_VERSION}/auth/admin/activity-logs/export`,
