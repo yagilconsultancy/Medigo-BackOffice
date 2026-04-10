@@ -1,16 +1,17 @@
-import { getApiClient } from '../../../../lib';
-import { resolveRoute, ROUTES } from '../../../../constants';
 import {
+  getApiClient,
+  resolveRoute,
+  ROUTES,
   ApiSurchargeRuleResponse,
   SurchargeRuleUpdate,
-} from '../../../../types';
+} from '../../../../..';
 
-export const updateSurchargeRule = async (payload: {
-  ruleId: string;
-  data: SurchargeRuleUpdate;
-}) => {
+export const updateSurchargeRule = async (
+  ruleId: string,
+  payload: SurchargeRuleUpdate
+) => {
   return await getApiClient().put<ApiSurchargeRuleResponse>(
-    resolveRoute(ROUTES.updateSurchargeRule, payload.ruleId),
-    payload.data
+    resolveRoute(ROUTES.updateSurchargeRule, ruleId),
+    payload
   );
 };

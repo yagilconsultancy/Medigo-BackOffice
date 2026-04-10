@@ -1,12 +1,12 @@
 import { AxiosResponse } from 'axios';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { getApiClient } from '../../../../lib';
+import { resolveRoute, ROUTES } from '../../../..';
+import { getApiClient } from '../../../..';
 import {
   ApiPackageKPIsResponse,
   ApiRidePackageListResponse,
   ApiRidePackageResponse,
   PackageListQueryPayload,
-} from '../../../../types';
+} from '../../../..';
 
 export const getPackageKpis = async () => {
   return await getApiClient().get<

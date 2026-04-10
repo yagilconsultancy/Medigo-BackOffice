@@ -1,7 +1,7 @@
 import { AxiosResponse } from 'axios';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { getApiClient } from '../../../../lib';
-import { ApiRateCardResponse, CreateRateCardRequest } from '../../../../types';
+import { resolveRoute, ROUTES } from '../../../..';
+import { getApiClient } from '../../../..';
+import { ApiRateCardResponse, CreateRateCardRequest } from '../../../..';
 
 export const saveConfiguration = async (payload: CreateRateCardRequest) => {
   return await getApiClient().put<

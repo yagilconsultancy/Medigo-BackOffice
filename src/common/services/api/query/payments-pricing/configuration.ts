@@ -1,7 +1,7 @@
 import { AxiosResponse } from 'axios';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { getApiClient } from '../../../../lib';
-import { ApiResponse, ApiRateCardResponse } from '../../../../types';
+import { resolveRoute, ROUTES } from '../../../..';
+import { getApiClient } from '../../../..';
+import { ApiResponse, ApiRateCardResponse } from '../../../..';
 
 export const getConfigKpis = async () => {
   return await getApiClient().get<

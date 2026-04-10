@@ -177,7 +177,10 @@ export const DisciplinaryActionsPage = () => {
   }, [searchQuery, transformedData]);
 
   const paginatedData = filteredData;
-  const totalCount = actionsListData?.data?.total || 0;
+  const totalCount =
+    actionsListData?.success && actionsListData.data?.total
+      ? actionsListData.data.total
+      : 0;
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);

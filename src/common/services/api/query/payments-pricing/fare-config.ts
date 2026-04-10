@@ -1,12 +1,12 @@
 import { AxiosResponse } from 'axios';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { getApiClient } from '../../../../lib';
+import { resolveRoute, ROUTES } from '../../../..';
+import { getApiClient } from '../../../..';
 import {
   ApiServiceTypeListResponse,
   ApiServiceTypeConfigResponse,
   ApiRoutePricingResponse,
   ApiCommissionViewResponse,
-} from '../../../../types';
+} from '../../../..';
 
 export const listServiceTypes = async () => {
   return await getApiClient().get<

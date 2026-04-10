@@ -1,12 +1,12 @@
 import { AxiosResponse } from 'axios';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { getApiClient } from '../../../../lib';
+import { resolveRoute, ROUTES } from '../../../..';
+import { getApiClient } from '../../../..';
 import {
   ApiPricingLogListResponse,
   ApiPricingLogExportResponse,
   PricingLogsQueryPayload,
   PricingLogsExportQueryPayload,
-} from '../../../../types';
+} from '../../../..';
 
 export const listPricingLogs = async (payload: PricingLogsQueryPayload) => {
   return await getApiClient().get<

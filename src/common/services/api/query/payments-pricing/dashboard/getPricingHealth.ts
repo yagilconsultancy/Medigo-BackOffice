@@ -1,6 +1,9 @@
-import { getApiClient } from '../../../../lib';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { ApiPricingHealthResponse } from '../../../../types';
+import {
+  getApiClient,
+  resolveRoute,
+  ROUTES,
+  ApiPricingHealthResponse,
+} from '../../../../..';
 
 export const getPricingHealth = async () => {
   return await getApiClient().get<ApiPricingHealthResponse>(

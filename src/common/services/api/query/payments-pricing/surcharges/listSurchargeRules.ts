@@ -1,6 +1,6 @@
-import { getApiClient } from '../../../../lib';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { ApiSurchargeRuleListResponse } from '../../../../types';
+import { getApiClient } from '../../../../..';
+import { resolveRoute, ROUTES } from '../../../../..';
+import { ApiSurchargeRuleListResponse } from '../../../../..';
 
 export const listSurchargeRules = async () => {
   return await getApiClient().get<ApiSurchargeRuleListResponse>(

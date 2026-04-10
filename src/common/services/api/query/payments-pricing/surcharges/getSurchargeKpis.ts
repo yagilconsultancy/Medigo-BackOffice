@@ -1,6 +1,6 @@
-import { getApiClient } from '../../../../lib';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { ApiSurchargeKPIsResponse } from '../../../../types';
+import { getApiClient } from '../../../../..';
+import { resolveRoute, ROUTES } from '../../../../..';
+import { ApiSurchargeKPIsResponse } from '../../../../..';
 
 export const getSurchargeKpis = async () => {
   return await getApiClient().get<ApiSurchargeKPIsResponse>(

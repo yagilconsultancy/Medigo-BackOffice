@@ -14,10 +14,10 @@ export const manuallyAssignDriver = async (
 ) => {
   const { rideId, ...body } = payload;
 
-  return await getApiClient().post<ApiResponse, AxiosResponse<ApiResponse>>(
-    resolveRoute(ROUTES.manuallyAssignDriver, rideId),
-    body
-  );
+  return await getApiClient().post<
+    ApiResponse<null>,
+    AxiosResponse<ApiResponse<null>>
+  >(resolveRoute(ROUTES.manuallyAssignDriver, rideId), body);
 };
 
 export const updateDispatchSettings = async (

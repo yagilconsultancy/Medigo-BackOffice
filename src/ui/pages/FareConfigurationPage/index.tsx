@@ -22,7 +22,11 @@ import {
 } from '../../modules/components';
 import { AppDropdownMenu } from '../../modules/components/AppDropdownMenu';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useListServiceTypes,
+  useResolvedApiQuery,
+} from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -730,8 +734,6 @@ const stretcherSurchargesInfo = {
   ],
 };
 
-// ─── Vehicle Configs ────────────────────────────────────────────────────────
-
 const vehicleConfigs: Record<string, VehicleConfig> = {
   'Standard Vehicle': {
     tabs: [
@@ -861,8 +863,6 @@ const vehicleConfigs: Record<string, VehicleConfig> = {
   },
 };
 
-// ─── Surcharges Cell Renderer ───────────────────────────────────────────────
-
 const renderSurchargeCell = (
   colName: string,
   value: string,
@@ -930,12 +930,11 @@ const renderSurchargeCell = (
   );
 };
 
-// ─── Component ──────────────────────────────────────────────────────────────
-
 export const FareConfigurationPage = () => {
   const [vehicleType, setVehicleType] = useState('Standard Vehicle');
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [activeTab, setActiveTab] = useState(0);
+  const { data: serviceTypes } = useResolvedApiQuery(useListServiceTypes, null);
 
   const currentStyle =
     vehicleTypeStyles[vehicleType] || vehicleTypeStyles['Standard Vehicle'];
@@ -976,7 +975,7 @@ export const FareConfigurationPage = () => {
     </Stack>
   );
 
-  // ─── Column Definitions ────────────────────────────────────────────────────
+  console.log('serviceTypes', serviceTypes);
 
   const settingLabel =
     currentTab.rateLabels?.setting || (isStandard ? 'Setting' : 'Rate Item');

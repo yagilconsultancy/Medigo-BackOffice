@@ -549,23 +549,13 @@ export const RefundManagementPage = () => {
           ))}
         </Grid>
 
-        {/* ── Table ──────────────────────────────────────────────────── */}
         <AppGridtable
           columns={columns}
           data={refundRows}
           initialPageSize={8}
           disableRowClick
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          rowCount={refundsData?.total || 0}
-          paginationMode="server"
-          emptyState={
-            <EmptyState
-              title="No refund requests found"
-              description="There are no refund requests matching your current filters"
-              height={400}
-            />
-          }
+          totalRows={refundsData?.total || 0}
+          emptyState={<EmptyState emptyState="No refund requests found" />}
           sx={{ height: 'auto', width: '100%' }}
         >
           <Stack spacing={'16px'} width={'100%'}>

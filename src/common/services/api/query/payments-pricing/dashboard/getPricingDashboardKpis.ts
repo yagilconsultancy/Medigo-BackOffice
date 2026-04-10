@@ -1,6 +1,9 @@
-import { getApiClient } from '../../../../lib';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { ApiPricingDashboardKPIsResponse } from '../../../../types';
+import {
+  getApiClient,
+  resolveRoute,
+  ROUTES,
+  ApiPricingDashboardKPIsResponse,
+} from '../../../../..';
 
 export const getPricingDashboardKpis = async () => {
   return await getApiClient().get<ApiPricingDashboardKPIsResponse>(

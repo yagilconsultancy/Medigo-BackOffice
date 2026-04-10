@@ -327,9 +327,6 @@ export const PricingLogsPage = () => {
           initialPageSize={pageSize}
           disableRowClick
           totalRows={logsData?.total || 0}
-          page={page}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
           sx={{
             height: 'auto',
             width: '100%',

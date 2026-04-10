@@ -355,13 +355,7 @@ export const PricingDashboardPage = () => {
           initialPageSize={10}
           hidePagination
           disableRowClick
-          emptyState={
-            <EmptyState
-              title="No route pricing data available"
-              description="Route comparison data will appear here once configured"
-              height={200}
-            />
-          }
+          emptyState={<EmptyState />}
           sx={{
             height: 'auto',
             width: '100%',
@@ -440,11 +434,7 @@ export const PricingDashboardPage = () => {
                   <PriceChangeCard key={change.id} change={change} />
                 ))
               ) : (
-                <EmptyState
-                  title="No recent pricing changes"
-                  description="Pricing change history will appear here"
-                  height={200}
-                />
+                <EmptyState />
               )}
             </Stack>
           </Stack>
@@ -496,11 +486,7 @@ export const PricingDashboardPage = () => {
                   <HealthCheckItem key={item.id} item={item} />
                 ))
               ) : (
-                <EmptyState
-                  title="No health data available"
-                  description="Pricing health information will appear here"
-                  height={200}
-                />
+                <EmptyState />
               )}
             </Stack>
           </Stack>

@@ -1,9 +1,10 @@
-import { getApiClient } from '../../../../lib';
-import { resolveRoute, ROUTES } from '../../../../constants';
 import {
+  getApiClient,
+  resolveRoute,
+  ROUTES,
   ApiSurchargeRuleResponse,
   SurchargeRuleCreate,
-} from '../../../../types';
+} from '../../../../..';
 
 export const createSurchargeRule = async (data: SurchargeRuleCreate) => {
   return await getApiClient().post<ApiSurchargeRuleResponse>(

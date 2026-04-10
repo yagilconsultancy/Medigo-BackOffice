@@ -1,6 +1,6 @@
 import { AxiosResponse } from 'axios';
 import { getApiClient, resolveRoute, ROUTES } from '../../../../..';
-import { ApiResponse, CommissionConfigUpdate } from '../../../../../types';
+import { ApiResponse, CommissionConfigUpdate } from '../../../../..';
 
 export const updateCommissionConfig = async (
   payload: CommissionConfigUpdate

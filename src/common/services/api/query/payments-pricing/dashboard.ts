@@ -1,13 +1,13 @@
 import { AxiosResponse } from 'axios';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { getApiClient } from '../../../../lib';
+import { resolveRoute, ROUTES } from '../../../..';
+import { getApiClient } from '../../../..';
 import {
   ApiPricingDashboardKPIsResponse,
   ApiRouteComparisonResponse,
   ApiRecentChangesResponse,
   ApiPricingHealthResponse,
   RecentChangesQueryPayload,
-} from '../../../../types';
+} from '../../../..';
 
 export const getPricingDashboardKpis = async () => {
   return await getApiClient().get<

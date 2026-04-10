@@ -1,12 +1,12 @@
 import { AxiosResponse } from 'axios';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { getApiClient } from '../../../../lib';
+import { resolveRoute, ROUTES } from '../../../..';
+import { getApiClient } from '../../../..';
 import {
   ApiSurchargeRuleResponse,
   ApiResponse,
   SurchargeRuleCreate,
   SurchargeRuleUpdate,
-} from '../../../../types';
+} from '../../../..';
 
 export const createSurchargeRule = async (payload: SurchargeRuleCreate) => {
   return await getApiClient().post<

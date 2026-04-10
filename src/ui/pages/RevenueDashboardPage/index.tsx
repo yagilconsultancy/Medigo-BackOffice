@@ -33,6 +33,7 @@ import {
   useGetRevenueByRideType,
   useGetRevenueByCity,
   useGetRevenueDistribution,
+  useResolvedApiQuery,
 } from '../../../common';
 import { EmptyState } from '../../modules/blocks';
 

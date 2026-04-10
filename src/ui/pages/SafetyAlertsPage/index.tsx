@@ -728,7 +728,9 @@ export const SafetyAlertsPage = () => {
                 height: 'auto',
                 width: '100%',
               }}
-            />
+            >
+              <></>
+            </AppGridtable>
             <CustomPagination
               count={totalCount}
               page={paginationModel.page}

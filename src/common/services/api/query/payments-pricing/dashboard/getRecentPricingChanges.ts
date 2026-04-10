@@ -1,9 +1,10 @@
-import { getApiClient } from '../../../../lib';
-import { resolveRoute, ROUTES } from '../../../../constants';
 import {
+  getApiClient,
+  resolveRoute,
+  ROUTES,
   ApiRecentChangesResponse,
   RecentChangesQueryPayload,
-} from '../../../../types';
+} from '../../../../..';
 
 export const getRecentPricingChanges = async (
   payload?: RecentChangesQueryPayload

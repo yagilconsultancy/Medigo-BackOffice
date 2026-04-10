@@ -1,10 +1,10 @@
 import { AxiosResponse } from 'axios';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { getApiClient } from '../../../../lib';
+import { resolveRoute, ROUTES } from '../../../..';
+import { getApiClient } from '../../../..';
 import {
   ApiCancellationKPIsResponse,
   ApiCancellationPolicyResponse,
-} from '../../../../types';
+} from '../../../..';
 
 export const getCancellationKpis = async () => {
   return await getApiClient().get<

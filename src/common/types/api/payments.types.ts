@@ -683,6 +683,7 @@ export interface PricingLogExportResponse {
 
 export interface PricingLogsExportQueryPayload {
   category?: string | null;
+  search?: string | null;
 }
 
 // ====================== COMMISSION SETTINGS ======================

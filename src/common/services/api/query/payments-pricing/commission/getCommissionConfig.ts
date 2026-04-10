@@ -1,6 +1,6 @@
 import { AxiosResponse } from 'axios';
 import { getApiClient, resolveRoute, ROUTES } from '../../../../..';
-import { ApiCommissionConfigResponse } from '../../../../../types';
+import { ApiCommissionConfigResponse } from '../../../../..';
 
 export const getCommissionConfig = async () => {
   return await getApiClient().get<

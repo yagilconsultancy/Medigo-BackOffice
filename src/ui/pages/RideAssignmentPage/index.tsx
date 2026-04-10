@@ -95,7 +95,9 @@ export const RideAssignmentPage = () => {
           minute: '2-digit',
           hour12: true,
         }),
-        distance: ride.distance ? `${ride.distance.toFixed(1)} mi` : 'N/A',
+        distance: ride.distance_km
+          ? `${(ride.distance_km * 0.621371).toFixed(1)} mi`
+          : 'N/A',
         specialNote: specialReq,
         specialNoteBg,
         specialNoteColor,

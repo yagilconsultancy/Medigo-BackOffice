@@ -37,14 +37,18 @@ export const useSurchargeApi = () => {
     return success;
   };
 
-  const updateSurchargeRule = async (payload: {
+  const updateSurchargeRule = async (params: {
     ruleId: string;
     data: SurchargeRuleUpdate;
   }): Promise<boolean> => {
     let success = false;
 
     await tryExecute(
-      () => doUpdateSurchargeRule.mutateAsync(payload),
+      () =>
+        doUpdateSurchargeRule.mutateAsync({
+          ruleId: params.ruleId,
+          payload: params.data,
+        }),
       async (response) => {
         const responseData = response.data;
 

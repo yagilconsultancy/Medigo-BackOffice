@@ -1,6 +1,9 @@
-import { getApiClient } from '../../../../lib';
-import { resolveRoute, ROUTES } from '../../../../constants';
-import { ApiRouteComparisonResponse } from '../../../../types';
+import {
+  getApiClient,
+  resolveRoute,
+  ROUTES,
+  ApiRouteComparisonResponse,
+} from '../../../../..';
 
 export const getRouteComparison = async () => {
   return await getApiClient().get<ApiRouteComparisonResponse>(
