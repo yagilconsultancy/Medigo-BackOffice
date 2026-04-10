@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Box,
   Chip,
@@ -10,6 +10,7 @@ import {
   Typography,
   styled,
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutlineOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
@@ -19,9 +20,22 @@ import AllInclusiveOutlinedIcon from '@mui/icons-material/AllInclusiveOutlined';
 import VolunteerActivismOutlinedIcon from '@mui/icons-material/VolunteerActivismOutlined';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  AppButton,
+  DashboardTitleAndDesc,
+  RowStack,
+} from '../../modules/components';
+import {
+  pxToRem,
+  useResolvedApiQuery,
+  useGetPackageKpis,
+  useListPackages,
+  RidePackage,
+  PackageKPIs,
+} from '../../../common';
+import { usePaymentPricingApi } from '../../../common/hooks/api';
 import { ReactNode } from 'react';
+import { CreatePackageModal } from './CreatePackageModal';
 
 // ─── iOS Switch ─────────────────────────────────────────────────────────────
 
@@ -63,178 +77,124 @@ const IOSSwitch = styled(Switch)(({ theme }) => ({
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Package = {
-  id: string;
-  title: string;
-  description: string;
+type PackageUI = RidePackage & {
   icon: ReactNode;
   iconBg: string;
-  category: string;
   categoryColor: string;
   categoryBg: string;
-  price: string;
-  rides: string;
-  discount: string;
-  validity: string;
-  subscribers: number;
-  active: boolean;
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
+// Helper function to get icon and colors based on package_type
+const getPackageStyle = (packageType: string) => {
+  const styles: Record<
+    string,
+    { icon: ReactNode; iconBg: string; color: string; bg: string }
+  > = {
+    rider: {
+      icon: <LocalOfferOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
+      iconBg: '#EBF2FF',
+      color: '#2F6FED',
+      bg: '#EBF2FF',
+    },
+    corporate: {
+      icon: <BusinessOutlinedIcon sx={{ fontSize: 18, color: '#EC4899' }} />,
+      iconBg: '#FDF2F8',
+      color: '#EC4899',
+      bg: '#FDF2F8',
+    },
+    subscription: {
+      icon: (
+        <AllInclusiveOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />
+      ),
+      iconBg: '#EEF2FF',
+      color: '#6366F1',
+      bg: '#EEF2FF',
+    },
+    medical: {
+      icon: (
+        <MedicalServicesOutlinedIcon sx={{ fontSize: 18, color: '#9CA3AF' }} />
+      ),
+      iconBg: '#F3F4F6',
+      color: '#9CA3AF',
+      bg: '#F3F4F6',
+    },
+    default: {
+      icon: <Inventory2OutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
+      iconBg: '#EEF2FF',
+      color: '#6366F1',
+      bg: '#EEF2FF',
+    },
+  };
 
-const initialPackages: Package[] = [
-  {
-    id: 'ride_bundle_10',
-    title: '10-Ride Bundle',
-    description: 'Prepaid bundle of 10 standard rides',
-    icon: <LocalOfferOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-    category: 'Rider',
-    categoryColor: '#2F6FED',
-    categoryBg: '#EBF2FF',
-    price: '$79.00',
-    rides: '10 rides',
-    discount: '7% off',
-    validity: '60 days',
-    subscribers: 312,
-    active: true,
-  },
-  {
-    id: 'ride_bundle_20',
-    title: '20-Ride Bundle',
-    description: 'Prepaid bundle of 20 standard rides — best value',
-    icon: <LocalOfferOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
-    iconBg: '#ECFDF5',
-    category: 'Rider',
-    categoryColor: '#2F6FED',
-    categoryBg: '#EBF2FF',
-    price: '$145.00',
-    rides: '20 rides',
-    discount: '14% off',
-    validity: '90 days',
-    subscribers: 198,
-    active: true,
-  },
-  {
-    id: 'monthly_unlimited',
-    title: 'Monthly Unlimited',
-    description: 'Unlimited standard rides within one calendar month',
-    icon: <AllInclusiveOutlinedIcon sx={{ fontSize: 18, color: '#6366F1' }} />,
-    iconBg: '#EEF2FF',
-    category: 'Subscription',
-    categoryColor: '#6366F1',
-    categoryBg: '#EEF2FF',
-    price: '$189.00',
-    rides: 'Unlimited',
-    discount: 'Up to 20%',
-    validity: '30 days',
-    subscribers: 87,
-    active: true,
-  },
-  {
-    id: 'corporate_50',
-    title: 'Corporate Plan \u2013 50',
-    description: '50-ride block for corporate accounts & healthcare orgs',
-    icon: <BusinessOutlinedIcon sx={{ fontSize: 18, color: '#EC4899' }} />,
-    iconBg: '#FDF2F8',
-    category: 'Corporate',
-    categoryColor: '#EC4899',
-    categoryBg: '#FDF2F8',
-    price: '$340.00',
-    rides: '50 rides',
-    discount: '20% off',
-    validity: '120 days',
-    subscribers: 24,
-    active: true,
-  },
-  {
-    id: 'corporate_100',
-    title: 'Corporate Plan \u2013 100',
-    description: '100-ride block — priority dispatch + invoice billing',
-    icon: <BusinessOutlinedIcon sx={{ fontSize: 18, color: '#D97706' }} />,
-    iconBg: '#FFFBEB',
-    category: 'Corporate',
-    categoryColor: '#EC4899',
-    categoryBg: '#FDF2F8',
-    price: '$620.00',
-    rides: '100 rides',
-    discount: '27% off',
-    validity: '180 days',
-    subscribers: 11,
-    active: true,
-  },
-  {
-    id: 'community_access',
-    title: 'Community Access',
-    description: 'Subsidized plan for low-income riders — social program',
-    icon: (
-      <VolunteerActivismOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-    ),
-    iconBg: '#F1F5F9',
-    category: 'Rider',
-    categoryColor: '#2F6FED',
-    categoryBg: '#EBF2FF',
-    price: '$29.00',
-    rides: '10 rides',
-    discount: '65% off',
-    validity: '30 days',
-    subscribers: 156,
-    active: true,
-  },
-  {
-    id: 'medical_vip',
-    title: 'Medical VIP Monthly',
-    description: 'Priority Medical Priority + Wheelchair rides, monthly',
-    icon: (
-      <MedicalServicesOutlinedIcon sx={{ fontSize: 18, color: '#9CA3AF' }} />
-    ),
-    iconBg: '#F3F4F6',
-    category: 'Subscription',
-    categoryColor: '#6366F1',
-    categoryBg: '#EEF2FF',
-    price: '$249.00',
-    rides: 'Unlimited priority',
-    discount: '15% off',
-    validity: '30 days',
-    subscribers: 43,
-    active: false,
-  },
-];
-
-// ─── Filter Tabs ────────────────────────────────────────────────────────────
-
-const filterTabs = ['All', 'Rider', 'Corporate', 'Subscription'] as const;
-type FilterTab = (typeof filterTabs)[number];
+  return styles[packageType.toLowerCase()] || styles.default;
+};
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const RecurringPackagesPage = () => {
-  const [packages, setPackages] = useState<Package[]>(initialPackages);
-  const [activeFilter, setActiveFilter] = useState<FilterTab>('All');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { togglePackage } = usePaymentPricingApi();
 
-  const activeCount = packages.filter((p) => p.active).length;
-  const totalSubscribers = packages.reduce((sum, p) => sum + p.subscribers, 0);
-  const packageTypes = new Set(packages.map((p) => p.category)).size;
+  // Fetch KPIs and packages from API
+  const { data: packageKpis } = useResolvedApiQuery(useGetPackageKpis, null);
+  const { data: packageListData } = useResolvedApiQuery(useListPackages, {
+    packages: [],
+  });
 
-  const handleToggle = (id: string) => {
-    setPackages((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p))
-    );
+  const kpiData = useMemo<PackageKPIs | undefined>(() => {
+    return packageKpis ? packageKpis : undefined;
+  }, [packageKpis]);
+
+  const packages = useMemo<RidePackage[]>(() => {
+    return packageListData?.packages || [];
+  }, [packageListData]);
+
+  const activeCount = (kpiData as any)?.active_count ?? 0;
+  const totalPackages = packages.length;
+  const packageTypes =
+    (kpiData as any)?.type_count ??
+    new Set(packages.map((p) => p.package_type)).size;
+
+  const handleToggle = async (id: string) => {
+    await togglePackage(id);
   };
 
-  const filteredPackages =
-    activeFilter === 'All'
-      ? packages
-      : packages.filter((p) => p.category === activeFilter);
+  const filteredPackages = packages;
 
   return (
     <AppDashboardLayout>
       <Stack spacing={'24px'}>
         {/* Header */}
-        <DashboardTitleAndDesc
-          title="Recurring Packages"
-          desc="Create and manage subscription-based or bundled ride plans with fixed pricing and usage limits."
-        />
+        <RowStack justifyContent="space-between">
+          <DashboardTitleAndDesc
+            title="Recurring Packages"
+            desc="Create and manage subscription-based or bundled ride plans with fixed pricing and usage limits."
+          />
+          <AppButton
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setIsCreateModalOpen(true)}
+            sx={{
+              background: '#2F6FED',
+              color: '#FFFFFF',
+              borderRadius: '14px',
+              padding: '10px 20px',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: pxToRem(13.5),
+              fontFamily: (theme) => theme.typography.fontFamily,
+              height: 44,
+              boxShadow: 'none',
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                background: '#2558C9',
+                boxShadow: 'none',
+              },
+            }}
+          >
+            Create Package
+          </AppButton>
+        </RowStack>
 
         {/* Stat Cards */}
         <RowStack spacing={'12px'}>
@@ -271,7 +231,7 @@ export const RecurringPackagesPage = () => {
                   color: '#111827',
                 }}
               >
-                {activeCount}
+                {activeCount}/{totalPackages}
               </Typography>
             </Stack>
             <Box
@@ -323,7 +283,7 @@ export const RecurringPackagesPage = () => {
                   color: '#111827',
                 }}
               >
-                {totalSubscribers}
+                {(kpiData as any)?.total_subscribers ?? 0}
               </Typography>
             </Stack>
             <Box
@@ -435,37 +395,6 @@ export const RecurringPackagesPage = () => {
                 Ride bundles, subscriptions, and corporate plans
               </Typography>
             </Stack>
-
-            {/* Filter Tabs */}
-            <RowStack spacing={'0px'}>
-              {filterTabs.map((tab) => (
-                <Box
-                  key={tab}
-                  onClick={() => setActiveFilter(tab)}
-                  sx={{
-                    padding: '6px 16px',
-                    borderRadius: '16px',
-                    cursor: 'pointer',
-                    background:
-                      activeFilter === tab ? '#2F6FED' : 'transparent',
-                    border:
-                      activeFilter === tab ? 'none' : '0.67px solid #E8ECF0',
-                    marginLeft: activeFilter === tab ? 0 : '-0.67px',
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 600,
-                      fontSize: pxToRem(12.5),
-                      color: activeFilter === tab ? '#FFFFFF' : '#6B7280',
-                    }}
-                  >
-                    {tab}
-                  </Typography>
-                </Box>
-              ))}
-            </RowStack>
           </Stack>
 
           {/* Package Cards Grid */}
@@ -478,6 +407,12 @@ export const RecurringPackagesPage = () => {
           </Grid>
         </Stack>
       </Stack>
+
+      {/* Create Package Modal */}
+      <CreatePackageModal
+        open={isCreateModalOpen}
+        setOpen={setIsCreateModalOpen}
+      />
     </AppDashboardLayout>
   );
 };
@@ -488,10 +423,11 @@ const PackageCard = ({
   pkg,
   onToggle,
 }: {
-  pkg: Package;
+  pkg: RidePackage;
   onToggle: () => void;
 }) => {
-  const isInactive = !pkg.active;
+  const isInactive = !pkg.is_active;
+  const style = getPackageStyle(pkg.package_type);
 
   return (
     <Stack
@@ -512,14 +448,14 @@ const PackageCard = ({
               width: 40,
               height: 40,
               borderRadius: '14px',
-              background: isInactive ? '#F3F4F6' : pkg.iconBg,
+              background: isInactive ? '#F3F4F6' : style.iconBg,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
             }}
           >
-            {pkg.icon}
+            {style.icon}
           </Box>
           <Stack spacing={'4px'}>
             <RowStack spacing={'8px'}>
@@ -531,24 +467,25 @@ const PackageCard = ({
                   color: '#111827',
                 }}
               >
-                {pkg.title}
+                {pkg.name}
               </Typography>
               <Chip
-                label={pkg.category}
+                label={pkg.package_type}
                 size="small"
                 sx={{
-                  background: pkg.categoryBg,
-                  color: pkg.categoryColor,
+                  background: style.bg,
+                  color: style.color,
                   fontWeight: 600,
                   fontSize: pxToRem(10.5),
                   height: 22,
                   borderRadius: '100px',
+                  textTransform: 'capitalize',
                 }}
               />
             </RowStack>
           </Stack>
         </RowStack>
-        <IOSSwitch checked={pkg.active} onChange={onToggle} />
+        <IOSSwitch checked={pkg.is_active} onChange={onToggle} />
       </RowStack>
 
       {/* Description */}
@@ -566,10 +503,23 @@ const PackageCard = ({
       {/* Stats Row: Price, Rides, Discount, Validity */}
       <Grid container spacing={'12px'}>
         {[
-          { label: 'Price', value: pkg.price },
-          { label: 'Rides', value: pkg.rides },
-          { label: 'Discount', value: pkg.discount },
-          { label: 'Validity', value: pkg.validity },
+          {
+            label: 'Price',
+            value: `$${typeof pkg.price === 'number' ? pkg.price.toFixed(2) : Number(pkg.price || 0).toFixed(2)}`,
+          },
+          {
+            label: 'Rides',
+            value: (pkg as any).is_unlimited
+              ? 'Unlimited'
+              : `${(pkg as any).ride_count ?? 0} rides`,
+          },
+          {
+            label: 'Discount',
+            value: (pkg as any).discount_percent
+              ? `${Number((pkg as any).discount_percent).toFixed(0)}% off`
+              : 'N/A',
+          },
+          { label: 'Validity', value: `${pkg.validity_days} days` },
         ].map((stat) => (
           <Grid key={stat.label} size={{ xs: 6, md: 3 }}>
             <Stack
@@ -605,29 +555,19 @@ const PackageCard = ({
         ))}
       </Grid>
 
-      {/* Footer: Subscribers + Status Badge */}
+      {/* Footer: Status Badge */}
       <RowStack
-        justifyContent="space-between"
+        justifyContent="flex-end"
         sx={{
           borderTop: '0.67px solid #E8ECF0',
           paddingTop: '12px',
         }}
       >
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 400,
-            fontSize: pxToRem(13),
-            color: '#9CA3AF',
-          }}
-        >
-          {pkg.subscribers} active subscribers
-        </Typography>
         <Box
           sx={{
             padding: '4px 12px',
             borderRadius: '20px',
-            background: pkg.active ? '#ECFDF5' : '#F3F4F6',
+            background: pkg.is_active ? '#ECFDF5' : '#F3F4F6',
           }}
         >
           <Typography
@@ -635,10 +575,10 @@ const PackageCard = ({
               fontFamily: (theme) => theme.typography.fontFamily,
               fontWeight: 600,
               fontSize: pxToRem(11),
-              color: pkg.active ? '#059669' : '#9CA3AF',
+              color: pkg.is_active ? '#059669' : '#9CA3AF',
             }}
           >
-            {pkg.active ? 'Active' : 'Inactive'}
+            {pkg.is_active ? 'Active' : 'Inactive'}
           </Typography>
         </Box>
       </RowStack>

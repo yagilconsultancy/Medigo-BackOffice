@@ -1142,7 +1142,6 @@ export const FareConfigurationPage = () => {
   const config = dynamicConfig;
   const safeTab = config ? Math.min(activeTab, config.tabs.length - 1) : 0;
   const currentTab = config?.tabs[safeTab];
-  const isStandard = vehicleType === 'Standard Vehicle';
 
   const emptyState = (
     <Stack
@@ -2112,18 +2111,18 @@ export const FareConfigurationPage = () => {
     },
   ];
 
-  const columnMap: Record<string, GridColSpec<TableRow>[]> = {
-    rate: rateColumns,
-    stdRoute: stdRouteColumns,
-    route: routeColumns,
-    toll: tollColumns,
-    discount: discountColumns,
-    rules: rulesColumns,
-    commission: commissionColumns,
-    stretcherRoute: stretcherRouteColumns,
-    revenueSplit: revenueSplitColumns,
-    comparison: comparisonColumns,
-  };
+  // const columnMap: Record<string, GridColSpec<TableRow>[]> = {
+  //   rate: rateColumns,
+  //   stdRoute: stdRouteColumns,
+  //   route: routeColumns,
+  //   toll: tollColumns,
+  //   discount: discountColumns,
+  //   rules: rulesColumns,
+  //   commission: commissionColumns,
+  //   stretcherRoute: stretcherRouteColumns,
+  //   revenueSplit: revenueSplitColumns,
+  //   comparison: comparisonColumns,
+  // };
 
   // Generate columns dynamically for genericTable type
   const generateDynamicColumns = (
@@ -2157,7 +2156,8 @@ export const FareConfigurationPage = () => {
   const columns =
     currentTab?.columnType === 'genericTable'
       ? generateDynamicColumns(currentTab?.data || [])
-      : columnMap[currentTab?.columnType] || rateColumns;
+      : [];
+  // columnMap[currentTab?.columnType] || rateColumns;
   const hasSections = !!currentTab?.sections;
 
   const renderSurchargeSections = () => (
