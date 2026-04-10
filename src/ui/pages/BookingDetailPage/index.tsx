@@ -24,14 +24,10 @@ import {
 import { pxToRem } from '../../../common';
 import {
   useGetBookingDetail,
-  useGetAvailableDrivers,
   useAssignDriverToBooking,
   useReassignDriver,
 } from '../../../common/hooks';
-import {
-  AdminBookingDetailResponse,
-  AvailableDriverResponse,
-} from '../../../common/types';
+import { AdminBookingDetailResponse } from '../../../common/types';
 import {
   StatChip,
   InfoCard,
@@ -132,7 +128,6 @@ export const BookingDetailPage = () => {
   const params = useParams();
   const id = (params?.id as string) || '';
   const bookingQuery = useGetBookingDetail(id);
-  const driversQuery = useGetAvailableDrivers(id);
   const assignDriverMutation = useAssignDriverToBooking();
   const reassignDriverMutation = useReassignDriver();
   const [openAssignDriver, setOpenAssignDriver] = useState(false);
@@ -141,12 +136,6 @@ export const BookingDetailPage = () => {
   const apiResponse = bookingQuery.data;
   const booking =
     apiResponse && 'data' in apiResponse ? apiResponse.data : null;
-
-  const driversResponse = driversQuery.data;
-  const availableDrivers: AvailableDriverResponse[] =
-    driversResponse && 'data' in driversResponse
-      ? (driversResponse.data ?? [])
-      : [];
 
   const hasDriver = !!booking?.driver_id;
 
@@ -770,8 +759,7 @@ export const BookingDetailPage = () => {
       <AssignDriverModal
         open={openAssignDriver}
         handleClose={() => setOpenAssignDriver(false)}
-        drivers={availableDrivers}
-        isLoadingDrivers={driversQuery.isLoading}
+        rideId={id}
         onAssign={handleAssignDriver}
         isAssigning={assignDriverMutation.isPending}
       />
@@ -779,8 +767,7 @@ export const BookingDetailPage = () => {
       <AssignDriverModal
         open={openReassignDriver}
         handleClose={() => setOpenReassignDriver(false)}
-        drivers={availableDrivers}
-        isLoadingDrivers={driversQuery.isLoading}
+        rideId={id}
         onAssign={handleReassignDriver}
         isAssigning={reassignDriverMutation.isPending}
         title="Reassign Driver"

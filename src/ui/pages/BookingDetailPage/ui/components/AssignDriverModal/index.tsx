@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   alpha,
   Box,
@@ -14,14 +14,17 @@ import {
   AppModal,
   RowStack,
 } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import {
+  pxToRem,
+  useGetAvailableDrivers,
+  useResolvedApiQuery,
+} from '../../../../../../common';
 import { AvailableDriverResponse } from '../../../../../../common/types';
 
 type AssignDriverModalProps = {
   open: boolean;
   handleClose: () => void;
-  drivers: AvailableDriverResponse[];
-  isLoadingDrivers: boolean;
+  rideId: string;
   onAssign: (driverId: string) => void;
   isAssigning: boolean;
   title?: string;
@@ -32,8 +35,7 @@ type AssignDriverModalProps = {
 export const AssignDriverModal = ({
   open,
   handleClose,
-  drivers,
-  isLoadingDrivers,
+  rideId,
   onAssign,
   isAssigning,
   title = 'Assign Driver',
@@ -41,6 +43,16 @@ export const AssignDriverModal = ({
   confirmLabel = 'Assign Driver',
 }: AssignDriverModalProps) => {
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+
+  // Fetch available drivers from API
+  const { data: driversData, isLoading: isLoadingDrivers } =
+    useResolvedApiQuery(useGetAvailableDrivers, [], rideId);
+
+  // Map API response to drivers array
+  const drivers = useMemo<AvailableDriverResponse[]>(() => {
+    if (!driversData) return [];
+    return driversData;
+  }, [driversData]);
 
   const handleConfirm = () => {
     if (selectedDriverId) {

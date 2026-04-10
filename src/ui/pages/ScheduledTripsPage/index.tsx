@@ -15,49 +15,6 @@ import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined
 import { useState, useMemo } from 'react';
 import dayjs from 'dayjs';
 
-const availableDrivers = [
-  {
-    id: '1',
-    initials: 'MJ',
-    initialsColor: '#2F6FED',
-    name: 'Marcus Johnson',
-    vehicle: 'Toyota Sienna · 2022',
-    rating: 4.9,
-  },
-  {
-    id: '2',
-    initials: 'DC',
-    initialsColor: '#F59E0B',
-    name: 'David Chen',
-    vehicle: 'Ford Escape · 2023',
-    rating: 4.8,
-  },
-  {
-    id: '3',
-    initials: 'AK',
-    initialsColor: '#8B5CF6',
-    name: 'Anna Kim',
-    vehicle: 'Toyota Camry · 2022',
-    rating: 4.6,
-  },
-  {
-    id: '4',
-    initials: 'KC',
-    initialsColor: '#0EA5E9',
-    name: 'Kevin Cho',
-    vehicle: 'Ford Explorer · 2022',
-    rating: 4.6,
-  },
-  {
-    id: '5',
-    initials: 'GM',
-    initialsColor: '#D97706',
-    name: 'Grace Miller',
-    vehicle: 'Buick Enclave · 2021',
-    rating: 4.4,
-  },
-];
-
 export const ScheduledTripsPage = () => {
   // — All hooks first —
   const [assignModalOpen, setAssignModalOpen] = useState(false);
@@ -226,13 +183,13 @@ export const ScheduledTripsPage = () => {
         <AssignDriverModal
           open={assignModalOpen}
           handleClose={() => setAssignModalOpen(false)}
+          rideId={selectedTrip.id}
           bookingId={selectedTrip.bookingId}
           patientName={selectedTrip.patientName}
           rideType={selectedTrip.vehicleType}
           pickup={selectedTrip.route.split(' → ')[0] || selectedTrip.route}
           destination={selectedTrip.route.split(' → ')[1] || ''}
           dateTime={selectedTrip.dateTime}
-          drivers={availableDrivers}
         />
       )}
     </AppDashboardLayout>

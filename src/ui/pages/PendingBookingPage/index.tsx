@@ -20,49 +20,6 @@ import {
 import { AssignDriverModal } from '../../modules/components';
 import { PendingBooking } from './ui/components/PendingBookingCard';
 
-const availableDrivers = [
-  {
-    id: '1',
-    initials: 'MJ',
-    initialsColor: '#2F6FED',
-    name: 'Marcus Johnson',
-    vehicle: 'Toyota Sienna · 2022',
-    rating: 4.9,
-  },
-  {
-    id: '2',
-    initials: 'DC',
-    initialsColor: '#F59E0B',
-    name: 'David Chen',
-    vehicle: 'Ford Escape · 2023',
-    rating: 4.8,
-  },
-  {
-    id: '3',
-    initials: 'AK',
-    initialsColor: '#8B5CF6',
-    name: 'Anna Kim',
-    vehicle: 'Toyota Camry · 2022',
-    rating: 4.6,
-  },
-  {
-    id: '4',
-    initials: 'KC',
-    initialsColor: '#0EA5E9',
-    name: 'Kevin Cho',
-    vehicle: 'Ford Explorer · 2022',
-    rating: 4.6,
-  },
-  {
-    id: '5',
-    initials: 'GM',
-    initialsColor: '#D97706',
-    name: 'Grace Miller',
-    vehicle: 'Buick Enclave · 2021',
-    rating: 4.4,
-  },
-];
-
 export const PendingBookingPage = () => {
   // — All hooks first —
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -197,13 +154,13 @@ export const PendingBookingPage = () => {
         <AssignDriverModal
           open={assignModalOpen}
           handleClose={() => setAssignModalOpen(false)}
+          rideId={selectedBooking.id}
           bookingId={selectedBooking.bookingId}
           patientName={selectedBooking.patientName}
           rideType={selectedBooking.serviceType}
           pickup={selectedBooking.pickup}
           destination={selectedBooking.destination}
           dateTime={selectedBooking.dateTime}
-          drivers={availableDrivers}
         />
       )}
     </AppDashboardLayout>
