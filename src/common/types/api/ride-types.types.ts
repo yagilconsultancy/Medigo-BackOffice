@@ -64,3 +64,7 @@ export interface ToggleRideTypePayload {
   rideTypeId: string;
   is_active: boolean;
 }
+
+export interface DeleteRideTypePayload {
+  rideTypeId: string;
+}

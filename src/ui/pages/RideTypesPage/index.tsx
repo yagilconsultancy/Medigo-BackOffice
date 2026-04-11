@@ -64,7 +64,8 @@ const statCardConfig = [
 
 export const RideTypesPage = () => {
   // Hooks - API
-  const { createRideType, updateRideType, toggleRideType } = useRideTypesApi();
+  const { createRideType, updateRideType, toggleRideType, deleteRideType } =
+    useRideTypesApi();
   const { data: rideTypeKpis } = useResolvedApiQuery(useGetRideTypeKpis, null);
   const { data: rideTypesData } = useResolvedApiQuery<RideTypeResponse[]>(
     useListRideTypes,
@@ -95,6 +96,12 @@ export const RideTypesPage = () => {
     await toggleRideType({
       rideTypeId: id,
       is_active: !currentStatus,
+    });
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteRideType({
+      rideTypeId: id,
     });
   };
 
@@ -239,6 +246,7 @@ export const RideTypesPage = () => {
                 minFare={rideType.min_fare}
                 onToggle={() => handleToggle(rideType.id, rideType.is_active)}
                 onEdit={() => setEditingRideType(rideType)}
+                onDelete={() => handleDelete(rideType.id)}
               />
             ))}
           </Stack>

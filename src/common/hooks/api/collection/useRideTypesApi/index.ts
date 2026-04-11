@@ -3,18 +3,21 @@ import {
   useCreateRideType,
   useUpdateRideType,
   useToggleRideType,
+  useDeleteRideType,
 } from '../../mutation';
 import { tryExecute, extractResponseErrors } from '../../../../utils';
 import {
   RideTypeCreateRequest,
   UpdateRideTypePayload,
   ToggleRideTypePayload,
+  DeleteRideTypePayload,
 } from '../../../../types';
 
 export const useRideTypesApi = () => {
   const doCreateRideType = useCreateRideType();
   const doUpdateRideType = useUpdateRideType();
   const doToggleRideType = useToggleRideType();
+  const doDeleteRideType = useDeleteRideType();
 
   const createRideType = async (
     payload: RideTypeCreateRequest
@@ -84,9 +87,32 @@ export const useRideTypesApi = () => {
     return success;
   };
 
+  const deleteRideType = async (
+    payload: DeleteRideTypePayload
+  ): Promise<boolean> => {
+    let success = false;
+    await tryExecute(
+      () => doDeleteRideType.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
+        if (responseData.success) {
+          success = true;
+          toast.success('Ride type deleted successfully');
+        } else {
+          toast.error(extractResponseErrors(responseData));
+        }
+      },
+      async () => {
+        toast.error('An error occurred while deleting the ride type');
+      }
+    );
+    return success;
+  };
+
   return {
     createRideType,
     updateRideType,
     toggleRideType,
+    deleteRideType,
   };
 };

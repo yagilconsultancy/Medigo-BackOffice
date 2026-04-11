@@ -3,6 +3,7 @@
 import { Box, Chip, Divider, Stack, Switch, Typography } from '@mui/material';
 import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { RowStack } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 
@@ -18,6 +19,7 @@ type RideTypeCardProps = {
   minFare: number;
   onToggle?: () => void;
   onEdit?: () => void;
+  onDelete?: () => void;
 };
 
 // ─── Pricing Stat ────────────────────────────────────────────────────────────
@@ -61,6 +63,7 @@ export const RideTypeCard = ({
   minFare,
   onToggle,
   onEdit,
+  onDelete,
 }: RideTypeCardProps) => {
   return (
     <Stack
@@ -193,6 +196,21 @@ export const RideTypeCard = ({
             }}
           >
             <EditOutlinedIcon sx={{ fontSize: 18, color: '#9CA3AF' }} />
+          </Box>
+          <Box
+            onClick={onDelete}
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              '&:hover': { background: '#FEF2F2' },
+            }}
+          >
+            <DeleteOutlineIcon sx={{ fontSize: 18, color: '#EF4444' }} />
           </Box>
         </RowStack>
       </RowStack>

@@ -2,10 +2,12 @@ import { AxiosResponse } from 'axios';
 import { resolveRoute, ROUTES } from '../../../../constants';
 import { getApiClient } from '../../../../lib';
 import {
+  ApiResponse,
   ApiRideTypeResponse,
   RideTypeCreateRequest,
   UpdateRideTypePayload,
   ToggleRideTypePayload,
+  DeleteRideTypePayload,
 } from '../../../../types';
 
 export const createRideType = async (payload: RideTypeCreateRequest) => {
@@ -31,4 +33,12 @@ export const toggleRideType = async (payload: ToggleRideTypePayload) => {
   >(resolveRoute(ROUTES.toggleRideType, rideTypeId), null, {
     params: { is_active },
   });
+};
+
+export const deleteRideType = async (payload: DeleteRideTypePayload) => {
+  const { rideTypeId } = payload;
+  return await getApiClient().delete<
+    ApiResponse<null>,
+    AxiosResponse<ApiResponse<null>>
+  >(resolveRoute(ROUTES.deleteRideType, rideTypeId));
 };

@@ -413,6 +413,8 @@ export const ROUTES_SPEC = {
     `/${API_VERSION}/payments/admin/ride-types/${rideTypeId}`,
   toggleRideType: (rideTypeId: string) =>
     `/${API_VERSION}/payments/admin/ride-types/${rideTypeId}/toggle`,
+  deleteRideType: (rideTypeId: string) =>
+    `/${API_VERSION}/payments/admin/ride-types/${rideTypeId}`,
 
   // ====================== PAYMENTS PRICING ======================
 

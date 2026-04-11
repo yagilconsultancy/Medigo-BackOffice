@@ -1,5 +1,14 @@
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { getAuthToken, getRefreshToken, setAuthToken, handleLogout } from '../utils';
+import axios, {
+  AxiosInstance,
+  AxiosError,
+  InternalAxiosRequestConfig,
+} from 'axios';
+import {
+  getAuthToken,
+  getRefreshToken,
+  setAuthToken,
+  handleLogout,
+} from '../utils';
 import { refresh as refreshTokenService } from '../services/api/mutation/auth/refresh';
 
 let apiClient: AxiosInstance | null = null;
