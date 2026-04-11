@@ -10,3 +10,5 @@ export * from './dispatch.types';
 export * from './payments.types';
 export * from './ride-types.types';
 export * from './cities.types';
+export * from './roles-permissions.types';
+export * from './caregivers.types';

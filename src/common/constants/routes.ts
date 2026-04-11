@@ -492,6 +492,41 @@ export const ROUTES_SPEC = {
     `/${API_VERSION}/locations/admin/cities/${cityId}`,
   toggleCity: (cityId: string) =>
     `/${API_VERSION}/locations/admin/cities/${cityId}/toggle`,
+
+  // ====================== ROLES & PERMISSIONS ======================
+
+  // Admin Roles
+  listAdminRoles: `/${API_VERSION}/users/admin/roles`,
+  createAdminRole: `/${API_VERSION}/users/admin/roles`,
+  getAdminRoleDetail: (roleId: string) =>
+    `/${API_VERSION}/users/admin/roles/${roleId}`,
+  updateAdminRole: (roleId: string) =>
+    `/${API_VERSION}/users/admin/roles/${roleId}`,
+  deleteAdminRole: (roleId: string) =>
+    `/${API_VERSION}/users/admin/roles/${roleId}`,
+  assignRole: `/${API_VERSION}/users/admin/roles/assign`,
+  removeRole: `/${API_VERSION}/users/admin/roles/remove`,
+
+  // Permissions
+  getPermissionMatrix: `/${API_VERSION}/users/admin/permissions/matrix`,
+  savePermissions: `/${API_VERSION}/users/admin/permissions/save`,
+  getMyPermissions: `/${API_VERSION}/users/admin/me/permissions`,
+
+  // ====================== CAREGIVERS ======================
+
+  // Caregiver KPIs
+  getCaregiverKpis: `/${API_VERSION}/users/admin/caregivers/kpis`,
+
+  // Caregiver Profiles
+  listCaregiverProfiles: `/${API_VERSION}/users/admin/caregivers/profiles`,
+
+  // Caregivers Management
+  listCaregivers: `/${API_VERSION}/users/admin/caregivers`,
+  createCaregiver: `/${API_VERSION}/users/admin/caregivers`,
+  getCaregiverDetail: (caregiverId: string) =>
+    `/${API_VERSION}/users/admin/caregivers/${caregiverId}`,
+  updateCaregiver: (caregiverId: string) =>
+    `/${API_VERSION}/users/admin/caregivers/${caregiverId}`,
 } as const;
 
 export const ROUTES = Object.fromEntries(

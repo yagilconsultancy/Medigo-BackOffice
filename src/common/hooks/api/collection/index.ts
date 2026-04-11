@@ -22,3 +22,5 @@ export * from './useCommissionApi';
 export * from './useCancellationApi';
 export * from './useRideTypesApi';
 export * from './useCitiesApi';
+export * from './useRolesPermissionsApi';
+export * from './useCaregiversApi';

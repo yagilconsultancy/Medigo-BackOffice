@@ -23,3 +23,5 @@ export * from './payments-pricing';
 export * from './users';
 export * from './ride-types';
 export * from './locations';
+export * from './roles-permissions';
+export * from './caregivers';
