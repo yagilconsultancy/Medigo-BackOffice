@@ -1,16 +1,20 @@
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { useLogin } from '../../mutation';
-import { ApiLoginPayload } from '../../../../types';
+import { useLogin, useLogout, useRefresh } from '../../mutation';
+import { ApiLoginPayload, ApiLoginRefreshRequest } from '../../../../types';
 import {
   extractResponseErrors,
   setAuthToken,
+  setRefreshToken,
   tryExecute,
 } from '../../../../utils';
+import Cookies from 'js-cookie';
 
 export const useAuthApi = () => {
   const doLogin = useLogin();
   const router = useRouter();
+  const doLogout = useLogout();
+  const doRefresh = useRefresh();
 
   const login = async (payload: ApiLoginPayload): Promise<boolean> => {
     let success = false;
@@ -19,23 +23,17 @@ export const useAuthApi = () => {
       () => doLogin.mutateAsync(payload),
       async (response) => {
         const responseData = response.data;
-        console.log('Okkaaaayyy', response, responseData);
 
         if (responseData.success) {
           const token = responseData.data.access_token;
-          //   const role = responseData.data.role;
+          const refreshToken = responseData.data.refresh_token;
 
           setAuthToken(token);
-          //   setUserToken(token);
+          setRefreshToken(refreshToken);
 
-          //   if (role === "admin") {
           success = true;
           toast.success(`${responseData.message}`);
           router.push('/');
-          //   } else {
-          //     toast.error("You do not have access to this panel");
-          //   }
-          //Todo: handle the 403 error here
         } else if (response.status === 401) {
           toast.error(extractResponseErrors(responseData));
         } else {
@@ -50,55 +48,53 @@ export const useAuthApi = () => {
     return success;
   };
 
-  //   const activateAdmin = async (payload: ApiActivateAdminPayload): Promise<boolean> => {
-  //     let success = false;
+  const logout = async (payload: ApiLoginRefreshRequest): Promise<void> => {
+    await tryExecute(
+      () => doLogout.mutateAsync(payload),
+      async () => {
+        Cookies.remove('medi_refresh');
 
-  //     await tryExecute(
-  //       () => doActivateAdmin.mutateAsync(payload),
-  //       async (response) => {
-  //         const responseData = response.data;
-  //         console.log("activate response", responseData);
+        toast.success('Logged out successfully');
+        router.push('/login');
+      },
+      async () => {
+        toast.error('An error occurred during logout');
+      }
+    );
+  };
 
-  //         if (responseData.success) {
-  //           success = true;
-  //           router.push("/login");
-  //           //Todo: handle the 403 error here
-  //         } else if (response.status === 400) {
-  //           toast.error(extractResponseErrors(responseData));
-  //         } else {
-  //           toast.error("An error occurred");
-  //         }
-  //       },
-  //       async () => {
-  //         toast.error("An error occurred");
-  //       },
-  //     );
+  const refresh = async (payload: ApiLoginRefreshRequest): Promise<boolean> => {
+    let success = false;
 
-  //     return success;
-  //   };
+    await tryExecute(
+      () => doRefresh.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
 
-  //   const logout = async (): Promise<void> => {
-  //     await tryExecute(
-  //       () => doLogout.mutateAsync(),
-  //       async () => {
-  //         // Clear server-side cookie (Next.js server action)
-  //         await deleteAuthToken();
+        if (responseData.success) {
+          const token = responseData.data.access_token;
 
-  //         // Clear client-side cookie
-  //         setUserToken("");
+          setAuthToken(token);
 
-  //         toast.success("Logged out successfully");
-  //         router.push("/login");
-  //       },
-  //       async () => {
-  //         toast.error("An error occurred during logout");
-  //       },
-  //     );
-  //   };
+          success = true;
+          toast.success(`${responseData.message}`);
+        } else if (response.status === 401) {
+          toast.error(extractResponseErrors(responseData));
+        } else {
+          toast.error('An error occurred');
+        }
+      },
+      async () => {
+        toast.error('An error occurred during token refresh');
+      }
+    );
+
+    return success;
+  };
 
   return {
     login,
-    // activateAdmin,
-    // logout,
+    refresh,
+    logout,
   };
 };

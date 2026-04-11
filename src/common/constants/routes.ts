@@ -7,6 +7,9 @@ export const ROUTES_SPEC = {
 
   // System logs
   adminLogin: `/${API_VERSION}/auth/admin/login`,
+  adminRefresh: `/${API_VERSION}/auth/refresh`,
+  adminLogout: `/${API_VERSION}/auth/logout`,
+
   getUserProfile: `/${API_VERSION}/users/me`,
   getActivityKPI: `/${API_VERSION}/auth/admin/activity-logs/kpis`,
   getActivityList: `/${API_VERSION}/auth/admin/activity-logs`,
@@ -399,6 +402,17 @@ export const ROUTES_SPEC = {
     `/${API_VERSION}/payments/admin/refunds/${refundId}/approve`,
   rejectRefund: (refundId: string) =>
     `/${API_VERSION}/payments/admin/refunds/${refundId}/reject`,
+
+  // Admin Ride Types
+  getRideTypeKpis: `/${API_VERSION}/payments/admin/ride-types/kpis`,
+  listRideTypes: `/${API_VERSION}/payments/admin/ride-types`,
+  createRideType: `/${API_VERSION}/payments/admin/ride-types`,
+  getRideType: (rideTypeId: string) =>
+    `/${API_VERSION}/payments/admin/ride-types/${rideTypeId}`,
+  updateRideType: (rideTypeId: string) =>
+    `/${API_VERSION}/payments/admin/ride-types/${rideTypeId}`,
+  toggleRideType: (rideTypeId: string) =>
+    `/${API_VERSION}/payments/admin/ride-types/${rideTypeId}/toggle`,
 
   // ====================== PAYMENTS PRICING ======================
 

@@ -25,6 +25,8 @@ type AddRideTypeFormValues = {
   description: string;
   baseFare: string;
   perKmRate: string;
+  perMinRate: string;
+  minFare: string;
 };
 
 // ─── Validation ─────────────────────────────────────────────────────────────
@@ -34,6 +36,8 @@ const validationSchema = Yup.object({
   description: Yup.string().required('Description is required'),
   baseFare: Yup.string().required('Base fare is required'),
   perKmRate: Yup.string().required('Per km rate is required'),
+  perMinRate: Yup.string().required('Per minute rate is required'),
+  minFare: Yup.string().required('Minimum fare is required'),
 });
 
 const initialValues: AddRideTypeFormValues = {
@@ -41,6 +45,8 @@ const initialValues: AddRideTypeFormValues = {
   description: '',
   baseFare: '',
   perKmRate: '',
+  perMinRate: '',
+  minFare: '',
 };
 
 // ─── Label Component ────────────────────────────────────────────────────────
@@ -170,10 +176,30 @@ export const AddRideTypeModal = ({
 
                 {/* Per km Rate */}
                 <Stack spacing={'6px'}>
-                  <FieldLabel label="Per km Rate" />
+                  <FieldLabel label="Per km Rate (CAD)" />
                   <FormikAppTextField
                     name="perKmRate"
                     placeholder="e.g. 3.80"
+                    borderRadius="10px"
+                  />
+                </Stack>
+
+                {/* Per Minute Rate */}
+                <Stack spacing={'6px'}>
+                  <FieldLabel label="Per Minute Rate (CAD)" />
+                  <FormikAppTextField
+                    name="perMinRate"
+                    placeholder="e.g. 0.35"
+                    borderRadius="10px"
+                  />
+                </Stack>
+
+                {/* Minimum Fare */}
+                <Stack spacing={'6px'}>
+                  <FieldLabel label="Minimum Fare (CAD)" />
+                  <FormikAppTextField
+                    name="minFare"
+                    placeholder="e.g. 35.00"
                     borderRadius="10px"
                   />
                 </Stack>

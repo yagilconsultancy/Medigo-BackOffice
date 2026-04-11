@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
@@ -13,144 +13,90 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetRideTypeKpis,
+  useListRideTypes,
+  useResolvedApiQuery,
+  useRideTypesApi,
+  RideTypeKPIs,
+  RideTypeResponse,
+} from '../../../common';
 import {
   RideTypeCard,
   AddRideTypeModal,
   EditRideTypeModal,
 } from './ui/component';
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+// ─── Stat Card Config ────────────────────────────────────────────────────────
 
-type RideTypeData = {
-  id: string;
-  name: string;
-  description: string;
-  isActive: boolean;
-  baseFare: number;
-  perKm: number;
-  perMin: number;
-  minFare: number;
-};
-
-// ─── Sample Data ────────────────────────────────────────────────────────────
-
-const initialRideTypes: RideTypeData[] = [
+const statCardConfig = [
   {
-    id: '1',
-    name: 'MediGo Standard Ambulatory Ride',
-    description: 'Regular car for ambulatory patients — most common ride type',
-    isActive: true,
-    baseFare: 8.0,
-    perKm: 1.8,
-    perMin: 0.18,
-    minFare: 12.0,
+    label: 'Ride Types',
+    icon: <DirectionsCarOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
+    iconBg: '#EBF2FF',
+    getValue: (kpi?: RideTypeKPIs) => kpi?.total_ride_types?.toString() ?? '0',
   },
   {
-    id: '2',
-    name: 'MediGo Standard Ride',
-    description:
-      'WAV-Equipped vehicles for wheelchair users and mobility device passengers',
-    isActive: true,
-    baseFare: 12.0,
-    perKm: 2.2,
-    perMin: 0.22,
-    minFare: 18.0,
+    label: 'Active',
+    icon: (
+      <CheckCircleOutlineOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />
+    ),
+    iconBg: '#ECFDF5',
+    getValue: (kpi?: RideTypeKPIs) => kpi?.active?.toString() ?? '0',
   },
   {
-    id: '3',
-    name: 'MediGo Stretcher Van',
-    description:
-      'Driver assists patient to/from door — for patients needing extra support',
-    isActive: true,
-    baseFare: 14.0,
-    perKm: 2.4,
-    perMin: 0.25,
-    minFare: 20.0,
+    label: 'Inactive',
+    icon: <HighlightOffOutlinedIcon sx={{ fontSize: 18, color: '#9CA3AF' }} />,
+    iconBg: '#F3F4F6',
+    getValue: (kpi?: RideTypeKPIs) => kpi?.inactive?.toString() ?? '0',
   },
   {
-    id: '4',
-    name: 'MediGo Stretcher Transport',
-    description:
-      'For non-ambulatory patients on stretchers; requires specialized vehicle',
-    isActive: true,
-    baseFare: 22.0,
-    perKm: 3.8,
-    perMin: 0.35,
-    minFare: 35.0,
-  },
-  {
-    id: '5',
-    name: 'MediGo Bariatric Transport',
-    description:
-      'Specialized vehicle for bariatric patients requiring additional space and equipment',
-    isActive: false,
-    baseFare: 9.0,
-    perKm: 1.6,
-    perMin: 0.15,
-    minFare: 15.0,
+    label: 'Avg Base Fare',
+    icon: <PaidOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
+    iconBg: '#EBF2FF',
+    getValue: (kpi?: RideTypeKPIs) =>
+      kpi?.avg_base_fare != null ? `$${kpi.avg_base_fare.toFixed(2)}` : '$0',
   },
 ];
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const RideTypesPage = () => {
-  const [rideTypes, setRideTypes] = useState<RideTypeData[]>(initialRideTypes);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingRideType, setEditingRideType] = useState<RideTypeData | null>(
-    null
+  // Hooks - API
+  const { createRideType, updateRideType, toggleRideType } = useRideTypesApi();
+  const { data: rideTypeKpis } = useResolvedApiQuery(useGetRideTypeKpis, null);
+  const { data: rideTypesData } = useResolvedApiQuery<RideTypeResponse[]>(
+    useListRideTypes,
+    []
   );
 
-  const totalTypes = rideTypes.length;
-  const activeTypes = rideTypes.filter((r) => r.isActive).length;
-  const inactiveTypes = rideTypes.filter((r) => !r.isActive).length;
-  const avgBaseFare =
-    rideTypes.length > 0
-      ? Math.round(
-          rideTypes.reduce((sum, r) => sum + r.baseFare, 0) / rideTypes.length
-        )
-      : 0;
+  // State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingRideType, setEditingRideType] =
+    useState<RideTypeResponse | null>(null);
 
-  const handleToggle = (id: string) => {
-    setRideTypes((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, isActive: !r.isActive } : r))
-    );
+  // Derived state
+  const kpiData = useMemo<RideTypeKPIs | undefined>(() => {
+    return rideTypeKpis ? rideTypeKpis : undefined;
+  }, [rideTypeKpis]);
+
+  const rideTypes = useMemo<RideTypeResponse[]>(() => {
+    return rideTypesData || [];
+  }, [rideTypesData]);
+
+  const statCards = statCardConfig.map((card) => ({
+    ...card,
+    value: card.getValue(kpiData),
+  }));
+
+  // Handlers
+  const handleToggle = async (id: string, currentStatus: boolean) => {
+    await toggleRideType({
+      rideTypeId: id,
+      is_active: !currentStatus,
+    });
   };
-
-  const statCards = [
-    {
-      value: String(totalTypes),
-      label: 'Ride Types',
-      icon: (
-        <DirectionsCarOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-      ),
-      iconBg: '#EBF2FF',
-    },
-    {
-      value: String(activeTypes),
-      label: 'Active',
-      icon: (
-        <CheckCircleOutlineOutlinedIcon
-          sx={{ fontSize: 18, color: '#059669' }}
-        />
-      ),
-      iconBg: '#ECFDF5',
-    },
-    {
-      value: String(inactiveTypes),
-      label: 'Inactive',
-      icon: (
-        <HighlightOffOutlinedIcon sx={{ fontSize: 18, color: '#9CA3AF' }} />
-      ),
-      iconBg: '#F3F4F6',
-    },
-    {
-      value: `$${avgBaseFare}`,
-      label: 'Avg Base Fare',
-      icon: <PaidOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
-      iconBg: '#EBF2FF',
-    },
-  ];
 
   return (
     <AppDashboardLayout>
@@ -284,14 +230,14 @@ export const RideTypesPage = () => {
             {rideTypes.map((rideType) => (
               <RideTypeCard
                 key={rideType.id}
-                name={rideType.name}
-                description={rideType.description}
-                isActive={rideType.isActive}
-                baseFare={rideType.baseFare}
-                perKm={rideType.perKm}
-                perMin={rideType.perMin}
-                minFare={rideType.minFare}
-                onToggle={() => handleToggle(rideType.id)}
+                name={rideType.display_name}
+                description={rideType.description ?? ''}
+                isActive={rideType.is_active}
+                baseFare={rideType.base_fare}
+                perKm={rideType.per_km_rate}
+                perMin={rideType.per_min_rate}
+                minFare={rideType.min_fare}
+                onToggle={() => handleToggle(rideType.id, rideType.is_active)}
                 onEdit={() => setEditingRideType(rideType)}
               />
             ))}
@@ -303,19 +249,22 @@ export const RideTypesPage = () => {
       <AddRideTypeModal
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSubmit={(values) => {
-          const newRideType: RideTypeData = {
-            id: String(rideTypes.length + 1),
-            name: values.rideTypeName,
-            description: values.description,
-            isActive: false,
-            baseFare: Number(values.baseFare),
-            perKm: Number(values.perKmRate),
-            perMin: 0,
-            minFare: 0,
-          };
-          setRideTypes((prev) => [...prev, newRideType]);
-          setIsAddModalOpen(false);
+        onSubmit={async (values) => {
+          const success = await createRideType({
+            service_type: values.rideTypeName
+              .toLowerCase()
+              .replace(/\s+/g, '_'),
+            display_name: values.rideTypeName,
+            description: values.description || null,
+            base_fare: Number(values.baseFare),
+            per_km_rate: Number(values.perKmRate),
+            per_min_rate: Number(values.perMinRate || 0),
+            min_fare: Number(values.minFare || 0),
+          });
+
+          if (success) {
+            setIsAddModalOpen(false);
+          }
         }}
       />
 
@@ -325,26 +274,27 @@ export const RideTypesPage = () => {
           open={!!editingRideType}
           onClose={() => setEditingRideType(null)}
           rideTypeData={{
-            name: editingRideType.name,
-            description: editingRideType.description,
-            baseFare: editingRideType.baseFare,
-            perKmRate: editingRideType.perKm,
+            name: editingRideType.display_name,
+            description: editingRideType.description ?? '',
+            baseFare: editingRideType.base_fare,
+            perKmRate: editingRideType.per_km_rate,
+            perMinRate: editingRideType.per_min_rate,
+            minFare: editingRideType.min_fare,
           }}
-          onSubmit={(values) => {
-            setRideTypes((prev) =>
-              prev.map((r) =>
-                r.id === editingRideType.id
-                  ? {
-                      ...r,
-                      name: values.rideTypeName,
-                      description: values.description,
-                      baseFare: Number(values.baseFare),
-                      perKm: Number(values.perKmRate),
-                    }
-                  : r
-              )
-            );
-            setEditingRideType(null);
+          onSubmit={async (values) => {
+            const success = await updateRideType({
+              rideTypeId: editingRideType.id,
+              display_name: values.rideTypeName,
+              description: values.description || null,
+              base_fare: Number(values.baseFare),
+              per_km_rate: Number(values.perKmRate),
+              per_min_rate: Number(values.perMinRate),
+              min_fare: Number(values.minFare),
+            });
+
+            if (success) {
+              setEditingRideType(null);
+            }
           }}
         />
       )}

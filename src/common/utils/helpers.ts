@@ -82,6 +82,7 @@ export const pxToRem = (px: number): string => {
 
 export const handleLogout = () => {
   Cookies.remove('medi_auth');
+  Cookies.remove('medi_refresh');
   window.location.href = `/login`;
 };
 
@@ -299,12 +300,28 @@ export const setAuthToken = (token: string) => {
   });
 };
 
+export const setRefreshToken = (token: string) => {
+  Cookies.set('medi_refresh', token, {
+    expires: 7,
+    secure: true,
+    sameSite: 'strict',
+  });
+};
+
 export const getAuthToken = () => {
   return Cookies.get('medi_auth');
 };
 
+export const getRefreshToken = () => {
+  return Cookies.get('medi_refresh');
+};
+
 export const removeAuthToken = () => {
   Cookies.remove('medi_auth');
+};
+
+export const removeRefreshToken = () => {
+  Cookies.remove('medi_refresh');
 };
 
 export const toSnakeCase = (value: string): string => {

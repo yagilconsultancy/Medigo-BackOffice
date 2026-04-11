@@ -4,7 +4,6 @@ import { ApiResponse } from '../types';
 export const extractResponseErrors = (
   apiResponse: ApiResponse<any>
 ): ReactNode => {
-  console.log('Got here:::', apiResponse);
   if (apiResponse.success) {
     return null;
   }

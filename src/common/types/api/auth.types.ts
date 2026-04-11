@@ -64,6 +64,19 @@ export interface ApiLoginPayload {
   password: string;
 }
 
+export interface ApiLogoutResponse {
+  success: boolean;
+  message?: string;
+  data?: null;
+}
+export type ApiLogoutApiResponse = ApiResponse<ApiLogoutResponse>;
+
+export interface ApiLoginRefreshRequest {
+  refresh_token: string;
+}
+
+export type ApiLoginRefreshResponse = ApiResponse<LoginResponse>;
+
 export interface LoginResponse {
   access_token: string;
   refresh_token: string;
