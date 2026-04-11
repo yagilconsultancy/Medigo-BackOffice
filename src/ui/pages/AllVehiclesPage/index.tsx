@@ -81,11 +81,17 @@ const statusColors: Record<VehicleStatus, string> = {
   Inactive: '#EF4444',
 };
 
+// Default fallback for unknown status
+const defaultStatusColor = '#6B7280';
+
 const docValidityColors: Record<DocValidity, string> = {
   Valid: '#059669',
   Expiring: '#D97706',
   Expired: '#EF4444',
 };
+
+// Default fallback for unknown doc validity
+const defaultDocValidityColor = '#6B7280';
 
 const categoryColors: Record<VehicleCategory, { color: string; bg: string }> = {
   'Wheelchair Accessible': { color: '#059669', bg: '#ECFDF5' },
@@ -93,6 +99,9 @@ const categoryColors: Record<VehicleCategory, { color: string; bg: string }> = {
   'Assisted Ride': { color: '#7C3AED', bg: '#F3EEFF' },
   'Stretcher Transport': { color: '#D97706', bg: '#FFFBEB' },
 };
+
+// Default fallback for unknown categories
+const defaultCategoryColor = { color: '#6B7280', bg: '#F3F4F6' };
 
 // ─── Category Filter Options ────────────────────────────────────────────────
 
@@ -338,7 +347,7 @@ export const AllVehiclesPage = () => {
       minWidth: 175,
       renderCell: (params) => {
         const cat = params.value as VehicleCategory;
-        const config = categoryColors[cat];
+        const config = categoryColors[cat] || defaultCategoryColor;
         return (
           <Chip
             variant="filled"
@@ -388,7 +397,7 @@ export const AllVehiclesPage = () => {
       minWidth: 100,
       renderCell: (params) => {
         const status = params.value as VehicleStatus;
-        const color = statusColors[status];
+        const color = statusColors[status] || defaultStatusColor;
         return (
           <Chip
             variant="filled"
@@ -426,7 +435,7 @@ export const AllVehiclesPage = () => {
               fontFamily: (theme) => theme.typography.fontFamily,
               fontWeight: 600,
               fontSize: pxToRem(12),
-              color: docValidityColors[validity],
+              color: docValidityColors[validity] || defaultDocValidityColor,
             }}
           >
             {validity}
@@ -447,7 +456,7 @@ export const AllVehiclesPage = () => {
               fontFamily: (theme) => theme.typography.fontFamily,
               fontWeight: 600,
               fontSize: pxToRem(12),
-              color: docValidityColors[validity],
+              color: docValidityColors[validity] || defaultDocValidityColor,
             }}
           >
             {validity}

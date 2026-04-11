@@ -34,15 +34,13 @@ import {
   AppDatePickerPopover,
   FormikAppTextField,
   AppSelect,
-  UserDropdownMenuInput,
-  UserInputData,
+  FleetDropdownMenuInput,
+  FleetInputData,
+  FleetDriverDropdownMenuInput,
+  FleetDriverInputData,
 } from '../../../../../modules/components';
-import {
-  pxToRem,
-  useFleetVehiclesApi,
-  useResolvedApiQuery,
-  useGetUserProfile,
-} from '../../../../../../common';
+import { pxToRem, useFleetVehiclesApi } from '../../../../../../common';
+import { toast } from 'sonner';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -92,16 +90,6 @@ const categoryCards: {
   },
 ];
 
-const fleetOptions = [
-  'Independent (MediGo Direct)',
-  'MedRide Express',
-  'CareTransit Co.',
-  'HealthHaul LLC',
-  'SafeRide Medical',
-  'MobCare Transport',
-  'Apex Medical Rides',
-];
-
 // ─── Validation Schema ──────────────────────────────────────────────────────
 
 const validationSchema = Yup.object().shape({
@@ -112,7 +100,6 @@ const validationSchema = Yup.object().shape({
   vin: Yup.string(),
   color: Yup.string(),
   capacity: Yup.string(),
-  fleet: Yup.string().required('Fleet company is required'),
   insuranceProvider: Yup.string(),
   regAuthority: Yup.string(),
   mileage: Yup.string(),
@@ -127,7 +114,6 @@ const initialValues = {
   vin: '',
   color: '',
   capacity: '',
-  fleet: '',
   insuranceProvider: '',
   regAuthority: '',
   mileage: '',
@@ -143,7 +129,6 @@ export const AddVehicleDrawer = ({
 }: AddVehicleDrawerProps) => {
   // Hooks
   const { createVehicle } = useFleetVehiclesApi();
-  const { data: userProfile } = useResolvedApiQuery(useGetUserProfile, null);
 
   // State
   const [category, setCategory] = useState<VehicleCategory | ''>('');
@@ -160,7 +145,9 @@ export const AddVehicleDrawer = ({
   const [insuranceFile, setInsuranceFile] = useState<File | null>(null);
   const [registrationFile, setRegistrationFile] = useState<File | null>(null);
   const [inspectionFile, setInspectionFile] = useState<File | null>(null);
-  const [selectedDriver, setSelectedDriver] = useState<UserInputData | null>(
+  const [selectedDriver, setSelectedDriver] =
+    useState<FleetDriverInputData | null>(null);
+  const [selectedFleet, setSelectedFleet] = useState<FleetInputData | null>(
     null
   );
   const insuranceInputRef = useRef<HTMLInputElement | null>(null);
@@ -183,15 +170,15 @@ export const AddVehicleDrawer = ({
   };
 
   const handleSubmit = async (values: typeof initialValues) => {
-    // if (!category) {
-    //   console.log('Category is required but not selected');
-    //   return;
-    // }
+    if (!category) {
+      toast.error('Category is required but not selected');
+      return;
+    }
 
-    // if (!userProfile?.id) {
-    //   console.log('User profile not loaded yet');
-    //   return;
-    // }
+    if (!selectedFleet?.id) {
+      toast.error('Please select a fleet company');
+      return;
+    }
 
     // Build special equipment array
     const specialEquipment: string[] = [];
@@ -200,7 +187,7 @@ export const AddVehicleDrawer = ({
 
     // Build payload
     const payload = {
-      business_id: userProfile.id,
+      business_id: selectedFleet.id,
       driver_profile_id: selectedDriver?.id || null,
       vehicle_name: `${values.year} ${values.make} ${values.model}`.trim(),
       make: values.make,
@@ -231,7 +218,8 @@ export const AddVehicleDrawer = ({
       registration_file: registrationFile,
       inspection_file: inspectionFile,
     };
-
+    // console.log('Submitting vehicle with payload:', payload);
+    // return
     const success = await createVehicle(payload);
 
     console.log('Create vehicle result:', success);
@@ -250,6 +238,7 @@ export const AddVehicleDrawer = ({
       setRegistrationFile(null);
       setInspectionFile(null);
       setSelectedDriver(null);
+      setSelectedFleet(null);
     }
   };
 
@@ -559,22 +548,24 @@ export const AddVehicleDrawer = ({
                     gap: '12px',
                   }}
                 >
-                  <AppSelect
-                    name="fleet"
-                    label="Fleet Company*"
-                    options={fleetOptions}
-                    placeholder="Select fleet"
-                  />
+                  <FormField label="Fleet Company*">
+                    <FleetDropdownMenuInput
+                      handleFleetSelected={(fleet) => {
+                        setSelectedFleet(fleet);
+                        setSelectedDriver(null); // Reset driver when fleet changes
+                      }}
+                      selectedFleetId={selectedFleet?.id}
+                      selectedFleetName={selectedFleet?.name}
+                    />
+                  </FormField>
                   <FormField label="Assigned Driver">
-                    <UserDropdownMenuInput
-                      type="driver"
-                      handleUserSelected={(user) => setSelectedDriver(user)}
-                      selectedUserId={selectedDriver?.id}
-                      selectedUserName={
-                        selectedDriver
-                          ? `${selectedDriver.firstName} ${selectedDriver.lastName}`
-                          : undefined
+                    <FleetDriverDropdownMenuInput
+                      fleetId={selectedFleet?.id}
+                      handleDriverSelected={(driver) =>
+                        setSelectedDriver(driver)
                       }
+                      selectedDriverId={selectedDriver?.id}
+                      selectedDriverName={selectedDriver?.displayName}
                     />
                   </FormField>
                 </Box>
@@ -600,9 +591,9 @@ export const AddVehicleDrawer = ({
                     }}
                   >
                     This vehicle will be registered under{' '}
-                    {values.fleet || 'MediGo'} with{' '}
+                    {selectedFleet?.name || 'a fleet company'} with{' '}
                     {selectedDriver
-                      ? `${selectedDriver.firstName} ${selectedDriver.lastName} assigned`
+                      ? `${selectedDriver.displayName} assigned`
                       : 'no driver assigned yet'}
                     .
                   </Typography>
