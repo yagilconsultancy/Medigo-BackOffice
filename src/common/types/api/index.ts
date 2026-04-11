@@ -9,3 +9,4 @@ export * from './notification.types';
 export * from './dispatch.types';
 export * from './payments.types';
 export * from './ride-types.types';
+export * from './cities.types';

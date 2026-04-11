@@ -475,6 +475,23 @@ export const ROUTES_SPEC = {
   getCancellationKpis: `/${API_VERSION}/payments/pricing/cancellation/kpis`,
   getCancellationPolicies: `/${API_VERSION}/payments/pricing/cancellation`,
   updateCancellationPolicies: `/${API_VERSION}/payments/pricing/cancellation`,
+
+  // ====================== LOCATIONS - CITIES & SERVICE AREAS ======================
+
+  // City KPIs
+  getCityKpis: `/${API_VERSION}/locations/admin/cities/kpis`,
+
+  // Cities Management
+  listCities: `/${API_VERSION}/locations/admin/cities`,
+  createCity: `/${API_VERSION}/locations/admin/cities`,
+  getCity: (cityId: string) =>
+    `/${API_VERSION}/locations/admin/cities/${cityId}`,
+  updateCity: (cityId: string) =>
+    `/${API_VERSION}/locations/admin/cities/${cityId}`,
+  deleteCity: (cityId: string) =>
+    `/${API_VERSION}/locations/admin/cities/${cityId}`,
+  toggleCity: (cityId: string) =>
+    `/${API_VERSION}/locations/admin/cities/${cityId}/toggle`,
 } as const;
 
 export const ROUTES = Object.fromEntries(

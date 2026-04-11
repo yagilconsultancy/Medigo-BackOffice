@@ -21,3 +21,4 @@ export * from './useSurchargeApi';
 export * from './useCommissionApi';
 export * from './useCancellationApi';
 export * from './useRideTypesApi';
+export * from './useCitiesApi';
