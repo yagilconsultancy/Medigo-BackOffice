@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   TooltipProps,
 } from 'recharts';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Skeleton, Stack, Typography } from '@mui/material';
 import { RowStack } from '../../../../../modules/components';
 import { EmptyState } from '../../../../../modules/blocks';
 import { pxToRem } from '../../../../../../common';
@@ -26,6 +26,7 @@ type ChartDataPoint = {
 
 type FleetRevenueChartProps = {
   trendData?: FleetRevenueTrendResponse | null;
+  isFetching?: boolean;
 };
 
 // ─── Custom Tooltip ─────────────────────────────────────────────────────────
@@ -101,7 +102,10 @@ const CustomTooltip = ({
   );
 };
 
-export const FleetRevenueChart = ({ trendData }: FleetRevenueChartProps) => {
+export const FleetRevenueChart = ({
+  trendData,
+  isFetching,
+}: FleetRevenueChartProps) => {
   const chartData = useMemo<ChartDataPoint[]>(() => {
     if (!trendData?.trend?.length) return [];
     return trendData.trend.map((point) => {
@@ -123,6 +127,17 @@ export const FleetRevenueChart = ({ trendData }: FleetRevenueChartProps) => {
     if (!chartData.length) return 0;
     return totalRevenue / chartData.length;
   }, [chartData, totalRevenue]);
+
+  if (isFetching) {
+    return (
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        height={310}
+        sx={{ borderRadius: '12px' }}
+      />
+    );
+  }
 
   if (!chartData.length) {
     return (

@@ -7,6 +7,7 @@ import {
   Box,
   Grid,
   LinearProgress,
+  Skeleton,
   Stack,
   Typography,
 } from '@mui/material';
@@ -76,19 +77,27 @@ export const FleetEarningsPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
+  const kpisQuery = useGetFleetEarningsKpi({ fleet_id: fleetId || undefined });
   const { data: kpis } = useResolvedApiQuery(useGetFleetEarningsKpi, null, {
     fleet_id: fleetId || undefined,
   });
+  const isFetchingKpis = kpisQuery.isFetching;
 
+  const trendQuery = useGetFleetEarningsTrend({
+    fleet_id: fleetId || undefined,
+  });
   const { data: trendData } = useResolvedApiQuery(
     useGetFleetEarningsTrend,
     null,
     { fleet_id: fleetId || undefined }
   );
+  const isFetchingTrend = trendQuery.isFetching;
 
-  const { data: breakdownData } = useGetFleetEarningsBreakdown({
+  const breakdownQuery = useGetFleetEarningsBreakdown({
     fleet_id: fleetId || undefined,
   });
+  const { data: breakdownData } = breakdownQuery;
+  const isFetchingBreakdown = breakdownQuery.isFetching;
 
   const earningsRows = useMemo<EarningsRow[]>(() => {
     if (!breakdownData?.success || !breakdownData?.data?.length) return [];
@@ -379,84 +388,109 @@ export const FleetEarningsPage = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
-          {statCards.map((card, index) => (
-            <Grid key={index} size={{ xs: 6, lg: 3 }}>
-              <Stack
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #E8ECF0',
-                  borderRadius: '14px',
-                  padding: '16px 20px',
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 700,
-                    fontSize: pxToRem(24),
-                    lineHeight: '1.3em',
-                    color: card.valueColor,
-                  }}
-                >
-                  {card.value}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 500,
-                    fontSize: pxToRem(12.5),
-                    lineHeight: '1.5em',
-                    color: '#6B7280',
-                    marginTop: '2px',
-                  }}
-                >
-                  {card.label}
-                </Typography>
-              </Stack>
-            </Grid>
-          ))}
+          {isFetchingKpis
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={100}
+                    sx={{ borderRadius: '14px' }}
+                  />
+                </Grid>
+              ))
+            : statCards.map((card, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <Stack
+                    sx={{
+                      background: '#FFFFFF',
+                      border: '0.67px solid #E8ECF0',
+                      borderRadius: '14px',
+                      padding: '16px 20px',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 700,
+                        fontSize: pxToRem(24),
+                        lineHeight: '1.3em',
+                        color: card.valueColor,
+                      }}
+                    >
+                      {card.value}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 500,
+                        fontSize: pxToRem(12.5),
+                        lineHeight: '1.5em',
+                        color: '#6B7280',
+                        marginTop: '2px',
+                      }}
+                    >
+                      {card.label}
+                    </Typography>
+                  </Stack>
+                </Grid>
+              ))}
         </Grid>
 
         {/* Revenue Trends Chart */}
-        <FleetRevenueChart trendData={trendData} />
+        <FleetRevenueChart trendData={trendData} isFetching={isFetchingTrend} />
 
         {/* Earnings Breakdown Table */}
-        <AppGridtable
-          columns={columns}
-          data={earningsRows}
-          initialPageSize={6}
-          emptyState={<EmptyState animationSrc="/empty.json" />}
-          sx={{
-            height: 'auto',
-            width: '100%',
-          }}
-        >
-          <RowStack justifyContent={'space-between'} width={'100%'}>
-            <RowStack spacing={'8px'}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(16),
-                  color: '#111827',
-                }}
-              >
-                Earnings Breakdown
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(13),
-                  color: '#9CA3AF',
-                }}
-              >
-                {earningsRows.length} fleet partner
-                {earningsRows.length !== 1 ? 's' : ''}
-              </Typography>
+        {isFetchingBreakdown ? (
+          <Stack spacing={'12px'}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                width="100%"
+                height={70}
+                sx={{ borderRadius: '12px' }}
+              />
+            ))}
+          </Stack>
+        ) : (
+          <AppGridtable
+            columns={columns}
+            data={earningsRows}
+            initialPageSize={6}
+            emptyState={<EmptyState animationSrc="/empty.json" />}
+            sx={{
+              height: 'auto',
+              width: '100%',
+            }}
+          >
+            <RowStack justifyContent={'space-between'} width={'100%'}>
+              <RowStack spacing={'8px'}>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(16),
+                    color: '#111827',
+                  }}
+                >
+                  Earnings Breakdown
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 400,
+                    fontSize: pxToRem(13),
+                    color: '#9CA3AF',
+                  }}
+                >
+                  {earningsRows.length} fleet partner
+                  {earningsRows.length !== 1 ? 's' : ''}
+                </Typography>
+              </RowStack>
             </RowStack>
-          </RowStack>
-        </AppGridtable>
+          </AppGridtable>
+        )}
       </Stack>
 
       {/* Payout Modal */}

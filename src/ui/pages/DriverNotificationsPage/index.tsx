@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
+import { Box, Divider, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
@@ -81,15 +81,23 @@ export const DriverNotificationsPage = () => {
     pageSize: 10,
   });
 
+  const kpisQuery = useGetDriverBroadcastKpis();
   const { data: kpisData } = useResolvedApiQuery(
     useGetDriverBroadcastKpis,
     null
   );
+  const isFetchingKpis = kpisQuery.isFetching;
+
+  const broadcastsQuery = useListDriverBroadcasts({
+    page: paginationModel.page + 1,
+    page_size: paginationModel.pageSize,
+  });
   const { data: broadcastsData } = useResolvedApiQuery(
     useListDriverBroadcasts,
     null,
     { page: paginationModel.page + 1, page_size: paginationModel.pageSize }
   );
+  const isFetchingBroadcasts = broadcastsQuery.isFetching;
 
   const statCards = useMemo(
     () => [

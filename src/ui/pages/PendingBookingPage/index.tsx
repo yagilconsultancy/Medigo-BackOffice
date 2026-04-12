@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import dayjs from 'dayjs';
-import { Stack, Typography } from '@mui/material';
+import { Stack, Typography, Skeleton } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { DashboardTitle, RowStack } from '../../modules/components';
 import {
@@ -28,9 +28,13 @@ export const PendingBookingPage = () => {
     null
   );
 
+  const kpisQuery = useGetPendingBookingsKpis();
   const { data: kpis } = useResolvedApiQuery(useGetPendingBookingsKpis, null);
 
   const pendingQuery = useGetPendingBookings({ page: 1, limit: 20 });
+
+  const isFetchingKpis = kpisQuery.isFetching;
+  const isFetchingBookings = pendingQuery.isFetching;
 
   const pendingBookings = useMemo(() => {
     const items = pendingQuery.data?.data;
@@ -105,22 +109,48 @@ export const PendingBookingPage = () => {
 
         {/* Stat Cards */}
         <RowStack spacing={'12px'} width="100%">
-          <PendingStatCard
-            value={String(kpis?.pending_now ?? 0)}
-            label="Pending Now"
-          />
-          <PendingStatCard
-            value={`${kpis?.avg_wait_minutes ?? 0} min`}
-            label="Avg. Wait Time"
-          />
-          <PendingStatCard
-            value={String(kpis?.assigned_count ?? 0)}
-            label="Assigned"
-          />
+          {isFetchingKpis ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                width="100%"
+                height={100}
+                sx={{ borderRadius: '14px', flex: 1 }}
+              />
+            ))
+          ) : (
+            <>
+              <PendingStatCard
+                value={String(kpis?.pending_now ?? 0)}
+                label="Pending Now"
+              />
+              <PendingStatCard
+                value={`${kpis?.avg_wait_minutes ?? 0} min`}
+                label="Avg. Wait Time"
+              />
+              <PendingStatCard
+                value={String(kpis?.assigned_count ?? 0)}
+                label="Assigned"
+              />
+            </>
+          )}
         </RowStack>
 
         {/* Booking Cards */}
-        {pendingBookings.length > 0 ? (
+        {isFetchingBookings ? (
+          <Stack spacing={'12px'}>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                width="100%"
+                height={180}
+                sx={{ borderRadius: '16px' }}
+              />
+            ))}
+          </Stack>
+        ) : pendingBookings.length > 0 ? (
           <Stack spacing={'12px'}>
             {pendingBookings.map((booking) => (
               <PendingBookingCard

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Stack, Typography } from '@mui/material';
+import { Stack, Typography, Skeleton } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   DashboardTitleAndDesc,
@@ -28,6 +28,11 @@ export const VehicleProfilesPage = () => {
     useState<VehicleProfileCardData | null>(null);
 
   // Fetch vehicle profiles from API
+  const profilesQuery = useGetFleetProfiles({
+    page,
+    limit: pageSize,
+    search: searchQuery.trim() || '',
+  });
   const { data: profilesData } = useResolvedApiQuery(
     useGetFleetProfiles,
     null,
@@ -37,6 +42,7 @@ export const VehicleProfilesPage = () => {
       search: searchQuery.trim() || '',
     }
   );
+  const isFetchingProfiles = profilesQuery.isFetching;
 
   // Map API response to UI format
   const vehicleProfiles = useMemo<VehicleProfileCardData[]>(() => {
@@ -110,7 +116,19 @@ export const VehicleProfilesPage = () => {
         />
 
         {/* Vehicle Cards — full-width rows */}
-        {vehicleProfiles.length > 0 ? (
+        {isFetchingProfiles ? (
+          <Stack spacing={'20px'}>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                width="100%"
+                height={200}
+                sx={{ borderRadius: '16px' }}
+              />
+            ))}
+          </Stack>
+        ) : vehicleProfiles.length > 0 ? (
           <Stack spacing={'20px'}>
             {vehicleProfiles.map((vehicle) => (
               <VehicleProfileCard

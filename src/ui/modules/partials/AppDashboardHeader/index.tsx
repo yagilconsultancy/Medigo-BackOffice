@@ -1,12 +1,12 @@
 'use client';
 
-import { AppBar, Avatar, Badge, Toolbar } from '@mui/material';
+import { AppBar, Avatar, Badge, Box } from '@mui/material';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import { AppSearchField, RowStack } from '../../components';
+import { RowStack } from '../../components';
 import { IconComponent } from './ui/components';
 import { toast } from 'sonner';
-import usericon from './ui/assets/icons/user.svg';
+import { pxToRem, useGetUserProfile, useResolvedApiQuery } from '@/common';
 
 type AppHeaderProps = {
   sidebarOpen: boolean;
@@ -19,6 +19,18 @@ export const AppDashBoardHeader = ({
   drawerWidth,
   collapsedWidth,
 }: AppHeaderProps) => {
+  const { data: userProfile } = useResolvedApiQuery(useGetUserProfile, null);
+
+  // Generate initials from first and last name
+  const getInitials = (firstName?: string | null, lastName?: string | null) => {
+    const first = firstName?.charAt(0)?.toUpperCase() || '';
+    const last = lastName?.charAt(0)?.toUpperCase() || '';
+    return `${first}${last}`;
+  };
+
+  const initials = getInitials(userProfile?.first_name, userProfile?.last_name);
+  const fullName =
+    `${userProfile?.first_name || ''} ${userProfile?.last_name || ''}`.trim();
   return (
     <AppBar
       elevation={0}
@@ -41,7 +53,8 @@ export const AppDashBoardHeader = ({
     >
       <>
         <RowStack width={'100%'} justifyContent={'space-between'}>
-          <AppSearchField placeholder="Search bookings, drivers, or trips…" />
+          {/* <AppSearchField placeholder="Search bookings, drivers, or trips…" /> */}
+          <Box />
           <RowStack spacing={1}>
             <IconComponent
               icon={
@@ -56,13 +69,25 @@ export const AppDashBoardHeader = ({
               handleClick={() => toast.success('Settings')}
             />
             <Avatar
+              src={userProfile?.avatar_url}
+              alt={fullName}
+              sx={{
+                bgcolor: '#2F6FED',
+                color: '#FFFFFF',
+                fontWeight: 600,
+                fontSize: pxToRem(13),
+              }}
+            >
+              {!userProfile?.avatar_url && initials}
+            </Avatar>
+            {/* <Avatar
               src={usericon.src}
               alt="user"
               sx={{
                 width: '40px',
                 height: '40px',
               }}
-            />
+            /> */}
           </RowStack>
         </RowStack>
       </>

@@ -1,7 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Box, Grid, LinearProgress, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Grid,
+  LinearProgress,
+  Stack,
+  Typography,
+  Skeleton,
+} from '@mui/material';
 import {
   BarChart,
   Bar,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
+import { Box, Divider, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
@@ -64,15 +64,23 @@ export const RiderNotificationsPage = () => {
     pageSize: 10,
   });
 
+  const kpisQuery = useGetRiderBroadcastKpis();
   const { data: kpisData } = useResolvedApiQuery(
     useGetRiderBroadcastKpis,
     null
   );
+  const isFetchingKpis = kpisQuery.isFetching;
+
+  const broadcastsQuery = useListRiderBroadcasts({
+    page: paginationModel.page + 1,
+    page_size: paginationModel.pageSize,
+  });
   const { data: broadcastsData } = useResolvedApiQuery(
     useListRiderBroadcasts,
     null,
     { page: paginationModel.page + 1, page_size: paginationModel.pageSize }
   );
+  const isFetchingBroadcasts = broadcastsQuery.isFetching;
 
   const statCards = useMemo(
     () => [
@@ -159,57 +167,68 @@ export const RiderNotificationsPage = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
-          {statCards.map((card, index) => (
-            <Grid key={index} size={{ xs: 6, lg: 4 }}>
-              <Stack
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #F0F4F8',
-                  borderRadius: '16px',
-                  padding: '16px 20px',
-                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '10px',
-                    background: card.iconBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '12px',
-                  }}
-                >
-                  {card.icon}
-                </Box>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 700,
-                    fontSize: pxToRem(24),
-                    lineHeight: '1.3em',
-                    color: '#111827',
-                  }}
-                >
-                  {card.value}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 500,
-                    fontSize: pxToRem(12.5),
-                    lineHeight: '1.5em',
-                    color: '#6B7280',
-                    marginTop: '2px',
-                  }}
-                >
-                  {card.label}
-                </Typography>
-              </Stack>
-            </Grid>
-          ))}
+          {isFetchingKpis
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 4 }}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={120}
+                    sx={{ borderRadius: '14px' }}
+                  />
+                </Grid>
+              ))
+            : statCards.map((card, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 4 }}>
+                  <Stack
+                    sx={{
+                      background: '#FFFFFF',
+                      border: '0.67px solid #F0F4F8',
+                      borderRadius: '16px',
+                      padding: '16px 20px',
+                      boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '10px',
+                        background: card.iconBg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      {card.icon}
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 700,
+                        fontSize: pxToRem(24),
+                        lineHeight: '1.3em',
+                        color: '#111827',
+                      }}
+                    >
+                      {card.value}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 500,
+                        fontSize: pxToRem(12.5),
+                        lineHeight: '1.5em',
+                        color: '#6B7280',
+                        marginTop: '2px',
+                      }}
+                    >
+                      {card.label}
+                    </Typography>
+                  </Stack>
+                </Grid>
+              ))}
         </Grid>
 
         {/* Notifications List */}
@@ -251,7 +270,19 @@ export const RiderNotificationsPage = () => {
           </Stack>
 
           {/* Notification Rows */}
-          {notificationsData.length === 0 ? (
+          {isFetchingBroadcasts ? (
+            <Stack spacing={'12px'}>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  variant="rectangular"
+                  width="100%"
+                  height={100}
+                  sx={{ borderRadius: '12px' }}
+                />
+              ))}
+            </Stack>
+          ) : notificationsData.length === 0 ? (
             <Stack
               sx={{
                 height: '400px',

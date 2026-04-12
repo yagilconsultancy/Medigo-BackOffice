@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Box, Grid, Stack, Typography } from '@mui/material';
+import { Box, Grid, Stack, Typography, Skeleton } from '@mui/material';
 import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -167,6 +167,10 @@ export const VehicleDocumentsPage = () => {
   const [pageSize, setPageSize] = useState(10);
 
   // Fetch vehicle documents data from API
+  const documentsQuery = useGetFleetVehicleDocumentOverview({
+    page,
+    limit: pageSize,
+  });
   const { data: documentsResponse } = useResolvedApiQuery(
     useGetFleetVehicleDocumentOverview,
     null,
@@ -175,6 +179,7 @@ export const VehicleDocumentsPage = () => {
       limit: pageSize,
     }
   );
+  const isFetchingDocuments = documentsQuery.isFetching;
 
   // Map API response to UI format
   const vehiclesData = useMemo<VehicleDocRow[]>(() => {
@@ -403,56 +408,67 @@ export const VehicleDocumentsPage = () => {
 
         {/* KPI Cards */}
         <Grid container spacing={'16px'}>
-          {statCards.map((card, index) => (
-            <Grid key={index} size={{ xs: 6, lg: 3 }}>
-              <Stack
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #E8ECF0',
-                  borderRadius: '14px',
-                  padding: '16px 20px',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '10px',
-                    background: card.iconBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '12px',
-                  }}
-                >
-                  {card.icon}
-                </Box>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 700,
-                    fontSize: pxToRem(24),
-                    lineHeight: '1.3em',
-                    color: card.valueColor,
-                  }}
-                >
-                  {card.value}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 500,
-                    fontSize: pxToRem(12.5),
-                    lineHeight: '1.5em',
-                    color: '#6B7280',
-                    marginTop: '2px',
-                  }}
-                >
-                  {card.label}
-                </Typography>
-              </Stack>
-            </Grid>
-          ))}
+          {isFetchingDocuments
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={120}
+                    sx={{ borderRadius: '14px' }}
+                  />
+                </Grid>
+              ))
+            : statCards.map((card, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <Stack
+                    sx={{
+                      background: '#FFFFFF',
+                      border: '0.67px solid #E8ECF0',
+                      borderRadius: '14px',
+                      padding: '16px 20px',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '10px',
+                        background: card.iconBg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      {card.icon}
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 700,
+                        fontSize: pxToRem(24),
+                        lineHeight: '1.3em',
+                        color: card.valueColor,
+                      }}
+                    >
+                      {card.value}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 500,
+                        fontSize: pxToRem(12.5),
+                        lineHeight: '1.5em',
+                        color: '#6B7280',
+                        marginTop: '2px',
+                      }}
+                    >
+                      {card.label}
+                    </Typography>
+                  </Stack>
+                </Grid>
+              ))}
         </Grid>
 
         {/* Alert Banner */}
@@ -519,7 +535,17 @@ export const VehicleDocumentsPage = () => {
           </RowStack>
 
           {/* Table Rows */}
-          {filteredVehicles.length > 0 ? (
+          {isFetchingDocuments ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                width="100%"
+                height={120}
+                sx={{ borderRadius: '8px', mb: '12px' }}
+              />
+            ))
+          ) : filteredVehicles.length > 0 ? (
             filteredVehicles.map((vehicle) => (
               <RowStack
                 key={vehicle.id}

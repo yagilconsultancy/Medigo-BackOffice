@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
+import { Box, Divider, Grid, Stack, Typography, Skeleton } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
@@ -66,11 +66,15 @@ export const RideTypesPage = () => {
   // Hooks - API
   const { createRideType, updateRideType, toggleRideType, deleteRideType } =
     useRideTypesApi();
+  const kpisQuery = useGetRideTypeKpis();
+  const rideTypesQuery = useListRideTypes();
   const { data: rideTypeKpis } = useResolvedApiQuery(useGetRideTypeKpis, null);
   const { data: rideTypesData } = useResolvedApiQuery<RideTypeResponse[]>(
     useListRideTypes,
     []
   );
+  const isFetchingKpis = kpisQuery.isFetching;
+  const isFetchingRideTypes = rideTypesQuery.isFetching;
 
   // State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -142,57 +146,68 @@ export const RideTypesPage = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
-          {statCards.map((card, index) => (
-            <Grid key={index} size={{ xs: 6, lg: 3 }}>
-              <Stack
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #F0F4F8',
-                  borderRadius: '16px',
-                  padding: '16px 20px',
-                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '10px',
-                    background: card.iconBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '12px',
-                  }}
-                >
-                  {card.icon}
-                </Box>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 700,
-                    fontSize: pxToRem(24),
-                    lineHeight: '1.3em',
-                    color: '#111827',
-                  }}
-                >
-                  {card.value}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 500,
-                    fontSize: pxToRem(12.5),
-                    lineHeight: '1.5em',
-                    color: '#6B7280',
-                    marginTop: '2px',
-                  }}
-                >
-                  {card.label}
-                </Typography>
-              </Stack>
-            </Grid>
-          ))}
+          {isFetchingKpis
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={120}
+                    sx={{ borderRadius: '16px' }}
+                  />
+                </Grid>
+              ))
+            : statCards.map((card, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <Stack
+                    sx={{
+                      background: '#FFFFFF',
+                      border: '0.67px solid #F0F4F8',
+                      borderRadius: '16px',
+                      padding: '16px 20px',
+                      boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '10px',
+                        background: card.iconBg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      {card.icon}
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 700,
+                        fontSize: pxToRem(24),
+                        lineHeight: '1.3em',
+                        color: '#111827',
+                      }}
+                    >
+                      {card.value}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 500,
+                        fontSize: pxToRem(12.5),
+                        lineHeight: '1.5em',
+                        color: '#6B7280',
+                        marginTop: '2px',
+                      }}
+                    >
+                      {card.label}
+                    </Typography>
+                  </Stack>
+                </Grid>
+              ))}
         </Grid>
 
         {/* Ride Categories Section */}
@@ -234,21 +249,33 @@ export const RideTypesPage = () => {
 
           {/* Ride Type Cards */}
           <Stack spacing={'16px'}>
-            {rideTypes.map((rideType) => (
-              <RideTypeCard
-                key={rideType.id}
-                name={rideType.display_name}
-                description={rideType.description ?? ''}
-                isActive={rideType.is_active}
-                baseFare={rideType.base_fare}
-                perKm={rideType.per_km_rate}
-                perMin={rideType.per_min_rate}
-                minFare={rideType.min_fare}
-                onToggle={() => handleToggle(rideType.id, rideType.is_active)}
-                onEdit={() => setEditingRideType(rideType)}
-                onDelete={() => handleDelete(rideType.id)}
-              />
-            ))}
+            {isFetchingRideTypes
+              ? Array.from({ length: 3 }).map((_, index) => (
+                  <Skeleton
+                    key={index}
+                    variant="rectangular"
+                    width="100%"
+                    height={140}
+                    sx={{ borderRadius: '16px' }}
+                  />
+                ))
+              : rideTypes.map((rideType) => (
+                  <RideTypeCard
+                    key={rideType.id}
+                    name={rideType.display_name}
+                    description={rideType.description ?? ''}
+                    isActive={rideType.is_active}
+                    baseFare={rideType.base_fare}
+                    perKm={rideType.per_km_rate}
+                    perMin={rideType.per_min_rate}
+                    minFare={rideType.min_fare}
+                    onToggle={() =>
+                      handleToggle(rideType.id, rideType.is_active)
+                    }
+                    onEdit={() => setEditingRideType(rideType)}
+                    onDelete={() => handleDelete(rideType.id)}
+                  />
+                ))}
           </Stack>
         </Stack>
       </Stack>

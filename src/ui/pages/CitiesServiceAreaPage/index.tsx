@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
+import { Box, Divider, Grid, Stack, Typography, Skeleton } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
@@ -29,11 +29,15 @@ import { CityServiceCard, AddCityModal, EditCityModal } from './ui/component';
 export const CitiesServiceAreaPage = () => {
   // Hooks - API
   const { createCity, updateCity, toggleCity, deleteCity } = useCitiesApi();
+  const cityKpisQuery = useGetCityKpis();
+  const citiesQuery = useListCities();
   const { data: cityKpis } = useResolvedApiQuery(useGetCityKpis, null);
   const { data: citiesData } = useResolvedApiQuery<CityRow[]>(
     useListCities,
     []
   );
+  const isFetchingKpis = cityKpisQuery.isFetching;
+  const isFetchingCities = citiesQuery.isFetching;
 
   // State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -131,57 +135,68 @@ export const CitiesServiceAreaPage = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
-          {statCards.map((card, index) => (
-            <Grid key={index} size={{ xs: 6, lg: 3 }}>
-              <Stack
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #F0F4F8',
-                  borderRadius: '16px',
-                  padding: '16px 20px',
-                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '10px',
-                    background: card.iconBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '12px',
-                  }}
-                >
-                  {card.icon}
-                </Box>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 700,
-                    fontSize: pxToRem(24),
-                    lineHeight: '1.3em',
-                    color: '#111827',
-                  }}
-                >
-                  {card.value}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 500,
-                    fontSize: pxToRem(12.5),
-                    lineHeight: '1.5em',
-                    color: '#6B7280',
-                    marginTop: '2px',
-                  }}
-                >
-                  {card.label}
-                </Typography>
-              </Stack>
-            </Grid>
-          ))}
+          {isFetchingKpis
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={120}
+                    sx={{ borderRadius: '16px' }}
+                  />
+                </Grid>
+              ))
+            : statCards.map((card, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <Stack
+                    sx={{
+                      background: '#FFFFFF',
+                      border: '0.67px solid #F0F4F8',
+                      borderRadius: '16px',
+                      padding: '16px 20px',
+                      boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '10px',
+                        background: card.iconBg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      {card.icon}
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 700,
+                        fontSize: pxToRem(24),
+                        lineHeight: '1.3em',
+                        color: '#111827',
+                      }}
+                    >
+                      {card.value}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 500,
+                        fontSize: pxToRem(12.5),
+                        lineHeight: '1.5em',
+                        color: '#6B7280',
+                        marginTop: '2px',
+                      }}
+                    >
+                      {card.label}
+                    </Typography>
+                  </Stack>
+                </Grid>
+              ))}
         </Grid>
 
         <Stack
@@ -221,21 +236,32 @@ export const CitiesServiceAreaPage = () => {
 
           {/* City Cards Grid */}
           <Grid container spacing={'16px'}>
-            {cities.map((city) => (
-              <Grid key={city.id} size={{ xs: 12, lg: 6 }}>
-                <CityServiceCard
-                  cityName={`${city.name}, ${city.province}`}
-                  serviceZones={city.service_zones}
-                  isActive={city.is_active}
-                  drivers={city.drivers}
-                  riders={city.riders}
-                  totalTrips={city.total_trips}
-                  onToggle={() => handleToggle(city.id, city.is_active)}
-                  onEdit={() => setEditingCity(city)}
-                  onDelete={() => handleDelete(city.id)}
-                />
-              </Grid>
-            ))}
+            {isFetchingCities
+              ? Array.from({ length: 4 }).map((_, index) => (
+                  <Grid key={index} size={{ xs: 12, lg: 6 }}>
+                    <Skeleton
+                      variant="rectangular"
+                      width="100%"
+                      height={160}
+                      sx={{ borderRadius: '16px' }}
+                    />
+                  </Grid>
+                ))
+              : cities.map((city) => (
+                  <Grid key={city.id} size={{ xs: 12, lg: 6 }}>
+                    <CityServiceCard
+                      cityName={`${city.name}, ${city.province}`}
+                      serviceZones={city.service_zones}
+                      isActive={city.is_active}
+                      drivers={city.drivers}
+                      riders={city.riders}
+                      totalTrips={city.total_trips}
+                      onToggle={() => handleToggle(city.id, city.is_active)}
+                      onEdit={() => setEditingCity(city)}
+                      onDelete={() => handleDelete(city.id)}
+                    />
+                  </Grid>
+                ))}
           </Grid>
         </Stack>
       </Stack>

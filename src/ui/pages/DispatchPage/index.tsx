@@ -1,6 +1,14 @@
 'use client';
 
-import { Box, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Skeleton,
+  Stack,
+  Tab,
+  Tabs,
+  Typography,
+} from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppButton,
@@ -196,11 +204,13 @@ export const DispatchPage = () => {
   const [selectedTripId, setSelectedTripId] = useState<string>('1');
 
   // Fetch dispatch dashboard data
+  const dashboardQuery = useGetDispatchDashboard();
   const { data: dashboardData } = useResolvedApiQuery(
     useGetDispatchDashboard,
     null
   );
   const { triggerAutoDispatch } = useDispatchApi();
+  const isFetchingDashboard = dashboardQuery.isFetching;
 
   // Transform unassigned rides to pending bookings format
   const pendingBookings = useMemo<DispatchBooking[]>(() => {
@@ -412,11 +422,26 @@ export const DispatchPage = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
-          {statCards.map((card, index) => (
-            <Grid key={index} size={{ xs: 6, lg: 3 }} alignItems={'stretch'}>
-              <DispatchStatCard {...card} />
-            </Grid>
-          ))}
+          {isFetchingDashboard
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={120}
+                    sx={{ borderRadius: '14px' }}
+                  />
+                </Grid>
+              ))
+            : statCards.map((card, index) => (
+                <Grid
+                  key={index}
+                  size={{ xs: 6, lg: 3 }}
+                  alignItems={'stretch'}
+                >
+                  <DispatchStatCard {...card} />
+                </Grid>
+              ))}
         </Grid>
 
         {/* ═══════════ ASSIGNMENTS VIEW ═══════════ */}

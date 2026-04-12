@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Box, Divider, Grid, Stack, Typography } from '@mui/material';
+import { Box, Divider, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
@@ -76,15 +76,23 @@ export const FleetNotificationsPage = () => {
     pageSize: 10,
   });
 
+  const kpisQuery = useGetFleetBroadcastKpis();
   const { data: kpisData } = useResolvedApiQuery(
     useGetFleetBroadcastKpis,
     null
   );
+  const isFetchingKpis = kpisQuery.isFetching;
+
+  const broadcastsQuery = useListFleetBroadcasts({
+    page: paginationModel.page + 1,
+    page_size: paginationModel.pageSize,
+  });
   const { data: broadcastsData } = useResolvedApiQuery(
     useListFleetBroadcasts,
     null,
     { page: paginationModel.page + 1, page_size: paginationModel.pageSize }
   );
+  const isFetchingBroadcasts = broadcastsQuery.isFetching;
 
   const statCards = useMemo(
     () => [

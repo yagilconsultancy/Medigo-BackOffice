@@ -1,6 +1,6 @@
 'use client';
 
-import { Stack, Typography } from '@mui/material';
+import { Skeleton, Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { AssignDriverModal, RowStack } from '../../modules/components';
 import {
@@ -20,8 +20,11 @@ export const ScheduledTripsPage = () => {
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<ScheduledTrip | null>(null);
 
+  const kpisQuery = useGetScheduledTripsKpis();
   const { data: kpis } = useResolvedApiQuery(useGetScheduledTripsKpis, null);
   const scheduledQuery = useGetScheduledTrips({ page: 1, limit: 20 });
+  const isFetchingKpis = kpisQuery.isFetching;
+  const isFetchingScheduled = scheduledQuery.isFetching;
 
   const scheduledTrips = useMemo(() => {
     const items = scheduledQuery.data?.data;
@@ -90,42 +93,52 @@ export const ScheduledTripsPage = () => {
 
         {/* Stat Cards */}
         <RowStack spacing={'12px'} width="100%">
-          {statCards.map((card, index) => (
-            <Stack
-              key={index}
-              spacing={'4px'}
-              sx={{
-                background: '#FFFFFF',
-                borderRadius: '16px',
-                padding: '21px',
-                flex: 1,
-                border: '0.67px solid #EAECF0',
-              }}
-            >
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 800,
-                  fontSize: pxToRem(32),
-                  lineHeight: '48px',
-                  color: (theme) => theme.color.deepBlue,
-                }}
-              >
-                {card.value}
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(13),
-                  lineHeight: '19.5px',
-                  color: (theme) => theme.color.lightGrey,
-                }}
-              >
-                {card.label}
-              </Typography>
-            </Stack>
-          ))}
+          {isFetchingKpis
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  variant="rectangular"
+                  width="100%"
+                  height={110}
+                  sx={{ borderRadius: '16px' }}
+                />
+              ))
+            : statCards.map((card, index) => (
+                <Stack
+                  key={index}
+                  spacing={'4px'}
+                  sx={{
+                    background: '#FFFFFF',
+                    borderRadius: '16px',
+                    padding: '21px',
+                    flex: 1,
+                    border: '0.67px solid #EAECF0',
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 800,
+                      fontSize: pxToRem(32),
+                      lineHeight: '48px',
+                      color: (theme) => theme.color.deepBlue,
+                    }}
+                  >
+                    {card.value}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(13),
+                      lineHeight: '19.5px',
+                      color: (theme) => theme.color.lightGrey,
+                    }}
+                  >
+                    {card.label}
+                  </Typography>
+                </Stack>
+              ))}
         </RowStack>
 
         {/* Upcoming Schedule Table */}
@@ -161,7 +174,19 @@ export const ScheduledTripsPage = () => {
           </RowStack>
 
           {/* Table Rows */}
-          {scheduledTrips.length === 0 ? (
+          {isFetchingScheduled ? (
+            <Stack spacing={'12px'} sx={{ padding: '24px' }}>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  variant="rectangular"
+                  width="100%"
+                  height={120}
+                  sx={{ borderRadius: '16px' }}
+                />
+              ))}
+            </Stack>
+          ) : scheduledTrips.length === 0 ? (
             <EmptyState animationSrc="/empty.json" />
           ) : (
             scheduledTrips.map((trip, index) => (

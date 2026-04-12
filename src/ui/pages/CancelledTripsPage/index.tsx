@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Grid, IconButton, Stack, Typography } from '@mui/material';
+import { Grid, IconButton, Skeleton, Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppGridtable,
@@ -47,9 +47,11 @@ export const CancelledTripsPage = () => {
     null
   );
 
+  const kpisQuery = useGetCancelledTripsKpis();
   const { data: kpis } = useResolvedApiQuery(useGetCancelledTripsKpis, null);
-
   const cancelledQuery = useGetCancelledTrips({ page, limit: 20 });
+  const isFetchingKpis = kpisQuery.isFetching;
+  const isFetchingCancelled = cancelledQuery.isFetching;
 
   const cancelledTrips = useMemo(() => {
     const items = cancelledQuery.data?.data;
@@ -205,80 +207,105 @@ export const CancelledTripsPage = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
-          {statCards.map((card, index) => (
-            <Grid size={{ xs: 6, md: 3 }} key={index}>
-              <Stack
-                spacing={'4px'}
-                sx={{
-                  background: '#FFFFFF',
-                  borderRadius: '16px',
-                  padding: '21px',
-                  border: '0.67px solid #EAECF0',
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 700,
-                    fontSize: pxToRem(28),
-                    lineHeight: '42px',
-                    color: card.color,
-                  }}
-                >
-                  {card.value}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(13),
-                    lineHeight: '19.5px',
-                    color: (theme) => theme.color.lightGrey,
-                  }}
-                >
-                  {card.label}
-                </Typography>
-              </Stack>
-            </Grid>
-          ))}
+          {isFetchingKpis
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <Grid size={{ xs: 6, md: 3 }} key={index}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={100}
+                    sx={{ borderRadius: '16px' }}
+                  />
+                </Grid>
+              ))
+            : statCards.map((card, index) => (
+                <Grid size={{ xs: 6, md: 3 }} key={index}>
+                  <Stack
+                    spacing={'4px'}
+                    sx={{
+                      background: '#FFFFFF',
+                      borderRadius: '16px',
+                      padding: '21px',
+                      border: '0.67px solid #EAECF0',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 700,
+                        fontSize: pxToRem(28),
+                        lineHeight: '42px',
+                        color: card.color,
+                      }}
+                    >
+                      {card.value}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 400,
+                        fontSize: pxToRem(13),
+                        lineHeight: '19.5px',
+                        color: (theme) => theme.color.lightGrey,
+                      }}
+                    >
+                      {card.label}
+                    </Typography>
+                  </Stack>
+                </Grid>
+              ))}
         </Grid>
 
         {/* Cancelled Trips Table */}
-        <AppGridtable
-          columns={columns}
-          data={filteredTrips}
-          emptyState={<EmptyState animationSrc="/empty.json" />}
-          initialPageSize={6}
-          sx={{
-            height: 'auto',
-            width: '100%',
-          }}
-        >
-          <RowStack justifyContent="space-between" width="100%">
-            <RowStack spacing={1}>
-              <CancelOutlinedIcon sx={{ color: '#4B5563' }} />
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 500,
-                  fontSize: pxToRem(16),
-                  color: (theme) => theme.color.deepBlue,
+        {isFetchingCancelled ? (
+          <Stack spacing={'12px'}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                width="100%"
+                height={80}
+                sx={{ borderRadius: '14px' }}
+              />
+            ))}
+          </Stack>
+        ) : (
+          <AppGridtable
+            columns={columns}
+            data={filteredTrips}
+            emptyState={<EmptyState animationSrc="/empty.json" />}
+            initialPageSize={6}
+            sx={{
+              height: 'auto',
+              width: '100%',
+            }}
+          >
+            <RowStack justifyContent="space-between" width="100%">
+              <RowStack spacing={1}>
+                <CancelOutlinedIcon sx={{ color: '#4B5563' }} />
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 500,
+                    fontSize: pxToRem(16),
+                    color: (theme) => theme.color.deepBlue,
+                  }}
+                >
+                  Cancelled Trips
+                </Typography>
+              </RowStack>
+              <AppSearchField
+                name="search"
+                placeholder="Search cancelled trips..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                boxProps={{
+                  sx: { width: '240px' },
                 }}
-              >
-                Cancelled Trips
-              </Typography>
+              />
             </RowStack>
-            <AppSearchField
-              name="search"
-              placeholder="Search cancelled trips..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              boxProps={{
-                sx: { width: '240px' },
-              }}
-            />
-          </RowStack>
-        </AppGridtable>
+          </AppGridtable>
+        )}
       </Stack>
 
       <CancelledTripDetailModal

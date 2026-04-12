@@ -1,6 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { Grid, Stack, Typography } from '@mui/material';
+import { Grid, Stack, Typography, Skeleton } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppCardparent,
@@ -172,6 +172,18 @@ export const HomePage = () => {
   const today = getTodayDate();
   const [activeTripTab, setActiveTripTab] = useState(0);
 
+  // Query hooks with isFetching tracking
+  const dashboardOverviewQuery = useGetDashboardOverview();
+  const tripVolumeTrendQuery = useGetTripVolumeTrend({
+    days: tripTabPeriodDays[activeTripTab],
+  });
+  const transportDistributionQuery = useGetTransportDistribution();
+  const recentActivityQuery = useGetRecentActivity();
+  const topFleetPartnersQuery = useGetTopFleetPartners();
+  const bookingChannelsQuery = useGetBookingChannels();
+  const serviceQualityQuery = useGetServiceQuality();
+  const topFacilitiesQuery = useGetTopFacilities();
+
   const { data: dashboardKPIs } = useResolvedApiQuery(
     useGetDashboardOverview,
     null
@@ -212,6 +224,16 @@ export const HomePage = () => {
     useGetTopFacilities,
     null
   );
+
+  // Extract isFetching states
+  const isFetchingKPIs = dashboardOverviewQuery.isFetching;
+  const isFetchingTripTrend = tripVolumeTrendQuery.isFetching;
+  const isFetchingTransportDist = transportDistributionQuery.isFetching;
+  const isFetchingRecentActivity = recentActivityQuery.isFetching;
+  const isFetchingFleetPartners = topFleetPartnersQuery.isFetching;
+  const isFetchingBookingChannels = bookingChannelsQuery.isFetching;
+  const isFetchingServiceQuality = serviceQualityQuery.isFetching;
+  const isFetchingTopFacilities = topFacilitiesQuery.isFetching;
 
   const cardData = useMemo(() => {
     return statCardConfig.map((config) => {
@@ -389,11 +411,22 @@ export const HomePage = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={'20px'} alignItems="stretch">
-          {cardData.map((card, index) => (
-            <Grid size={{ sm: 6, lg: 3 }} key={index}>
-              <CardComponent {...card} />
-            </Grid>
-          ))}
+          {isFetchingKPIs
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <Grid size={{ sm: 6, lg: 3 }} key={index}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={140}
+                    sx={{ borderRadius: '14px' }}
+                  />
+                </Grid>
+              ))
+            : cardData.map((card, index) => (
+                <Grid size={{ sm: 6, lg: 3 }} key={index}>
+                  <CardComponent {...card} />
+                </Grid>
+              ))}
         </Grid>
 
         {/* Booking Trends + Transport Type Distribution */}
@@ -415,7 +448,14 @@ export const HomePage = () => {
                     onChange={(index) => setActiveTripTab(index)}
                   />
                 </RowStack>
-                {chartData.length > 0 ? (
+                {isFetchingTripTrend ? (
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={280}
+                    sx={{ borderRadius: '12px' }}
+                  />
+                ) : chartData.length > 0 ? (
                   <HomeChart data={chartData} xKey="day" yKey="trips" />
                 ) : (
                   emptyState
@@ -430,7 +470,14 @@ export const HomePage = () => {
                   title="Transport Type Distribution"
                   desc="Last 30 days breakdown by vehicle type"
                 />
-                {transportData.length > 0 ? (
+                {isFetchingTransportDist ? (
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={280}
+                    sx={{ borderRadius: '12px' }}
+                  />
+                ) : transportData.length > 0 ? (
                   <TransportDistribution
                     data={transportData}
                     clientPercent={
@@ -459,7 +506,19 @@ export const HomePage = () => {
                   title="Booking Channels"
                   desc="How clients are booking rides"
                 />
-                {bookingChannelsData.length > 0 ? (
+                {isFetchingBookingChannels ? (
+                  <Stack spacing={'12px'}>
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <Skeleton
+                        key={index}
+                        variant="rectangular"
+                        width="100%"
+                        height={70}
+                        sx={{ borderRadius: '12px' }}
+                      />
+                    ))}
+                  </Stack>
+                ) : bookingChannelsData.length > 0 ? (
                   <Stack spacing={'20px'}>
                     {bookingChannelsData.map((channel) => (
                       <BookingChannelItem key={channel.label} {...channel} />
@@ -478,7 +537,20 @@ export const HomePage = () => {
                   title="Service Quality Metrics"
                   desc="Performance indicators for last 30 days"
                 />
-                {serviceMetricsData.length > 0 ? (
+                {isFetchingServiceQuality ? (
+                  <Grid container spacing={'16px'}>
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <Grid key={index} size={{ xs: 6 }}>
+                        <Skeleton
+                          variant="rectangular"
+                          width="100%"
+                          height={100}
+                          sx={{ borderRadius: '12px' }}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                ) : serviceMetricsData.length > 0 ? (
                   <Grid container spacing={'16px'}>
                     {serviceMetricsData.map((metric) => (
                       <Grid key={metric.label} size={{ xs: 6 }}>
@@ -503,7 +575,19 @@ export const HomePage = () => {
                   title="Top Performing Facilities"
                   desc="Facilities ranked by booking volume and acceptance rate"
                 />
-                {facilityData.length > 0 ? (
+                {isFetchingTopFacilities ? (
+                  <Stack spacing={'12px'}>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Skeleton
+                        key={index}
+                        variant="rectangular"
+                        width="100%"
+                        height={70}
+                        sx={{ borderRadius: '12px' }}
+                      />
+                    ))}
+                  </Stack>
+                ) : facilityData.length > 0 ? (
                   <>
                     {facilityData.map((facility) => (
                       <FacilityComponent key={facility.num} {...facility} />
@@ -552,11 +636,25 @@ export const HomePage = () => {
                   title="Top Fleet Partners"
                   desc="Companies ranked by completed trips this month"
                 />
-                {fleetPartnerData.length > 0
-                  ? fleetPartnerData.map((partner) => (
-                      <FleetPartnerComponent key={partner.num} {...partner} />
-                    ))
-                  : emptyState}
+                {isFetchingFleetPartners ? (
+                  <Stack spacing={'12px'}>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Skeleton
+                        key={index}
+                        variant="rectangular"
+                        width="100%"
+                        height={70}
+                        sx={{ borderRadius: '12px' }}
+                      />
+                    ))}
+                  </Stack>
+                ) : fleetPartnerData.length > 0 ? (
+                  fleetPartnerData.map((partner) => (
+                    <FleetPartnerComponent key={partner.num} {...partner} />
+                  ))
+                ) : (
+                  emptyState
+                )}
               </Stack>
             </AppCardparent>
           </Grid>
@@ -569,11 +667,27 @@ export const HomePage = () => {
               title="Recent Activity"
               desc="Latest bookings and system events"
             />
-            {recentData.length > 0
-              ? recentData.map((recent, index) => (
+            {isFetchingRecentActivity ? (
+              <Stack spacing={'12px'}>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Skeleton
+                    key={index}
+                    variant="rectangular"
+                    width="100%"
+                    height={60}
+                    sx={{ borderRadius: '12px' }}
+                  />
+                ))}
+              </Stack>
+            ) : recentData.length > 0 ? (
+              recentData
+                .slice(0, 10)
+                .map((recent, index) => (
                   <RecentActivity key={index} {...recent} />
                 ))
-              : emptyState}
+            ) : (
+              emptyState
+            )}
           </Stack>
         </AppCardparent>
       </Stack>

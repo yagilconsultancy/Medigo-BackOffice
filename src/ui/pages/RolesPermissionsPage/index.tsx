@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Box, Grid, Stack, Typography, CircularProgress } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Stack,
+  Typography,
+  CircularProgress,
+  Skeleton,
+} from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
@@ -345,10 +352,13 @@ export const RolesPermissionsPage = () => {
   const { removeRole } = useRolesPermissionsApi();
 
   // Fetch roles from API
-  const { data: apiRolesData, refetch: refetchRoles } = useResolvedApiQuery(
+  const rolesQuery = useListAdminRoles();
+  const { data: apiRolesData } = useResolvedApiQuery(
     useListAdminRoles,
     [] as AdminRoleCardResponse[]
   );
+  const isFetchingRoles = rolesQuery.isFetching;
+  const refetchRoles = rolesQuery.refetch;
 
   // Fetch role details when a role is selected
   const {
@@ -607,31 +617,43 @@ export const RolesPermissionsPage = () => {
 
             {/* Role Cards */}
             <Grid container spacing={'12px'}>
-              {roles.map((role) => (
-                <Grid key={role.id} size={{ xs: 6, lg: 3 }}>
-                  <RoleCard
-                    icon={
-                      role.id === activeRoleId
-                        ? React.cloneElement(
-                            role.icon as React.ReactElement<{ sx: object }>,
-                            {
-                              sx: { fontSize: 18, color: '#FFFFFF' },
-                            }
-                          )
-                        : role.icon
-                    }
-                    count={role.count}
-                    roleName={role.roleName}
-                    adminLabel={`${role.count} admin${role.count !== 1 ? 's' : ''}`}
-                    isActive={role.id === activeRoleId}
-                    activeColor={role.activeColor}
-                    iconBg={role.iconBg}
-                    onClick={() => setActiveRoleId(role.id)}
-                    onEdit={() => handleEditRole(role)}
-                    onDelete={() => handleDeleteRole(role)}
-                  />
-                </Grid>
-              ))}
+              {isFetchingRoles
+                ? // Loading skeleton for role cards
+                  Array.from({ length: 4 }).map((_, index) => (
+                    <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                      <Skeleton
+                        variant="rectangular"
+                        width="100%"
+                        height={120}
+                        sx={{ borderRadius: '16px' }}
+                      />
+                    </Grid>
+                  ))
+                : roles.map((role) => (
+                    <Grid key={role.id} size={{ xs: 6, lg: 3 }}>
+                      <RoleCard
+                        icon={
+                          role.id === activeRoleId
+                            ? React.cloneElement(
+                                role.icon as React.ReactElement<{ sx: object }>,
+                                {
+                                  sx: { fontSize: 18, color: '#FFFFFF' },
+                                }
+                              )
+                            : role.icon
+                        }
+                        count={role.count}
+                        roleName={role.roleName}
+                        adminLabel={`${role.count} admin${role.count !== 1 ? 's' : ''}`}
+                        isActive={role.id === activeRoleId}
+                        activeColor={role.activeColor}
+                        iconBg={role.iconBg}
+                        onClick={() => setActiveRoleId(role.id)}
+                        onEdit={() => handleEditRole(role)}
+                        onDelete={() => handleDeleteRole(role)}
+                      />
+                    </Grid>
+                  ))}
             </Grid>
 
             {/* Selected Role Detail */}

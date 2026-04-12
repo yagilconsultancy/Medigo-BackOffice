@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import dayjs from 'dayjs';
-import { Grid, Stack, Typography } from '@mui/material';
+import { Grid, Skeleton, Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppSearchField,
@@ -72,12 +72,16 @@ export const FleetApplicationsPage = () => {
   const [actionApplication, setActionApplication] =
     useState<FleetApplicationRow | null>(null);
 
+  const kpisQuery = useGetFleetApplicationsKpi();
   const { data: kpis } = useResolvedApiQuery(useGetFleetApplicationsKpi, null);
+  const isFetchingKpis = kpisQuery.isFetching;
 
-  const { data: applicationsList } = useGetFleetApplications({
+  const applicationsQuery = useGetFleetApplications({
     search: searchQuery || undefined,
     status: activeTab !== 'All' ? uiStatusToApiStatus[activeTab] : undefined,
   });
+  const { data: applicationsList } = applicationsQuery;
+  const isFetchingApplications = applicationsQuery.isFetching;
 
   const { approveApplication, rejectApplication, requestInfoApplication } =
     useFleetApplicationsApi();
@@ -185,11 +189,22 @@ export const FleetApplicationsPage = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
-          {statCards.map((card, index) => (
-            <Grid key={index} size={{ xs: 6, lg: 3 }}>
-              <DispatchStatCard {...card} />
-            </Grid>
-          ))}
+          {isFetchingKpis
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={100}
+                    sx={{ borderRadius: '14px' }}
+                  />
+                </Grid>
+              ))
+            : statCards.map((card, index) => (
+                <Grid key={index} size={{ xs: 6, lg: 3 }}>
+                  <DispatchStatCard {...card} />
+                </Grid>
+              ))}
         </Grid>
 
         {/* Tab Filters + Search */}
@@ -235,18 +250,30 @@ export const FleetApplicationsPage = () => {
 
         {/* Application Cards */}
         <Stack spacing={'12px'}>
-          {applications.map((application) => (
-            <ApplicationCard
-              key={application.id}
-              application={application}
-              onClick={() => handleCardClick(application)}
-              onApprove={() => openActionModal('approve', application)}
-              onReject={() => openActionModal('reject', application)}
-              onRequestDocs={() => openActionModal('request-docs', application)}
-            />
-          ))}
-
-          {applications.length === 0 && (
+          {isFetchingApplications ? (
+            Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                width="100%"
+                height={120}
+                sx={{ borderRadius: '12px' }}
+              />
+            ))
+          ) : applications.length > 0 ? (
+            applications.map((application) => (
+              <ApplicationCard
+                key={application.id}
+                application={application}
+                onClick={() => handleCardClick(application)}
+                onApprove={() => openActionModal('approve', application)}
+                onReject={() => openActionModal('reject', application)}
+                onRequestDocs={() =>
+                  openActionModal('request-docs', application)
+                }
+              />
+            ))
+          ) : (
             <EmptyState animationSrc="/empty.json" />
           )}
         </Stack>
