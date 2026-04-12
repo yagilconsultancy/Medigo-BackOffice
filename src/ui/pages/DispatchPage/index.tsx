@@ -468,7 +468,7 @@ export const DispatchPage = () => {
                       color: (theme) => theme.color.deepBlue,
                     }}
                   >
-                    Pending Bookings
+                    Approved Bookings
                   </Typography>
                   <Typography
                     sx={{
@@ -478,7 +478,7 @@ export const DispatchPage = () => {
                       color: (theme) => theme.color.lightGrey,
                     }}
                   >
-                    {pendingBookings.length} awaiting assignment
+                    {pendingBookings.length} awaiting driver assignment
                   </Typography>
                 </Stack>
 
