@@ -91,7 +91,7 @@ export const CreateRoleModal = ({
     } finally {
       setSubmitting(false);
     }
-  }
+  };
 
   return (
     <AppModal
@@ -190,11 +190,7 @@ export const CreateRoleModal = ({
                 </Stack>
 
                 {/* Color (Optional) */}
-                <ColorPicker
-                  value={color}
-                  onChange={setColor}
-                  label="Color"
-                />
+                <ColorPicker value={color} onChange={setColor} label="Color" />
 
                 <RowStack spacing={'12px'} sx={{ pt: '4px' }}>
                   <AppButton

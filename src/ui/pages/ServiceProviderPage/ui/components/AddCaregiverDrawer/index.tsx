@@ -330,7 +330,9 @@ export const AddCaregiverDrawer = ({
         validationSchema={validationSchema}
         onSubmit={async (values, { setSubmitting, resetForm }) => {
           try {
-            const [firstName, ...lastNameParts] = values.fullName.trim().split(' ');
+            const [firstName, ...lastNameParts] = values.fullName
+              .trim()
+              .split(' ');
             const lastName = lastNameParts.join(' ') || firstName;
 
             const capabilities = [

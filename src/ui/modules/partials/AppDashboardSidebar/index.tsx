@@ -10,10 +10,7 @@ import {
 } from '@mui/material';
 import { AdminInfo, Header } from './ui/components';
 import { SidebarLinks, SidebarLinksProps } from './ui/blocks';
-import {
-  useGetMyPermissions,
-  useResolvedApiQuery,
-} from '../../../../common';
+import { useGetMyPermissions, useResolvedApiQuery } from '../../../../common';
 import type { UserPermissionsResponse } from '../../../../common';
 
 // Sidebar icons
@@ -215,10 +212,8 @@ export function AppDashboardSideBar({
   const COLLAPSED_WIDTH = isXs ? 0 : 72;
 
   // Fetch user permissions
-  const { data: permissionsData } = useResolvedApiQuery<UserPermissionsResponse>(
-    useGetMyPermissions,
-    null
-  );
+  const { data: permissionsData } =
+    useResolvedApiQuery<UserPermissionsResponse>(useGetMyPermissions, null);
 
   // Filter sidebar items based on accessible modules
   const filteredSidebarList = useMemo(() => {
@@ -234,17 +229,19 @@ export function AppDashboardSideBar({
       return sidebarList;
     }
 
-    return sidebarList.map((section) => ({
-      ...section,
-      items: section.items.filter((item) => {
-        // If item has no moduleId, show it (default behavior)
-        if (!item.moduleId) {
-          return true;
-        }
-        // Check if user has access to this module
-        return accessibleModules.includes(item.moduleId);
-      }),
-    })).filter((section) => section.items.length > 0); // Remove empty sections
+    return sidebarList
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) => {
+          // If item has no moduleId, show it (default behavior)
+          if (!item.moduleId) {
+            return true;
+          }
+          // Check if user has access to this module
+          return accessibleModules.includes(item.moduleId);
+        }),
+      }))
+      .filter((section) => section.items.length > 0); // Remove empty sections
   }, [permissionsData]);
   const openedMixin = (theme: Theme): CSSObject => ({
     width: DRAWER_WIDTH,
@@ -335,7 +332,10 @@ export function AppDashboardSideBar({
               scrollbarWidth: 'none',
             }}
           >
-            <SidebarLinks sidebarList={filteredSidebarList} isSidebarOpen={open} />
+            <SidebarLinks
+              sidebarList={filteredSidebarList}
+              isSidebarOpen={open}
+            />
           </Box>
 
           {/* Admin User - fixed at bottom */}

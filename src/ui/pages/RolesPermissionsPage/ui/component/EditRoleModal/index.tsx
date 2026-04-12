@@ -183,11 +183,7 @@ export const EditRoleModal = ({
                 </Stack>
 
                 {/* Color (Optional) */}
-                <ColorPicker
-                  value={color}
-                  onChange={setColor}
-                  label="Color"
-                />
+                <ColorPicker value={color} onChange={setColor} label="Color" />
 
                 <RowStack spacing={'12px'} sx={{ pt: '4px' }}>
                   <AppButton
@@ -218,7 +214,9 @@ export const EditRoleModal = ({
                     type="submit"
                     variant="contained"
                     isLoading={isSubmitting}
-                    disabled={!isValid || (!dirty && color === initialData.color)}
+                    disabled={
+                      !isValid || (!dirty && color === initialData.color)
+                    }
                     sx={{
                       flex: 1,
                       height: 43,

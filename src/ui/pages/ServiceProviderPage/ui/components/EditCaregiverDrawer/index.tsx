@@ -376,7 +376,9 @@ export const EditCaregiverDrawer = ({
         enableReinitialize
         onSubmit={async (values, { setSubmitting }) => {
           try {
-            const [firstName, ...lastNameParts] = values.fullName.trim().split(' ');
+            const [firstName, ...lastNameParts] = values.fullName
+              .trim()
+              .split(' ');
             const lastName = lastNameParts.join(' ') || firstName;
 
             const capabilities = [

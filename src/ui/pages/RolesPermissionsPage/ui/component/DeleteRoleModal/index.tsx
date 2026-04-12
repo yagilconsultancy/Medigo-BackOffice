@@ -113,9 +113,7 @@ export const DeleteRoleModal = ({
               alignSelf: 'center',
             }}
           >
-            <WarningAmberRoundedIcon
-              sx={{ fontSize: 28, color: '#EF4444' }}
-            />
+            <WarningAmberRoundedIcon sx={{ fontSize: 28, color: '#EF4444' }} />
           </Box>
 
           {/* Message */}

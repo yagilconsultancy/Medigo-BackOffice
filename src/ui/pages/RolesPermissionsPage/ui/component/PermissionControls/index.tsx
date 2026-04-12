@@ -56,9 +56,6 @@ type PermissionRoleConfig = {
 
 type PermissionFormValues = Record<string, boolean>;
 
-
-
-
 // ─── Context ────────────────────────────────────────────────────────────────
 
 type PermissionsContextType = {
@@ -439,18 +436,23 @@ const getLightBg = (color: string): string => {
 
 export const PermissionControls = () => {
   const { savePermissions } = useRolesPermissionsApi();
-  const { data: matrixData, isFetching, refetch } = useResolvedApiQuery<PermissionMatrixResponse>(
-    useGetPermissionMatrix,
-    { roles: [], modules: [], permissions: {} }
-  );
+  const {
+    data: matrixData,
+    isFetching,
+    refetch,
+  } = useResolvedApiQuery<PermissionMatrixResponse>(useGetPermissionMatrix, {
+    roles: [],
+    modules: [],
+    permissions: {},
+  });
 
   // Map API data to UI structure
   const permissionRolesFromApi: PermissionRoleConfig[] = useMemo(() => {
     return matrixData.roles.map((role) => {
       const color = role.color || '#2F6FED';
-      const enabledModules = Object.keys(matrixData.permissions[role.id] || {}).filter(
-        (moduleKey) => matrixData.permissions[role.id][moduleKey]
-      );
+      const enabledModules = Object.keys(
+        matrixData.permissions[role.id] || {}
+      ).filter((moduleKey) => matrixData.permissions[role.id][moduleKey]);
 
       return {
         id: role.id,
@@ -529,7 +531,9 @@ export const PermissionControls = () => {
         onSubmit={async (values, { setSubmitting, resetForm }) => {
           try {
             // Build the permissions payload - only send permissions that are true
-            const permissionsPayload: ModulePermissionUpdate[] = Object.entries(values)
+            const permissionsPayload: ModulePermissionUpdate[] = Object.entries(
+              values
+            )
               .filter(([_, canAccess]) => canAccess === true)
               .map(([moduleName, canAccess]) => ({
                 role_id: selectedRole.id,
@@ -574,7 +578,9 @@ export const PermissionControls = () => {
               </Stack>
 
               {/* Right: Permission Panel */}
-              <PermissionContentPanel permissionGroups={permissionGroupsFromApi} />
+              <PermissionContentPanel
+                permissionGroups={permissionGroupsFromApi}
+              />
             </RowStack>
           </Stack>
         </Form>

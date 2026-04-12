@@ -100,9 +100,7 @@ const roleIconMap: Record<
     headerBg: '#FFFBEB',
   },
   'fleet manager': {
-    icon: (
-      <PeopleOutlineOutlinedIcon sx={{ fontSize: 18, color: '#EC4899' }} />
-    ),
+    icon: <PeopleOutlineOutlinedIcon sx={{ fontSize: 18, color: '#EC4899' }} />,
     color: '#EC4899',
     iconBg: '#FDF2F8',
     headerBg: '#FDF2F8',
@@ -353,8 +351,11 @@ export const RolesPermissionsPage = () => {
   );
 
   // Fetch role details when a role is selected
-  const { data: roleDetailData, isFetching: isFetchingRoleDetail, refetch: refetchRoleDetail } =
-    useResolvedApiQuery(useGetAdminRoleDetail, null, activeRoleId);
+  const {
+    data: roleDetailData,
+    isFetching: isFetchingRoleDetail,
+    refetch: refetchRoleDetail,
+  } = useResolvedApiQuery(useGetAdminRoleDetail, null, activeRoleId);
 
   // Handler to remove admin from role
   const handleRemoveAdmin = async (userId: string, roleId: string) => {
@@ -650,245 +651,261 @@ export const RolesPermissionsPage = () => {
                   sx={{
                     padding: '16px 24px',
                     background: activeRoleWithAdmins.headerBg,
-                  borderBottom: '0.67px solid #F0F4F8',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '14px',
-                    background: activeRoleWithAdmins.activeColor,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
+                    borderBottom: '0.67px solid #F0F4F8',
                   }}
                 >
-                  {React.cloneElement(
-                    activeRoleWithAdmins.icon as React.ReactElement<{ sx: object }>,
-                    {
-                      sx: { fontSize: 18, color: '#FFFFFF' },
-                    }
-                  )}
-                </Box>
-                <Stack sx={{ flex: 1 }}>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 700,
-                      fontSize: pxToRem(15),
-                      color: '#111827',
-                      lineHeight: '1.5em',
-                    }}
-                  >
-                    {activeRoleWithAdmins.roleName}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(12.5),
-                      color: '#6B7280',
-                      lineHeight: '1.5em',
-                    }}
-                  >
-                    {activeRoleWithAdmins.description}
-                  </Typography>
-                </Stack>
-                <RowStack spacing={'6px'}>
-                  <PeopleOutlineOutlinedIcon
-                    sx={{ fontSize: 14, color: activeRoleWithAdmins.activeColor }}
-                  />
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 600,
-                      fontSize: pxToRem(13),
-                      color: activeRoleWithAdmins.activeColor,
-                      lineHeight: '1.5em',
-                    }}
-                  >
-                    {activeRoleWithAdmins.admins.length} admin
-                    {activeRoleWithAdmins.admins.length !== 1 ? 's' : ''}
-                  </Typography>
-                </RowStack>
-              </RowStack>
-
-              {/* Admin List */}
-              <Stack spacing={'12px'} sx={{ padding: '20px 24px' }}>
-                {isFetchingRoleDetail ? (
                   <Box
                     sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '14px',
+                      background: activeRoleWithAdmins.activeColor,
                       display: 'flex',
-                      justifyContent: 'center',
                       alignItems: 'center',
-                      padding: '40px',
+                      justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
-                    <CircularProgress size={32} />
+                    {React.cloneElement(
+                      activeRoleWithAdmins.icon as React.ReactElement<{
+                        sx: object;
+                      }>,
+                      {
+                        sx: { fontSize: 18, color: '#FFFFFF' },
+                      }
+                    )}
                   </Box>
-                ) : activeRoleWithAdmins.admins.length === 0 ? (
-                  <Box sx={{ padding: '20px 0' }}>
-                    <EmptyState
-                      emptyState={
-                        <Typography
+                  <Stack sx={{ flex: 1 }}>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 700,
+                        fontSize: pxToRem(15),
+                        color: '#111827',
+                        lineHeight: '1.5em',
+                      }}
+                    >
+                      {activeRoleWithAdmins.roleName}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 400,
+                        fontSize: pxToRem(12.5),
+                        color: '#6B7280',
+                        lineHeight: '1.5em',
+                      }}
+                    >
+                      {activeRoleWithAdmins.description}
+                    </Typography>
+                  </Stack>
+                  <RowStack spacing={'6px'}>
+                    <PeopleOutlineOutlinedIcon
+                      sx={{
+                        fontSize: 14,
+                        color: activeRoleWithAdmins.activeColor,
+                      }}
+                    />
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 600,
+                        fontSize: pxToRem(13),
+                        color: activeRoleWithAdmins.activeColor,
+                        lineHeight: '1.5em',
+                      }}
+                    >
+                      {activeRoleWithAdmins.admins.length} admin
+                      {activeRoleWithAdmins.admins.length !== 1 ? 's' : ''}
+                    </Typography>
+                  </RowStack>
+                </RowStack>
+
+                {/* Admin List */}
+                <Stack spacing={'12px'} sx={{ padding: '20px 24px' }}>
+                  {isFetchingRoleDetail ? (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: '40px',
+                      }}
+                    >
+                      <CircularProgress size={32} />
+                    </Box>
+                  ) : activeRoleWithAdmins.admins.length === 0 ? (
+                    <Box sx={{ padding: '20px 0' }}>
+                      <EmptyState
+                        emptyState={
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(14),
+                              color: '#9CA3AF',
+                              textAlign: 'center',
+                            }}
+                          >
+                            No admins assigned to this role
+                          </Typography>
+                        }
+                      />
+                    </Box>
+                  ) : (
+                    activeRoleWithAdmins.admins.map((admin) => (
+                      <RowStack
+                        key={admin.id}
+                        spacing={'16px'}
+                        sx={{
+                          padding: '16px 20px',
+                          background: '#F7F9FB',
+                          border: '0.67px solid #F0F4F8',
+                          borderRadius: '14px',
+                        }}
+                      >
+                        {/* Avatar */}
+                        <Box
                           sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 400,
-                            fontSize: pxToRem(14),
-                            color: '#9CA3AF',
-                            textAlign: 'center',
+                            width: 40,
+                            height: 40,
+                            borderRadius: '50%',
+                            background: activeRoleWithAdmins.activeColor,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
                           }}
                         >
-                          No admins assigned to this role
-                        </Typography>
-                      }
-                    />
-                  </Box>
-                ) : (
-                  activeRoleWithAdmins.admins.map((admin) => (
-                  <RowStack
-                    key={admin.id}
-                    spacing={'16px'}
-                    sx={{
-                      padding: '16px 20px',
-                      background: '#F7F9FB',
-                      border: '0.67px solid #F0F4F8',
-                      borderRadius: '14px',
-                    }}
-                  >
-                    {/* Avatar */}
-                    <Box
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: '50%',
-                        background: activeRoleWithAdmins.activeColor,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 700,
-                          fontSize: pxToRem(13),
-                          color: '#FFFFFF',
-                        }}
-                      >
-                        {admin.initials}
-                      </Typography>
-                    </Box>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 700,
+                              fontSize: pxToRem(13),
+                              color: '#FFFFFF',
+                            }}
+                          >
+                            {admin.initials}
+                          </Typography>
+                        </Box>
 
-                    {/* Name + Email */}
-                    <Stack sx={{ flex: 1 }}>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 600,
-                          fontSize: pxToRem(13.5),
-                          color: '#111827',
-                          lineHeight: '1.5em',
-                        }}
-                      >
-                        {admin.name}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(12),
-                          color: '#9CA3AF',
-                          lineHeight: '1.5em',
-                        }}
-                      >
-                        {admin.email}
-                      </Typography>
-                    </Stack>
+                        {/* Name + Email */}
+                        <Stack sx={{ flex: 1 }}>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(13.5),
+                              color: '#111827',
+                              lineHeight: '1.5em',
+                            }}
+                          >
+                            {admin.name}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(12),
+                              color: '#9CA3AF',
+                              lineHeight: '1.5em',
+                            }}
+                          >
+                            {admin.email}
+                          </Typography>
+                        </Stack>
 
-                    {/* Last Active */}
-                    <Stack alignItems={'flex-end'}>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(11.5),
-                          color: '#9CA3AF',
-                          lineHeight: '1.5em',
-                        }}
-                      >
-                        Last active
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 500,
-                          fontSize: pxToRem(12.5),
-                          color: '#374151',
-                          lineHeight: '1.5em',
-                        }}
-                      >
-                        {admin.lastActive}
-                      </Typography>
-                    </Stack>
+                        {/* Last Active */}
+                        <Stack alignItems={'flex-end'}>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(11.5),
+                              color: '#9CA3AF',
+                              lineHeight: '1.5em',
+                            }}
+                          >
+                            Last active
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 500,
+                              fontSize: pxToRem(12.5),
+                              color: '#374151',
+                              lineHeight: '1.5em',
+                            }}
+                          >
+                            {admin.lastActive}
+                          </Typography>
+                        </Stack>
 
-                    {/* Joined */}
-                    <Stack alignItems={'flex-end'}>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(11.5),
-                          color: '#9CA3AF',
-                          lineHeight: '1.5em',
-                        }}
-                      >
-                        Joined
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 500,
-                          fontSize: pxToRem(12.5),
-                          color: '#374151',
-                          lineHeight: '1.5em',
-                        }}
-                      >
-                        {admin.joined}
-                      </Typography>
-                    </Stack>
+                        {/* Joined */}
+                        <Stack alignItems={'flex-end'}>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(11.5),
+                              color: '#9CA3AF',
+                              lineHeight: '1.5em',
+                            }}
+                          >
+                            Joined
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 500,
+                              fontSize: pxToRem(12.5),
+                              color: '#374151',
+                              lineHeight: '1.5em',
+                            }}
+                          >
+                            {admin.joined}
+                          </Typography>
+                        </Stack>
 
-                    {/* Remove Button */}
-                    <Box
-                      onClick={() => handleRemoveAdmin(admin.id, activeRoleId)}
-                      sx={{
-                        padding: '7px 14px',
-                        background: '#FEF2F2',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        '&:hover': { background: '#FEE2E2' },
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 600,
-                          fontSize: pxToRem(12),
-                          color: '#EF4444',
-                          lineHeight: '1.5em',
-                        }}
-                      >
-                        Remove
-                      </Typography>
-                    </Box>
-                  </RowStack>
-                  ))
-                )}
+                        {/* Remove Button */}
+                        <Box
+                          onClick={() =>
+                            handleRemoveAdmin(admin.id, activeRoleId)
+                          }
+                          sx={{
+                            padding: '7px 14px',
+                            background: '#FEF2F2',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            '&:hover': { background: '#FEE2E2' },
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(12),
+                              color: '#EF4444',
+                              lineHeight: '1.5em',
+                            }}
+                          >
+                            Remove
+                          </Typography>
+                        </Box>
+                      </RowStack>
+                    ))
+                  )}
+                </Stack>
               </Stack>
-            </Stack>
             )}
           </Stack>
         )}

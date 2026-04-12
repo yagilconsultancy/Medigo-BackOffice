@@ -67,7 +67,9 @@ export const CitiesServiceAreaPage = () => {
       {
         value: String(kpiData?.active_cities ?? 0),
         label: 'Active Cities',
-        icon: <LocationOnOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
+        icon: (
+          <LocationOnOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
+        ),
         iconBg: '#EBF2FF',
       },
       {

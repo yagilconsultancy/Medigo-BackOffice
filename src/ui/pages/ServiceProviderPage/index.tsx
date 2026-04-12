@@ -494,7 +494,6 @@ const driversData: DriverRow[] = [
   },
 ];
 
-
 const caregiversData: CaregiverRow[] = [
   {
     id: '1',
@@ -714,18 +713,14 @@ export const ServiceProviderPage = () => {
     isFetching: isFetchingCaregivers,
     isLoading: isLoadingCaregivers,
     refetch: refetchCaregivers,
-  } = useResolvedApiQuery(
-    useListCaregivers,
-    null,
-    {
-      search: caregiverSearchQuery.trim() || undefined,
-      page: caregiverPaginationModel.page + 1,
-      limit: caregiverPaginationModel.pageSize,
-    }
-  );
+  } = useResolvedApiQuery(useListCaregivers, null, {
+    search: caregiverSearchQuery.trim() || undefined,
+    page: caregiverPaginationModel.page + 1,
+    limit: caregiverPaginationModel.pageSize,
+  });
 
   const apiCaregivers = useMemo<CaregiverRow[]>(() => {
-    return (caregiversResponse.data || []).map((item: CaregiverRosterRow) => ({
+    return (caregiversResponse?.data || []).map((item: CaregiverRosterRow) => ({
       id: item.caregiver_id,
       caregiverId: item.caregiver_id,
       name: item.full_name,
@@ -743,7 +738,7 @@ export const ServiceProviderPage = () => {
     }));
   }, [caregiversResponse]);
 
-  const totalCaregiverCount = caregiversResponse.total ?? 0;
+  const totalCaregiverCount = caregiversResponse?.total ?? 0;
 
   const handleCaregiverSearchChange = useCallback((value: string) => {
     setCaregiverSearchQuery(value);
@@ -791,7 +786,9 @@ export const ServiceProviderPage = () => {
       label: 'Available Now',
     },
     {
-      icon: <AssignmentIndOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
+      icon: (
+        <AssignmentIndOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />
+      ),
       iconBg: '#EEF2FF',
       value: String(caregiverKpisData?.on_assignment ?? 0),
       label: 'On Assignment',
@@ -803,7 +800,6 @@ export const ServiceProviderPage = () => {
       label: 'Avg. Rating',
     },
   ];
-
 
   const columns: GridColSpec<DriverRow>[] = [
     {

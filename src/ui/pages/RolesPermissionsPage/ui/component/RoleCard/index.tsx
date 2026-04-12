@@ -123,9 +123,7 @@ export const RoleCard = ({
                 width: 32,
                 height: 32,
                 borderRadius: '8px',
-                background: isActive
-                  ? 'rgba(255, 255, 255, 0.2)'
-                  : '#F7F9FB',
+                background: isActive ? 'rgba(255, 255, 255, 0.2)' : '#F7F9FB',
                 border: isActive
                   ? '0.67px solid rgba(255, 255, 255, 0.3)'
                   : '0.67px solid #E8ECF0',
@@ -135,9 +133,7 @@ export const RoleCard = ({
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 '&:hover': {
-                  background: isActive
-                    ? 'rgba(255, 255, 255, 0.3)'
-                    : '#E8ECF0',
+                  background: isActive ? 'rgba(255, 255, 255, 0.3)' : '#E8ECF0',
                 },
               }}
             >
@@ -159,9 +155,7 @@ export const RoleCard = ({
                 width: 32,
                 height: 32,
                 borderRadius: '8px',
-                background: isActive
-                  ? 'rgba(255, 255, 255, 0.2)'
-                  : '#FEF2F2',
+                background: isActive ? 'rgba(255, 255, 255, 0.2)' : '#FEF2F2',
                 border: isActive
                   ? '0.67px solid rgba(255, 255, 255, 0.3)'
                   : '0.67px solid #FEE2E2',
@@ -171,9 +165,7 @@ export const RoleCard = ({
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 '&:hover': {
-                  background: isActive
-                    ? 'rgba(255, 255, 255, 0.3)'
-                    : '#FEE2E2',
+                  background: isActive ? 'rgba(255, 255, 255, 0.3)' : '#FEE2E2',
                 },
               }}
             >
