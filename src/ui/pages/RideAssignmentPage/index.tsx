@@ -2,7 +2,6 @@
 
 import { Grid, Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { RowStack } from '../../modules/components';
 import { EmptyState } from '../../modules/blocks';
 import {
   pxToRem,
@@ -49,7 +48,7 @@ export const RideAssignmentPage = () => {
   const { manuallyAssignDriver } = useDispatchApi();
 
   const resolvedUnassignedRides = useMemo(() => {
-    return unassignedRidesData?.items || [];
+    return unassignedRidesData?.rides || [];
   }, [unassignedRidesData]);
 
   const resolvedAvailableDrivers = useMemo(() => {

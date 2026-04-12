@@ -100,7 +100,7 @@ export interface TriggerAutoDispatchResponse {
 }
 
 export interface UnassignedRidesListResponse {
-  items: UnassignedRideItem[];
+  rides: UnassignedRideItem[];
   total: number;
   page: number;
   limit: number;
