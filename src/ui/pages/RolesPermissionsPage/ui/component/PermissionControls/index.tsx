@@ -528,14 +528,14 @@ export const PermissionControls = () => {
         enableReinitialize
         onSubmit={async (values, { setSubmitting, resetForm }) => {
           try {
-            // Build the permissions payload
-            const permissionsPayload: ModulePermissionUpdate[] = Object.entries(values).map(
-              ([moduleName, canAccess]) => ({
+            // Build the permissions payload - only send permissions that are true
+            const permissionsPayload: ModulePermissionUpdate[] = Object.entries(values)
+              .filter(([_, canAccess]) => canAccess === true)
+              .map(([moduleName, canAccess]) => ({
                 role_id: selectedRole.id,
                 module_name: moduleName,
                 can_access: canAccess as boolean,
-              })
-            );
+              }));
 
             const success = await savePermissions(permissionsPayload);
             if (success) {
