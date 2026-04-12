@@ -235,17 +235,18 @@ const DEFAULT_DRIVERS_RESPONSE: AdminDriverListResponse = {
 };
 
 const mapDriverStatus = (item: AdminDriverListItem): DriverStatus => {
+  // Use is_approved to determine status
+  if (!item.is_approved) return 'Pending';
+
+  // Check account_status for suspended/deactivated
   const normalized = (item.account_status ?? '').toLowerCase();
   if (normalized === 'suspended') return 'Suspended';
-  if (normalized === 'pending') return 'Pending';
   if (normalized === 'deactivated' || normalized === 'inactive') {
     return 'Deactivated';
   }
-  if (normalized === 'on_trip' || normalized === 'on trip') return 'On Trip';
-  if (normalized === 'active') {
-    return item.is_online ? 'Available' : 'Offline';
-  }
-  return 'Offline';
+
+  // For approved drivers, check online status
+  return item.is_online ? 'Available' : 'Offline';
 };
 
 const mapDocsStatus = (status?: string | null): DocsStatus => {
