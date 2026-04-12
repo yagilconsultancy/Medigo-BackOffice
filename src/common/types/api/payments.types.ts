@@ -95,10 +95,11 @@ export interface RevenueQueryPayload {
 // ====================== PAYOUTS ======================
 
 export interface PayoutKPIs {
-  total_payouts?: number;
-  pending_payouts?: number;
-  completed_payouts?: number;
-  total_drivers?: number;
+  total_earnings?: number;
+  active_drivers?: number;
+  payouts_pending_count?: number;
+  payouts_pending_total?: number;
+  payouts_completed_total?: number;
 }
 
 export interface PayoutScheduleItem {
@@ -109,11 +110,9 @@ export interface PayoutScheduleItem {
 }
 
 export interface EarningsBreakdownResponse {
-  total_earnings: number;
-  base_fare: number;
-  tips: number;
-  bonuses: number;
-  adjustments: number;
+  gross_ride_revenue: number;
+  platform_commission: number;
+  driver_payouts: number;
 }
 
 export interface MonthlyEarningsPoint {

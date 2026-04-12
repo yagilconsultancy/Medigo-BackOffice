@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Avatar,
   Box,
   Grid,
   IconButton,
+  Skeleton,
   Stack,
   Typography,
 } from '@mui/material';
@@ -33,8 +34,17 @@ import {
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { FilterSection } from '../../modules/components/AppFilterPopover';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetPayoutKpis,
+  useGetPayoutSchedule,
+  useGetEarningsBreakdown,
+  useGetMonthlyDistribution,
+  useGetDriverEarningsList,
+  useResolvedApiQuery,
+} from '../../../common';
 import { EarningDetailModal } from '../CaregiverPayoutPage/ui/components';
+import { EmptyState } from '../../modules/blocks';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -57,161 +67,57 @@ type DriverRow = {
   status: DriverStatus;
 };
 
-// ─── Stat Cards ─────────────────────────────────────────────────────────────
+// ─── Helper Functions ───────────────────────────────────────────────────────
 
-const statCards = [
-  {
-    icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-    value: '$142,360',
-    label: 'Total Earnings',
-    badge: '+16.2%',
-    badgeBg: '#F0FDF7',
-    badgeColor: '#059669',
-    subtext: 'March 2026 · vs February',
-  },
-  {
-    icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
-    iconBg: '#EEF2FF',
-    value: '148',
-    label: 'Active Drivers',
-    badge: '+4',
-    badgeBg: '#F0FDF7',
-    badgeColor: '#059669',
-    subtext: 'Receiving payouts · vs last month',
-  },
-  {
-    icon: <ScheduleOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />,
-    iconBg: '#FFFBEB',
-    value: '$18,420',
-    label: 'Payouts Pending',
-    badge: 'Mar 17',
-    badgeBg: '#FEF9EC',
-    badgeColor: '#D97706',
-    subtext: 'Next payout · Scheduled Monday',
-  },
-  {
-    icon: <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#059669' }} />,
-    iconBg: '#F0FDF7',
-    value: '$123,940',
-    label: 'Payouts Completed',
-    badge: '95.5%',
-    badgeBg: '#F0FDF7',
-    badgeColor: '#059669',
-    subtext: 'This month · completion rate',
-  },
-];
+const formatCurrency = (value?: number): string => {
+  if (!value) return '$0';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
 
-// ─── Payout Schedule ────────────────────────────────────────────────────────
-
-const payoutSchedule = [
-  {
-    date: 'Mar 10, 2026',
-    status: 'Completed',
-    statusBg: '#F0FDF7',
-    statusDot: '#059669',
-    statusColor: '#059669',
-    desc: 'Weekly Payout · 112 drivers',
-    amount: '$82,400',
-    amountColor: '#059669',
-    cardBg: '#F6FEF9',
-    cardBorder: '#BBF7D0',
-  },
-  {
-    date: 'Mar 17, 2026',
-    status: 'Scheduled',
-    statusBg: '#DBEAFE',
-    statusDot: '#2F6FED',
-    statusColor: '#2F6FED',
-    desc: 'Weekly Payout · 112 drivers',
-    amount: '$18,420',
-    amountColor: '#2F6FED',
-    cardBg: '#F8FAFF',
-    cardBorder: '#BFDBFE',
-  },
-  {
-    date: 'Mar 24, 2026',
-    status: 'Upcoming',
-    statusBg: '#F3F4F6',
-    statusDot: '#D1D5DB',
-    statusColor: '#9CA3AF',
-    desc: 'Weekly Payout · 112 drivers',
-    amount: 'Est. $19,800',
-    amountColor: '#6B7280',
-    cardBg: '#FAFAFA',
-    cardBorder: '#F0F4F8',
-  },
-  {
-    date: 'Mar 31, 2026',
-    status: 'Upcoming',
-    statusBg: '#F3F4F6',
-    statusDot: '#D1D5DB',
-    statusColor: '#9CA3AF',
-    desc: 'Monthly Payout · 18 drivers',
-    amount: 'Est. $14,200',
-    amountColor: '#6B7280',
-    cardBg: '#FAFAFA',
-    cardBorder: '#F0F4F8',
-  },
-  {
-    date: 'Apr 7, 2026',
-    status: 'Upcoming',
-    statusBg: '#F3F4F6',
-    statusDot: '#D1D5DB',
-    statusColor: '#9CA3AF',
-    desc: 'Weekly Payout · 112 drivers',
-    amount: 'Est. $21,000',
-    amountColor: '#6B7280',
-    cardBg: '#FAFAFA',
-    cardBorder: '#F0F4F8',
-  },
-];
-
-// ─── Earnings Breakdown ─────────────────────────────────────────────────────
-
-const earningsBreakdown = [
-  {
-    icon: (
-      <MonetizationOnOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
-    ),
-    iconBg: '#EFF5FF',
-    value: '$284,720',
-    label: 'Gross Ride Revenue',
-    desc: 'Total collected from rides',
-  },
-  {
-    icon: <RemoveCircleOutlineIcon sx={{ fontSize: 18, color: '#EF4444' }} />,
-    iconBg: '#FFF1F2',
-    value: '$56,944',
-    label: 'Platform Commission',
-    desc: '20% platform fee deducted',
-  },
-  {
-    icon: (
-      <AccountBalanceWalletOutlinedIcon
-        sx={{ fontSize: 18, color: '#059669' }}
-      />
-    ),
-    iconBg: '#F0FDF7',
-    value: '$142,360',
-    label: 'Net Driver Pool',
-    desc: '50% allocated to drivers',
-  },
-];
-
-// ─── Donut Chart Data ───────────────────────────────────────────────────────
-
-const donutData = [
-  { name: 'Driver Payout', value: 50, amount: '$142,360', color: '#10B981' },
-  { name: 'Fleet Payout', value: 25, amount: '$71,180', color: '#6366F1' },
-  {
-    name: 'Platform Commission',
-    value: 20,
-    amount: '$56,944',
-    color: '#2F6FED',
-  },
-  { name: 'Other', value: 5, amount: '$14,236', color: '#D1D5DB' },
-];
+const getStatusStyles = (status: string) => {
+  const statusMap: Record<
+    string,
+    {
+      bg: string;
+      dot: string;
+      color: string;
+      cardBg: string;
+      cardBorder: string;
+      amountColor: string;
+    }
+  > = {
+    completed: {
+      bg: '#F0FDF7',
+      dot: '#059669',
+      color: '#059669',
+      cardBg: '#F6FEF9',
+      cardBorder: '#BBF7D0',
+      amountColor: '#059669',
+    },
+    scheduled: {
+      bg: '#DBEAFE',
+      dot: '#2F6FED',
+      color: '#2F6FED',
+      cardBg: '#F8FAFF',
+      cardBorder: '#BFDBFE',
+      amountColor: '#2F6FED',
+    },
+    upcoming: {
+      bg: '#F3F4F6',
+      dot: '#D1D5DB',
+      color: '#9CA3AF',
+      cardBg: '#FAFAFA',
+      cardBorder: '#F0F4F8',
+      amountColor: '#6B7280',
+    },
+  };
+  return statusMap[status.toLowerCase()] || statusMap.upcoming;
+};
 
 // ─── Custom Tooltip ─────────────────────────────────────────────────────────
 
@@ -429,6 +335,7 @@ const driverData: DriverRow[] = [
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const DriverPayoutPage = () => {
+  // — All hooks first —
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(
     dayjs('2026-03-10')
   );
@@ -439,7 +346,56 @@ export const DriverPayoutPage = () => {
     fleet: 'All',
     status: 'All',
   });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
+  // API Hooks
+  const kpisQuery = useGetPayoutKpis();
+  const { data: kpis } = useResolvedApiQuery(useGetPayoutKpis, null);
+  const isFetchingKpis = kpisQuery.isFetching;
+
+  const scheduleQuery = useGetPayoutSchedule();
+  const { data: scheduleData } = useResolvedApiQuery(
+    useGetPayoutSchedule,
+    null
+  );
+  const isFetchingSchedule = scheduleQuery.isFetching;
+
+  const breakdownQuery = useGetEarningsBreakdown();
+  const { data: breakdownData } = useResolvedApiQuery(
+    useGetEarningsBreakdown,
+    null
+  );
+  const isFetchingBreakdown = breakdownQuery.isFetching;
+
+  const distributionQuery = useGetMonthlyDistribution();
+  // const { data: distributionData } = useResolvedApiQuery(
+  //   useGetMonthlyDistribution,
+  //   null
+  // );
+  // const isFetchingDistribution = distributionQuery.isFetching;
+
+  const driversQuery = useGetDriverEarningsList({
+    page,
+    limit: pageSize,
+    search: searchQuery.trim() || null,
+    fleet_id: filters.fleet !== 'All' ? filters.fleet : null,
+    status: filters.status !== 'All' ? filters.status : null,
+  });
+  const { data: driversData } = useResolvedApiQuery(
+    useGetDriverEarningsList,
+    null,
+    {
+      page,
+      limit: pageSize,
+      search: searchQuery.trim() || null,
+      fleet_id: filters.fleet !== 'All' ? filters.fleet : null,
+      status: filters.status !== 'All' ? filters.status : null,
+    }
+  );
+  const isFetchingDrivers = driversQuery.isFetching;
+
+  // — Derived state / handlers —
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
@@ -448,18 +404,189 @@ export const DriverPayoutPage = () => {
     setFilters({ fleet: 'All', status: 'All' });
   };
 
-  const filteredDrivers = driverData.filter((d) => {
-    const q = searchQuery.toLowerCase().trim();
-    const matchesSearch =
-      !q ||
-      d.name.toLowerCase().includes(q) ||
-      d.fleet.toLowerCase().includes(q) ||
-      d.driverId.toLowerCase().includes(q);
-    const matchesFleet = filters.fleet === 'All' || d.fleet === filters.fleet;
-    const matchesStatus =
-      filters.status === 'All' || d.status === filters.status;
-    return matchesSearch && matchesFleet && matchesStatus;
-  });
+  // Map KPI data
+  const statCards = useMemo(
+    () => [
+      {
+        icon: (
+          <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
+        ),
+        iconBg: '#EBF2FF',
+        value: formatCurrency(kpis?.total_earnings),
+        label: 'Total Earnings',
+        badge: '+16.2%',
+        badgeBg: '#F0FDF7',
+        badgeColor: '#059669',
+        subtext: 'March 2026 · vs February',
+      },
+      {
+        icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
+        iconBg: '#EEF2FF',
+        value: String(kpis?.active_drivers ?? 0),
+        label: 'Active Drivers',
+        badge: '+4',
+        badgeBg: '#F0FDF7',
+        badgeColor: '#059669',
+        subtext: 'Receiving payouts · vs last month',
+      },
+      {
+        icon: <ScheduleOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />,
+        iconBg: '#FFFBEB',
+        value: String(kpis?.payouts_pending_count ?? 0),
+        label: 'Payouts Pending',
+        badge: 'Mar 17',
+        badgeBg: '#FEF9EC',
+        badgeColor: '#D97706',
+        subtext: 'Next payout · Scheduled Monday',
+      },
+      {
+        icon: (
+          <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />
+        ),
+        iconBg: '#FFFBEB',
+        value: formatCurrency(kpis?.payouts_pending_total),
+        label: 'Pending Amount',
+        badge: formatCurrency(kpis?.payouts_pending_total),
+        badgeBg: '#FEF9EC',
+        badgeColor: '#D97706',
+        subtext: 'Total pending payouts',
+      },
+      {
+        icon: (
+          <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#059669' }} />
+        ),
+        iconBg: '#F0FDF7',
+        value: formatCurrency(kpis?.payouts_completed_total),
+        label: 'Payouts Completed',
+        badge: '95.5%',
+        badgeBg: '#F0FDF7',
+        badgeColor: '#059669',
+        subtext: 'This month · completion rate',
+      },
+    ],
+    [kpis]
+  );
+
+  // Map schedule data
+  const payoutSchedule = useMemo(() => {
+    if (!scheduleData || !Array.isArray(scheduleData)) return [];
+    return scheduleData.map((item) => {
+      const styles = getStatusStyles(item.status);
+      return {
+        date: dayjs(item.date).format('MMM D, YYYY'),
+        status: item.status.charAt(0).toUpperCase() + item.status.slice(1),
+        statusBg: styles.bg,
+        statusDot: styles.dot,
+        statusColor: styles.color,
+        desc: `Weekly Payout · ${item.driver_count} drivers`,
+        amount: formatCurrency(item.amount),
+        amountColor: styles.amountColor,
+        cardBg: styles.cardBg,
+        cardBorder: styles.cardBorder,
+      };
+    });
+  }, [scheduleData]);
+
+  // Map earnings breakdown
+  const earningsBreakdown = useMemo(() => {
+    if (!breakdownData) return [];
+    return [
+      {
+        icon: (
+          <MonetizationOnOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
+        ),
+        iconBg: '#EFF5FF',
+        value: formatCurrency(breakdownData.gross_ride_revenue),
+        label: 'Gross Ride Revenue',
+        desc: 'Total collected from rides',
+      },
+      {
+        icon: (
+          <RemoveCircleOutlineIcon sx={{ fontSize: 18, color: '#EF4444' }} />
+        ),
+        iconBg: '#FFF1F2',
+        value: formatCurrency(breakdownData.platform_commission),
+        label: 'Platform Commission',
+        desc: '20% platform fee deducted',
+      },
+      {
+        icon: (
+          <AccountBalanceWalletOutlinedIcon
+            sx={{ fontSize: 18, color: '#059669' }}
+          />
+        ),
+        iconBg: '#F0FDF7',
+        value: formatCurrency(breakdownData.driver_payouts),
+        label: 'Net Driver Pool',
+        desc: 'Allocated to drivers',
+      },
+    ];
+  }, [breakdownData]);
+
+  // Map donut chart data
+  const donutData = useMemo(() => {
+    if (!breakdownData) return [];
+    const total = breakdownData.gross_ride_revenue || 1;
+    return [
+      {
+        name: 'Driver Payouts',
+        value: Math.round((breakdownData.driver_payouts / total) * 100),
+        amount: formatCurrency(breakdownData.driver_payouts),
+        color: '#10B981',
+      },
+      {
+        name: 'Platform Commission',
+        value: Math.round((breakdownData.platform_commission / total) * 100),
+        amount: formatCurrency(breakdownData.platform_commission),
+        color: '#2F6FED',
+      },
+    ];
+  }, [breakdownData]);
+
+  // Map driver earnings list
+  const driverRows = useMemo<DriverRow[]>(() => {
+    if (!driversData?.items) return [];
+    const avatarColors = [
+      '#2F6FED',
+      '#6366F1',
+      '#F59E0B',
+      '#EC4899',
+      '#10B981',
+      '#9CA3AF',
+      '#EF4444',
+    ];
+    return driversData.items.map((item, index) => {
+      const getInitials = (name: string) => {
+        return name
+          .split(' ')
+          .map((w) => w[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2);
+      };
+      const commissionValue = item.total_earnings * 0.2;
+      return {
+        id: item.id,
+        driverId: item.driver_id,
+        name: item.driver_name,
+        initials: getInitials(item.driver_name),
+        avatarBg: avatarColors[index % avatarColors.length],
+        fleet: item.fleet_name || 'N/A',
+        trips: item.completed_rides,
+        gross: formatCurrency(item.total_earnings),
+        commission: `−${formatCurrency(commissionValue)}`,
+        netPayout: formatCurrency(item.total_earnings - commissionValue),
+        pending: formatCurrency(item.pending_payout),
+        pendingValue: item.pending_payout,
+        schedule: 'Weekly · Every Monday',
+        status: (item.status === 'active'
+          ? 'Active'
+          : 'Suspended') as DriverStatus,
+      };
+    });
+  }, [driversData]);
+
+  const filteredDrivers = driverRows;
 
   const columns: GridColSpec<DriverRow>[] = [
     {
@@ -722,7 +849,7 @@ export const DriverPayoutPage = () => {
           />
 
           <RowStack spacing={'12px'} sx={{ flexShrink: 0 }}>
-            <AppDatePickerPopover
+            {/* <AppDatePickerPopover
               value={selectedDate}
               onChange={setSelectedDate}
               buttonSx={{
@@ -732,7 +859,7 @@ export const DriverPayoutPage = () => {
               }}
               iconSx={{ color: '#2F6FED' }}
               textSx={{ color: '#2F6FED' }}
-            />
+            /> */}
 
             <AppButton
               startIcon={
@@ -758,89 +885,101 @@ export const DriverPayoutPage = () => {
         </RowStack>
 
         {/* ── Stat Cards ─────────────────────────────────────────────── */}
-        <Grid container spacing={'20px'}>
-          {statCards.map((card) => (
-            <Grid key={card.label} size={{ xs: 6, lg: 3 }}>
-              <Stack
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #E8ECF0',
-                  borderRadius: '16px',
-                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.1)',
-                  padding: '20px',
-                  gap: '14px',
-                }}
-              >
-                <RowStack justifyContent={'space-between'}>
-                  <Box
+        <Grid container spacing={'20px'} alignItems="stretch">
+          {isFetchingKpis
+            ? Array.from({ length: 5 }).map((_, index) => (
+                <Grid key={index} size={{ xs: 12, sm: 6, md: 2.4 }}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={140}
+                    sx={{ borderRadius: '16px' }}
+                  />
+                </Grid>
+              ))
+            : statCards.map((card) => (
+                <Grid key={card.label} size={{ xs: 12, sm: 6, md: 2.4 }}>
+                  <Stack
                     sx={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: '14px',
-                      background: card.iconBg,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      background: '#FFFFFF',
+                      border: '0.67px solid #E8ECF0',
+                      borderRadius: '16px',
+                      boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.1)',
+                      padding: '20px',
+                      gap: '14px',
+                      height: '100%',
                     }}
                   >
-                    {card.icon}
-                  </Box>
-                  <Box
-                    sx={{
-                      padding: '3px 10px',
-                      borderRadius: '100px',
-                      background: card.badgeBg,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 700,
-                        fontSize: pxToRem(13),
-                        color: card.badgeColor,
-                      }}
-                    >
-                      {card.badge}
-                    </Typography>
-                  </Box>
-                </RowStack>
-                <Stack spacing={'4px'}>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 700,
-                      fontSize: pxToRem(30),
-                      lineHeight: '1em',
-                      letterSpacing: '-0.0167em',
-                      color: '#111827',
-                    }}
-                  >
-                    {card.value}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 500,
-                      fontSize: pxToRem(13),
-                      color: '#374151',
-                    }}
-                  >
-                    {card.label}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(11.5),
-                      color: '#9CA3AF',
-                    }}
-                  >
-                    {card.subtext}
-                  </Typography>
-                </Stack>
-              </Stack>
-            </Grid>
-          ))}
+                    <RowStack justifyContent={'space-between'}>
+                      <Box
+                        sx={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: '14px',
+                          background: card.iconBg,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {card.icon}
+                      </Box>
+                      <Box
+                        sx={{
+                          padding: '3px 10px',
+                          borderRadius: '100px',
+                          background: card.badgeBg,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 700,
+                            fontSize: pxToRem(13),
+                            color: card.badgeColor,
+                          }}
+                        >
+                          {card.badge}
+                        </Typography>
+                      </Box>
+                    </RowStack>
+                    <Stack spacing={'4px'}>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 700,
+                          fontSize: pxToRem(30),
+                          lineHeight: '1em',
+                          letterSpacing: '-0.0167em',
+                          color: '#111827',
+                        }}
+                      >
+                        {card.value}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 500,
+                          fontSize: pxToRem(13),
+                          color: '#374151',
+                        }}
+                      >
+                        {card.label}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 400,
+                          fontSize: pxToRem(11.5),
+                          color: '#9CA3AF',
+                        }}
+                      >
+                        {card.subtext}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </Grid>
+              ))}
         </Grid>
 
         {/* ── Middle Section: Schedule + Earnings Breakdown ─────────── */}
@@ -870,80 +1009,97 @@ export const DriverPayoutPage = () => {
                 </Typography>
               </RowStack>
 
-              <Stack spacing={'12px'}>
-                {payoutSchedule.map((ps) => (
-                  <Stack
-                    key={ps.date}
-                    spacing={'6px'}
-                    sx={{
-                      background: ps.cardBg,
-                      border: `0.667px solid ${ps.cardBorder}`,
-                      borderRadius: '14px',
-                      padding: '14px 16px',
-                    }}
-                  >
-                    <RowStack justifyContent={'space-between'}>
+              {isFetchingSchedule ? (
+                <Stack spacing={'12px'}>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Skeleton
+                      key={index}
+                      variant="rectangular"
+                      width="100%"
+                      height={85}
+                      sx={{ borderRadius: '14px' }}
+                    />
+                  ))}
+                </Stack>
+              ) : payoutSchedule.length > 0 ? (
+                <Stack spacing={'12px'}>
+                  {payoutSchedule.map((ps) => (
+                    <Stack
+                      key={ps.date}
+                      spacing={'6px'}
+                      sx={{
+                        background: ps.cardBg,
+                        border: `0.667px solid ${ps.cardBorder}`,
+                        borderRadius: '14px',
+                        padding: '14px 16px',
+                      }}
+                    >
+                      <RowStack justifyContent={'space-between'}>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 700,
+                            fontSize: pxToRem(13.5),
+                            color: '#111827',
+                          }}
+                        >
+                          {ps.date}
+                        </Typography>
+                        <RowStack
+                          spacing={'5px'}
+                          sx={{
+                            padding: '2px 8px',
+                            borderRadius: '100px',
+                            background: ps.statusBg,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: '2.5px',
+                              background: ps.statusDot,
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(11),
+                              color: ps.statusColor,
+                            }}
+                          >
+                            {ps.status}
+                          </Typography>
+                        </RowStack>
+                      </RowStack>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 400,
+                          fontSize: pxToRem(11.5),
+                          color: '#9CA3AF',
+                        }}
+                      >
+                        {ps.desc}
+                      </Typography>
                       <Typography
                         sx={{
                           fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 700,
-                          fontSize: pxToRem(13.5),
-                          color: '#111827',
+                          fontSize: pxToRem(17),
+                          color: ps.amountColor,
                         }}
                       >
-                        {ps.date}
+                        {ps.amount}
                       </Typography>
-                      <RowStack
-                        spacing={'5px'}
-                        sx={{
-                          padding: '2px 8px',
-                          borderRadius: '100px',
-                          background: ps.statusBg,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: '2.5px',
-                            background: ps.statusDot,
-                          }}
-                        />
-                        <Typography
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 600,
-                            fontSize: pxToRem(11),
-                            color: ps.statusColor,
-                          }}
-                        >
-                          {ps.status}
-                        </Typography>
-                      </RowStack>
-                    </RowStack>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 400,
-                        fontSize: pxToRem(11.5),
-                        color: '#9CA3AF',
-                      }}
-                    >
-                      {ps.desc}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 700,
-                        fontSize: pxToRem(17),
-                        color: ps.amountColor,
-                      }}
-                    >
-                      {ps.amount}
-                    </Typography>
-                  </Stack>
-                ))}
-              </Stack>
+                    </Stack>
+                  ))}
+                </Stack>
+              ) : (
+                <EmptyState animationSrc="/empty.json" />
+              )}
             </Stack>
           </Grid>
 
@@ -971,263 +1127,317 @@ export const DriverPayoutPage = () => {
                 Earnings Breakdown
               </Typography>
 
-              {/* 3 Stat Cards Row */}
-              <Grid container spacing={'12px'} sx={{ mb: '24px' }}>
-                {earningsBreakdown.map((eb) => (
-                  <Grid key={eb.label} size={{ xs: 12, md: 4 }}>
-                    <Stack
-                      spacing={'6px'}
-                      sx={{
-                        background: '#F7F9FB',
-                        border: '0.67px solid #F0F4F8',
-                        borderRadius: '14px',
-                        padding: '14px',
-                      }}
-                    >
-                      <RowStack spacing={'8px'}>
-                        <Box
+              {isFetchingBreakdown ? (
+                <Stack spacing={'16px'}>
+                  {/* 3 Stat Cards Skeleton */}
+                  <Grid container spacing={'12px'}>
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <Grid key={index} size={{ xs: 12, md: 4 }}>
+                        <Skeleton
+                          variant="rectangular"
+                          width="100%"
+                          height={100}
+                          sx={{ borderRadius: '14px' }}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                  {/* Chart Skeleton */}
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={300}
+                    sx={{ borderRadius: '12px' }}
+                  />
+                </Stack>
+              ) : earningsBreakdown.length > 0 && donutData.length > 0 ? (
+                <>
+                  {/* 3 Stat Cards Row */}
+                  <Grid container spacing={'12px'} sx={{ mb: '24px' }}>
+                    {earningsBreakdown.map((eb) => (
+                      <Grid key={eb.label} size={{ xs: 12, md: 4 }}>
+                        <Stack
+                          spacing={'6px'}
                           sx={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: '8px',
-                            background: eb.iconBg,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
+                            background: '#F7F9FB',
+                            border: '0.67px solid #F0F4F8',
+                            borderRadius: '14px',
+                            padding: '14px',
                           }}
                         >
-                          {eb.icon}
-                        </Box>
+                          <RowStack spacing={'8px'}>
+                            <Box
+                              sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: '8px',
+                                background: eb.iconBg,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {eb.icon}
+                            </Box>
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(11.5),
+                                color: '#9CA3AF',
+                              }}
+                            >
+                              {eb.label}
+                            </Typography>
+                          </RowStack>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 700,
+                              fontSize: pxToRem(22),
+                              color: '#111827',
+                              lineHeight: '1.2em',
+                            }}
+                          >
+                            {eb.value}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(11),
+                              color: '#9CA3AF',
+                            }}
+                          >
+                            {eb.desc}
+                          </Typography>
+                        </Stack>
+                      </Grid>
+                    ))}
+                  </Grid>
+
+                  {/* Monthly Earnings Distribution */}
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 600,
+                      fontSize: pxToRem(13),
+                      color: '#6B7280',
+                      mb: '16px',
+                    }}
+                  >
+                    Monthly Earnings Distribution
+                  </Typography>
+
+                  <Stack alignItems={'center'} spacing={'24px'}>
+                    {/* Donut Chart */}
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <ResponsiveContainer width={220} height={220}>
+                        <PieChart>
+                          <Pie
+                            data={donutData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={65}
+                            outerRadius={100}
+                            paddingAngle={2}
+                            dataKey="value"
+                            strokeWidth={0}
+                          >
+                            {donutData.map((entry, index) => (
+                              <Cell
+                                key={index}
+                                fill={entry.color}
+                                style={{ cursor: 'pointer', outline: 'none' }}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            content={<CustomPieTooltip />}
+                            wrapperStyle={{ outline: 'none' }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      {/* Center Label */}
+                      <Stack
+                        alignItems={'center'}
+                        justifyContent={'center'}
+                        sx={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                        }}
+                      >
                         <Typography
                           sx={{
                             fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 400,
-                            fontSize: pxToRem(11.5),
-                            color: '#9CA3AF',
+                            fontWeight: 700,
+                            fontSize: pxToRem(18),
+                            color: '#111827',
                           }}
                         >
-                          {eb.label}
+                          Earnings
                         </Typography>
-                      </RowStack>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 700,
-                          fontSize: pxToRem(22),
-                          color: '#111827',
-                          lineHeight: '1.2em',
-                        }}
-                      >
-                        {eb.value}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(11),
-                          color: '#9CA3AF',
-                        }}
-                      >
-                        {eb.desc}
-                      </Typography>
-                    </Stack>
-                  </Grid>
-                ))}
-              </Grid>
-
-              {/* Monthly Earnings Distribution */}
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(13),
-                  color: '#6B7280',
-                  mb: '16px',
-                }}
-              >
-                Monthly Earnings Distribution
-              </Typography>
-
-              <Stack alignItems={'center'} spacing={'24px'}>
-                {/* Donut Chart */}
-                <Box
-                  sx={{
-                    position: 'relative',
-                    flexShrink: 0,
-                  }}
-                >
-                  <ResponsiveContainer width={220} height={220}>
-                    <PieChart>
-                      <Pie
-                        data={donutData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={65}
-                        outerRadius={100}
-                        paddingAngle={2}
-                        dataKey="value"
-                        strokeWidth={0}
-                      >
-                        {donutData.map((entry, index) => (
-                          <Cell
-                            key={index}
-                            fill={entry.color}
-                            style={{ cursor: 'pointer', outline: 'none' }}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        content={<CustomPieTooltip />}
-                        wrapperStyle={{ outline: 'none' }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  {/* Center Label */}
-                  <Stack
-                    alignItems={'center'}
-                    justifyContent={'center'}
-                    sx={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 700,
-                        fontSize: pxToRem(18),
-                        color: '#111827',
-                      }}
-                    >
-                      Earnings
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 400,
-                        fontSize: pxToRem(12),
-                        color: '#9CA3AF',
-                      }}
-                    >
-                      Distribution
-                    </Typography>
-                  </Stack>
-                </Box>
-
-                {/* Legend - Horizontal Row */}
-                <RowStack
-                  spacing={'24px'}
-                  justifyContent={'space-between'}
-                  flexWrap={'wrap'}
-                  width={'100%'}
-                  sx={{
-                    padding: '42px',
-                  }}
-                >
-                  {donutData.map((d) => (
-                    <Stack key={d.name} alignItems={'center'} spacing={'4px'}>
-                      <RowStack spacing={'6px'}>
-                        <Box
-                          sx={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: '50%',
-                            background: d.color,
-                            flexShrink: 0,
-                          }}
-                        />
                         <Typography
                           sx={{
                             fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 400,
                             fontSize: pxToRem(12),
-                            color: '#6B7280',
+                            color: '#9CA3AF',
                           }}
                         >
-                          {d.name}
+                          Distribution
                         </Typography>
-                      </RowStack>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 700,
-                          fontSize: pxToRem(16),
-                          color: '#111827',
-                        }}
-                      >
-                        {d.value}%
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 400,
-                          fontSize: pxToRem(11.5),
-                          color: '#9CA3AF',
-                        }}
-                      >
-                        {d.amount}
-                      </Typography>
-                    </Stack>
-                  ))}
-                </RowStack>
-              </Stack>
+                      </Stack>
+                    </Box>
+
+                    {/* Legend - Horizontal Row */}
+                    <RowStack
+                      spacing={'24px'}
+                      justifyContent={'space-between'}
+                      flexWrap={'wrap'}
+                      width={'100%'}
+                      sx={{
+                        padding: '42px',
+                      }}
+                    >
+                      {donutData.map((d) => (
+                        <Stack
+                          key={d.name}
+                          alignItems={'center'}
+                          spacing={'4px'}
+                        >
+                          <RowStack spacing={'6px'}>
+                            <Box
+                              sx={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: '50%',
+                                background: d.color,
+                                flexShrink: 0,
+                              }}
+                            />
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(12),
+                                color: '#6B7280',
+                              }}
+                            >
+                              {d.name}
+                            </Typography>
+                          </RowStack>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 700,
+                              fontSize: pxToRem(16),
+                              color: '#111827',
+                            }}
+                          >
+                            {d.value}%
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(11.5),
+                              color: '#9CA3AF',
+                            }}
+                          >
+                            {d.amount}
+                          </Typography>
+                        </Stack>
+                      ))}
+                    </RowStack>
+                  </Stack>
+                </>
+              ) : (
+                <EmptyState animationSrc="/empty.json" />
+              )}
             </Stack>
           </Grid>
         </Grid>
 
         {/* ── Table ──────────────────────────────────────────────────── */}
-        <AppGridtable
-          columns={columns}
-          data={filteredDrivers}
-          initialPageSize={7}
-          disableRowClick
-          sx={{ height: 'auto', width: '100%' }}
-        >
-          <Stack spacing={'12px'} width={'100%'}>
-            <RowStack justifyContent={'space-between'}>
-              <Stack spacing={'2px'}>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 700,
-                    fontSize: pxToRem(16),
-                    color: '#111827',
-                  }}
-                >
-                  Driver Earnings Detail
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(11.5),
-                    color: '#9CA3AF',
-                  }}
-                >
-                  Per-driver breakdown for March 2026
-                </Typography>
-              </Stack>
-
-              <RowStack spacing={'8px'}>
-                <AppSearchField
-                  name="search"
-                  placeholder="Search by name, fleet or ID…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  boxProps={{ sx: { width: '280px' } }}
-                />
-                <AppFilterPopover
-                  sections={filterSections}
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  onReset={handleFilterReset}
-                />
-              </RowStack>
-            </RowStack>
+        {isFetchingDrivers ? (
+          <Stack spacing={'12px'}>
+            {Array.from({ length: 7 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                width="100%"
+                height={60}
+                sx={{ borderRadius: '12px' }}
+              />
+            ))}
           </Stack>
-        </AppGridtable>
+        ) : (
+          <AppGridtable
+            columns={columns}
+            data={filteredDrivers}
+            initialPageSize={7}
+            disableRowClick
+            emptyState={<EmptyState animationSrc="/empty.json" />}
+            sx={{ height: 'auto', width: '100%' }}
+          >
+            <Stack spacing={'12px'} width={'100%'}>
+              <RowStack justifyContent={'space-between'}>
+                <Stack spacing={'2px'}>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 700,
+                      fontSize: pxToRem(16),
+                      color: '#111827',
+                    }}
+                  >
+                    Driver Earnings Detail
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(11.5),
+                      color: '#9CA3AF',
+                    }}
+                  >
+                    Per-driver breakdown for March 2026
+                  </Typography>
+                </Stack>
+
+                <RowStack spacing={'8px'}>
+                  <AppSearchField
+                    name="search"
+                    placeholder="Search by name, fleet or ID…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    boxProps={{ sx: { width: '280px' } }}
+                  />
+                  <AppFilterPopover
+                    sections={filterSections}
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onReset={handleFilterReset}
+                  />
+                </RowStack>
+              </RowStack>
+            </Stack>
+          </AppGridtable>
+        )}
       </Stack>
 
       {/* Earning Detail Modal */}
