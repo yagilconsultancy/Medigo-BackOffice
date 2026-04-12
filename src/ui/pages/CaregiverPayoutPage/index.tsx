@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Avatar,
   Box,
@@ -8,6 +8,7 @@ import {
   Grid,
   IconButton,
   LinearProgress,
+  Skeleton,
   Stack,
   Typography,
 } from '@mui/material';
@@ -32,8 +33,16 @@ import {
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { FilterSection } from '../../modules/components/AppFilterPopover';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useGetPayoutKpis,
+  useGetEarningsBreakdown,
+  useGetPayoutsBySpecialty,
+  useGetDriverEarningsList,
+  useResolvedApiQuery,
+} from '../../../common';
 import { EarningDetailModal, ConfirmPayoutModal } from './ui/components';
+import { EmptyState } from '../../modules/blocks';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -67,244 +76,6 @@ const specialtyColors: Record<string, string> = {
   Other: '#6EE7B7',
 };
 
-// ─── Stat Cards ─────────────────────────────────────────────────────────────
-
-const statCards = [
-  {
-    icon: <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-    value: '$48,920',
-    label: 'Total Caregiver Payouts (Mar)',
-    subtext: '+11.4% vs Feb',
-  },
-  {
-    icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
-    iconBg: '#EEF2FF',
-    value: '38',
-    label: 'Active Caregivers',
-    subtext: 'Paid this month',
-  },
-  {
-    icon: <AssignmentOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />,
-    iconBg: '#ECFDF5',
-    value: '1,640',
-    label: 'Total Assignments',
-    subtext: 'Completed trips',
-  },
-  {
-    icon: <ShowChartOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
-    iconBg: '#FFFBEB',
-    value: '$1,287',
-    label: 'Avg Payout / Caregiver',
-    subtext: 'This month',
-  },
-];
-
-// ─── Donut Chart Data ───────────────────────────────────────────────────────
-
-const donutData = [
-  { name: 'PSW', value: 35, color: '#2F6FED' },
-  { name: 'RPN', value: 23, color: '#6366F1' },
-  { name: 'RN', value: 20, color: '#10B981' },
-  { name: 'OT', value: 12, color: '#93C5FD' },
-  { name: 'PT', value: 7, color: '#A5B4FC' },
-  { name: 'Other', value: 3, color: '#6EE7B7' },
-];
-
-// ─── Earnings Distribution Data ─────────────────────────────────────────────
-
-const earningsDistribution = [
-  {
-    initials: 'AO',
-    bg: '#2F6FED',
-    name: 'Amara Osei',
-    specialty: 'PSW',
-    city: 'Toronto, ON',
-    assignments: 210,
-    fee: '-$2,520',
-    net: '$10,080',
-    progress: 100,
-    barColor: '#2F6FED',
-  },
-  {
-    initials: 'SL',
-    bg: '#6366F1',
-    name: 'Sophie Lavoie',
-    specialty: 'RPN',
-    city: 'Montreal, QC',
-    assignments: 185,
-    fee: '-$2,220',
-    net: '$8,880',
-    progress: 88,
-    barColor: '#6366F1',
-  },
-  {
-    initials: 'PN',
-    bg: '#10B981',
-    name: 'Priya Nair',
-    specialty: 'RN',
-    city: 'Vancouver, BC',
-    assignments: 162,
-    fee: '-$1,944',
-    net: '$7,776',
-    progress: 77,
-    barColor: '#10B981',
-  },
-  {
-    initials: 'MT',
-    bg: '#2F6FED',
-    name: 'Marcus Tremblay',
-    specialty: 'PSW',
-    city: 'Calgary, AB',
-    assignments: 148,
-    fee: '-$1,776',
-    net: '$7,104',
-    progress: 70,
-    barColor: '#2F6FED',
-  },
-  {
-    initials: 'FD',
-    bg: '#6366F1',
-    name: 'Fatou Diallo',
-    specialty: 'OT',
-    city: 'Edmonton, AB',
-    assignments: 130,
-    fee: '-$1,560',
-    net: '$6,240',
-    progress: 62,
-    barColor: '#6366F1',
-  },
-  {
-    initials: 'HT',
-    bg: '#9CA3AF',
-    name: 'Hina Takahashi',
-    specialty: 'PT',
-    city: 'Ottawa, ON',
-    assignments: 112,
-    fee: '-$1,344',
-    net: '$5,376',
-    progress: 53,
-    barColor: '#9CA3AF',
-  },
-];
-
-// ─── Table Data ─────────────────────────────────────────────────────────────
-
-const caregiverData: CaregiverRow[] = [
-  {
-    id: '1',
-    caregiverId: 'CG-001',
-    name: 'Amara Osei',
-    initials: 'AO',
-    avatarBg: '#2F6FED',
-    city: 'Toronto, ON',
-    specialty: 'PSW',
-    assignments: 210,
-    gross: '$12,600',
-    fee: '-$2,520',
-    netPayout: '$10,080',
-    pending: '$1,008',
-    pendingValue: 1008,
-    status: 'Active',
-  },
-  {
-    id: '2',
-    caregiverId: 'CG-002',
-    name: 'Sophie Lavoie',
-    initials: 'SL',
-    avatarBg: '#6366F1',
-    city: 'Montreal, QC',
-    specialty: 'RPN',
-    assignments: 185,
-    gross: '$11,100',
-    fee: '-$2,220',
-    netPayout: '$8,880',
-    pending: '$0',
-    pendingValue: 0,
-    status: 'Active',
-  },
-  {
-    id: '3',
-    caregiverId: 'CG-003',
-    name: 'Priya Nair',
-    initials: 'PN',
-    avatarBg: '#10B981',
-    city: 'Vancouver, BC',
-    specialty: 'RN',
-    assignments: 162,
-    gross: '$9,720',
-    fee: '-$1,944',
-    netPayout: '$7,776',
-    pending: '$778',
-    pendingValue: 778,
-    status: 'Active',
-  },
-  {
-    id: '4',
-    caregiverId: 'CG-004',
-    name: 'Marcus Tremblay',
-    initials: 'MT',
-    avatarBg: '#2F6FED',
-    city: 'Calgary, AB',
-    specialty: 'PSW',
-    assignments: 148,
-    gross: '$8,880',
-    fee: '-$1,776',
-    netPayout: '$7,104',
-    pending: '$0',
-    pendingValue: 0,
-    status: 'Active',
-  },
-  {
-    id: '5',
-    caregiverId: 'CG-005',
-    name: 'Fatou Diallo',
-    initials: 'FD',
-    avatarBg: '#6366F1',
-    city: 'Edmonton, AB',
-    specialty: 'OT',
-    assignments: 130,
-    gross: '$7,800',
-    fee: '-$1,560',
-    netPayout: '$6,240',
-    pending: '$624',
-    pendingValue: 624,
-    status: 'Active',
-  },
-  {
-    id: '6',
-    caregiverId: 'CG-006',
-    name: 'Hina Takahashi',
-    initials: 'HT',
-    avatarBg: '#9CA3AF',
-    city: 'Ottawa, ON',
-    specialty: 'PT',
-    assignments: 112,
-    gross: '$6,720',
-    fee: '-$1,344',
-    netPayout: '$5,376',
-    pending: '$0',
-    pendingValue: 0,
-    status: 'Suspended',
-  },
-  {
-    id: '7',
-    caregiverId: 'CG-007',
-    name: 'James Kowalczyk',
-    initials: 'JK',
-    avatarBg: '#10B981',
-    city: 'Winnipeg, MB',
-    specialty: 'PSW',
-    assignments: 98,
-    gross: '$5,880',
-    fee: '-$1,176',
-    netPayout: '$4,704',
-    pending: '$470',
-    pendingValue: 470,
-    status: 'Active',
-  },
-];
-
 // ─── Filter Sections ────────────────────────────────────────────────────────
 
 const caregiverFilterSections: FilterSection[] = [
@@ -335,6 +106,63 @@ export const CaregiverPayoutPage = () => {
     specialty: 'All',
     status: 'All',
   });
+  const [page] = useState(1);
+  const [pageSize] = useState(10);
+
+  // API Hooks with is_caregiver: true
+  const kpisQuery = useGetPayoutKpis({ is_caregiver: true });
+  const { data: kpis } = useResolvedApiQuery(useGetPayoutKpis, null, {
+    is_caregiver: true,
+  });
+  const isFetchingKpis = kpisQuery.isFetching;
+
+  const breakdownQuery = useGetEarningsBreakdown({ is_caregiver: true });
+  const { data: breakdownData } = useResolvedApiQuery(
+    useGetEarningsBreakdown,
+    null,
+    { is_caregiver: true }
+  );
+  const isFetchingBreakdown = breakdownQuery.isFetching;
+
+  const specialtyQuery = useGetPayoutsBySpecialty({ is_caregiver: true });
+  const { data: specialtyData } = useResolvedApiQuery(
+    useGetPayoutsBySpecialty,
+    null,
+    { is_caregiver: true }
+  );
+  const isFetchingSpecialty = specialtyQuery.isFetching;
+
+  const caregiversQuery = useGetDriverEarningsList({
+    is_caregiver: true,
+    page,
+    limit: pageSize,
+    search: searchQuery.trim() || null,
+    specialty: filters.specialty !== 'All' ? filters.specialty : null,
+    status: filters.status !== 'All' ? filters.status : null,
+  });
+  const { data: caregiversListData } = useResolvedApiQuery(
+    useGetDriverEarningsList,
+    null,
+    {
+      is_caregiver: true,
+      page,
+      limit: pageSize,
+      search: searchQuery.trim() || null,
+      specialty: filters.specialty !== 'All' ? filters.specialty : null,
+      status: filters.status !== 'All' ? filters.status : null,
+    }
+  );
+  const isFetchingCaregivers = caregiversQuery.isFetching;
+
+  const formatCurrency = (value?: number): string => {
+    if (!value) return '$0';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -344,20 +172,145 @@ export const CaregiverPayoutPage = () => {
     setFilters({ specialty: 'All', status: 'All' });
   };
 
-  const filteredCaregivers = caregiverData.filter((c) => {
-    const q = searchQuery.toLowerCase().trim();
-    const matchesSearch =
-      !q ||
-      c.name.toLowerCase().includes(q) ||
-      c.specialty.toLowerCase().includes(q) ||
-      c.city.toLowerCase().includes(q) ||
-      c.caregiverId.toLowerCase().includes(q);
-    const matchesSpecialty =
-      filters.specialty === 'All' || c.specialty === filters.specialty;
-    const matchesStatus =
-      filters.status === 'All' || c.status === filters.status;
-    return matchesSearch && matchesSpecialty && matchesStatus;
-  });
+  const statCards = useMemo(
+    () => [
+      {
+        icon: (
+          <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />
+        ),
+        iconBg: '#EBF2FF',
+        value: formatCurrency(kpis?.total_earnings),
+        label: 'Total Earnings',
+        badge: '+16.2%',
+        badgeBg: '#F0FDF7',
+        badgeColor: '#059669',
+        subtext: 'March 2026 · vs February',
+      },
+      {
+        icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
+        iconBg: '#EEF2FF',
+        value: String(kpis?.active_drivers ?? 0),
+        label: 'Active Caregivers',
+        subtext: 'Paid this month',
+      },
+      {
+        icon: (
+          <AssignmentOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />
+        ),
+        iconBg: '#ECFDF5',
+        value: formatCurrency(kpis?.payouts_pending_count),
+        label: 'Pending Count',
+        subtext: 'Awaiting processing',
+      },
+      {
+        icon: (
+          <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />
+        ),
+        iconBg: '#FFFBEB',
+        value: formatCurrency(kpis?.payouts_pending_total),
+        label: 'Pending Amount',
+        subtext: 'Total pending payouts',
+      },
+      {
+        icon: <ShowChartOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />,
+        iconBg: '#ECFDF5',
+        value: formatCurrency(kpis?.payouts_completed_total),
+        label: 'Completed',
+        subtext: 'Processed payouts',
+      },
+    ],
+    [kpis]
+  );
+
+  const donutData = useMemo(() => {
+    if (!specialtyData || !Array.isArray(specialtyData)) return [];
+
+    return specialtyData.map((item: any, index: number) => ({
+      name: item.specialty || `Specialty ${index + 1}`,
+      value: item.percentage || 0,
+      amount: formatCurrency(item.total_amount),
+      color:
+        specialtyColors[item.specialty as keyof typeof specialtyColors] ||
+        '#9CA3AF',
+    }));
+  }, [specialtyData]);
+
+  const earningsDistribution = useMemo(() => {
+    if (!caregiversListData?.items || !Array.isArray(caregiversListData.items))
+      return [];
+
+    const sortedList = [...caregiversListData.items]
+      .sort(
+        (a: any, b: any) => (b.total_earnings || 0) - (a.total_earnings || 0)
+      )
+      .slice(0, 6);
+
+    const maxNet = sortedList[0]?.total_earnings || 1;
+
+    return sortedList.map((cg: any) => {
+      const initials =
+        cg.driver_name
+          ?.split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase() || '??';
+
+      const platformFee = (cg.total_earnings || 0) * 0.2;
+
+      return {
+        initials,
+        bg:
+          specialtyColors[cg.specialty as keyof typeof specialtyColors] ||
+          '#9CA3AF',
+        name: cg.driver_name || 'Unknown',
+        specialty: cg.specialty || 'N/A',
+        city: 'N/A',
+        assignments: cg.completed_rides || 0,
+        fee: `-${formatCurrency(platformFee)}`,
+        net: formatCurrency(cg.total_earnings),
+        progress: Math.round(((cg.total_earnings || 0) / maxNet) * 100),
+        barColor:
+          specialtyColors[cg.specialty as keyof typeof specialtyColors] ||
+          '#9CA3AF',
+      };
+    });
+  }, [caregiversListData]);
+
+  const caregiverTableData = useMemo(() => {
+    if (!caregiversListData?.items || !Array.isArray(caregiversListData.items))
+      return [];
+
+    return caregiversListData.items.map((cg: any) => {
+      const initials =
+        cg.driver_name
+          ?.split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase() || '??';
+
+      const gross = (cg.total_earnings || 0) / 0.8;
+      const platformFee = gross - (cg.total_earnings || 0);
+
+      return {
+        id: cg.id || '',
+        caregiverId: cg.driver_id || 'N/A',
+        name: cg.driver_name || 'Unknown',
+        initials,
+        avatarBg:
+          specialtyColors[cg.specialty as keyof typeof specialtyColors] ||
+          '#9CA3AF',
+        city: 'N/A',
+        specialty: cg.specialty || 'N/A',
+        assignments: cg.completed_rides || 0,
+        gross: formatCurrency(gross),
+        fee: `-${formatCurrency(platformFee)}`,
+        netPayout: formatCurrency(cg.total_earnings),
+        pending: formatCurrency(cg.pending_payout),
+        pendingValue: cg.pending_payout || 0,
+        status: cg.status || 'Active',
+      };
+    });
+  }, [caregiversListData]);
 
   const columns: GridColSpec<CaregiverRow>[] = [
     {
@@ -554,44 +507,44 @@ export const CaregiverPayoutPage = () => {
         </Typography>
       ),
     },
-    {
-      field: 'actions' as string,
-      headerName: '',
-      flex: 0.5,
-      minWidth: 70,
-      sortable: false,
-      renderCell: (params) => (
-        <RowStack spacing={'4px'}>
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedCaregiver(params.row);
-              setEarningDetailOpen(true);
-            }}
-            sx={{
-              width: 30,
-              height: 30,
-              color: '#9CA3AF',
-              '&:hover': { color: '#2F6FED', background: '#EBF2FF' },
-            }}
-          >
-            <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
-          </IconButton>
-          <IconButton
-            size="small"
-            sx={{
-              width: 30,
-              height: 30,
-              color: '#9CA3AF',
-              '&:hover': { color: '#6B7280', background: '#F3F4F6' },
-            }}
-          >
-            <ChatOutlinedIcon sx={{ fontSize: 16 }} />
-          </IconButton>
-        </RowStack>
-      ),
-    },
+    // {
+    //   field: 'actions' as string,
+    //   headerName: '',
+    //   flex: 0.5,
+    //   minWidth: 70,
+    //   sortable: false,
+    //   renderCell: (params) => (
+    //     <RowStack spacing={'4px'}>
+    //       <IconButton
+    //         size="small"
+    //         onClick={(e) => {
+    //           e.stopPropagation();
+    //           setSelectedCaregiver(params.row);
+    //           setEarningDetailOpen(true);
+    //         }}
+    //         sx={{
+    //           width: 30,
+    //           height: 30,
+    //           color: '#9CA3AF',
+    //           '&:hover': { color: '#2F6FED', background: '#EBF2FF' },
+    //         }}
+    //       >
+    //         <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
+    //       </IconButton>
+    //       <IconButton
+    //         size="small"
+    //         sx={{
+    //           width: 30,
+    //           height: 30,
+    //           color: '#9CA3AF',
+    //           '&:hover': { color: '#6B7280', background: '#F3F4F6' },
+    //         }}
+    //       >
+    //         <ChatOutlinedIcon sx={{ fontSize: 16 }} />
+    //       </IconButton>
+    //     </RowStack>
+    //   ),
+    // },
   ];
 
   return (
@@ -633,68 +586,80 @@ export const CaregiverPayoutPage = () => {
         </RowStack>
 
         {/* Stat Cards */}
-        <Grid container spacing={'20px'}>
-          {statCards.map((card) => (
-            <Grid key={card.label} size={{ xs: 6, lg: 3 }}>
-              <Stack
-                sx={{
-                  background: '#FFFFFF',
-                  border: '0.67px solid #F0F4F8',
-                  borderRadius: '16px',
-                  boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
-                  padding: '20px',
-                  gap: '16px',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: '14px',
-                    background: card.iconBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {card.icon}
-                </Box>
-                <Stack spacing={'4px'}>
-                  <Typography
+        <Grid container spacing={'20px'} alignItems="stretch">
+          {isFetchingKpis
+            ? Array.from({ length: 5 }).map((_, index) => (
+                <Grid key={index} size={{ xs: 12, sm: 6, md: 2.4 }}>
+                  <Skeleton
+                    variant="rectangular"
+                    width="100%"
+                    height={140}
+                    sx={{ borderRadius: '16px' }}
+                  />
+                </Grid>
+              ))
+            : statCards.map((card) => (
+                <Grid key={card.label} size={{ xs: 12, sm: 6, md: 2.4 }}>
+                  <Stack
                     sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 700,
-                      fontSize: pxToRem(24),
-                      lineHeight: '1em',
-                      color: '#111827',
+                      background: '#FFFFFF',
+                      border: '0.67px solid #F0F4F8',
+                      borderRadius: '16px',
+                      boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+                      padding: '20px',
+                      gap: '16px',
+                      height: '100%',
                     }}
                   >
-                    {card.value}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(13),
-                      color: '#374151',
-                    }}
-                  >
-                    {card.label}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(11.5),
-                      color: '#9CA3AF',
-                    }}
-                  >
-                    {card.subtext}
-                  </Typography>
-                </Stack>
-              </Stack>
-            </Grid>
-          ))}
+                    <Box
+                      sx={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: '14px',
+                        background: card.iconBg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {card.icon}
+                    </Box>
+                    <Stack spacing={'4px'}>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 700,
+                          fontSize: pxToRem(24),
+                          lineHeight: '1em',
+                          color: '#111827',
+                        }}
+                      >
+                        {card.value}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 400,
+                          fontSize: pxToRem(13),
+                          color: '#374151',
+                        }}
+                      >
+                        {card.label}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 400,
+                          fontSize: pxToRem(11.5),
+                          color: '#9CA3AF',
+                        }}
+                      >
+                        {card.subtext}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </Grid>
+              ))}
         </Grid>
 
         {/* Middle Section: Donut Chart + Earnings Distribution */}
@@ -723,106 +688,127 @@ export const CaregiverPayoutPage = () => {
                 Payouts by Specialty
               </Typography>
 
-              {/* Donut Chart */}
-              <Box
-                sx={{
-                  position: 'relative',
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  mb: '24px',
-                }}
-              >
-                <ResponsiveContainer width={200} height={200}>
-                  <PieChart>
-                    <Pie
-                      data={donutData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={90}
-                      paddingAngle={2}
-                      dataKey="value"
-                      strokeWidth={0}
-                    >
-                      {donutData.map((entry, index) => (
-                        <Cell key={index} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Center Label */}
-                <Stack
-                  alignItems={'center'}
-                  justifyContent={'center'}
-                  sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 700,
-                      fontSize: pxToRem(13),
-                      color: '#111827',
-                    }}
-                  >
-                    Payout
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(11),
-                      color: '#9CA3AF',
-                    }}
-                  >
-                    by Specialty
-                  </Typography>
-                </Stack>
-              </Box>
-
-              {/* Legend */}
-              <Stack spacing={'6px'}>
-                {donutData.map((d) => (
-                  <RowStack key={d.name} justifyContent={'space-between'}>
-                    <RowStack spacing={'8px'}>
-                      <Box
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          background: d.color,
-                          flexShrink: 0,
-                        }}
+              {isFetchingSpecialty ? (
+                <Stack alignItems="center" spacing={'12px'}>
+                  <Skeleton variant="circular" width={180} height={180} />
+                  <Stack spacing={'6px'} width="100%">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <Skeleton
+                        key={index}
+                        variant="rectangular"
+                        width="100%"
+                        height={24}
                       />
+                    ))}
+                  </Stack>
+                </Stack>
+              ) : donutData.length > 0 ? (
+                <>
+                  {/* Donut Chart */}
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      mb: '24px',
+                    }}
+                  >
+                    <ResponsiveContainer width={200} height={200}>
+                      <PieChart>
+                        <Pie
+                          data={donutData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          paddingAngle={2}
+                          dataKey="value"
+                          strokeWidth={0}
+                        >
+                          {donutData.map((entry, index) => (
+                            <Cell key={index} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {/* Center Label */}
+                    <Stack
+                      alignItems={'center'}
+                      justifyContent={'center'}
+                      sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 700,
+                          fontSize: pxToRem(13),
+                          color: '#111827',
+                        }}
+                      >
+                        Payout
+                      </Typography>
                       <Typography
                         sx={{
                           fontFamily: (theme) => theme.typography.fontFamily,
                           fontWeight: 400,
-                          fontSize: pxToRem(12),
-                          color: '#374151',
+                          fontSize: pxToRem(11),
+                          color: '#9CA3AF',
                         }}
                       >
-                        {d.name}
+                        by Specialty
                       </Typography>
-                    </RowStack>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 600,
-                        fontSize: pxToRem(12),
-                        color: '#111827',
-                      }}
-                    >
-                      {d.value}%
-                    </Typography>
-                  </RowStack>
-                ))}
-              </Stack>
+                    </Stack>
+                  </Box>
+
+                  {/* Legend */}
+                  <Stack spacing={'6px'}>
+                    {donutData.map((d) => (
+                      <RowStack key={d.name} justifyContent={'space-between'}>
+                        <RowStack spacing={'8px'}>
+                          <Box
+                            sx={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: '50%',
+                              background: d.color,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 400,
+                              fontSize: pxToRem(12),
+                              color: '#374151',
+                            }}
+                          >
+                            {d.name}
+                          </Typography>
+                        </RowStack>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 600,
+                            fontSize: pxToRem(12),
+                            color: '#111827',
+                          }}
+                        >
+                          {d.value}%
+                        </Typography>
+                      </RowStack>
+                    ))}
+                  </Stack>
+                </>
+              ) : (
+                <EmptyState animationSrc="/empty.json" />
+              )}
             </Stack>
           </Grid>
 
@@ -850,163 +836,190 @@ export const CaregiverPayoutPage = () => {
                 Caregiver Earnings Distribution — March 2026
               </Typography>
 
-              <Stack spacing={'12px'} sx={{ flex: 1 }}>
-                {earningsDistribution.map((cg) => (
-                  <Stack key={cg.name} spacing={'8px'}>
-                    <RowStack justifyContent={'space-between'}>
-                      <RowStack spacing={'10px'}>
-                        <Avatar
-                          sx={{
-                            width: 28,
-                            height: 28,
-                            fontSize: pxToRem(10),
-                            fontWeight: 700,
-                            background: cg.bg,
-                            color: '#FFFFFF',
-                          }}
-                        >
-                          {cg.initials}
-                        </Avatar>
-                        <RowStack spacing={'6px'}>
-                          <Typography
-                            sx={{
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              fontWeight: 600,
-                              fontSize: pxToRem(13),
-                              color: '#111827',
-                              lineHeight: '1.4em',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {cg.name}
-                          </Typography>
-                          <Typography
-                            sx={{
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              fontWeight: 400,
-                              fontSize: pxToRem(11.5),
-                              color: '#9CA3AF',
-                              lineHeight: '1.4em',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {cg.specialty} · {cg.city}
-                          </Typography>
+              {isFetchingCaregivers ? (
+                <Stack spacing={'12px'} sx={{ flex: 1 }}>
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <Stack key={index} spacing={'8px'}>
+                      <Skeleton
+                        variant="rectangular"
+                        width="100%"
+                        height={60}
+                      />
+                      <Skeleton
+                        variant="rectangular"
+                        width="100%"
+                        height={7}
+                        sx={{ borderRadius: '100px' }}
+                      />
+                    </Stack>
+                  ))}
+                </Stack>
+              ) : earningsDistribution.length > 0 ? (
+                <>
+                  <Stack spacing={'12px'} sx={{ flex: 1 }}>
+                    {earningsDistribution.map((cg) => (
+                      <Stack key={cg.name} spacing={'8px'}>
+                        <RowStack justifyContent={'space-between'}>
+                          <RowStack spacing={'10px'}>
+                            <Avatar
+                              sx={{
+                                width: 28,
+                                height: 28,
+                                fontSize: pxToRem(10),
+                                fontWeight: 700,
+                                background: cg.bg,
+                                color: '#FFFFFF',
+                              }}
+                            >
+                              {cg.initials}
+                            </Avatar>
+                            <RowStack spacing={'6px'}>
+                              <Typography
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(13),
+                                  color: '#111827',
+                                  lineHeight: '1.4em',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {cg.name}
+                              </Typography>
+                              <Typography
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 400,
+                                  fontSize: pxToRem(11.5),
+                                  color: '#9CA3AF',
+                                  lineHeight: '1.4em',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {cg.specialty} · {cg.city}
+                              </Typography>
+                            </RowStack>
+                          </RowStack>
+                          <RowStack spacing={'16px'}>
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(12),
+                                color: '#9CA3AF',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {cg.assignments} assignments
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 600,
+                                fontSize: pxToRem(12),
+                                color: '#EF4444',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {cg.fee}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 700,
+                                fontSize: pxToRem(14),
+                                color: '#10B981',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {cg.net}
+                            </Typography>
+                          </RowStack>
                         </RowStack>
-                      </RowStack>
-                      <RowStack spacing={'16px'}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={cg.progress}
+                          sx={{
+                            height: 7,
+                            borderRadius: '100px',
+                            backgroundColor: '#F0F4F8',
+                            '& .MuiLinearProgress-bar': {
+                              borderRadius: '100px',
+                              backgroundColor: cg.barColor,
+                            },
+                          }}
+                        />
+                      </Stack>
+                    ))}
+                  </Stack>
+
+                  {/* Summary Footer */}
+                  <RowStack
+                    spacing={'16px'}
+                    sx={{
+                      mt: '20px',
+                      pt: '20px',
+                      borderTop: '0.67px solid #F0F4F8',
+                    }}
+                  >
+                    {[
+                      {
+                        label: 'Total Earnings',
+                        value: formatCurrency(kpis?.total_earnings),
+                        color: '#10B981',
+                      },
+                      {
+                        label: 'Pending Payouts',
+                        value: formatCurrency(kpis?.payouts_pending_total),
+                        color: '#D97706',
+                      },
+                      {
+                        label: 'Completed Payouts',
+                        value: formatCurrency(kpis?.payouts_completed_total),
+                        color: '#6B7280',
+                      },
+                    ].map((item) => (
+                      <Stack
+                        key={item.label}
+                        sx={{
+                          flex: 1,
+                          background: '#F7F9FB',
+                          borderRadius: '14px',
+                          padding: '12px',
+                        }}
+                      >
                         <Typography
                           sx={{
                             fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 400,
-                            fontSize: pxToRem(12),
+                            fontSize: pxToRem(11),
                             color: '#9CA3AF',
-                            whiteSpace: 'nowrap',
                           }}
                         >
-                          {cg.assignments} assignments
-                        </Typography>
-                        <Typography
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 600,
-                            fontSize: pxToRem(12),
-                            color: '#EF4444',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {cg.fee}
+                          {item.label}
                         </Typography>
                         <Typography
                           sx={{
                             fontFamily: (theme) => theme.typography.fontFamily,
                             fontWeight: 700,
-                            fontSize: pxToRem(14),
-                            color: '#10B981',
-                            whiteSpace: 'nowrap',
+                            fontSize: pxToRem(16),
+                            color: item.color,
                           }}
                         >
-                          {cg.net}
+                          {item.value}
                         </Typography>
-                      </RowStack>
-                    </RowStack>
-                    <LinearProgress
-                      variant="determinate"
-                      value={cg.progress}
-                      sx={{
-                        height: 7,
-                        borderRadius: '100px',
-                        backgroundColor: '#F0F4F8',
-                        '& .MuiLinearProgress-bar': {
-                          borderRadius: '100px',
-                          backgroundColor: cg.barColor,
-                        },
-                      }}
-                    />
-                  </Stack>
-                ))}
-              </Stack>
-
-              {/* Summary Footer */}
-              <RowStack
-                spacing={'16px'}
-                sx={{
-                  mt: '20px',
-                  pt: '20px',
-                  borderTop: '0.67px solid #F0F4F8',
-                }}
-              >
-                {[
-                  {
-                    label: 'Total Net Payouts',
-                    value: '$48,920',
-                    color: '#10B981',
-                  },
-                  {
-                    label: 'Platform Fees (20%)',
-                    value: '$12,230',
-                    color: '#6B7280',
-                  },
-                  {
-                    label: 'Pending Payouts',
-                    value: '$2,880',
-                    color: '#D97706',
-                  },
-                ].map((item) => (
-                  <Stack
-                    key={item.label}
-                    sx={{
-                      flex: 1,
-                      background: '#F7F9FB',
-                      borderRadius: '14px',
-                      padding: '12px',
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 400,
-                        fontSize: pxToRem(11),
-                        color: '#9CA3AF',
-                      }}
-                    >
-                      {item.label}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 700,
-                        fontSize: pxToRem(16),
-                        color: item.color,
-                      }}
-                    >
-                      {item.value}
-                    </Typography>
-                  </Stack>
-                ))}
-              </RowStack>
+                      </Stack>
+                    ))}
+                  </RowStack>
+                </>
+              ) : (
+                <EmptyState animationSrc="/empty.json" />
+              )}
             </Stack>
           </Grid>
         </Grid>
@@ -1014,9 +1027,10 @@ export const CaregiverPayoutPage = () => {
         {/* Table */}
         <AppGridtable
           columns={columns}
-          data={filteredCaregivers}
+          data={caregiverTableData}
           initialPageSize={7}
           disableRowClick
+          emptyState={<EmptyState animationSrc="/empty.json" />}
           sx={{
             height: 'auto',
             width: '100%',

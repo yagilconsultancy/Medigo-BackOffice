@@ -2,11 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 
 import { ROUTES, resolveRoute } from '../../../../../constants';
 import { getPayoutsBySpecialty } from '../../../../../services/api';
+import { PayoutKpisQueryPayload } from '../../../../../types';
 
-export const useGetPayoutsBySpecialty = () => {
+export const useGetPayoutsBySpecialty = (payload?: PayoutKpisQueryPayload) => {
   return useQuery({
-    queryKey: [resolveRoute(ROUTES.getPayoutsBySpecialty)],
-    queryFn: () => getPayoutsBySpecialty().then((res) => res.data),
+    queryKey: [
+      resolveRoute(ROUTES.getPayoutsBySpecialty),
+      JSON.stringify(payload),
+    ],
+    queryFn: () => getPayoutsBySpecialty(payload).then((res) => res.data),
     placeholderData: (previousData) => previousData,
     retry: (failureCount, error) => {
       if (error && typeof error === 'object' && 'response' in error) {

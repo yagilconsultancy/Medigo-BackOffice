@@ -48,11 +48,15 @@ export const getMonthlyDistribution = async () => {
   >(resolveRoute(ROUTES.getMonthlyDistribution));
 };
 
-export const getPayoutsBySpecialty = async () => {
+export const getPayoutsBySpecialty = async (
+  payload?: PayoutKpisQueryPayload
+) => {
   return await getApiClient().get<
     ApiPayoutsBySpecialtyResponse,
     AxiosResponse<ApiPayoutsBySpecialtyResponse>
-  >(resolveRoute(ROUTES.getPayoutsBySpecialty));
+  >(resolveRoute(ROUTES.getPayoutsBySpecialty), {
+    params: { ...payload },
+  });
 };
 
 export const getDriverEarningsList = async (
