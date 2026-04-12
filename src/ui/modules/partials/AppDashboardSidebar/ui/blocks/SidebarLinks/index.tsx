@@ -22,6 +22,7 @@ export type SidebarItem = {
   text: string;
   link?: string;
   icon?: any;
+  moduleId?: string;
   dropdown?: { text: string; link: string; icon?: any }[];
 };
 

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   Box,
   CSSObject,
@@ -9,6 +10,11 @@ import {
 } from '@mui/material';
 import { AdminInfo, Header } from './ui/components';
 import { SidebarLinks, SidebarLinksProps } from './ui/blocks';
+import {
+  useGetMyPermissions,
+  useResolvedApiQuery,
+} from '../../../../common';
+import type { UserPermissionsResponse } from '../../../../common';
 
 // Sidebar icons
 import dashboardIcon from './ui/assets/icons/dashboard-icon.svg';
@@ -34,6 +40,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         icon: dashboardIcon,
         text: 'Dashboard Overview',
         link: '/',
+        moduleId: 'analytics_dashboard',
       },
     ],
   },
@@ -43,6 +50,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: bookingIcon,
         text: 'Booking Management',
+        moduleId: 'booking_management',
         dropdown: [
           { text: 'All Bookings', link: '/bookings' },
           { text: 'Pending Bookings', link: '/bookings/pending' },
@@ -53,6 +61,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: dispatchIcon,
         text: 'Dispatch Center',
+        moduleId: 'dispatch_center',
         dropdown: [
           { text: 'Live Dispatch Map', link: '/dispatch' },
           { text: 'Ride Management', link: '/dispatch/rides' },
@@ -62,6 +71,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       // {
       //   icon: gpsIcon,
       //   text: 'GPS Tracking',
+      //   moduleId: 'gps_tracking',
       //   dropdown: [
       //     { text: 'Live Driver Map', link: '/gps' },
       //     { text: 'Active Trip Map', link: '/gps/trips' },
@@ -71,6 +81,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: fleetIcon,
         text: 'Fleet Management',
+        moduleId: 'fleet_management',
         dropdown: [
           { text: 'Fleet Applications', link: '/fleet' },
           { text: 'Fleet Companies', link: '/fleet/companies' },
@@ -81,11 +92,13 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: settingsIcon,
         text: 'Service Management',
+        moduleId: 'service_management',
         dropdown: [{ text: 'Service Provider', link: '/services/providers' }],
       },
       {
         icon: riderManagementIcon,
         text: 'Facility & Client Mgt',
+        moduleId: 'rider_management',
         dropdown: [
           { text: 'All Riders', link: '/riders' },
           { text: 'Rider Profiles', link: '/riders/profiles' },
@@ -96,6 +109,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: vehicleIcon,
         text: 'Vehicle Management',
+        moduleId: 'vehicle_management',
         dropdown: [
           { text: 'All Vehicles', link: '/vehicles' },
           // { text: 'Vehicle Profiles', link: '/vehicles/profiles' },
@@ -106,6 +120,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: paymentIcon,
         text: 'Payment Management',
+        moduleId: 'payments_finance',
         dropdown: [
           { text: 'Transactions', link: '/payments' },
           { text: 'Revenue Dashboard', link: '/payments/revenue' },
@@ -117,6 +132,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: invoiceIcon,
         text: 'Pricing Management',
+        moduleId: 'invoices_billing',
         dropdown: [
           { text: 'Pricing Dashboard', link: '/pricing' },
           { text: 'Fare Configuration', link: '/pricing/fares' },
@@ -131,6 +147,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: safetyIcon,
         text: 'Safety & Incidents',
+        moduleId: 'safety_incidents',
         dropdown: [
           { text: 'Incident Report', link: '/safety' },
           { text: 'Safety Alerts', link: '/safety/reports' },
@@ -141,6 +158,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: notificationIcon,
         text: 'Notifications',
+        moduleId: 'notifications',
         dropdown: [
           { text: 'System Notifications', link: '/notifications' },
           { text: 'Rider Notifications', link: '/notifications/riders' },
@@ -151,6 +169,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: supportIcon,
         text: 'Support & Service',
+        moduleId: 'support_center',
         dropdown: [
           { text: 'Support Ticket', link: '/support' },
           { text: 'Trip Issue Resolution', link: '/support/issues' },
@@ -160,6 +179,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: rolesIcon,
         text: 'Dashboard Settings',
+        moduleId: 'dashboard_settings',
         dropdown: [
           { text: 'Cities & Service Area', link: '/settings/areas' },
           { text: 'Ride Types', link: '/settings/ride-types' },
@@ -169,6 +189,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
       {
         icon: logsIcon,
         text: 'System Logs & Security',
+        moduleId: 'system_logs',
         dropdown: [
           { text: 'Activity Logs', link: '/logs' },
           { text: 'Login History', link: '/logs/history' },
@@ -192,6 +213,39 @@ export function AppDashboardSideBar({
   const isXs = useMediaQuery(theme.breakpoints.only('xs'));
   const DRAWER_WIDTH = isXs ? '80%' : 259; // Width when sidebar is open
   const COLLAPSED_WIDTH = isXs ? 0 : 72;
+
+  // Fetch user permissions
+  const { data: permissionsData } = useResolvedApiQuery<UserPermissionsResponse>(
+    useGetMyPermissions,
+    null
+  );
+
+  // Filter sidebar items based on accessible modules
+  const filteredSidebarList = useMemo(() => {
+    // If permissionsData is null or accessible_modules is empty, show all items
+    if (!permissionsData || !permissionsData.accessible_modules) {
+      return sidebarList;
+    }
+
+    const accessibleModules = permissionsData.accessible_modules;
+
+    // If no modules returned, show all items
+    if (accessibleModules.length === 0) {
+      return sidebarList;
+    }
+
+    return sidebarList.map((section) => ({
+      ...section,
+      items: section.items.filter((item) => {
+        // If item has no moduleId, show it (default behavior)
+        if (!item.moduleId) {
+          return true;
+        }
+        // Check if user has access to this module
+        return accessibleModules.includes(item.moduleId);
+      }),
+    })).filter((section) => section.items.length > 0); // Remove empty sections
+  }, [permissionsData]);
   const openedMixin = (theme: Theme): CSSObject => ({
     width: DRAWER_WIDTH,
     transition: theme.transitions.create('width', {
@@ -281,7 +335,7 @@ export function AppDashboardSideBar({
               scrollbarWidth: 'none',
             }}
           >
-            <SidebarLinks sidebarList={sidebarList} isSidebarOpen={open} />
+            <SidebarLinks sidebarList={filteredSidebarList} isSidebarOpen={open} />
           </Box>
 
           {/* Admin User - fixed at bottom */}
