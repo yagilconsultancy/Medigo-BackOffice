@@ -65,9 +65,6 @@ const FieldLabel = ({ label }: { label: string }) => (
   </Typography>
 );
 
-
-// ─── Component ──────────────────────────────────────────────────────────────
-
 export const CreateRoleModal = ({
   open,
   onClose,

@@ -23,8 +23,12 @@ import {
   pxToRem,
   useGetPermissionMatrix,
   useResolvedApiQuery,
+  useRolesPermissionsApi,
 } from '../../../../../../common';
-import type { PermissionMatrixResponse } from '../../../../../../common';
+import type {
+  PermissionMatrixResponse,
+  ModulePermissionUpdate,
+} from '../../../../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -417,6 +421,10 @@ const getRoleIcon = (roleName: string) => {
   return <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 14 }} />;
 };
 
+const isSuperAdminRole = (roleName: string): boolean => {
+  return roleName.toLowerCase().includes('super');
+};
+
 const getLightBg = (color: string): string => {
   const colorMap: Record<string, string> = {
     '#2F6FED': '#EBF2FF',
@@ -430,7 +438,8 @@ const getLightBg = (color: string): string => {
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export const PermissionControls = () => {
-  const { data: matrixData, isFetching } = useResolvedApiQuery<PermissionMatrixResponse>(
+  const { savePermissions } = useRolesPermissionsApi();
+  const { data: matrixData, isFetching, refetch } = useResolvedApiQuery<PermissionMatrixResponse>(
     useGetPermissionMatrix,
     { roles: [], modules: [], permissions: {} }
   );
@@ -451,7 +460,7 @@ export const PermissionControls = () => {
         activeColor: color,
         iconBg: getLightBg(color),
         headerBg: getLightBg(color),
-        isLocked: role.is_system,
+        isLocked: isSuperAdminRole(role.display_name),
         enabledModules,
       };
     });
@@ -517,9 +526,22 @@ export const PermissionControls = () => {
         key={selectedRoleId}
         initialValues={buildInitialValues(selectedRole, allModuleKeys)}
         enableReinitialize
-        onSubmit={async (values, { setSubmitting }) => {
+        onSubmit={async (values, { setSubmitting, resetForm }) => {
           try {
-            console.log('Save permissions:', selectedRole.roleName, values);
+            // Build the permissions payload
+            const permissionsPayload: ModulePermissionUpdate[] = Object.entries(values).map(
+              ([moduleName, canAccess]) => ({
+                role_id: selectedRole.id,
+                module_name: moduleName,
+                can_access: canAccess as boolean,
+              })
+            );
+
+            const success = await savePermissions(permissionsPayload);
+            if (success) {
+              await refetch();
+              resetForm({ values });
+            }
           } finally {
             setSubmitting(false);
           }

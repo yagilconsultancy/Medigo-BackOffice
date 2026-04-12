@@ -19,6 +19,7 @@ import {
   useListAdminRoles,
   useGetAdminRoleDetail,
   useResolvedApiQuery,
+  useRolesPermissionsApi,
 } from '../../../common';
 import type { AdminRoleCardResponse } from '../../../common';
 import {
@@ -328,6 +329,9 @@ export const RolesPermissionsPage = () => {
   const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false);
   const [activeRoleId, setActiveRoleId] = useState<string>('');
 
+  // API hooks
+  const { removeRole } = useRolesPermissionsApi();
+
   // Fetch roles from API
   const { data: apiRolesData, refetch: refetchRoles } = useResolvedApiQuery(
     useListAdminRoles,
@@ -335,8 +339,23 @@ export const RolesPermissionsPage = () => {
   );
 
   // Fetch role details when a role is selected
-  const { data: roleDetailData, isFetching: isFetchingRoleDetail } =
+  const { data: roleDetailData, isFetching: isFetchingRoleDetail, refetch: refetchRoleDetail } =
     useResolvedApiQuery(useGetAdminRoleDetail, null, activeRoleId);
+
+  // Handler to remove admin from role
+  const handleRemoveAdmin = async (userId: string, roleId: string) => {
+    const success = await removeRole({
+      user_id: userId,
+      role_id: roleId,
+    });
+
+    if (success) {
+      // Refetch role details to update the admin list
+      await refetchRoleDetail();
+      // Refetch roles to update the count
+      await refetchRoles();
+    }
+  };
 
   // Helper function to generate light background color from hex
   const getLightBg = (hexColor: string): string => {
@@ -808,6 +827,7 @@ export const RolesPermissionsPage = () => {
 
                     {/* Remove Button */}
                     <Box
+                      onClick={() => handleRemoveAdmin(admin.id, activeRoleId)}
                       sx={{
                         padding: '7px 14px',
                         background: '#FEF2F2',
