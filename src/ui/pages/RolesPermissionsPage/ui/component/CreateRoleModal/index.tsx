@@ -1,67 +1,52 @@
 'use client';
 
-import { Box, Grid, Stack, Typography, CircularProgress } from '@mui/material';
+import { useState } from 'react';
+import { Box, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { Formik, Form, useFormikContext } from 'formik';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { AppModal } from '../../../../../modules/components/AppModal';
 import {
   AppButton,
   FormikAppTextField,
+  ColorPicker,
   RowStack,
 } from '../../../../../modules/components';
-import {
-  pxToRem,
-  useListAdminRoles,
-  useResolvedApiQuery,
-} from '../../../../../../common';
-import type { AdminRoleCardResponse } from '../../../../../../common';
+import { pxToRem, useRolesPermissionsApi } from '../../../../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type InviteAdminModalProps = {
+type CreateRoleModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: InviteAdminFormValues) => void;
+  onSuccess: () => void;
 };
 
-type InviteAdminFormValues = {
-  fullName: string;
-  emailAddress: string;
-  assignRole: string;
-};
-
-// ─── Helper Functions ───────────────────────────────────────────────────────
-
-// Helper function to generate light background color from hex
-const getLightBg = (hexColor: string): string => {
-  // Map of specific colors to their light backgrounds
-  const colorBgMap: Record<string, string> = {
-    '#8B5CF6': '#F5F3FF', // Purple
-    '#3B82F6': '#EFF6FF', // Blue
-    '#10B981': '#ECFDF5', // Green
-    '#F59E0B': '#FFFBEB', // Amber/Yellow
-    '#2F6FED': '#EBF2FF', // Blue (legacy)
-    '#6366F1': '#EEF2FF', // Indigo
-    '#EC4899': '#FDF2F8', // Pink
-  };
-  return colorBgMap[hexColor] || '#F3F4F6'; // Default gray background
+export type CreateRoleFormValues = {
+  name: string;
+  display_name: string;
+  description: string;
+  color: string;
 };
 
 // ─── Validation ─────────────────────────────────────────────────────────────
 
 const validationSchema = Yup.object({
-  fullName: Yup.string().required('Full name is required'),
-  emailAddress: Yup.string()
-    .email('Invalid email address')
-    .required('Email is required'),
-  assignRole: Yup.string().required('Please select a role'),
+  name: Yup.string()
+    .required('Role name is required')
+    .matches(
+      /^[a-z_]+$/,
+      'Role name must be lowercase with underscores only (e.g., finance_admin)'
+    ),
+  display_name: Yup.string().required('Display name is required'),
+  description: Yup.string().required('Description is required'),
 });
 
-const initialValues: InviteAdminFormValues = {
-  fullName: '',
-  emailAddress: '',
-  assignRole: '',
+const initialValues: CreateRoleFormValues = {
+  name: '',
+  display_name: '',
+  description: '',
+  color: '#000000',
 };
 
 // ─── Label Component ────────────────────────────────────────────────────────
@@ -80,111 +65,42 @@ const FieldLabel = ({ label }: { label: string }) => (
   </Typography>
 );
 
-// ─── Role Selector ──────────────────────────────────────────────────────────
-
-const RoleSelector = () => {
-  const { values, setFieldValue } = useFormikContext<InviteAdminFormValues>();
-
-  // Fetch roles from API
-  const { data: apiRolesData, isFetching } = useResolvedApiQuery(
-    useListAdminRoles,
-    [] as AdminRoleCardResponse[]
-  );
-
-  // Map API roles to role options
-  const roleOptions = apiRolesData.map((role) => {
-    const roleColor = role.color || '#6B7280';
-    const roleBg = getLightBg(roleColor);
-
-    return {
-      id: role.id,
-      label: role.display_name,
-      color: roleColor,
-      borderColor: roleColor,
-      bg: roleBg,
-    };
-  });
-
-  if (isFetching) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: '20px',
-        }}
-      >
-        <CircularProgress size={24} />
-      </Box>
-    );
-  }
-
-  return (
-    <Grid container spacing={'10px'}>
-      {roleOptions.map((role) => {
-        const isSelected = values.assignRole === role.id;
-        return (
-          <Grid key={role.id} size={{ xs: 6 }}>
-            <RowStack
-              onClick={() => setFieldValue('assignRole', role.id)}
-              spacing={'8px'}
-              sx={{
-                padding: '10px 14px',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                background: isSelected ? role.bg : '#FFFFFF',
-                border: isSelected
-                  ? `1.5px solid ${role.borderColor}`
-                  : '1px solid #E8ECF0',
-                transition: 'all 0.15s ease',
-                '&:hover': {
-                  borderColor: role.borderColor,
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  width: 16,
-                  height: 16,
-                  borderRadius: '50%',
-                  border: isSelected
-                    ? `4px solid ${role.color}`
-                    : '1.5px solid #D1D5DB',
-                  flexShrink: 0,
-                }}
-              />
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: isSelected ? 600 : 400,
-                  fontSize: pxToRem(13),
-                  color: isSelected ? role.color : '#374151',
-                  lineHeight: '1.5em',
-                }}
-              >
-                {role.label}
-              </Typography>
-            </RowStack>
-          </Grid>
-        );
-      })}
-    </Grid>
-  );
-};
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export const InviteAdminModal = ({
+export const CreateRoleModal = ({
   open,
   onClose,
-  onSubmit,
-}: InviteAdminModalProps) => {
+  onSuccess,
+}: CreateRoleModalProps) => {
+  const [color, setColor] = useState('#000000');
+  const { createAdminRole } = useRolesPermissionsApi();
+
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+    try {
+      const success = await createAdminRole({
+        name: values.name,
+        display_name: values.display_name,
+        description: values.description || null,
+        color: color || null,
+      });
+
+      if (success) {
+        resetForm();
+        setColor('#000000');
+        onClose();
+        onSuccess();
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <AppModal
       open={open}
       setOpen={() => onClose()}
-      label="invite-admin-modal"
+      label="create-role-modal"
       padding="0px"
       sx={{
         '& .MuiDialog-paper': {
@@ -199,18 +115,11 @@ export const InviteAdminModal = ({
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
-        onSubmit={async (values, { setSubmitting }) => {
-          try {
-            onSubmit(values);
-          } finally {
-            setSubmitting(false);
-          }
-        }}
+        onSubmit={handleSubmit}
       >
         {({ isSubmitting, isValid, dirty }) => (
           <Form>
             <Stack>
-              {/* ── Header ─────────────────────────────────────── */}
               <RowStack
                 justifyContent={'space-between'}
                 alignItems={'center'}
@@ -227,7 +136,7 @@ export const InviteAdminModal = ({
                     color: '#111827',
                   }}
                 >
-                  Invite Admin
+                  Create New Role
                 </Typography>
 
                 <Box
@@ -250,35 +159,46 @@ export const InviteAdminModal = ({
                 </Box>
               </RowStack>
 
-              {/* ── Body ──────────────────────────────────────── */}
               <Stack spacing={'16px'} sx={{ padding: '20px 24px' }}>
-                {/* Full Name */}
+                {/* Role Name (snake_case) */}
                 <Stack spacing={'6px'}>
-                  <FieldLabel label="Full Name" />
+                  <FieldLabel label="Role Name" />
                   <FormikAppTextField
-                    name="fullName"
-                    placeholder="e.g. Claire Beaumont"
+                    name="name"
+                    placeholder="e.g. finance_admin"
                     borderRadius="10px"
                   />
                 </Stack>
 
-                {/* Email Address */}
+                {/* Display Name */}
                 <Stack spacing={'6px'}>
-                  <FieldLabel label="Email Address" />
+                  <FieldLabel label="Display Name" />
                   <FormikAppTextField
-                    name="emailAddress"
-                    placeholder="claire@medigo.ca"
+                    name="display_name"
+                    placeholder="e.g. Finance Admin"
                     borderRadius="10px"
                   />
                 </Stack>
 
-                {/* Assign Role */}
+                {/* Description */}
                 <Stack spacing={'6px'}>
-                  <FieldLabel label="Assign Role" />
-                  <RoleSelector />
+                  <FieldLabel label="Description" />
+                  <FormikAppTextField
+                    name="description"
+                    placeholder="e.g. Manages financial operations and reports"
+                    borderRadius="10px"
+                    multiline
+                    rows={3}
+                  />
                 </Stack>
 
-                {/* ── Footer Buttons ─────────────────────────── */}
+                {/* Color (Optional) */}
+                <ColorPicker
+                  value={color}
+                  onChange={setColor}
+                  label="Color"
+                />
+
                 <RowStack spacing={'12px'} sx={{ pt: '4px' }}>
                   <AppButton
                     variant="contained"
@@ -328,7 +248,7 @@ export const InviteAdminModal = ({
                       },
                     }}
                   >
-                    Send Invite
+                    Create Role
                   </AppButton>
                 </RowStack>
               </Stack>

@@ -40,8 +40,12 @@ import {
   pxToRem,
   useSearchDrivers,
   useResolvedApiQuery,
+  useGetCaregiverKpis,
+  useListCaregivers,
   type AdminDriverListItem,
   type AdminDriverListResponse,
+  type CaregiverKPIs,
+  type CaregiverRosterRow,
 } from '../../../common';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
@@ -490,32 +494,6 @@ const driversData: DriverRow[] = [
   },
 ];
 
-const caregiverStatCards: StatCardProps[] = [
-  {
-    icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
-    iconBg: '#EBF2FF',
-    value: '124',
-    label: 'Total Caregivers',
-  },
-  {
-    icon: <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#10B981' }} />,
-    iconBg: '#ECFDF5',
-    value: '41',
-    label: 'Available Now',
-  },
-  {
-    icon: <AssignmentIndOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
-    iconBg: '#EEF2FF',
-    value: '28',
-    label: 'On Assignment',
-  },
-  {
-    icon: <StarIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
-    iconBg: '#FFFBEB',
-    value: '4.8',
-    label: 'Avg. Rating',
-  },
-];
 
 const caregiversData: CaregiverRow[] = [
   {
@@ -667,6 +645,12 @@ export const ServiceProviderPage = () => {
     pageSize: 10,
   });
 
+  // Caregivers pagination
+  const [caregiverPaginationModel, setCaregiverPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<DriverRow | null>(null);
@@ -719,6 +703,53 @@ export const ServiceProviderPage = () => {
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, []);
 
+  // Caregivers API
+  const { data: caregiverKpisData } = useResolvedApiQuery(
+    useGetCaregiverKpis,
+    null
+  );
+
+  const {
+    data: caregiversResponse,
+    isFetching: isFetchingCaregivers,
+    isLoading: isLoadingCaregivers,
+    refetch: refetchCaregivers,
+  } = useResolvedApiQuery(
+    useListCaregivers,
+    null,
+    {
+      search: caregiverSearchQuery.trim() || undefined,
+      page: caregiverPaginationModel.page + 1,
+      limit: caregiverPaginationModel.pageSize,
+    }
+  );
+
+  const apiCaregivers = useMemo<CaregiverRow[]>(() => {
+    return (caregiversResponse.data || []).map((item: CaregiverRosterRow) => ({
+      id: item.caregiver_id,
+      caregiverId: item.caregiver_id,
+      name: item.full_name,
+      avatar: item.avatar_url || '',
+      specialty: item.specialty,
+      certifications: item.certifications.join(', '),
+      capabilities: item.capabilities,
+      status: item.status as CaregiverStatus,
+      rating: item.rating ?? 0,
+      assignments: item.total_assignments,
+      location: '—',
+      joinedDate: dayjs(item.joined).format('MMM YYYY'),
+      phone: '—',
+      email: '—',
+    }));
+  }, [caregiversResponse]);
+
+  const totalCaregiverCount = caregiversResponse.total ?? 0;
+
+  const handleCaregiverSearchChange = useCallback((value: string) => {
+    setCaregiverSearchQuery(value);
+    setCaregiverPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, []);
+
   const driverStatCards: StatCardProps[] = [
     {
       icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
@@ -746,17 +777,33 @@ export const ServiceProviderPage = () => {
     },
   ];
 
-  const filteredCaregivers = useMemo(() => {
-    if (!caregiverSearchQuery.trim()) return caregiversData;
-    const query = caregiverSearchQuery.toLowerCase();
-    return caregiversData.filter(
-      (c) =>
-        c.name.toLowerCase().includes(query) ||
-        c.specialty.toLowerCase().includes(query) ||
-        c.certifications.toLowerCase().includes(query) ||
-        c.caregiverId.toLowerCase().includes(query)
-    );
-  }, [caregiverSearchQuery]);
+  const caregiverStatCards: StatCardProps[] = [
+    {
+      icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
+      iconBg: '#EBF2FF',
+      value: String(caregiverKpisData?.total_caregivers ?? 0),
+      label: 'Total Caregivers',
+    },
+    {
+      icon: <CheckCircleOutlineIcon sx={{ fontSize: 20, color: '#10B981' }} />,
+      iconBg: '#ECFDF5',
+      value: String(caregiverKpisData?.available_now ?? 0),
+      label: 'Available Now',
+    },
+    {
+      icon: <AssignmentIndOutlinedIcon sx={{ fontSize: 20, color: '#6366F1' }} />,
+      iconBg: '#EEF2FF',
+      value: String(caregiverKpisData?.on_assignment ?? 0),
+      label: 'On Assignment',
+    },
+    {
+      icon: <StarIcon sx={{ fontSize: 20, color: '#F59E0B' }} />,
+      iconBg: '#FFFBEB',
+      value: (caregiverKpisData?.avg_rating ?? 0).toFixed(1),
+      label: 'Avg. Rating',
+    },
+  ];
+
 
   const columns: GridColSpec<DriverRow>[] = [
     {
@@ -1297,7 +1344,7 @@ export const ServiceProviderPage = () => {
         </RowStack>
 
         {/* Tabs */}
-        <Tabs
+        {/* <Tabs
           value={activeTab}
           onChange={(_, newValue) => setActiveTab(newValue)}
           sx={{
@@ -1337,7 +1384,7 @@ export const ServiceProviderPage = () => {
                 : 'Caregivers Profile'
             }
           />
-        </Tabs>
+        </Tabs> */}
 
         {/* Content */}
         {providerType === 'Drivers' ? (
@@ -1489,8 +1536,22 @@ export const ServiceProviderPage = () => {
             {/* Caregiver Table */}
             <AppGridtable
               columns={caregiverColumns}
-              data={filteredCaregivers}
-              initialPageSize={8}
+              data={apiCaregivers}
+              initialPageSize={10}
+              disableAutoPagination
+              totalRows={totalCaregiverCount}
+              onPaginationModelChange={(model) =>
+                setCaregiverPaginationModel({
+                  page: model.page,
+                  pageSize: model.pageSize,
+                })
+              }
+              emptyState={
+                <Box sx={{ height: 400, width: '100%' }}>
+                  <EmptyState animationSrc="/empty.json" />
+                </Box>
+              }
+              isFetchingData={isFetchingCaregivers || isLoadingCaregivers}
               sx={{ height: 'auto', width: '100%' }}
             >
               <RowStack justifyContent={'space-between'} width={'100%'}>
@@ -1515,15 +1576,15 @@ export const ServiceProviderPage = () => {
                       lineHeight: '1.5em',
                     }}
                   >
-                    {filteredCaregivers.length} registered caregivers —
-                    specialty and certifications shown
+                    {totalCaregiverCount} registered caregivers — specialty and
+                    certifications shown
                   </Typography>
                 </Stack>
                 <AppSearchField
                   name="caregiverSearch"
                   placeholder="Search caregivers..."
                   value={caregiverSearchQuery}
-                  onChange={(e) => setCaregiverSearchQuery(e.target.value)}
+                  onChange={(e) => handleCaregiverSearchChange(e.target.value)}
                   boxProps={{ sx: { width: '240px' } }}
                 />
               </RowStack>
@@ -1617,6 +1678,9 @@ export const ServiceProviderPage = () => {
       <AddCaregiverDrawer
         open={addCaregiverOpen}
         onClose={() => setAddCaregiverOpen(false)}
+        onSuccess={() => {
+          refetchCaregivers();
+        }}
       />
 
       {/* Caregiver Detail Drawer */}
@@ -1631,6 +1695,9 @@ export const ServiceProviderPage = () => {
         open={editCaregiverOpen}
         onClose={() => setEditCaregiverOpen(false)}
         caregiver={editCaregiverData}
+        onSuccess={() => {
+          refetchCaregivers();
+        }}
       />
     </AppDashboardLayout>
   );

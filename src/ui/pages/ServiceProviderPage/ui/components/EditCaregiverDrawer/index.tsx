@@ -19,7 +19,8 @@ import AccessibleOutlinedIcon from '@mui/icons-material/AccessibleOutlined';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
 import MonitorHeartOutlinedIcon from '@mui/icons-material/MonitorHeartOutlined';
-import { pxToRem } from '../../../../../../common';
+import { pxToRem, useCaregiversApi } from '../../../../../../common';
+import type { UpdateCaregiverPayload } from '../../../../../../common';
 import {
   AppButton,
   FormikAppTextField,
@@ -38,6 +39,7 @@ export type EditCaregiverDrawerProps = {
   open: boolean;
   onClose: () => void;
   caregiver: EditCaregiverDrawerData | null;
+  onSuccess?: () => void;
 };
 
 // ─── Dropdown Options ───────────────────────────────────────────────────────
@@ -311,7 +313,10 @@ export const EditCaregiverDrawer = ({
   open,
   onClose,
   caregiver,
+  onSuccess,
 }: EditCaregiverDrawerProps) => {
+  const { updateCaregiver } = useCaregiversApi();
+
   const initialValues = useMemo(() => {
     if (!caregiver) {
       return {
@@ -371,9 +376,35 @@ export const EditCaregiverDrawer = ({
         enableReinitialize
         onSubmit={async (values, { setSubmitting }) => {
           try {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            console.log('Edit caregiver:', caregiver.id, values);
-            onClose();
+            const [firstName, ...lastNameParts] = values.fullName.trim().split(' ');
+            const lastName = lastNameParts.join(' ') || firstName;
+
+            const capabilities = [
+              values.wheelchairAssistance && 'Wheelchair Assistance',
+              values.seniorAssistance && 'Senior Assistance',
+              values.medicalEscort && 'Medical Escort',
+              values.stretcherTransport && 'Stretcher Transport',
+            ].filter(Boolean) as string[];
+
+            const payload: UpdateCaregiverPayload = {
+              caregiverId: caregiver.id,
+              first_name: firstName,
+              last_name: lastName,
+              email: values.email.trim() || null,
+              phone: values.phone.trim() || null,
+              specialty: values.specialty || null,
+              city: values.city.trim() || null,
+              province: null,
+              capabilities: capabilities.length ? capabilities : null,
+              fleet_id: null,
+            };
+
+            const success = await updateCaregiver(payload);
+
+            if (success) {
+              onClose();
+              onSuccess?.();
+            }
           } finally {
             setSubmitting(false);
           }

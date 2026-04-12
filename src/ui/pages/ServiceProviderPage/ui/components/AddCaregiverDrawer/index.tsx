@@ -19,7 +19,8 @@ import AccessibleOutlinedIcon from '@mui/icons-material/AccessibleOutlined';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
 import MonitorHeartOutlinedIcon from '@mui/icons-material/MonitorHeartOutlined';
-import { pxToRem } from '../../../../../../common';
+import { pxToRem, useCaregiversApi } from '../../../../../../common';
+import type { CaregiverCreateRequest } from '../../../../../../common';
 import {
   AppButton,
   FormikAppTextField,
@@ -32,6 +33,7 @@ import { AppDropdownMenu } from '../../../../../modules/components/AppDropdownMe
 export type AddCaregiverDrawerProps = {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 };
 
 // ─── Dropdown Options ───────────────────────────────────────────────────────
@@ -303,12 +305,19 @@ const FormikCheckboxCard = ({
 export const AddCaregiverDrawer = ({
   open,
   onClose,
+  onSuccess,
 }: AddCaregiverDrawerProps) => {
+  const { createCaregiver } = useCaregiversApi();
+
+  const handleClose = () => {
+    onClose();
+  };
+
   return (
     <Drawer
       anchor="right"
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       sx={{
         '& .MuiDrawer-paper': {
           width: 680,
@@ -319,10 +328,37 @@ export const AddCaregiverDrawer = ({
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
-        onSubmit={async (values, { setSubmitting }) => {
+        onSubmit={async (values, { setSubmitting, resetForm }) => {
           try {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            onClose();
+            const [firstName, ...lastNameParts] = values.fullName.trim().split(' ');
+            const lastName = lastNameParts.join(' ') || firstName;
+
+            const capabilities = [
+              values.wheelchairAssistance && 'Wheelchair Assistance',
+              values.seniorAssistance && 'Senior Assistance',
+              values.medicalEscort && 'Medical Escort',
+              values.stretcherTransport && 'Stretcher Transport',
+            ].filter(Boolean) as string[];
+
+            const payload: CaregiverCreateRequest = {
+              first_name: firstName,
+              last_name: lastName,
+              email: values.email.trim(),
+              phone: values.phone.trim(),
+              specialty: values.specialty,
+              city: values.city.trim() || null,
+              province: null,
+              capabilities: capabilities.length ? capabilities : null,
+              fleet_id: null,
+            };
+
+            const success = await createCaregiver(payload);
+
+            if (success) {
+              resetForm();
+              handleClose();
+              onSuccess?.();
+            }
           } finally {
             setSubmitting(false);
           }
