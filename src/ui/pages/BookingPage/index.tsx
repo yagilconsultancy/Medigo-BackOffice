@@ -121,8 +121,8 @@ export const BookingPage = () => {
     if (!bookingsData?.data?.length) return [];
     return bookingsData.data.map((ride: RideResponse, index: number) => ({
       id: ride.id,
-      bookingId: `BK-${String((bookingsData.total ?? 0) - (bookingsData.page - 1) * (bookingsData.limit ?? 10) - index + 20484).padStart(5, '0')}`,
-      patient: ride.facility_name || ride.rider_id.slice(0, 8),
+      bookingId: ride.id.padStart(5, '0'),
+      patient: ride.rider_name,
       pickupLocation: ride.pickup_address,
       destination: ride.destination_address,
       dateTime: dayjs(ride.scheduled_at).format('MMM D, YYYY · hh:mm A'),

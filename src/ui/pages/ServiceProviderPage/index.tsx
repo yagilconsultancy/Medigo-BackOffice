@@ -12,8 +12,6 @@ import {
   IconButton,
   Rating,
   Stack,
-  Tab,
-  Tabs,
   Typography,
 } from '@mui/material';
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
@@ -44,7 +42,6 @@ import {
   useListCaregivers,
   type AdminDriverListItem,
   type AdminDriverListResponse,
-  type CaregiverKPIs,
   type CaregiverRosterRow,
 } from '../../../common';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
@@ -58,9 +55,7 @@ import {
   SuspendDriverModal,
   EditDriverModal,
   CaregiverProfileCard,
-  CaregiverProfileCardData,
   ViewCaregiverDrawer,
-  CaregiverViewData,
   AddCaregiverDrawer,
   EditCaregiverDrawer,
   EditCaregiverDrawerData,
@@ -72,8 +67,9 @@ type DriverStatus =
   | 'Available'
   | 'On Trip'
   | 'Suspended'
-  | 'Pending'
+  | 'pending'
   | 'Offline'
+  | 'active'
   | 'Deactivated';
 type DocsStatus = 'Complete' | 'Pending' | 'Missing' | 'Expired';
 
@@ -85,10 +81,10 @@ type DriverRow = {
   fleet: string;
   vehicle: string;
   plate: string;
-  status: DriverStatus;
+  status: string;
   rating: number;
   trips: number;
-  docs: DocsStatus;
+  docs?: DocsStatus;
   joinedDate: string;
   phone: string;
   email: string;
@@ -127,9 +123,10 @@ const statusConfig: Record<
   { color: string; bg: string; border: string }
 > = {
   Available: { color: '#166534', bg: '#EDFAF4', border: '#BBF7D0' },
+  active: { color: '#166534', bg: '#EDFAF4', border: '#BBF7D0' },
   'On Trip': { color: '#3730A3', bg: '#EEF2FF', border: '#C7D2FE' },
   Suspended: { color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
-  Pending: { color: '#78350F', bg: '#FFFBEB', border: '#FDE68A' },
+  pending: { color: '#78350F', bg: '#FFFBEB', border: '#FDE68A' },
   Offline: { color: '#4B5563', bg: '#F3F4F6', border: '#E5E7EB' },
   Deactivated: { color: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB' },
 };
@@ -234,34 +231,34 @@ const DEFAULT_DRIVERS_RESPONSE: AdminDriverListResponse = {
   total_pages: 0,
 };
 
-const mapDriverStatus = (item: AdminDriverListItem): DriverStatus => {
-  // Use is_approved to determine status
-  if (!item.is_approved) return 'Pending';
+// const mapDriverStatus = (item: AdminDriverListItem): DriverStatus => {
+//   // Use is_approved to determine status
+//   if (!item.account_status) return 'Pending';
 
-  // Check account_status for suspended/deactivated
-  const normalized = (item.account_status ?? '').toLowerCase();
-  if (normalized === 'suspended') return 'Suspended';
-  if (normalized === 'deactivated' || normalized === 'inactive') {
-    return 'Deactivated';
-  }
+//   // Check account_status for suspended/deactivated
+//   const normalized = (item.account_status ?? '').toLowerCase();
+//   if (normalized === 'suspended') return 'Suspended';
+//   if (normalized === 'deactivated' || normalized === 'inactive') {
+//     return 'Deactivated';
+//   }
 
-  // For approved drivers, check online status
-  return item.is_online ? 'Available' : 'Offline';
-};
+//   // For approved drivers, check online status
+//   return item.account_status ? 'Active' : 'Offline';
+// };
 
-const mapDocsStatus = (status?: string | null): DocsStatus => {
-  const normalized = (status ?? '').toLowerCase();
-  if (
-    normalized === 'complete' ||
-    normalized === 'verified' ||
-    normalized === 'approved'
-  ) {
-    return 'Complete';
-  }
-  if (normalized === 'missing' || normalized === 'none') return 'Missing';
-  if (normalized === 'expired') return 'Expired';
-  return 'Pending';
-};
+// const mapDocsStatus = (status?: string | null): DocsStatus => {
+//   const normalized = (status ?? '').toLowerCase();
+//   if (
+//     normalized === 'complete' ||
+//     normalized === 'verified' ||
+//     normalized === 'approved'
+//   ) {
+//     return 'Complete';
+//   }
+//   if (normalized === 'missing' || normalized === 'none') return 'Missing';
+//   if (normalized === 'expired') return 'Expired';
+//   return 'Pending';
+// };
 
 const buildListVehicleLabel = (item: AdminDriverListItem): string => {
   const parts = [
@@ -287,10 +284,10 @@ const mapApiDriver = (item: AdminDriverListItem): DriverRow => {
     fleet: item.fleet_name ?? '—',
     vehicle: buildListVehicleLabel(item),
     plate: item.vehicle_plate ?? '—',
-    status: mapDriverStatus(item),
+    status: item.account_status,
     rating: item.rating ?? 0,
     trips: item.total_trips ?? 0,
-    docs: mapDocsStatus(item.document_status),
+    // docs: mapDocsStatus(item.document_status),
     joinedDate: joinedLabel,
     phone: item.phone ?? '—',
     email: item.email ?? '—',
@@ -974,32 +971,32 @@ export const ServiceProviderPage = () => {
         </Typography>
       ),
     },
-    {
-      field: 'docs',
-      headerName: 'Docs',
-      flex: 0.6,
-      minWidth: 90,
-      renderCell: (params) => {
-        const docs = params.row.docs as DocsStatus;
-        const config = docsConfig[docs] ?? docsConfig['Complete'];
-        return (
-          <Chip
-            label={docs}
-            size="small"
-            sx={{
-              background: config.bg,
-              color: config.color,
-              border: `0.67px solid ${config.border}`,
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 600,
-              fontSize: pxToRem(11),
-              height: '24px',
-              borderRadius: '100px',
-            }}
-          />
-        );
-      },
-    },
+    // {
+    //   field: 'docs',
+    //   headerName: 'Docs',
+    //   flex: 0.6,
+    //   minWidth: 90,
+    //   renderCell: (params) => {
+    //     const docs = params.row.docs as DocsStatus;
+    //     const config = docsConfig[docs] ?? docsConfig['Complete'];
+    //     return (
+    //       <Chip
+    //         label={docs}
+    //         size="small"
+    //         sx={{
+    //           background: config.bg,
+    //           color: config.color,
+    //           border: `0.67px solid ${config.border}`,
+    //           fontFamily: 'Inter, sans-serif',
+    //           fontWeight: 600,
+    //           fontSize: pxToRem(11),
+    //           height: '24px',
+    //           borderRadius: '100px',
+    //         }}
+    //       />
+    //     );
+    //   },
+    // },
     {
       field: 'actions' as string,
       headerName: 'Actions',

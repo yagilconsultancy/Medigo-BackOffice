@@ -20,6 +20,7 @@ export interface RideResponse {
   special_instructions?: string | null;
   visit_type?: string | null;
   facility_name?: string | null;
+  rider_name?: string;
   booking_channel?: string;
   facility_id?: string | null;
   use_highway_407?: boolean;
