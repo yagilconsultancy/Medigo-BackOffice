@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { IconButton, Stack } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppGridtable,
@@ -9,10 +9,8 @@ import {
   AppSearchField,
   DashboardTitleAndDesc,
   RowStack,
-  StyledImage,
 } from '../../modules/components';
 import {
-  pxToRem,
   useGetAllBookings,
   useApproveBooking,
   useDeclineBooking,
@@ -20,7 +18,6 @@ import {
 import { RideResponse } from '../../../common/types';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { EmptyState } from '../../modules/blocks';
-import filterIcon from './ui/assets/icons/filter-Icon.svg';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
@@ -42,12 +39,16 @@ export type BookingRow = {
   destination: string;
   dateTime: string;
   status:
-    | 'Pending'
-    | 'Approved'
-    | 'Declined'
-    | 'None'
-    | 'Processed'
-    | 'Full Refund';
+    | 'requested'
+    | 'pending_business_assignment'
+    | 'confirmed'
+    | 'driver_assigned'
+    | 'driver_en_route'
+    | 'driver_arrived'
+    | 'in_progress'
+    | 'completed'
+    | 'cancelled'
+    | 'no_show';
 };
 
 export const BookingPage = () => {
@@ -67,9 +68,10 @@ export const BookingPage = () => {
 
   const filterToApiStatus: Record<string, string | undefined> = {
     All: undefined,
-    Pending: 'pending',
-    Approved: 'approved',
-    Declined: 'declined',
+    Requested: 'requested',
+    Confirmed: 'confirmed',
+    Cancelled: 'cancelled',
+    Completed: 'completed',
   };
 
   const bookingsQuery = useGetAllBookings({
@@ -79,18 +81,23 @@ export const BookingPage = () => {
     limit: pageSize,
   });
   const allCountQuery = useGetAllBookings({ page: 1, limit: 1 });
-  const pendingCountQuery = useGetAllBookings({
-    status: 'pending',
+  const requestedCountQuery = useGetAllBookings({
+    status: 'requested',
     page: 1,
     limit: 1,
   });
-  const approvedCountQuery = useGetAllBookings({
-    status: 'approved',
+  const confirmedCountQuery = useGetAllBookings({
+    status: 'confirmed',
     page: 1,
     limit: 1,
   });
-  const declinedCountQuery = useGetAllBookings({
-    status: 'declined',
+  const cancelledCountQuery = useGetAllBookings({
+    status: 'cancelled',
+    page: 1,
+    limit: 1,
+  });
+  const completedCountQuery = useGetAllBookings({
+    status: 'completed',
     page: 1,
     limit: 1,
   });
@@ -98,14 +105,16 @@ export const BookingPage = () => {
   const bookingsData = bookingsQuery.data;
 
   const statusMap: Record<string, BookingRow['status']> = {
-    requested: 'Pending',
-    pending: 'Pending',
-    approved: 'Approved',
-    confirmed: 'Approved',
-    accepted: 'Approved',
-    declined: 'Declined',
-    rejected: 'Declined',
-    cancelled: 'Declined',
+    requested: 'requested',
+    pending_business_assignment: 'pending_business_assignment',
+    confirmed: 'confirmed',
+    driver_assigned: 'driver_assigned',
+    driver_en_route: 'driver_en_route',
+    driver_arrived: 'driver_arrived',
+    in_progress: 'in_progress',
+    completed: 'completed',
+    cancelled: 'cancelled',
+    no_show: 'no_show',
   };
 
   const filteredBookings = useMemo(() => {
@@ -117,7 +126,7 @@ export const BookingPage = () => {
       pickupLocation: ride.pickup_address,
       destination: ride.destination_address,
       dateTime: dayjs(ride.scheduled_at).format('MMM D, YYYY · hh:mm A'),
-      status: statusMap[ride.status?.toLowerCase()] || 'Pending',
+      status: statusMap[ride.status?.toLowerCase()] || 'requested',
     }));
   }, [bookingsData]);
 
@@ -128,19 +137,24 @@ export const BookingPage = () => {
       active: activeFilter === 'All',
     },
     {
-      text: 'Pending',
-      count: pendingCountQuery.data?.total ?? 0,
-      active: activeFilter === 'Pending',
+      text: 'Requested',
+      count: requestedCountQuery.data?.total ?? 0,
+      active: activeFilter === 'Requested',
     },
     {
-      text: 'Approved',
-      count: approvedCountQuery.data?.total ?? 0,
-      active: activeFilter === 'Approved',
+      text: 'Confirmed',
+      count: confirmedCountQuery.data?.total ?? 0,
+      active: activeFilter === 'Confirmed',
     },
     {
-      text: 'Declined',
-      count: declinedCountQuery.data?.total ?? 0,
-      active: activeFilter === 'Declined',
+      text: 'Cancelled',
+      count: cancelledCountQuery.data?.total ?? 0,
+      active: activeFilter === 'Cancelled',
+    },
+    {
+      text: 'Completed',
+      count: completedCountQuery.data?.total ?? 0,
+      active: activeFilter === 'Completed',
     },
   ];
 
@@ -256,7 +270,7 @@ export const BookingPage = () => {
             >
               <VisibilityOutlinedIcon sx={{ fontSize: 15 }} />
             </IconButton>
-            {row.status === 'Pending' && (
+            {row.status === 'requested' && (
               <>
                 <IconButton
                   size="small"
@@ -366,7 +380,7 @@ export const BookingPage = () => {
         handleClose={handleCloseDetail}
         bookingId={selectedBooking?.bookingId ?? ''}
         rideId={selectedBooking?.id ?? ''}
-        status={selectedBooking?.status ?? 'Pending'}
+        status={selectedBooking?.status ?? 'requested'}
         patientName={selectedBooking?.patient ?? ''}
         dateTime={selectedBooking?.dateTime ?? ''}
         pickup={selectedBooking?.pickupLocation ?? ''}

@@ -165,45 +165,45 @@ export const BookingDetailModal = ({
           </Stack>
         )}
         <RowStack spacing={'12px'} width={'100%'}>
-          {status !== 'Declined' && (
-            <AppButton
-              sx={{
-                background: '#F7F9FB',
-                border: '0.67px solid #E8ECF0',
-                color: (theme) => theme.color.error,
-                fontWeight: 600,
-                fontSize: pxToRem(13),
-                lineHeight: '19.5px',
-              }}
-              fullWidth
-              onClick={() => {
-                handleClose();
-                onDecline?.();
-              }}
-            >
-              Decline Booking
-            </AppButton>
-          )}
-          {status !== 'Approved' && (
-            <AppButton
-              sx={{
-                background: '#059669',
-                color: (theme) => theme.palette.background.default,
-                fontWeight: 600,
-                fontSize: pxToRem(13),
-                lineHeight: '19.5px',
-                '&:hover': {
-                  background: alpha('#059669', 0.95),
-                },
-              }}
-              fullWidth
-              onClick={() => {
-                handleClose();
-                onApprove?.();
-              }}
-            >
-              Approve Booking
-            </AppButton>
+          {status === 'requested' && (
+            <>
+              <AppButton
+                sx={{
+                  background: '#F7F9FB',
+                  border: '0.67px solid #E8ECF0',
+                  color: (theme) => theme.color.error,
+                  fontWeight: 600,
+                  fontSize: pxToRem(13),
+                  lineHeight: '19.5px',
+                }}
+                fullWidth
+                onClick={() => {
+                  handleClose();
+                  onDecline?.();
+                }}
+              >
+                Decline Booking
+              </AppButton>
+              <AppButton
+                sx={{
+                  background: '#059669',
+                  color: (theme) => theme.palette.background.default,
+                  fontWeight: 600,
+                  fontSize: pxToRem(13),
+                  lineHeight: '19.5px',
+                  '&:hover': {
+                    background: alpha('#059669', 0.95),
+                  },
+                }}
+                fullWidth
+                onClick={() => {
+                  handleClose();
+                  onApprove?.();
+                }}
+              >
+                Approve Booking
+              </AppButton>
+            </>
           )}
           <AppButton
             sx={{
