@@ -237,6 +237,10 @@ export function AppDashboardSideBar({
           if (!item.moduleId) {
             return true;
           }
+          // Always show Service Management module regardless of permissions
+          if (item.moduleId === 'service_management') {
+            return true;
+          }
           // Check if user has access to this module
           return accessibleModules.includes(item.moduleId);
         }),
