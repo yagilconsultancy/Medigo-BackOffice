@@ -26,6 +26,8 @@ import {
   RoleCard,
   InviteAdminModal,
   CreateRoleModal,
+  EditRoleModal,
+  DeleteRoleModal,
   PermissionControls,
 } from './ui/component';
 import { EmptyState } from '../../modules/blocks';
@@ -327,6 +329,18 @@ export const RolesPermissionsPage = () => {
   const [mainTab, setMainTab] = useState<'roles' | 'permissions'>('roles');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false);
+  const [isEditRoleModalOpen, setIsEditRoleModalOpen] = useState(false);
+  const [isDeleteRoleModalOpen, setIsDeleteRoleModalOpen] = useState(false);
+  const [selectedRoleForEdit, setSelectedRoleForEdit] = useState<{
+    id: string;
+    display_name: string;
+    description: string;
+    color: string;
+  } | null>(null);
+  const [selectedRoleForDelete, setSelectedRoleForDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [activeRoleId, setActiveRoleId] = useState<string>('');
 
   // API hooks
@@ -355,6 +369,26 @@ export const RolesPermissionsPage = () => {
       // Refetch roles to update the count
       await refetchRoles();
     }
+  };
+
+  // Handler to open edit role modal
+  const handleEditRole = (role: RoleData) => {
+    setSelectedRoleForEdit({
+      id: role.id,
+      display_name: role.roleName,
+      description: role.description,
+      color: role.activeColor,
+    });
+    setIsEditRoleModalOpen(true);
+  };
+
+  // Handler to open delete role modal
+  const handleDeleteRole = (role: RoleData) => {
+    setSelectedRoleForDelete({
+      id: role.id,
+      name: role.roleName,
+    });
+    setIsDeleteRoleModalOpen(true);
   };
 
   // Helper function to generate light background color from hex
@@ -592,6 +626,8 @@ export const RolesPermissionsPage = () => {
                     activeColor={role.activeColor}
                     iconBg={role.iconBg}
                     onClick={() => setActiveRoleId(role.id)}
+                    onEdit={() => handleEditRole(role)}
+                    onDelete={() => handleDeleteRole(role)}
                   />
                 </Grid>
               ))}
@@ -869,6 +905,49 @@ export const RolesPermissionsPage = () => {
           refetchRoles();
         }}
       />
+
+      {/* Edit Role Modal */}
+      {selectedRoleForEdit && (
+        <EditRoleModal
+          open={isEditRoleModalOpen}
+          onClose={() => {
+            setIsEditRoleModalOpen(false);
+            setSelectedRoleForEdit(null);
+          }}
+          onSuccess={() => {
+            refetchRoles();
+            if (activeRoleId === selectedRoleForEdit.id) {
+              refetchRoleDetail();
+            }
+          }}
+          roleId={selectedRoleForEdit.id}
+          initialData={{
+            display_name: selectedRoleForEdit.display_name,
+            description: selectedRoleForEdit.description,
+            color: selectedRoleForEdit.color,
+          }}
+        />
+      )}
+
+      {/* Delete Role Modal */}
+      {selectedRoleForDelete && (
+        <DeleteRoleModal
+          open={isDeleteRoleModalOpen}
+          onClose={() => {
+            setIsDeleteRoleModalOpen(false);
+            setSelectedRoleForDelete(null);
+          }}
+          onSuccess={() => {
+            refetchRoles();
+            // If the deleted role was active, clear the active role
+            if (activeRoleId === selectedRoleForDelete.id) {
+              setActiveRoleId('');
+            }
+          }}
+          roleId={selectedRoleForDelete.id}
+          roleName={selectedRoleForDelete.name}
+        />
+      )}
 
       {/* Invite Admin Modal */}
       <InviteAdminModal
