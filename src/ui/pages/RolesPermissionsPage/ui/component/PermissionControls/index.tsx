@@ -1,7 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
-import { Box, Grid, Stack, Typography } from '@mui/material';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useEffect,
+} from 'react';
+import { Box, Grid, Stack, Typography, CircularProgress } from '@mui/material';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
@@ -13,7 +19,12 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import {
+  pxToRem,
+  useGetPermissionMatrix,
+  useResolvedApiQuery,
+} from '../../../../../../common';
+import type { PermissionMatrixResponse } from '../../../../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -41,137 +52,8 @@ type PermissionRoleConfig = {
 
 type PermissionFormValues = Record<string, boolean>;
 
-// ─── Permission Groups ──────────────────────────────────────────────────────
 
-const permissionGroups: PermissionGroup[] = [
-  {
-    name: 'Core',
-    modules: [
-      { key: 'analytics_dashboard', label: 'Analytics Dashboard' },
-      { key: 'booking_management', label: 'Booking Management' },
-      { key: 'dispatch_center', label: 'Dispatch Center' },
-      { key: 'gps_tracking', label: 'GPS Tracking' },
-    ],
-  },
-  {
-    name: 'People',
-    modules: [
-      { key: 'fleet_management', label: 'Fleet Management' },
-      { key: 'driver_management', label: 'Driver Management' },
-      { key: 'vehicle_management', label: 'Vehicle Management' },
-      { key: 'rider_management', label: 'Rider Management' },
-    ],
-  },
-  {
-    name: 'Finance',
-    modules: [
-      { key: 'payments_finance', label: 'Payments & Finance' },
-      { key: 'invoices_billing', label: 'Invoices & Billing' },
-    ],
-  },
-  {
-    name: 'Safety',
-    modules: [
-      { key: 'safety_incidents', label: 'Safety & Incidents' },
-      { key: 'notifications', label: 'Notifications' },
-    ],
-  },
-  {
-    name: 'Service',
-    modules: [{ key: 'support_center', label: 'Support Center' }],
-  },
-  {
-    name: 'Administration',
-    modules: [
-      { key: 'dashboard_settings', label: 'Dashboard Settings' },
-      { key: 'roles_permissions', label: 'Roles & Permissions' },
-      { key: 'system_logs', label: 'System Logs' },
-    ],
-  },
-];
 
-const allModuleKeys = permissionGroups.flatMap((g) =>
-  g.modules.map((m) => m.key)
-);
-
-const TOTAL_MODULES = allModuleKeys.length;
-
-// ─── Role Configs ───────────────────────────────────────────────────────────
-
-const permissionRoles: PermissionRoleConfig[] = [
-  {
-    id: 'super-admin',
-    roleName: 'Super Admin',
-    description: 'All system access and full administrative controls',
-    icon: (
-      <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 14, color: '#2F6FED' }} />
-    ),
-    activeColor: '#2F6FED',
-    iconBg: '#EBF2FF',
-    headerBg: '#EBF2FF',
-    isLocked: true,
-    enabledModules: [...allModuleKeys],
-  },
-  {
-    id: 'operations-admin',
-    roleName: 'Operations Admin',
-    description:
-      'Manages bookings, dispatch, drivers, riders, and GPS tracking',
-    icon: (
-      <ManageAccountsOutlinedIcon sx={{ fontSize: 14, color: '#10B981' }} />
-    ),
-    activeColor: '#10B981',
-    iconBg: '#ECFDF5',
-    headerBg: '#ECFDF5',
-    enabledModules: [
-      'analytics_dashboard',
-      'booking_management',
-      'dispatch_center',
-      'gps_tracking',
-      'fleet_management',
-      'driver_management',
-      'vehicle_management',
-      'rider_management',
-      'safety_incidents',
-      'notifications',
-    ],
-  },
-  {
-    id: 'finance-admin',
-    roleName: 'Finance Admin',
-    description: 'Access to payments, invoices, billing, and financial reports',
-    icon: (
-      <AccountBalanceOutlinedIcon sx={{ fontSize: 14, color: '#6366F1' }} />
-    ),
-    activeColor: '#6366F1',
-    iconBg: '#EEF2FF',
-    headerBg: '#EEF2FF',
-    enabledModules: [
-      'analytics_dashboard',
-      'payments_finance',
-      'invoices_billing',
-      'notifications',
-    ],
-  },
-  {
-    id: 'support-admin',
-    roleName: 'Support Admin',
-    description:
-      'Handles support tickets, rider/driver issues, and safety cases',
-    icon: <SupportAgentOutlinedIcon sx={{ fontSize: 14, color: '#F59E0B' }} />,
-    activeColor: '#F59E0B',
-    iconBg: '#FFFBEB',
-    headerBg: '#FFFBEB',
-    enabledModules: [
-      'analytics_dashboard',
-      'booking_management',
-      'rider_management',
-      'driver_management',
-      'safety_incidents',
-      'support_center',
-    ],
-  },
-];
 
 // ─── Context ────────────────────────────────────────────────────────────────
 
@@ -192,7 +74,8 @@ const usePermissions = () => {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const buildInitialValues = (
-  role: PermissionRoleConfig
+  role: PermissionRoleConfig,
+  allModuleKeys: string[]
 ): PermissionFormValues => {
   const values: PermissionFormValues = {};
   allModuleKeys.forEach((key) => {
@@ -303,7 +186,11 @@ const PermissionGroupSection = ({ group }: { group: PermissionGroup }) => {
 
 // ─── Permission Content Panel ───────────────────────────────────────────────
 
-const PermissionContentPanel = () => {
+const PermissionContentPanel = ({
+  permissionGroups,
+}: {
+  permissionGroups: PermissionGroup[];
+}) => {
   const { selectedRole } = usePermissions();
 
   return (
@@ -411,10 +298,12 @@ const PermissionRoleCard = ({
   role,
   isActive,
   onClick,
+  totalModules,
 }: {
   role: PermissionRoleConfig;
   isActive: boolean;
   onClick: () => void;
+  totalModules: number;
 }) => {
   const moduleCount = role.enabledModules.length;
 
@@ -465,7 +354,7 @@ const PermissionRoleCard = ({
         }}
       >
         {isActive
-          ? `${moduleCount}/${TOTAL_MODULES} modules`
+          ? `${moduleCount}/${totalModules} modules`
           : `${moduleCount} modules`}
       </Typography>
     </Stack>
@@ -512,19 +401,121 @@ const SaveButton = () => {
   );
 };
 
+// ─── Helper: Map Role Icons ─────────────────────────────────────────────────
+
+const getRoleIcon = (roleName: string) => {
+  const lowerName = roleName.toLowerCase();
+  if (lowerName.includes('super')) {
+    return <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 14 }} />;
+  } else if (lowerName.includes('operation')) {
+    return <ManageAccountsOutlinedIcon sx={{ fontSize: 14 }} />;
+  } else if (lowerName.includes('finance')) {
+    return <AccountBalanceOutlinedIcon sx={{ fontSize: 14 }} />;
+  } else if (lowerName.includes('support')) {
+    return <SupportAgentOutlinedIcon sx={{ fontSize: 14 }} />;
+  }
+  return <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 14 }} />;
+};
+
+const getLightBg = (color: string): string => {
+  const colorMap: Record<string, string> = {
+    '#2F6FED': '#EBF2FF',
+    '#10B981': '#ECFDF5',
+    '#6366F1': '#EEF2FF',
+    '#F59E0B': '#FFFBEB',
+  };
+  return colorMap[color.toUpperCase()] || '#F3F4F6';
+};
+
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export const PermissionControls = () => {
-  const [selectedRoleId, setSelectedRoleId] = useState(permissionRoles[0].id);
+  const { data: matrixData, isFetching } = useResolvedApiQuery<PermissionMatrixResponse>(
+    useGetPermissionMatrix,
+    { roles: [], modules: [], permissions: {} }
+  );
+
+  // Map API data to UI structure
+  const permissionRolesFromApi: PermissionRoleConfig[] = useMemo(() => {
+    return matrixData.roles.map((role) => {
+      const color = role.color || '#2F6FED';
+      const enabledModules = Object.keys(matrixData.permissions[role.id] || {}).filter(
+        (moduleKey) => matrixData.permissions[role.id][moduleKey]
+      );
+
+      return {
+        id: role.id,
+        roleName: role.display_name,
+        description: role.description || '',
+        icon: getRoleIcon(role.display_name),
+        activeColor: color,
+        iconBg: getLightBg(color),
+        headerBg: getLightBg(color),
+        isLocked: role.is_system,
+        enabledModules,
+      };
+    });
+  }, [matrixData]);
+
+  // Map modules to permission groups by category
+  const permissionGroupsFromApi: PermissionGroup[] = useMemo(() => {
+    const groupedByCategory: Record<string, ModulePermission[]> = {};
+
+    matrixData.modules.forEach((mod) => {
+      const category = mod.category || 'Other';
+      if (!groupedByCategory[category]) {
+        groupedByCategory[category] = [];
+      }
+      groupedByCategory[category].push({
+        key: mod.module_name,
+        label: mod.module_display_name,
+      });
+    });
+
+    return Object.entries(groupedByCategory).map(([category, modules]) => ({
+      name: category,
+      modules,
+    }));
+  }, [matrixData]);
+
+  const [selectedRoleId, setSelectedRoleId] = useState('');
+
+  // Set initial role when data loads
+  useEffect(() => {
+    if (permissionRolesFromApi.length > 0 && !selectedRoleId) {
+      setSelectedRoleId(permissionRolesFromApi[0].id);
+    }
+  }, [permissionRolesFromApi, selectedRoleId]);
 
   const selectedRole =
-    permissionRoles.find((r) => r.id === selectedRoleId) ?? permissionRoles[0];
+    permissionRolesFromApi.find((r) => r.id === selectedRoleId) ??
+    permissionRolesFromApi[0];
+
+  const totalModules = useMemo(() => {
+    return permissionGroupsFromApi.reduce(
+      (sum, group) => sum + group.modules.length,
+      0
+    );
+  }, [permissionGroupsFromApi]);
+
+  const allModuleKeys = useMemo(() => {
+    return permissionGroupsFromApi.flatMap((g) => g.modules.map((m) => m.key));
+  }, [permissionGroupsFromApi]);
+
+  // Loading state
+  if (isFetching || !selectedRole) {
+    return (
+      <Stack alignItems="center" justifyContent="center" sx={{ py: 8 }}>
+        <CircularProgress size={40} sx={{ color: '#2F6FED' }} />
+      </Stack>
+    );
+  }
 
   return (
     <PermissionsContext.Provider value={{ selectedRole, setSelectedRoleId }}>
       <Formik
         key={selectedRoleId}
-        initialValues={buildInitialValues(selectedRole)}
+        initialValues={buildInitialValues(selectedRole, allModuleKeys)}
         enableReinitialize
         onSubmit={async (values, { setSubmitting }) => {
           try {
@@ -549,18 +540,19 @@ export const PermissionControls = () => {
             <RowStack spacing={'20px'} alignItems="flex-start">
               {/* Left: Role Cards */}
               <Stack spacing={'12px'} sx={{ width: 206, flexShrink: 0 }}>
-                {permissionRoles.map((role) => (
+                {permissionRolesFromApi.map((role) => (
                   <PermissionRoleCard
                     key={role.id}
                     role={role}
                     isActive={role.id === selectedRoleId}
                     onClick={() => setSelectedRoleId(role.id)}
+                    totalModules={totalModules}
                   />
                 ))}
               </Stack>
 
               {/* Right: Permission Panel */}
-              <PermissionContentPanel />
+              <PermissionContentPanel permissionGroups={permissionGroupsFromApi} />
             </RowStack>
           </Stack>
         </Form>
