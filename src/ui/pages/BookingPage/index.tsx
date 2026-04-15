@@ -215,7 +215,7 @@ export const BookingPage = () => {
       headerName: 'Booking ID',
       flex: 1,
       minWidth: 120,
-      renderCell: (params) => <BookingIdComponent bookingId={params.value} />,
+      renderCell: (params) => <BookingIdComponent bookingId={params.value.slice(0,7)} />,
     },
     {
       field: 'patient',
