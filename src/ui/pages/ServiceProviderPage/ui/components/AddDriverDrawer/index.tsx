@@ -11,6 +11,7 @@ import {
   Drawer,
   IconButton,
   Stack,
+  Switch,
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -98,6 +99,7 @@ const validationSchema = Yup.object().shape({
   medicalEscort: Yup.boolean(),
   seniorAssistance: Yup.boolean(),
   stretcherTransport: Yup.boolean(),
+  isApproved: Yup.boolean(),
   appPassword: Yup.string(),
 });
 
@@ -117,6 +119,7 @@ const initialValues = {
   medicalEscort: false,
   seniorAssistance: false,
   stretcherTransport: false,
+  isApproved: false,
   appPassword: '',
 };
 
@@ -520,6 +523,90 @@ const FormikCheckboxCard = ({
   );
 };
 
+// ─── Formik iOS Switch ──────────────────────────────────────────────────────
+
+const FormikIOSSwitch = ({
+  name,
+  label,
+  description,
+}: {
+  name: string;
+  label: string;
+  description?: string;
+}) => {
+  const [field, , helpers] = useField(name);
+
+  return (
+    <RowStack
+      justifyContent="space-between"
+      sx={{
+        padding: '16px',
+        background: '#F7F9FB',
+        borderRadius: '12px',
+        border: '0.67px solid #F0F2F5',
+      }}
+    >
+      <Stack spacing={0.5} flex={1}>
+        <Typography
+          sx={{
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 600,
+            fontSize: pxToRem(13),
+            color: '#374151',
+          }}
+        >
+          {label}
+        </Typography>
+        {description && (
+          <Typography
+            sx={{
+              fontFamily: (theme) => theme.typography.fontFamily,
+              fontWeight: 400,
+              fontSize: pxToRem(12),
+              color: '#6B7280',
+            }}
+          >
+            {description}
+          </Typography>
+        )}
+      </Stack>
+      <Switch
+        checked={!!field.value}
+        onChange={(e) => helpers.setValue(e.target.checked)}
+        sx={{
+          width: 42,
+          height: 24,
+          padding: 0,
+          '& .MuiSwitch-switchBase': {
+            padding: 0,
+            margin: '2px',
+            transitionDuration: '300ms',
+            '&.Mui-checked': {
+              transform: 'translateX(18px)',
+              color: '#fff',
+              '& + .MuiSwitch-track': {
+                backgroundColor: '#2F6FED',
+                opacity: 1,
+                border: 0,
+              },
+            },
+          },
+          '& .MuiSwitch-thumb': {
+            boxSizing: 'border-box',
+            width: 20,
+            height: 20,
+          },
+          '& .MuiSwitch-track': {
+            borderRadius: 24 / 2,
+            backgroundColor: '#D1D5DB',
+            opacity: 1,
+          },
+        }}
+      />
+    </RowStack>
+  );
+};
+
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export const AddDriverDrawer = ({
@@ -628,6 +715,7 @@ export const AddDriverDrawer = ({
                 ? capabilities.join(',')
                 : null,
               date_of_birth: toIsoDate(values.dateOfBirth),
+              is_approved: values.isApproved,
               drivers_license_file: licenseFile,
               certificate_file: certFile,
             };
@@ -1113,6 +1201,11 @@ export const AddDriverDrawer = ({
                         placeholder="Set initial password"
                       />
                     </Stack>
+                    <FormikIOSSwitch
+                      name="isApproved"
+                      label="Approve Driver"
+                      description="Enable this to approve the driver immediately upon creation"
+                    />
                   </SectionCard>
                 </Stack>
               </Box>

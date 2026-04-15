@@ -1145,6 +1145,7 @@ export interface CreateDriverPayload {
   specialty?: string | null;
   date_of_birth?: string | null;
   account_status?: string;
+  is_approved?: boolean;
   vehicle_insurance_file?: File | null;
   drivers_license_file?: File | null;
   certificate_file?: File | null;
