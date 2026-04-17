@@ -13,7 +13,7 @@ import {
 import {
   pxToRem,
   useGetAdminInvitations,
-  useResolvedApiQuery,
+  useAdminInvitationsApi,
 } from '../../../common';
 import dayjs from 'dayjs';
 import { GridColSpec } from '../../modules/components/GridTable';
@@ -36,16 +36,12 @@ export const AdminInvitationsPage = () => {
   const [page, setPage] = useState(1);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
-  const invitationsQuery = useGetAdminInvitations({ offset: 0, limit: 20 });
-  const { data: invitationsData } = useResolvedApiQuery(
-    useGetAdminInvitations,
-    { success: true, data: [], total: 0, page: 1, limit: 20, total_pages: 0 },
-    { offset: 0, limit: 20 }
-  );
-  const isFetchingInvitations = invitationsQuery.isFetching;
+  const { data: invitationsData, isFetching: isFetchingInvitations } =
+    useGetAdminInvitations({ offset: 0, limit: 20 });
+  const { revokeInvitation } = useAdminInvitationsApi();
 
   const invitations = useMemo(() => {
-    const items = invitationsData.data;
+    const items = invitationsData?.data;
     if (!items?.length) return [];
     return items.map((item) => ({
       id: item.id,
@@ -57,15 +53,14 @@ export const AdminInvitationsPage = () => {
       expiresAt: dayjs(item.expires_at).format('MMM D, YYYY'),
       createdAt: dayjs(item.created_at).format('MMM D, YYYY'),
     }));
-  }, [invitationsData.data]);
+  }, [invitationsData?.data]);
 
   const handleInviteAdmin = () => {
     setInviteModalOpen(true);
   };
 
-  const handleRevokeInvitation = (invitationId: string) => {
-    // TODO: Implement revoke invitation
-    console.log('Revoke invitation:', invitationId);
+  const handleRevokeInvitation = async (invitationId: string) => {
+    await revokeInvitation(invitationId);
   };
 
   const columns: GridColSpec<InvitationRow>[] = [
@@ -217,7 +212,7 @@ export const AdminInvitationsPage = () => {
             emptyState={<EmptyState animationSrc="/empty.json" />}
             initialPageSize={10}
             pageSizeOptions={[10, 20, 50]}
-            totalRows={invitationsData.total}
+            totalRows={invitationsData?.total ?? 0}
             sx={{
               height: 'auto',
               width: '100%',
@@ -243,7 +238,7 @@ export const AdminInvitationsPage = () => {
                     color: (theme) => theme.color.lightGrey,
                   }}
                 >
-                  {invitationsData.total} invitations
+                  {invitationsData?.total ?? 0} invitations
                 </Typography>
               </Stack>
             </RowStack>

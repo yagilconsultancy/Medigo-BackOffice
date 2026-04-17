@@ -1,4 +1,4 @@
-import type { ApiPaginatedResponse, ApiResponse } from './common';
+import type { ApiPaginatedResponseData, ApiResponse } from './common';
 
 // ====================== REQUEST PAYLOADS ======================
 
@@ -53,10 +53,10 @@ export interface AdminInvitationResponse {
 export type ApiAdminInviteResponse = ApiResponse<AdminInviteSuccessResponse>;
 
 /**
- * API response for listing admin invitations (paginated)
+ * API response for listing admin invitations (flat paginated)
  */
 export type ApiAdminInvitationsListResponse =
-  ApiPaginatedResponse<AdminInvitationResponse>;
+  ApiPaginatedResponseData<AdminInvitationResponse>;
 
 /**
  * API response for revoking an admin invitation
