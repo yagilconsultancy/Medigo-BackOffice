@@ -18,6 +18,8 @@ import {
   RideDriverCard,
   RideDriver,
 } from './ui/components';
+import { BookingDetailModal } from '../BookingPage/ui/components';
+import dayjs from 'dayjs';
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -31,6 +33,8 @@ export const RideAssignmentPage = () => {
   const [assignments, setAssignments] = useState<Record<string, Assignment>>(
     {}
   );
+  const [openDetail, setOpenDetail] = useState<boolean>(false);
+  const [selectedRideForDetail, setSelectedRideForDetail] = useState<string | null>(null);
 
   // Fetch unassigned rides and available drivers
   const { data: unassignedRidesData } = useResolvedApiQuery(
@@ -170,6 +174,36 @@ export const RideAssignmentPage = () => {
     setSelectedRideId((prev) => (prev === rideId ? null : rideId));
   };
 
+  const handleViewDetails = (rideId: string) => {
+    setSelectedRideForDetail(rideId);
+    setOpenDetail(true);
+  };
+
+  const handleCloseDetail = () => {
+    setOpenDetail(false);
+    setSelectedRideForDetail(null);
+  };
+
+  const selectedRideDetail = useMemo(() => {
+    if (!selectedRideForDetail) return null;
+    const apiRide = resolvedUnassignedRides.find(
+      (r) => r.ride_id === selectedRideForDetail
+    );
+    const uiRide = allRides.find((r) => r.id === selectedRideForDetail);
+    if (!apiRide || !uiRide) return null;
+    return {
+      bookingId: apiRide.booking_number?.slice(0, 7) || '',
+      rideId: apiRide.ride_id,
+      // @ts-ignore
+      status: (apiRide.status?.toLowerCase()) as any,
+      patientName: apiRide.rider_name,
+      dateTime: dayjs(apiRide.scheduled_at).format('MMM D, YYYY · hh:mm A'),
+      pickup: apiRide.pickup_address,
+      destination: apiRide.destination_address,
+      specialRequirements: apiRide.special_requirements?.join(', '),
+    };
+  }, [selectedRideForDetail, resolvedUnassignedRides, allRides]);
+
   return (
     <AppDashboardLayout>
       <Stack spacing={'24px'}>
@@ -221,7 +255,7 @@ export const RideAssignmentPage = () => {
                     color: (theme) => theme.color.deepBlue,
                   }}
                 >
-                  Unassigned Rides
+                  Approved Bookings
                 </Typography>
                 <Typography
                   sx={{
@@ -244,7 +278,7 @@ export const RideAssignmentPage = () => {
                     justifyContent: 'center',
                   }}
                 >
-                  <EmptyState emptyState="No Unassigned Rides" />
+                  <EmptyState emptyState="No Approved Booking" />
                 </Stack>
               ) : (
                 <>
@@ -257,6 +291,7 @@ export const RideAssignmentPage = () => {
                       }}
                       isSelected={selectedRideId === ride.id}
                       onClick={() => handleRideClick(ride.id)}
+                      onViewDetails={() => handleViewDetails(ride.id)}
                     />
                   ))}
                 </>
@@ -325,6 +360,20 @@ export const RideAssignmentPage = () => {
           </Grid>
         </Grid>
       </Stack>
+      {selectedRideDetail && (
+        <BookingDetailModal
+          open={openDetail}
+          handleClose={handleCloseDetail}
+          bookingId={selectedRideDetail.bookingId}
+          rideId={selectedRideDetail.rideId}
+          status={selectedRideDetail.status}
+          patientName={selectedRideDetail.patientName}
+          dateTime={selectedRideDetail.dateTime}
+          pickup={selectedRideDetail.pickup}
+          destination={selectedRideDetail.destination}
+          specialRequirements={selectedRideDetail.specialRequirements}
+        />
+      )}
     </AppDashboardLayout>
   );
 };

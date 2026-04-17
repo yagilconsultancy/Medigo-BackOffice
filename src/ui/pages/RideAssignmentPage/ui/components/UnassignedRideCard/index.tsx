@@ -1,4 +1,4 @@
-import { Chip, Stack, Typography } from '@mui/material';
+import { Button, Chip, Stack, Typography } from '@mui/material';
 import { RowStack, StyledImage } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import pickupIcon from '../../../../DispatchPage/ui/assets/icons/pickup-icon.svg';
@@ -25,12 +25,14 @@ type UnassignedRideCardProps = {
   ride: UnassignedRide;
   isSelected: boolean;
   onClick: () => void;
+  onViewDetails: () => void;
 };
 
 export const UnassignedRideCard = ({
   ride,
   isSelected,
   onClick,
+  onViewDetails,
 }: UnassignedRideCardProps) => {
   const isAssigned = !!ride.assignedDriver;
 
@@ -154,16 +156,38 @@ export const UnassignedRideCard = ({
       </Typography>
 
       {/* Time + Distance */}
-      <Typography
-        sx={{
-          fontFamily: (theme) => theme.typography.fontFamily,
-          fontWeight: 400,
-          fontSize: pxToRem(11.5),
-          color: (theme) => theme.color.lightGrey,
-        }}
-      >
-        {ride.time} · {ride.distance}
-      </Typography>
+      <RowStack justifyContent="space-between" width="100%">
+        <Typography
+          sx={{
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 400,
+            fontSize: pxToRem(11.5),
+            color: (theme) => theme.color.lightGrey,
+          }}
+        >
+          {ride.time} · {ride.distance}
+        </Typography>
+        <Button
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails();
+          }}
+          sx={{
+            textTransform: 'none',
+            fontFamily: (theme) => theme.typography.fontFamily,
+            fontWeight: 600,
+            fontSize: pxToRem(12),
+            color: '#2F6FED',
+            padding: '4px 8px',
+            minWidth: 'auto',
+            '&:hover': {
+              background: 'rgba(47, 111, 237, 0.08)',
+            },
+          }}
+        >
+          View Details
+        </Button>
+      </RowStack>
     </Stack>
   );
 };

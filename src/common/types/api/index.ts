@@ -12,3 +12,4 @@ export * from './ride-types.types';
 export * from './cities.types';
 export * from './roles-permissions.types';
 export * from './caregivers.types';
+export * from './tracking.types';

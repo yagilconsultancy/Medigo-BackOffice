@@ -24,6 +24,9 @@ import {
   useGetDispatchDashboard,
   useResolvedApiQuery,
   useDispatchApi,
+  useGetActiveTripKpis,
+  useGetActiveTrips,
+  useGetTripDetail,
 } from '../../../common';
 import { useState, useMemo } from 'react';
 import {
@@ -194,53 +197,66 @@ const activeTrips: ActiveTrip[] = [
   },
 ];
 
-type ViewTab = 'assignments' | 'liveMap';
+// type ViewTab = 'assignments' | 'liveMap';
 
 export const DispatchPage = () => {
-  const [activeView, setActiveView] = useState<ViewTab>('assignments');
-  const [assignModalOpen, setAssignModalOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] =
-    useState<DispatchBooking | null>(null);
-  const [selectedTripId, setSelectedTripId] = useState<string>('1');
+  // const [activeView, setActiveView] = useState<ViewTab>('assignments');
+  // const [assignModalOpen, setAssignModalOpen] = useState(false);
+  // const [selectedBooking, setSelectedBooking] =
+  //   useState<DispatchBooking | null>(null);
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
 
   // Fetch dispatch dashboard data
-  const dashboardQuery = useGetDispatchDashboard();
+  // const dashboardQuery = useGetDispatchDashboard();
+  const kpisQuery = useGetActiveTripKpis();
+  const activeTripsQuery = useGetActiveTrips();
   const { data: dashboardData } = useResolvedApiQuery(
-    useGetDispatchDashboard,
+    useGetActiveTripKpis,
     null
   );
-  const { triggerAutoDispatch } = useDispatchApi();
-  const isFetchingDashboard = dashboardQuery.isFetching;
+  const { data: activeTripsData } = useResolvedApiQuery(
+    useGetActiveTrips,
+    null
+  );
+  const { data: selectedTripDetailData } = useResolvedApiQuery(
+    useGetTripDetail,
+    null,
+    selectedTripId || ''
+  );
+  // const { triggerAutoDispatch } = useDispatchApi();
+  // const isFetchingDashboard = dashboardQuery.isFetching;
+  const isFetchingKpis = kpisQuery.isFetching;
+  const isFetchingActiveTrips = activeTripsQuery.isFetching;
 
   // Transform unassigned rides to pending bookings format
-  const pendingBookings = useMemo<DispatchBooking[]>(() => {
-    return (dashboardData?.unassigned_rides || []).map((ride, index) => ({
-      id: ride.ride_id,
-      bookingId: ride.booking_number,
-      patientName: ride.rider_name,
-      time: new Date(ride.scheduled_at).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      }),
-      pickup: ride.pickup_address,
-      destination: ride.destination_address,
-      specialNote: ride.special_requirements?.[0],
-      specialNoteType: ride.special_requirements?.[0]
-        ? ride.special_requirements[0].toLowerCase().includes('wheelchair')
-          ? 'wheelchair'
-          : ride.special_requirements[0].toLowerCase().includes('care')
-            ? 'careAssistant'
-            : ride.special_requirements[0].toLowerCase().includes('oxygen')
-              ? 'oxygen'
-              : undefined
-        : undefined,
-      status: index === 0 ? ('urgent' as const) : undefined,
-    }));
-  }, [dashboardData?.unassigned_rides]);
+  // const pendingBookings = useMemo<DispatchBooking[]>(() => {
+  //   return (dashboardData?.unassigned_rides || []).map((ride, index) => ({
+  //     id: ride.ride_id,
+  //     bookingId: ride.booking_number,
+  //     patientName: ride.rider_name,
+  //     time: new Date(ride.scheduled_at).toLocaleTimeString('en-US', {
+  //       hour: '2-digit',
+  //       minute: '2-digit',
+  //       hour12: true,
+  //     }),
+  //     pickup: ride.pickup_address,
+  //     destination: ride.destination_address,
+  //     specialNote: ride.special_requirements?.[0],
+  //     specialNoteType: ride.special_requirements?.[0]
+  //       ? ride.special_requirements[0].toLowerCase().includes('wheelchair')
+  //         ? 'wheelchair'
+  //         : ride.special_requirements[0].toLowerCase().includes('care')
+  //           ? 'careAssistant'
+  //           : ride.special_requirements[0].toLowerCase().includes('oxygen')
+  //             ? 'oxygen'
+  //             : undefined
+  //       : undefined,
+  //     status: index === 0 ? ('urgent' as const) : undefined,
+  //   }));
+  // }, [dashboardData?.unassigned_rides]);
 
-  // Transform available drivers
-  const availableDrivers = useMemo<AvailableDriver[]>(() => {
+  // Transform active trips from API to UI format
+  const activeTrips = useMemo<ActiveTrip[]>(() => {
     const driverColors = [
       '#2F6FED',
       '#8B5CF6',
@@ -250,90 +266,137 @@ export const DispatchPage = () => {
       '#0EA5E9',
     ];
 
-    return (dashboardData?.available_drivers || []).map((driver, index) => {
-      const nameParts = driver.driver_name.split(' ');
+    return (activeTripsData || []).map((trip, index) => {
+      const nameParts = (trip.driver_name || '').split(' ');
       const initials =
         nameParts.length > 1
           ? `${nameParts[0][0]}${nameParts[1][0]}`
-          : nameParts[0].substring(0, 2);
+          : nameParts[0]?.substring(0, 2) || 'DR';
+
+      // Determine status based on ETA
+      const etaMinutes = trip.eta_minutes || 0;
+      const status = etaMinutes <= 5 ? 'Arriving' : 'In Transit';
+      const statusColor = etaMinutes <= 5 ? '#059669' : '#2F6FED';
+      const statusBg = etaMinutes <= 5 ? '#ECFDF5' : '#EBF2FF';
 
       return {
-        id: driver.driver_id,
-        initials: initials.toUpperCase(),
-        initialsColor: driverColors[index % driverColors.length],
-        name: driver.driver_name,
-        vehicle: driver.vehicle_info,
-        rating: driver.rating,
-        trips: driver.total_trips,
-        distance: driver.distance_from_pickup
-          ? `${driver.distance_from_pickup.toFixed(1)} mi`
-          : 'N/A',
-        eta: driver.eta_minutes ? `${driver.eta_minutes} min` : 'N/A',
-        status: 'Available' as const,
+        id: trip.ride_id,
+        tripId: trip.trip_id_display,
+        status,
+        statusColor,
+        statusBg,
+        eta: trip.eta_minutes ? `${trip.eta_minutes} min` : 'N/A',
+        patientName: trip.patient_name || 'Unknown Patient',
+        driverName: trip.driver_name || 'Unassigned',
+        driverInitials: initials.toUpperCase(),
+        driverInitialsColor: driverColors[index % driverColors.length],
+        speed: trip.current_speed ? `${Math.round(trip.current_speed)} mph` : '0 mph',
+        progress: trip.progress_percent || 0,
       };
     });
-  }, [dashboardData?.available_drivers]);
+  }, [activeTripsData]);
+
+  // Transform available drivers
+  // const availableDrivers = useMemo<AvailableDriver[]>(() => {
+  //   const driverColors = [
+  //     '#2F6FED',
+  //     '#8B5CF6',
+  //     '#F59E0B',
+  //     '#EF4444',
+  //     '#059669',
+  //     '#0EA5E9',
+  //   ];
+
+  //   return (dashboardData?.available_drivers || []).map((driver, index) => {
+  //     const nameParts = driver.driver_name.split(' ');
+  //     const initials =
+  //       nameParts.length > 1
+  //         ? `${nameParts[0][0]}${nameParts[1][0]}`
+  //         : nameParts[0].substring(0, 2);
+
+  //     return {
+  //       id: driver.driver_id,
+  //       initials: initials.toUpperCase(),
+  //       initialsColor: driverColors[index % driverColors.length],
+  //       name: driver.driver_name,
+  //       vehicle: driver.vehicle_info,
+  //       rating: driver.rating,
+  //       trips: driver.total_trips,
+  //       distance: driver.distance_from_pickup
+  //         ? `${driver.distance_from_pickup.toFixed(1)} mi`
+  //         : 'N/A',
+  //       eta: driver.eta_minutes ? `${driver.eta_minutes} min` : 'N/A',
+  //       status: 'Available' as const,
+  //     };
+  //   });
+  // }, [dashboardData?.available_drivers]);
 
   // Add isBestMatch flag for modal driver list
-  const dispatchDrivers = useMemo(() => {
-    return availableDrivers.map((d, i) => ({
-      ...d,
-      isBestMatch: i === 0,
-    }));
-  }, [availableDrivers]);
+  // const dispatchDrivers = useMemo(() => {
+  //   return availableDrivers.map((d, i) => ({
+  //     ...d,
+  //     isBestMatch: i === 0,
+  //   }));
+  // }, [availableDrivers]);
 
-  const selectedTrip =
-    activeTrips.find((t) => t.id === selectedTripId) || activeTrips[0];
+  // Set default selected trip to first trip
+  const selectedTrip = useMemo(() => {
+    if (!selectedTripId && activeTrips.length > 0) {
+      setSelectedTripId(activeTrips[0].id);
+      return activeTrips[0];
+    }
+    return activeTrips.find((t) => t.id === selectedTripId) || activeTrips[0];
+  }, [selectedTripId, activeTrips]);
 
-  const handleAssignDriver = (booking: DispatchBooking) => {
-    setSelectedBooking(booking);
-    setAssignModalOpen(true);
-  };
+  // const handleAssignDriver = (booking: DispatchBooking) => {
+  //   setSelectedBooking(booking);
+  //   setAssignModalOpen(true);
+  // };
 
-  const handleAutoAssignAll = async () => {
-    await triggerAutoDispatch();
-  };
+  // const handleAutoAssignAll = async () => {
+  //   await triggerAutoDispatch();
+  // };
 
-  const kpis = dashboardData?.kpis || {
-    pending_assignments: 0,
-    assigned_today: 0,
-    available_drivers: 0,
-    drivers_on_trip: 0,
+  const kpis = dashboardData || {
+    active_trips: 0,
+    arriving_soon: 0,
+    avg_speed: null,
+    completed_today: 0,
   };
 
   const statCards = [
     {
-      icon: pendingIcon,
-      value: kpis.pending_assignments.toString(),
-      label: 'Pending Assignments',
-      subtitle: 'Awaiting driver',
+      icon: tripIcon,
+      value: kpis.active_trips.toString(),
+      label: 'Active Trips',
+      subtitle: 'Currently in progress',
       badge: {
-        text: `${kpis.pending_assignments} need action`,
-        color: '#EF4444',
-        bg: '#FEF2F2',
+        text: `${kpis.active_trips} live now`,
+        color: '#2F6FED',
+        bg: '#EEF3FF',
       },
-      progress: `0/${kpis.pending_assignments} assigned`,
+      progress: `${kpis.active_trips} tracking`,
+    },
+    {
+      icon: pendingIcon,
+      value: kpis.arriving_soon.toString(),
+      label: 'Arriving Soon',
+      subtitle: 'Within 5 minutes',
+      badge: { text: 'ETA < 5 min', color: '#F59E0B', bg: '#FFFBEB' },
     },
     {
       icon: driverIcon,
-      value: kpis.assigned_today.toString(),
-      label: 'Assigned Today',
-      subtitle: 'Dispatched trips',
-      badge: { text: '+0 this session', color: '#059669', bg: '#ECFDF5' },
+      value: kpis.avg_speed ? `${kpis.avg_speed.toFixed(1)} mph` : 'N/A',
+      label: 'Average Speed',
+      subtitle: 'Active fleet',
+      badge: { text: 'Real-time', color: '#059669', bg: '#ECFDF5' },
     },
     {
       icon: userGroupIcon,
-      value: kpis.available_drivers.toString(),
-      label: 'Available Drivers',
-      subtitle: 'Ready to dispatch',
-      badge: { text: 'Online now', color: '#2F6FED', bg: '#EEF3FF' },
-    },
-    {
-      icon: tripIcon,
-      value: kpis.drivers_on_trip.toString(),
-      label: 'Drivers On Trip',
-      subtitle: 'Active rides',
-      badge: { text: 'Live tracking', color: '#9CA3AF', bg: '#F3F4F6' },
+      value: kpis.completed_today.toString(),
+      label: 'Completed Today',
+      subtitle: 'Finished trips',
+      badge: { text: 'Today\'s total', color: '#9CA3AF', bg: '#F3F4F6' },
     },
   ];
 
@@ -348,7 +411,7 @@ export const DispatchPage = () => {
           />
 
           {/* View Toggle */}
-          <Tabs
+          {/* <Tabs
             value={activeView === 'assignments' ? 0 : 1}
             onChange={(_, newValue) =>
               setActiveView(newValue === 0 ? 'assignments' : 'liveMap')
@@ -417,12 +480,12 @@ export const DispatchPage = () => {
                 },
               }}
             />
-          </Tabs>
+          </Tabs> */}
         </RowStack>
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
-          {isFetchingDashboard
+          {isFetchingKpis
             ? Array.from({ length: 4 }).map((_, index) => (
                 <Grid key={index} size={{ xs: 6, lg: 3 }}>
                   <Skeleton
@@ -445,9 +508,8 @@ export const DispatchPage = () => {
         </Grid>
 
         {/* ═══════════ ASSIGNMENTS VIEW ═══════════ */}
-        {activeView === 'assignments' && (
+        {/* {activeView === 'assignments' && (
           <Grid container spacing={'20px'} alignItems="stretch">
-            {/* Left: Pending Bookings */}
             <Grid size={{ xs: 12, lg: 5 }} sx={{ height: '100%' }}>
               <Stack
                 spacing={'12px'}
@@ -514,8 +576,6 @@ export const DispatchPage = () => {
                 )}
               </Stack>
             </Grid>
-
-            {/* Right: Available Drivers */}
             <Grid size={{ xs: 12, lg: 7 }} sx={{ height: '100%' }}>
               <Stack
                 spacing={'0px'}
@@ -602,10 +662,8 @@ export const DispatchPage = () => {
               </Stack>
             </Grid>
           </Grid>
-        )}
+        )} */}
 
-        {/* ═══════════ LIVE MAP VIEW ═══════════ */}
-        {activeView === 'liveMap' && (
           <Grid container spacing={'20px'}>
             {/* Left: Active Trips */}
             <Grid size={{ xs: 12, lg: 4 }}>
@@ -636,18 +694,37 @@ export const DispatchPage = () => {
                       color: (theme) => theme.color.lightGrey,
                     }}
                   >
-                    {activeTrips.length} trips in progress
+                    {isFetchingActiveTrips ? 'Loading...' : `${activeTrips.length} trips in progress`}
                   </Typography>
                 </Stack>
 
-                {activeTrips.map((trip) => (
-                  <ActiveTripCard
-                    key={trip.id}
-                    trip={trip}
-                    isSelected={selectedTripId === trip.id}
-                    onClick={() => setSelectedTripId(trip.id)}
-                  />
-                ))}
+                {isFetchingActiveTrips ? (
+                  <Stack spacing={1} sx={{ padding: '0 20px 20px' }}>
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} variant="rounded" height={100} />
+                    ))}
+                  </Stack>
+                ) : activeTrips.length === 0 ? (
+                  <Stack
+                    sx={{
+                      height: '300px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <EmptyState emptyState="No Active Trips" />
+                  </Stack>
+                ) : (
+                  activeTrips.map((trip) => (
+                    <ActiveTripCard
+                      key={trip.id}
+                      trip={trip}
+                      isSelected={selectedTripId === trip.id}
+                      onClick={() => setSelectedTripId(trip.id)}
+                    />
+                  ))
+                )}
               </Stack>
             </Grid>
 
@@ -703,25 +780,49 @@ export const DispatchPage = () => {
                 </Box>
 
                 {/* Trip Telemetry */}
-                <TripTelemetryPanel
-                  tripId={selectedTrip.tripId}
-                  patientName={selectedTrip.patientName}
-                  driverName={selectedTrip.driverName}
-                  speed={selectedTrip.speed}
-                  eta={selectedTrip.eta}
-                  progress={selectedTrip.progress}
-                  status={selectedTrip.status}
-                  pickup="742 Evergreen Terrace"
-                  destination="St. Mary's Hospital"
-                />
+                {selectedTrip ? (
+                  <TripTelemetryPanel
+                    tripId={selectedTrip.tripId}
+                    patientName={selectedTrip.patientName}
+                    driverName={selectedTrip.driverName}
+                    speed={selectedTrip.speed}
+                    eta={selectedTrip.eta}
+                    progress={selectedTrip.progress}
+                    status={selectedTrip.status}
+                    pickup={selectedTripDetailData?.pickup_address || 'Loading...'}
+                    destination={selectedTripDetailData?.destination_address || 'Loading...'}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      background: '#FFFFFF',
+                      borderRadius: '16px',
+                      border: '0.67px solid #EAECF0',
+                      padding: '20px',
+                      height: '200px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        color: (theme) => theme.color.lightGrey,
+                        fontSize: pxToRem(14),
+                      }}
+                    >
+                      Select a trip to view telemetry
+                    </Typography>
+                  </Box>
+                )}
               </Stack>
             </Grid>
           </Grid>
-        )}
       </Stack>
 
       {/* Dispatch Assign Driver Modal */}
-      {selectedBooking && (
+      {/* {selectedBooking && (
         <DispatchAssignModal
           open={assignModalOpen}
           handleClose={() => setAssignModalOpen(false)}
@@ -733,7 +834,7 @@ export const DispatchPage = () => {
           specialNote={selectedBooking.specialNote}
           drivers={dispatchDrivers}
         />
-      )}
+      )} */}
     </AppDashboardLayout>
   );
 };

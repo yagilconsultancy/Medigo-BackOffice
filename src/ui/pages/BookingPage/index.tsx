@@ -67,10 +67,10 @@ export const BookingPage = () => {
   const declineBookingMutation = useDeclineBooking();
 
   const filterToApiStatus: Record<string, string | undefined> = {
-    All: undefined,
-    Requested: 'requested',
-    Confirmed: 'confirmed',
-    Cancelled: 'cancelled',
+    All: 'requested,confirmed,cancelled,completed',
+    Pending: 'requested',
+    Approved: 'confirmed',
+    Declined: 'cancelled',
     Completed: 'completed',
   };
 
@@ -80,7 +80,11 @@ export const BookingPage = () => {
     page,
     limit: pageSize,
   });
-  const allCountQuery = useGetAllBookings({ page: 1, limit: 1 });
+  const allCountQuery = useGetAllBookings({
+    status: 'requested,confirmed,cancelled,completed',
+    page: 1,
+    limit: 1,
+  });
   const requestedCountQuery = useGetAllBookings({
     status: 'requested',
     page: 1,
@@ -137,24 +141,24 @@ export const BookingPage = () => {
       active: activeFilter === 'All',
     },
     {
-      text: 'Requested',
+      text: 'Pending',
       count: requestedCountQuery.data?.total ?? 0,
-      active: activeFilter === 'Requested',
+      active: activeFilter === 'Pending',
     },
     {
-      text: 'Confirmed',
+      text: 'Approved',
       count: confirmedCountQuery.data?.total ?? 0,
-      active: activeFilter === 'Confirmed',
-    },
-    {
-      text: 'Cancelled',
-      count: cancelledCountQuery.data?.total ?? 0,
-      active: activeFilter === 'Cancelled',
+      active: activeFilter === 'Approved',
     },
     {
       text: 'Completed',
       count: completedCountQuery.data?.total ?? 0,
       active: activeFilter === 'Completed',
+    },
+    {
+      text: 'Declined',
+      count: cancelledCountQuery.data?.total ?? 0,
+      active: activeFilter === 'Declined',
     },
   ];
 
@@ -168,10 +172,10 @@ export const BookingPage = () => {
     setOpenDecline(true);
   };
 
-  const handleOpenDetail = (booking: BookingRow) => {
-    setSelectedBooking(booking);
-    setOpenDetail(true);
-  };
+  // const handleOpenDetail = (booking: BookingRow) => {
+  //   setSelectedBooking(booking);
+  //   setOpenDetail(true);
+  // };
 
   const handleCloseApprove = () => setOpenApprove(false);
   const handleCloseDecline = () => setOpenDecline(false);
@@ -261,7 +265,7 @@ export const BookingPage = () => {
         const row = params.row;
         return (
           <RowStack spacing={0.5}>
-            <IconButton
+            {/* <IconButton
               size="small"
               sx={{
                 color: '#9CA3AF',
@@ -269,7 +273,7 @@ export const BookingPage = () => {
               onClick={() => handleOpenDetail(row)}
             >
               <VisibilityOutlinedIcon sx={{ fontSize: 15 }} />
-            </IconButton>
+            </IconButton> */}
             {row.status === 'requested' && (
               <>
                 <IconButton
@@ -378,7 +382,7 @@ export const BookingPage = () => {
       <BookingDetailModal
         open={openDetail}
         handleClose={handleCloseDetail}
-        bookingId={selectedBooking?.bookingId ?? ''}
+        bookingId={selectedBooking?.bookingId.slice(0,7) ?? ''}
         rideId={selectedBooking?.id ?? ''}
         status={selectedBooking?.status ?? 'requested'}
         patientName={selectedBooking?.patient ?? ''}

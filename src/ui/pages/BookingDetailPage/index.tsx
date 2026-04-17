@@ -299,8 +299,8 @@ export const BookingDetailPage = () => {
       <Stack spacing={'20px'}>
         <CustomBreadCrumbs
           breadcrumbsData={[
-            { href: '/bookings', text: 'Booking Management' },
-            { href: '/bookings', text: 'All Bookings' },
+            { href: '/dispatch/rides', text: 'Ride Management' },
+            { href: '/dispatch/rides', text: 'Ride Assignment' },
             { href: '#', text: booking.id.slice(0, 8).toUpperCase() },
           ]}
         />

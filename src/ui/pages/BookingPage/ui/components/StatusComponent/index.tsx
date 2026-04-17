@@ -14,7 +14,7 @@ export const StatusComponent = ({ status }: StatusComponentProps) => {
     // Booking statuses
     requested: theme.color.warning,
     pending_business_assignment: theme.color.warning,
-    confirmed: theme.color.info,
+    confirmed: theme.color.success,
     driver_assigned: theme.color.info,
     driver_en_route: theme.color.purple,
     driver_arrived: theme.color.purple,
@@ -35,13 +35,13 @@ export const StatusComponent = ({ status }: StatusComponentProps) => {
     // Booking statuses
     requested: 'Requested',
     pending_business_assignment: 'Pending Assignment',
-    confirmed: 'Confirmed',
+    confirmed: 'Approved',
     driver_assigned: 'Driver Assigned',
     driver_en_route: 'En Route',
     driver_arrived: 'Driver Arrived',
     in_progress: 'In Progress',
     completed: 'Completed',
-    cancelled: 'Cancelled',
+    cancelled: 'Declined',
     no_show: 'No Show',
     // Refund/Payment statuses
     pending: 'Pending',

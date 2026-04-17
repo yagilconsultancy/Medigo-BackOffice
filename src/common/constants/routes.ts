@@ -527,6 +527,14 @@ export const ROUTES_SPEC = {
     `/${API_VERSION}/users/admin/caregivers/${caregiverId}`,
   updateCaregiver: (caregiverId: string) =>
     `/${API_VERSION}/users/admin/caregivers/${caregiverId}`,
+
+  // ====================== TRACKING ======================
+
+  // Admin Tracking
+  getActiveTripKpis: `/${API_VERSION}/tracking/admin/kpis`,
+  getActiveTrips: `/${API_VERSION}/tracking/admin/trips`,
+  getTripDetail: (rideId: string) => `/${API_VERSION}/tracking/admin/trips/${rideId}`,
+  getLiveDrivers: `/${API_VERSION}/tracking/admin/live-drivers`,
 } as const;
 
 export const ROUTES = Object.fromEntries(

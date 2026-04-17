@@ -1,4 +1,4 @@
-import { BookingDetailPage } from '../../../ui/pages';
+import { BookingDetailPage } from '../../../../ui/pages';
 
 export default function BookingDetail() {
   return <BookingDetailPage />;

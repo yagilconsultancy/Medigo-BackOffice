@@ -55,7 +55,7 @@ export const BookingDetailModal = ({
 
   const handleViewFullDetails = () => {
     handleClose();
-    router.push(`/bookings/${rideId}`);
+    router.push(`/dispatch/rides/${rideId}`);
   };
 
   return (
@@ -165,7 +165,7 @@ export const BookingDetailModal = ({
           </Stack>
         )}
         <RowStack spacing={'12px'} width={'100%'}>
-          {status === 'requested' && (
+          {status === 'requested' && onApprove && onDecline && (
             <>
               <AppButton
                 sx={{
