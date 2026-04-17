@@ -25,6 +25,12 @@ export const ROUTES_SPEC = {
   revokeSession: (sessionId: string) =>
     `/${API_VERSION}/users/admin/sessions/${sessionId}`,
 
+  // Admin Invitations
+  inviteAdmin: `/${API_VERSION}/users/admin/admins/invite`,
+  getAdminInvitations: `/${API_VERSION}/users/admin/admins/invitations`,
+  revokeAdminInvitation: (invitationId: string) =>
+    `/${API_VERSION}/users/admin/admins/invitations/${invitationId}`,
+
   // Get all rides with filters (admin dashboard)
   getAllRides: `/${API_VERSION}/rides/admin/rides`,
 

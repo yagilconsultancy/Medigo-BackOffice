@@ -26,3 +26,4 @@ export * from './locations';
 export * from './roles-permissions';
 export * from './caregivers';
 export * from './tracking-admin';
+export * from './admin-invitations';

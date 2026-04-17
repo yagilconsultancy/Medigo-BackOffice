@@ -13,3 +13,4 @@ export * from './cities.types';
 export * from './roles-permissions.types';
 export * from './caregivers.types';
 export * from './tracking.types';
+export * from './admin-invitations.types';
