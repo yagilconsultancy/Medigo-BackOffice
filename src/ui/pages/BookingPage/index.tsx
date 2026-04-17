@@ -219,7 +219,9 @@ export const BookingPage = () => {
       headerName: 'Booking ID',
       flex: 1,
       minWidth: 120,
-      renderCell: (params) => <BookingIdComponent bookingId={params.value.slice(0,7)} />,
+      renderCell: (params) => (
+        <BookingIdComponent bookingId={params.value.slice(0, 7)} />
+      ),
     },
     {
       field: 'patient',
@@ -382,7 +384,7 @@ export const BookingPage = () => {
       <BookingDetailModal
         open={openDetail}
         handleClose={handleCloseDetail}
-        bookingId={selectedBooking?.bookingId.slice(0,7) ?? ''}
+        bookingId={selectedBooking?.bookingId.slice(0, 7) ?? ''}
         rideId={selectedBooking?.id ?? ''}
         status={selectedBooking?.status ?? 'requested'}
         patientName={selectedBooking?.patient ?? ''}

@@ -27,6 +27,7 @@ import {
   useGetActiveTripKpis,
   useGetActiveTrips,
   useGetTripDetail,
+  useDispatchSocket,
 } from '../../../common';
 import { useState, useMemo } from 'react';
 import {
@@ -206,6 +207,14 @@ export const DispatchPage = () => {
   //   useState<DispatchBooking | null>(null);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
 
+  // Socket.IO connection for real-time updates
+  const {
+    isConnected,
+    isJoined,
+    locationUpdates,
+    error: socketError,
+  } = useDispatchSocket();
+
   // Fetch dispatch dashboard data
   // const dashboardQuery = useGetDispatchDashboard();
   const kpisQuery = useGetActiveTripKpis();
@@ -255,7 +264,7 @@ export const DispatchPage = () => {
   //   }));
   // }, [dashboardData?.unassigned_rides]);
 
-  // Transform active trips from API to UI format
+  // Transform active trips from API to UI format with real-time updates
   const activeTrips = useMemo<ActiveTrip[]>(() => {
     const driverColors = [
       '#2F6FED',
@@ -272,6 +281,12 @@ export const DispatchPage = () => {
         nameParts.length > 1
           ? `${nameParts[0][0]}${nameParts[1][0]}`
           : nameParts[0]?.substring(0, 2) || 'DR';
+
+      // Get real-time location update from socket if available
+      const realtimeUpdate = locationUpdates.get(trip.ride_id);
+
+      // Use real-time speed if available, otherwise fall back to API data
+      const currentSpeed = realtimeUpdate?.speed ?? trip.current_speed;
 
       // Determine status based on ETA
       const etaMinutes = trip.eta_minutes || 0;
@@ -290,11 +305,25 @@ export const DispatchPage = () => {
         driverName: trip.driver_name || 'Unassigned',
         driverInitials: initials.toUpperCase(),
         driverInitialsColor: driverColors[index % driverColors.length],
-        speed: trip.current_speed ? `${Math.round(trip.current_speed)} mph` : '0 mph',
+        speed: currentSpeed ? `${Math.round(currentSpeed)} mph` : '0 mph',
         progress: trip.progress_percent || 0,
+        // Store real-time location for map updates
+        location: realtimeUpdate
+          ? {
+              lat: realtimeUpdate.latitude,
+              lng: realtimeUpdate.longitude,
+              heading: realtimeUpdate.heading,
+            }
+          : trip.current_latitude && trip.current_longitude
+            ? {
+                lat: trip.current_latitude,
+                lng: trip.current_longitude,
+                heading: trip.current_heading ?? undefined,
+              }
+            : undefined,
       };
     });
-  }, [activeTripsData]);
+  }, [activeTripsData, locationUpdates]);
 
   // Transform available drivers
   // const availableDrivers = useMemo<AvailableDriver[]>(() => {
@@ -396,7 +425,7 @@ export const DispatchPage = () => {
       value: kpis.completed_today.toString(),
       label: 'Completed Today',
       subtitle: 'Finished trips',
-      badge: { text: 'Today\'s total', color: '#9CA3AF', bg: '#F3F4F6' },
+      badge: { text: "Today's total", color: '#9CA3AF', bg: '#F3F4F6' },
     },
   ];
 
@@ -409,6 +438,44 @@ export const DispatchPage = () => {
             title="Dispatch Center"
             desc="Assign drivers to pending bookings and monitor active dispatches"
           />
+
+          {/* Real-time Connection Status */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              background: isConnected && isJoined ? '#ECFDF5' : '#FEF2F2',
+              border: `0.67px solid ${isConnected && isJoined ? '#059669' : '#EF4444'}`,
+            }}
+          >
+            <Box
+              sx={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: isConnected && isJoined ? '#059669' : '#EF4444',
+                animation:
+                  isConnected && isJoined ? 'pulse 2s infinite' : 'none',
+                '@keyframes pulse': {
+                  '0%, 100%': { opacity: 1 },
+                  '50%': { opacity: 0.5 },
+                },
+              }}
+            />
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 600,
+                fontSize: pxToRem(12),
+                color: isConnected && isJoined ? '#059669' : '#EF4444',
+              }}
+            >
+              {isConnected && isJoined ? 'Live Tracking' : 'Connecting...'}
+            </Typography>
+          </Box>
 
           {/* View Toggle */}
           {/* <Tabs
@@ -664,161 +731,173 @@ export const DispatchPage = () => {
           </Grid>
         )} */}
 
-          <Grid container spacing={'20px'}>
-            {/* Left: Active Trips */}
-            <Grid size={{ xs: 12, lg: 4 }}>
-              <Stack
+        <Grid container spacing={'20px'}>
+          {/* Left: Active Trips */}
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <Stack
+              sx={{
+                background: '#FFFFFF',
+                borderRadius: '16px',
+                border: '0.67px solid #EAECF0',
+                overflow: 'hidden',
+              }}
+            >
+              <Stack spacing={'2px'} sx={{ padding: '20px 20px 12px' }}>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(15),
+                    color: (theme) => theme.color.deepBlue,
+                  }}
+                >
+                  Active Trips
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 400,
+                    fontSize: pxToRem(12),
+                    color: (theme) => theme.color.lightGrey,
+                  }}
+                >
+                  {isFetchingActiveTrips
+                    ? 'Loading...'
+                    : `${activeTrips.length} trips in progress`}
+                </Typography>
+              </Stack>
+
+              {isFetchingActiveTrips ? (
+                <Stack spacing={1} sx={{ padding: '0 20px 20px' }}>
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} variant="rounded" height={100} />
+                  ))}
+                </Stack>
+              ) : activeTrips.length === 0 ? (
+                <Stack
+                  sx={{
+                    height: '300px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <EmptyState emptyState="No Active Trips" />
+                </Stack>
+              ) : (
+                activeTrips.map((trip) => (
+                  <ActiveTripCard
+                    key={trip.id}
+                    trip={trip}
+                    isSelected={selectedTripId === trip.id}
+                    onClick={() => setSelectedTripId(trip.id)}
+                  />
+                ))
+              )}
+            </Stack>
+          </Grid>
+
+          {/* Right: Map + Telemetry */}
+          <Grid size={{ xs: 12, lg: 8 }}>
+            <Stack spacing={'16px'}>
+              {/* Map */}
+              <Box
                 sx={{
                   background: '#FFFFFF',
                   borderRadius: '16px',
                   border: '0.67px solid #EAECF0',
                   overflow: 'hidden',
+                  height: '400px',
+                  position: 'relative',
                 }}
               >
-                <Stack spacing={'2px'} sx={{ padding: '20px 20px 12px' }}>
+                <AppGoogleMapsProvider
+                  apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
+                >
+                  <AppGoogleMap
+                    markerPositions={
+                      selectedTrip?.location
+                        ? [
+                            {
+                              lat: selectedTrip.location.lat,
+                              lng: selectedTrip.location.lng,
+                            },
+                          ]
+                        : []
+                    }
+                    mapContainerStyle={{ width: '100%', height: '400px' }}
+                    showDirections={false}
+                  />
+                </AppGoogleMapsProvider>
+                {/* Map Overlay Badge */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 16,
+                    left: 16,
+                    background: '#2F6FED',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    zIndex: 1,
+                  }}
+                >
                   <Typography
                     sx={{
                       fontFamily: (theme) => theme.typography.fontFamily,
                       fontWeight: 600,
-                      fontSize: pxToRem(15),
-                      color: (theme) => theme.color.deepBlue,
+                      fontSize: pxToRem(11),
+                      color: '#FFFFFF',
                     }}
                   >
-                    Active Trips
+                    Live Dispatch Map
                   </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(12),
-                      color: (theme) => theme.color.lightGrey,
-                    }}
-                  >
-                    {isFetchingActiveTrips ? 'Loading...' : `${activeTrips.length} trips in progress`}
-                  </Typography>
-                </Stack>
+                </Box>
+              </Box>
 
-                {isFetchingActiveTrips ? (
-                  <Stack spacing={1} sx={{ padding: '0 20px 20px' }}>
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} variant="rounded" height={100} />
-                    ))}
-                  </Stack>
-                ) : activeTrips.length === 0 ? (
-                  <Stack
-                    sx={{
-                      height: '300px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <EmptyState emptyState="No Active Trips" />
-                  </Stack>
-                ) : (
-                  activeTrips.map((trip) => (
-                    <ActiveTripCard
-                      key={trip.id}
-                      trip={trip}
-                      isSelected={selectedTripId === trip.id}
-                      onClick={() => setSelectedTripId(trip.id)}
-                    />
-                  ))
-                )}
-              </Stack>
-            </Grid>
-
-            {/* Right: Map + Telemetry */}
-            <Grid size={{ xs: 12, lg: 8 }}>
-              <Stack spacing={'16px'}>
-                {/* Map */}
+              {/* Trip Telemetry */}
+              {selectedTrip ? (
+                <TripTelemetryPanel
+                  tripId={selectedTrip.tripId}
+                  patientName={selectedTrip.patientName}
+                  driverName={selectedTrip.driverName}
+                  speed={selectedTrip.speed}
+                  eta={selectedTrip.eta}
+                  progress={selectedTrip.progress}
+                  status={selectedTrip.status}
+                  pickup={
+                    selectedTripDetailData?.pickup_address || 'Loading...'
+                  }
+                  destination={
+                    selectedTripDetailData?.destination_address || 'Loading...'
+                  }
+                />
+              ) : (
                 <Box
                   sx={{
                     background: '#FFFFFF',
                     borderRadius: '16px',
                     border: '0.67px solid #EAECF0',
-                    overflow: 'hidden',
-                    height: '400px',
-                    position: 'relative',
+                    padding: '20px',
+                    height: '200px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  <AppGoogleMapsProvider
-                    apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
-                  >
-                    <AppGoogleMap
-                      markerPositions={[
-                        { lat: 43.6532, lng: -79.3832 },
-                        { lat: 43.6615, lng: -79.3956 },
-                      ]}
-                      mapContainerStyle={{ width: '100%', height: '400px' }}
-                      showDirections={false}
-                    />
-                  </AppGoogleMapsProvider>
-                  {/* Map Overlay Badge */}
-                  <Box
+                  <Typography
                     sx={{
-                      position: 'absolute',
-                      top: 16,
-                      left: 16,
-                      background: '#2F6FED',
-                      borderRadius: '8px',
-                      padding: '6px 12px',
-                      zIndex: 1,
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      color: (theme) => theme.color.lightGrey,
+                      fontSize: pxToRem(14),
                     }}
                   >
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 600,
-                        fontSize: pxToRem(11),
-                        color: '#FFFFFF',
-                      }}
-                    >
-                      Live Dispatch Map
-                    </Typography>
-                  </Box>
+                    Select a trip to view telemetry
+                  </Typography>
                 </Box>
-
-                {/* Trip Telemetry */}
-                {selectedTrip ? (
-                  <TripTelemetryPanel
-                    tripId={selectedTrip.tripId}
-                    patientName={selectedTrip.patientName}
-                    driverName={selectedTrip.driverName}
-                    speed={selectedTrip.speed}
-                    eta={selectedTrip.eta}
-                    progress={selectedTrip.progress}
-                    status={selectedTrip.status}
-                    pickup={selectedTripDetailData?.pickup_address || 'Loading...'}
-                    destination={selectedTripDetailData?.destination_address || 'Loading...'}
-                  />
-                ) : (
-                  <Box
-                    sx={{
-                      background: '#FFFFFF',
-                      borderRadius: '16px',
-                      border: '0.67px solid #EAECF0',
-                      padding: '20px',
-                      height: '200px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        color: (theme) => theme.color.lightGrey,
-                        fontSize: pxToRem(14),
-                      }}
-                    >
-                      Select a trip to view telemetry
-                    </Typography>
-                  </Box>
-                )}
-              </Stack>
-            </Grid>
+              )}
+            </Stack>
           </Grid>
+        </Grid>
       </Stack>
 
       {/* Dispatch Assign Driver Modal */}

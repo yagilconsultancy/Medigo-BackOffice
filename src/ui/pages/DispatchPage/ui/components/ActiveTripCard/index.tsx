@@ -18,6 +18,11 @@ export type ActiveTrip = {
   driverInitialsColor: string;
   speed: string;
   progress: number;
+  location?: {
+    lat: number;
+    lng: number;
+    heading?: number;
+  };
 };
 
 type ActiveTripCardProps = {

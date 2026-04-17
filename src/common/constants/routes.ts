@@ -533,7 +533,8 @@ export const ROUTES_SPEC = {
   // Admin Tracking
   getActiveTripKpis: `/${API_VERSION}/tracking/admin/kpis`,
   getActiveTrips: `/${API_VERSION}/tracking/admin/trips`,
-  getTripDetail: (rideId: string) => `/${API_VERSION}/tracking/admin/trips/${rideId}`,
+  getTripDetail: (rideId: string) =>
+    `/${API_VERSION}/tracking/admin/trips/${rideId}`,
   getLiveDrivers: `/${API_VERSION}/tracking/admin/live-drivers`,
 } as const;
 

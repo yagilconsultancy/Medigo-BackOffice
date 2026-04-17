@@ -34,7 +34,9 @@ export const RideAssignmentPage = () => {
     {}
   );
   const [openDetail, setOpenDetail] = useState<boolean>(false);
-  const [selectedRideForDetail, setSelectedRideForDetail] = useState<string | null>(null);
+  const [selectedRideForDetail, setSelectedRideForDetail] = useState<
+    string | null
+  >(null);
 
   // Fetch unassigned rides and available drivers
   const { data: unassignedRidesData } = useResolvedApiQuery(
@@ -195,7 +197,7 @@ export const RideAssignmentPage = () => {
       bookingId: apiRide.booking_number?.slice(0, 7) || '',
       rideId: apiRide.ride_id,
       // @ts-ignore
-      status: (apiRide.status?.toLowerCase()) as any,
+      status: apiRide.status?.toLowerCase() as any,
       patientName: apiRide.rider_name,
       dateTime: dayjs(apiRide.scheduled_at).format('MMM D, YYYY · hh:mm A'),
       pickup: apiRide.pickup_address,
