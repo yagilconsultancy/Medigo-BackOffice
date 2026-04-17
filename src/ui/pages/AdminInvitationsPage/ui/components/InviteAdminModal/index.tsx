@@ -98,6 +98,7 @@ const RoleSelector = () => {
 
     return {
       id: role.id,
+      name: role.name,
       label: role.display_name,
       color: roleColor,
       borderColor: roleColor,
@@ -123,11 +124,11 @@ const RoleSelector = () => {
   return (
     <Grid container spacing={'10px'}>
       {roleOptions.map((role) => {
-        const isSelected = values.assignRole === role.id;
+        const isSelected = values.assignRole === role.name;
         return (
           <Grid key={role.id} size={{ xs: 6 }}>
             <RowStack
-              onClick={() => setFieldValue('assignRole', role.id)}
+              onClick={() => setFieldValue('assignRole', role.name)}
               spacing={'8px'}
               sx={{
                 padding: '10px 14px',
