@@ -186,6 +186,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         text: 'Dashboard Settings',
         moduleId: 'dashboard_settings',
         dropdown: [
+          { text: 'Admin Invitations', link: '/settings/admins' },
           { text: 'Cities & Service Area', link: '/settings/areas' },
           { text: 'Ride Types', link: '/settings/ride-types' },
           { text: 'Roles & Permissions', link: '/settings/permissions' },

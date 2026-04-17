@@ -588,7 +588,7 @@ export const RolesPermissionsPage = () => {
                 >
                   Create Role
                 </AppButton>
-                <AppButton
+                {/* <AppButton
                   variant="contained"
                   startIcon={<AddOutlinedIcon />}
                   onClick={() => setIsInviteModalOpen(true)}
@@ -611,7 +611,7 @@ export const RolesPermissionsPage = () => {
                   }}
                 >
                   Invite Admin
-                </AppButton>
+                </AppButton> */}
               </RowStack>
             </RowStack>
 
