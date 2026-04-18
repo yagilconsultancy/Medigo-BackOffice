@@ -1,6 +1,10 @@
+import { useCallback } from 'react';
 import { Box, LinearProgress, Stack, Typography } from '@mui/material';
 import { RowStack, StyledImage } from '../../../../../modules/components';
-import { AppGoogleMap } from '../../../../../modules/components';
+import {
+  AppGoogleMap,
+  type MarkerPosition,
+} from '../../../../../modules/components';
 import { AppGoogleMapsProvider } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import { InfoCard } from '../InfoCard';
@@ -91,6 +95,45 @@ export const LiveRouteCard = ({
     pickupLng != null &&
     destinationLat != null &&
     destinationLng != null;
+
+  const computeRoute = useCallback(
+    async (input: {
+      origin: MarkerPosition;
+      destination: MarkerPosition;
+      waypoints?: MarkerPosition[];
+    }): Promise<{ polyline: MarkerPosition[] } | null> => {
+      try {
+        const routesLib = (await google.maps.importLibrary('routes')) as any;
+        const Route = routesLib.Route;
+
+        const request: Record<string, any> = {
+          origin: input.origin,
+          destination: input.destination,
+          travelMode: 'DRIVE',
+          fields: ['path'],
+        };
+
+        if (input.waypoints?.length) {
+          request.intermediates = input.waypoints;
+        }
+
+        const { routes } = await Route.computeRoutes(request);
+
+        const route = routes?.[0];
+        if (!route?.path?.length) return null;
+
+        const polyline: MarkerPosition[] = route.path.map((point: any) => ({
+          lat: typeof point.lat === 'function' ? point.lat() : point.lat,
+          lng: typeof point.lng === 'function' ? point.lng() : point.lng,
+        }));
+
+        return { polyline };
+      } catch {
+        return null;
+      }
+    },
+    []
+  );
 
   return (
     <InfoCard
@@ -187,7 +230,8 @@ export const LiveRouteCard = ({
                   { lat: destinationLat!, lng: destinationLng! },
                 ]}
                 mapContainerStyle={{ width: '100%', height: '235px' }}
-                showDirections={false}
+                showDirections={true}
+                computeRoute={computeRoute}
               />
             </AppGoogleMapsProvider>
           ) : (
@@ -209,7 +253,7 @@ export const LiveRouteCard = ({
                   fontWeight: 500,
                 }}
               >
-                Map requires Google Maps API key
+                Map preview not available
               </Typography>
             </Box>
           )}

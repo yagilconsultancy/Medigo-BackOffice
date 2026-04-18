@@ -43,13 +43,13 @@ export type AppGoogleMapProps = {
 const TRUCK_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 40" width="64" height="40">
   <!-- Truck body / cargo box -->
-  <rect x="2" y="4" width="38" height="26" rx="3" ry="3" fill="#F97316"/>
+  <rect x="2" y="4" width="38" height="26" rx="3" ry="3" fill="#2F6FED"/>
   <!-- Cab -->
-  <rect x="40" y="10" width="20" height="20" rx="3" ry="3" fill="#EA580C"/>
+  <rect x="40" y="10" width="20" height="20" rx="3" ry="3" fill="#2F6FED"/>
   <!-- Windscreen -->
   <rect x="42" y="12" width="14" height="10" rx="2" ry="2" fill="#BAE6FD" opacity="0.9"/>
   <!-- Undercarriage -->
-  <rect x="2" y="28" width="58" height="4" rx="1" ry="1" fill="#7C3AED" opacity="0.2"/>
+  <rect x="2" y="28" width="58" height="4" rx="1" ry="1" fill="#2F6FED" opacity="0.2"/>
   <!-- Wheels -->
   <circle cx="14" cy="34" r="5" fill="#1E293B"/>
   <circle cx="14" cy="34" r="2.5" fill="#94A3B8"/>
@@ -87,7 +87,7 @@ function TruckOverlay({ position, heading }: TruckOverlayProps) {
           pointerEvents: 'none',
         }}
       >
-        <img
+        <StyledImage
           src={TRUCK_DATA_URI}
           alt="driver truck"
           width={64}
@@ -99,7 +99,6 @@ function TruckOverlay({ position, heading }: TruckOverlayProps) {
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 export function AppGoogleMap({
   markerPositions,
   mapContainerStyle = { width: '100%', height: '500px' },
@@ -219,7 +218,7 @@ export function AppGoogleMap({
         <Polyline
           path={routePath}
           options={{
-            strokeColor: '#F97316',
+            strokeColor: '#2F6FED',
             strokeOpacity: 0.9,
             strokeWeight: 4,
           }}

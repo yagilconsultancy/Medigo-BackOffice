@@ -18,6 +18,7 @@ type TripTelemetryPanelProps = {
   tripId: string;
   patientName: string;
   driverName: string;
+  driverPhone?: string;
   speed: string;
   eta: string;
   progress: number;
@@ -32,6 +33,7 @@ export const TripTelemetryPanel = ({
   tripId,
   patientName,
   driverName,
+  driverPhone,
   speed,
   eta,
   progress,
@@ -128,23 +130,45 @@ export const TripTelemetryPanel = ({
           </Typography>
         </Stack>
         <RowStack spacing={'8px'}>
-          <AppButton
-            sx={{
-              background: '#EBF2FF',
-              color: '#2F6FED',
-              fontWeight: 600,
-              fontSize: pxToRem(11.5),
-              borderRadius: '8px',
-              padding: '6px 14px',
-              minWidth: 'auto',
-              '&:hover': { background: '#DBEAFE' },
-            }}
-          >
-            <RowStack spacing={'4px'}>
-              <StyledImage src={callIcon} alt="call" width={12} height={12} />
-              <span>Call Driver</span>
-            </RowStack>
-          </AppButton>
+          {driverPhone && (
+            // <AppButton
+            //   component="a"
+            //   href={`tel:${driverPhone}`}
+            //   sx={{
+            //     background: '#EBF2FF',
+            //     color: '#2F6FED',
+            //     fontWeight: 600,
+            //     fontSize: pxToRem(11.5),
+            //     borderRadius: '8px',
+            //     padding: '6px 14px',
+            //     minWidth: 'auto',
+            //     textDecoration: 'none',
+            //     '&:hover': { background: '#DBEAFE' },
+            //   }}
+            // >
+              <RowStack spacing={'4px'}
+                sx={{
+                  // background: '#EBF2FF',
+                  color: '#2F6FED',
+                  fontWeight: 600,
+                  fontSize: pxToRem(11.5),
+                  borderRadius: '8px',
+                  padding: '6px 14px',
+                  minWidth: 'auto',
+                  textDecoration: 'none',
+                }}
+              >
+                {/* <Typography></Typography> */}
+                <StyledImage
+                  src={callIcon}
+                  alt="call"
+                  width={12}
+                  height={12}
+                />
+                <span>{`Driver: ${driverPhone}`}</span>
+              </RowStack>
+            // </AppButton>
+          )}
           <AppButton
             sx={{
               background: '#FEF2F2',

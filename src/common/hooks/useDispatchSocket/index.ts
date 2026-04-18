@@ -91,7 +91,7 @@ export const useDispatchSocket = (): UseDispatchSocketReturn => {
       socket.on(
         SocketEvent.DISPATCH_LOCATION_UPDATE,
         (data: DispatchLocationUpdate) => {
-          console.log('[Socket] Location update:', data.ride_id);
+          console.log('[Socket] Location update:', data);
           locationUpdatesRef.current.set(data.ride_id, data);
           forceUpdate({}); // Force re-render with new location data
         }
@@ -99,12 +99,12 @@ export const useDispatchSocket = (): UseDispatchSocketReturn => {
 
       // Tracking lifecycle events
       socket.on(SocketEvent.TRACKING_STARTED, (data: TrackingStartedEvent) => {
-        console.log('[Socket] New trip started:', data.ride_id);
+        console.log('[Socket] New trip started:', data);
         // You can emit a custom event or callback here if needed
       });
 
       socket.on(SocketEvent.TRACKING_ENDED, (data: TrackingEndedEvent) => {
-        console.log('[Socket] Trip ended:', data.ride_id);
+        console.log('[Socket] Trip ended:', data);
         // Remove trip from location updates
         locationUpdatesRef.current.delete(data.ride_id);
         forceUpdate({});

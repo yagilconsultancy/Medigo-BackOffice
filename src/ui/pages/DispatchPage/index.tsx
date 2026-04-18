@@ -5,8 +5,6 @@ import {
   Grid,
   Skeleton,
   Stack,
-  Tab,
-  Tabs,
   Typography,
 } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
@@ -17,6 +15,7 @@ import {
   DashboardTitleAndDesc,
   RowStack,
   StyledImage,
+  type MarkerPosition,
 } from '../../modules/components';
 import { EmptyState } from '../../modules/blocks';
 import {
@@ -28,21 +27,21 @@ import {
   useGetTripDetail,
   useDispatchSocket,
 } from '../../../common';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   DispatchStatCard,
-  DispatchBookingCard,
-  DispatchBooking,
-  AvailableDriverCard,
-  AvailableDriver,
+  // DispatchBookingCard,
+  // DispatchBooking,
+  // AvailableDriverCard,
+  // AvailableDriver,
   ActiveTripCard,
   ActiveTrip,
   TripTelemetryPanel,
-  DispatchAssignModal,
+  // DispatchAssignModal,
 } from './ui/components';
 
-import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
-import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
+// import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined';
+// import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import pendingIcon from './ui/assets/icons/dispatch-pending-Icon.svg';
 import driverIcon from './ui/assets/icons/driverinfo-icon.svg';
 import userGroupIcon from './ui/assets/icons/drivermanagement-Icon.svg';
@@ -50,6 +49,19 @@ import tripIcon from './ui/assets/icons/tripstatus-icon.svg';
 // import assignIcon from './ui/assets/icons/assign-icon.svg';
 
 // type ViewTab = 'assignments' | 'liveMap';
+
+const formatEta = (minutes: number): string => {
+  if (minutes < 1) return `${Math.round(minutes * 60)}s`;
+  if (minutes < 60) return `${Math.round(minutes)} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMin = Math.round(minutes % 60);
+  if (hours < 24) {
+    return remainingMin > 0 ? `${hours}h ${remainingMin}m` : `${hours}h`;
+  }
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
+};
 
 export const DispatchPage = () => {
   // const [activeView, setActiveView] = useState<ViewTab>('assignments');
@@ -146,7 +158,7 @@ export const DispatchPage = () => {
         status,
         statusColor,
         statusBg,
-        eta: trip.eta_minutes ? `${trip.eta_minutes} min` : 'N/A',
+        eta: trip.eta_minutes ? formatEta(trip.eta_minutes) : 'N/A',
         patientName: trip.patient_name || 'Unknown Patient',
         driverName: trip.driver_name || 'Unassigned',
         driverInitials: initials.toUpperCase(),
@@ -232,6 +244,70 @@ export const DispatchPage = () => {
   //   await triggerAutoDispatch();
   // };
 
+  // Compute driving route for the dispatch map polyline
+  const computeRoute = useCallback(
+    async (input: {
+      origin: MarkerPosition;
+      destination: MarkerPosition;
+      waypoints?: MarkerPosition[];
+    }): Promise<{ polyline: MarkerPosition[] } | null> => {
+      try {
+        const routesLib = (await google.maps.importLibrary('routes')) as any;
+        const Route = routesLib.Route;
+
+        const request: Record<string, any> = {
+          origin: input.origin,
+          destination: input.destination,
+          travelMode: 'DRIVE',
+          fields: ['path'],
+        };
+
+        if (input.waypoints?.length) {
+          request.intermediates = input.waypoints;
+        }
+
+        const { routes } = await Route.computeRoutes(request);
+
+        const route = routes?.[0];
+        if (!route?.path?.length) return null;
+
+        const polyline: MarkerPosition[] = route.path.map((point: any) => ({
+          lat: typeof point.lat === 'function' ? point.lat() : point.lat,
+          lng: typeof point.lng === 'function' ? point.lng() : point.lng,
+        }));
+
+        return { polyline };
+      } catch {
+        return null;
+      }
+    },
+    []
+  );
+
+  // Build map props from selected trip detail + real-time socket data
+  const realtimeUpdate = selectedTripId
+    ? locationUpdates.get(selectedTripId)
+    : undefined;
+
+  const driverLat =
+    realtimeUpdate?.latitude ??
+    selectedTripDetailData?.current_latitude ??
+    selectedTrip?.location?.lat;
+  const driverLng =
+    realtimeUpdate?.longitude ??
+    selectedTripDetailData?.current_longitude ??
+    selectedTrip?.location?.lng;
+  const driverHeading =
+    realtimeUpdate?.heading ??
+    selectedTripDetailData?.current_heading ??
+    selectedTrip?.location?.heading;
+
+  const destLat = selectedTripDetailData?.destination_latitude;
+  const destLng = selectedTripDetailData?.destination_longitude;
+
+  const hasTruckPosition = driverLat != null && driverLng != null;
+  const hasDestination = destLat != null && destLng != null;
+
   const kpis = dashboardData?.kpis || {
     pending_assignments: 0,
     assigned_today: 0,
@@ -289,7 +365,7 @@ export const DispatchPage = () => {
           />
 
           {/* Real-time Connection Status */}
-          <Box
+          {/* <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -324,7 +400,7 @@ export const DispatchPage = () => {
             >
               {isConnected && isJoined ? 'Live Tracking' : 'Connecting...'}
             </Typography>
-          </Box>
+          </Box> */}
 
           {/* View Toggle */}
           {/* <Tabs
@@ -665,17 +741,24 @@ export const DispatchPage = () => {
                 >
                   <AppGoogleMap
                     markerPositions={
-                      selectedTrip?.location
-                        ? [
-                            {
-                              lat: selectedTrip.location.lat,
-                              lng: selectedTrip.location.lng,
-                            },
-                          ]
+                      hasDestination
+                        ? [{ lat: destLat!, lng: destLng! }]
                         : []
                     }
+                    truckMarker={
+                      hasTruckPosition
+                        ? {
+                            position: {
+                              lat: driverLat!,
+                              lng: driverLng!,
+                            },
+                            heading: driverHeading ?? 0,
+                          }
+                        : undefined
+                    }
                     mapContainerStyle={{ width: '100%', height: '400px' }}
-                    showDirections={false}
+                    showDirections={hasTruckPosition && hasDestination}
+                    computeRoute={computeRoute}
                   />
                 </AppGoogleMapsProvider>
                 {/* Map Overlay Badge */}
@@ -706,18 +789,49 @@ export const DispatchPage = () => {
               {/* Trip Telemetry */}
               {selectedTrip ? (
                 <TripTelemetryPanel
-                  tripId={selectedTrip.tripId}
-                  patientName={selectedTrip.patientName}
-                  driverName={selectedTrip.driverName}
-                  speed={selectedTrip.speed}
-                  eta={selectedTrip.eta}
-                  progress={selectedTrip.progress}
-                  status={selectedTrip.status}
+                  tripId={
+                    selectedTripDetailData?.trip_id_display ||
+                    selectedTrip.tripId
+                  }
+                  patientName={
+                    selectedTripDetailData?.patient_name ||
+                    selectedTrip.patientName
+                  }
+                  driverName={
+                    selectedTripDetailData?.driver_name ||
+                    selectedTrip.driverName
+                  }
+                  driverPhone={
+                    selectedTripDetailData?.driver_phone || undefined
+                  }
+                  speed={
+                    realtimeUpdate?.speed != null
+                      ? `${Math.round(realtimeUpdate.speed)} mph`
+                      : selectedTripDetailData?.current_speed != null
+                        ? `${Math.round(selectedTripDetailData.current_speed)} mph`
+                        : selectedTrip.speed
+                  }
+                  eta={
+                    selectedTripDetailData?.eta_minutes != null
+                      ? formatEta(selectedTripDetailData.eta_minutes)
+                      : selectedTrip.eta
+                  }
+                  progress={
+                    selectedTripDetailData?.progress_percent ??
+                    selectedTrip.progress
+                  }
+                  status={
+                    selectedTripDetailData?.status || selectedTrip.status
+                  }
+                  statusColor={selectedTrip.statusColor}
                   pickup={
                     selectedTripDetailData?.pickup_address || 'Loading...'
                   }
                   destination={
                     selectedTripDetailData?.destination_address || 'Loading...'
+                  }
+                  vehicle={
+                    selectedTripDetailData?.driver_vehicle || undefined
                   }
                 />
               ) : (
