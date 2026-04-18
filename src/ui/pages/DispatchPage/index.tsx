@@ -24,7 +24,6 @@ import {
   useGetDispatchDashboard,
   useResolvedApiQuery,
   useDispatchApi,
-  useGetActiveTripKpis,
   useGetActiveTrips,
   useGetTripDetail,
   useDispatchSocket,
@@ -48,155 +47,7 @@ import pendingIcon from './ui/assets/icons/dispatch-pending-Icon.svg';
 import driverIcon from './ui/assets/icons/driverinfo-icon.svg';
 import userGroupIcon from './ui/assets/icons/drivermanagement-Icon.svg';
 import tripIcon from './ui/assets/icons/tripstatus-icon.svg';
-import assignIcon from './ui/assets/icons/assign-icon.svg';
-
-const availableDrivers: AvailableDriver[] = [
-  {
-    id: '1',
-    initials: 'MJ',
-    initialsColor: '#2F6FED',
-    name: 'Marcus Johnson',
-    vehicle: 'Toyota Sienna WAV',
-    rating: 4.9,
-    trips: 312,
-    distance: '0.4 mi',
-    eta: '3 min',
-    status: 'Available',
-  },
-  {
-    id: '2',
-    initials: 'SW',
-    initialsColor: '#8B5CF6',
-    name: 'Sarah Williams',
-    vehicle: 'Honda Odyssey',
-    rating: 4.8,
-    trips: 287,
-    distance: '0.8 mi',
-    eta: '5 min',
-    status: 'Available',
-  },
-  {
-    id: '3',
-    initials: 'DC',
-    initialsColor: '#F59E0B',
-    name: 'David Chen',
-    vehicle: 'Ford Escape',
-    rating: 4.8,
-    trips: 264,
-    distance: '1.1 mi',
-    eta: '7 min',
-    status: 'Available',
-  },
-  {
-    id: '4',
-    initials: 'ER',
-    initialsColor: '#EF4444',
-    name: 'Emily Rodriguez',
-    vehicle: 'Chrysler Pacifica',
-    rating: 4.7,
-    trips: 241,
-    distance: '1.4 mi',
-    eta: '9 min',
-    status: 'Available',
-  },
-  {
-    id: '5',
-    initials: 'JT',
-    initialsColor: '#059669',
-    name: 'James Thompson',
-    vehicle: 'Dodge Grand Caravan',
-    rating: 4.7,
-    trips: 218,
-    distance: '1.8 mi',
-    eta: '11 min',
-    status: 'Available',
-  },
-  {
-    id: '6',
-    initials: 'AK',
-    initialsColor: '#0EA5E9',
-    name: 'Anna Kim',
-    vehicle: 'Toyota Camry',
-    rating: 4.6,
-    trips: 195,
-    distance: '2.2 mi',
-    eta: '13 min',
-    status: 'Available',
-  },
-];
-
-const activeTrips: ActiveTrip[] = [
-  {
-    id: '1',
-    tripId: 'TR-8801',
-    status: 'In Transit',
-    statusColor: '#2F6FED',
-    statusBg: '#EBF2FF',
-    eta: '7 min',
-    patientName: 'Helen Moore',
-    driverName: 'Marcus Johnson',
-    driverInitials: 'MJ',
-    driverInitialsColor: '#2F6FED',
-    speed: '33 mph',
-    progress: 75,
-  },
-  {
-    id: '2',
-    tripId: 'TR-8800',
-    status: 'In Transit',
-    statusColor: '#2F6FED',
-    statusBg: '#EBF2FF',
-    eta: '14 min',
-    patientName: 'Robert Garcia',
-    driverName: 'Sarah Williams',
-    driverInitials: 'SW',
-    driverInitialsColor: '#8B5CF6',
-    speed: '26 mph',
-    progress: 48,
-  },
-  {
-    id: '3',
-    tripId: 'TR-8799',
-    status: 'Arriving',
-    statusColor: '#059669',
-    statusBg: '#ECFDF5',
-    eta: '2 min',
-    patientName: 'Daniel Martinez',
-    driverName: 'David Chen',
-    driverInitials: 'DC',
-    driverInitialsColor: '#F59E0B',
-    speed: '16 mph',
-    progress: 94,
-  },
-  {
-    id: '4',
-    tripId: 'TR-8798',
-    status: 'In Transit',
-    statusColor: '#2F6FED',
-    statusBg: '#EBF2FF',
-    eta: '21 min',
-    patientName: 'Nancy White',
-    driverName: 'Emily Rodriguez',
-    driverInitials: 'ER',
-    driverInitialsColor: '#EF4444',
-    speed: '43 mph',
-    progress: 31,
-  },
-  {
-    id: '5',
-    tripId: 'TR-8797',
-    status: 'In Transit',
-    statusColor: '#2F6FED',
-    statusBg: '#EBF2FF',
-    eta: '30 min',
-    patientName: 'Patricia Clark',
-    driverName: 'James Thompson',
-    driverInitials: 'JT',
-    driverInitialsColor: '#059669',
-    speed: '38 mph',
-    progress: 18,
-  },
-];
+// import assignIcon from './ui/assets/icons/assign-icon.svg';
 
 // type ViewTab = 'assignments' | 'liveMap';
 
@@ -215,26 +66,16 @@ export const DispatchPage = () => {
     error: socketError,
   } = useDispatchSocket();
 
-  // Fetch dispatch dashboard data
-  // const dashboardQuery = useGetDispatchDashboard();
-  const kpisQuery = useGetActiveTripKpis();
+  // Fetch dispatch dashboard data (KPIs + unassigned rides + available drivers)
+  const { data: dashboardData, isFetching: isFetchingDashboard } =
+    useResolvedApiQuery(useGetDispatchDashboard, null);
   const activeTripsQuery = useGetActiveTrips();
-  const { data: dashboardData } = useResolvedApiQuery(
-    useGetActiveTripKpis,
-    null
-  );
-  const { data: activeTripsData } = useResolvedApiQuery(
-    useGetActiveTrips,
-    null
-  );
   const { data: selectedTripDetailData } = useResolvedApiQuery(
     useGetTripDetail,
     null,
     selectedTripId || ''
   );
   // const { triggerAutoDispatch } = useDispatchApi();
-  // const isFetchingDashboard = dashboardQuery.isFetching;
-  const isFetchingKpis = kpisQuery.isFetching;
   const isFetchingActiveTrips = activeTripsQuery.isFetching;
 
   // Transform unassigned rides to pending bookings format
@@ -275,7 +116,12 @@ export const DispatchPage = () => {
       '#0EA5E9',
     ];
 
-    return (activeTripsData || []).map((trip, index) => {
+    const response = activeTripsQuery.data;
+    const trips =
+      response && 'data' in response && response.success
+        ? response.data
+        : [];
+    return trips.map((trip, index) => {
       const nameParts = (trip.driver_name || '').split(' ');
       const initials =
         nameParts.length > 1
@@ -323,7 +169,7 @@ export const DispatchPage = () => {
             : undefined,
       };
     });
-  }, [activeTripsData, locationUpdates]);
+  }, [activeTripsQuery.data, locationUpdates]);
 
   // Transform available drivers
   // const availableDrivers = useMemo<AvailableDriver[]>(() => {
@@ -386,46 +232,49 @@ export const DispatchPage = () => {
   //   await triggerAutoDispatch();
   // };
 
-  const kpis = dashboardData || {
-    active_trips: 0,
-    arriving_soon: 0,
-    avg_speed: null,
-    completed_today: 0,
+  const kpis = dashboardData?.kpis || {
+    pending_assignments: 0,
+    assigned_today: 0,
+    available_drivers: 0,
+    drivers_on_trip: 0,
   };
 
   const statCards = [
     {
-      icon: tripIcon,
-      value: kpis.active_trips.toString(),
-      label: 'Active Trips',
-      subtitle: 'Currently in progress',
+      icon: pendingIcon,
+      value: kpis.pending_assignments.toString(),
+      label: 'Pending Assignments',
+      subtitle: 'Awaiting driver',
       badge: {
-        text: `${kpis.active_trips} live now`,
+        text: `${kpis.pending_assignments} pending`,
+        color: '#F59E0B',
+        bg: '#FFFBEB',
+      },
+    },
+    {
+      icon: tripIcon,
+      value: kpis.assigned_today.toString(),
+      label: 'Assigned Today',
+      subtitle: 'Dispatched trips',
+      badge: {
+        text: "Today's total",
         color: '#2F6FED',
         bg: '#EEF3FF',
       },
-      progress: `${kpis.active_trips} tracking`,
-    },
-    {
-      icon: pendingIcon,
-      value: kpis.arriving_soon.toString(),
-      label: 'Arriving Soon',
-      subtitle: 'Within 5 minutes',
-      badge: { text: 'ETA < 5 min', color: '#F59E0B', bg: '#FFFBEB' },
     },
     {
       icon: driverIcon,
-      value: kpis.avg_speed ? `${kpis.avg_speed.toFixed(1)} mph` : 'N/A',
-      label: 'Average Speed',
-      subtitle: 'Active fleet',
-      badge: { text: 'Real-time', color: '#059669', bg: '#ECFDF5' },
+      value: kpis.available_drivers.toString(),
+      label: 'Available Drivers',
+      subtitle: 'Ready to dispatch',
+      badge: { text: 'Online now', color: '#059669', bg: '#ECFDF5' },
     },
     {
       icon: userGroupIcon,
-      value: kpis.completed_today.toString(),
-      label: 'Completed Today',
-      subtitle: 'Finished trips',
-      badge: { text: "Today's total", color: '#9CA3AF', bg: '#F3F4F6' },
+      value: kpis.drivers_on_trip.toString(),
+      label: 'Drivers on Trip',
+      subtitle: 'Currently active',
+      badge: { text: 'In transit', color: '#9CA3AF', bg: '#F3F4F6' },
     },
   ];
 
@@ -552,7 +401,7 @@ export const DispatchPage = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
-          {isFetchingKpis
+          {isFetchingDashboard
             ? Array.from({ length: 4 }).map((_, index) => (
                 <Grid key={index} size={{ xs: 6, lg: 3 }}>
                   <Skeleton
