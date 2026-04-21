@@ -146,27 +146,23 @@ export const TripTelemetryPanel = ({
             //     '&:hover': { background: '#DBEAFE' },
             //   }}
             // >
-              <RowStack spacing={'4px'}
-                sx={{
-                  // background: '#EBF2FF',
-                  color: '#2F6FED',
-                  fontWeight: 600,
-                  fontSize: pxToRem(11.5),
-                  borderRadius: '8px',
-                  padding: '6px 14px',
-                  minWidth: 'auto',
-                  textDecoration: 'none',
-                }}
-              >
-                {/* <Typography></Typography> */}
-                <StyledImage
-                  src={callIcon}
-                  alt="call"
-                  width={12}
-                  height={12}
-                />
-                <span>{`Driver: ${driverPhone}`}</span>
-              </RowStack>
+            <RowStack
+              spacing={'4px'}
+              sx={{
+                // background: '#EBF2FF',
+                color: '#2F6FED',
+                fontWeight: 600,
+                fontSize: pxToRem(11.5),
+                borderRadius: '8px',
+                padding: '6px 14px',
+                minWidth: 'auto',
+                textDecoration: 'none',
+              }}
+            >
+              {/* <Typography></Typography> */}
+              <StyledImage src={callIcon} alt="call" width={12} height={12} />
+              <span>{`Driver: ${driverPhone}`}</span>
+            </RowStack>
             // </AppButton>
           )}
           <AppButton

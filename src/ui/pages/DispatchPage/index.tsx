@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Box,
-  Grid,
-  Skeleton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppButton,
@@ -130,9 +124,7 @@ export const DispatchPage = () => {
 
     const response = activeTripsQuery.data;
     const trips =
-      response && 'data' in response && response.success
-        ? response.data
-        : [];
+      response && 'data' in response && response.success ? response.data : [];
     return trips.map((trip, index) => {
       const nameParts = (trip.driver_name || '').split(' ');
       const initials =
@@ -741,9 +733,7 @@ export const DispatchPage = () => {
                 >
                   <AppGoogleMap
                     markerPositions={
-                      hasDestination
-                        ? [{ lat: destLat!, lng: destLng! }]
-                        : []
+                      hasDestination ? [{ lat: destLat!, lng: destLng! }] : []
                     }
                     truckMarker={
                       hasTruckPosition
@@ -820,9 +810,7 @@ export const DispatchPage = () => {
                     selectedTripDetailData?.progress_percent ??
                     selectedTrip.progress
                   }
-                  status={
-                    selectedTripDetailData?.status || selectedTrip.status
-                  }
+                  status={selectedTripDetailData?.status || selectedTrip.status}
                   statusColor={selectedTrip.statusColor}
                   pickup={
                     selectedTripDetailData?.pickup_address || 'Loading...'
@@ -830,9 +818,7 @@ export const DispatchPage = () => {
                   destination={
                     selectedTripDetailData?.destination_address || 'Loading...'
                   }
-                  vehicle={
-                    selectedTripDetailData?.driver_vehicle || undefined
-                  }
+                  vehicle={selectedTripDetailData?.driver_vehicle || undefined}
                 />
               ) : (
                 <Box
