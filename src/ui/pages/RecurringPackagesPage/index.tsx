@@ -571,7 +571,7 @@ const PackageCard = ({
                 ? `${Number(
                     pkg.discount_percent ?? pkg.discount_percentage
                   ).toFixed(0)}% off`
-              : 'N/A',
+                : 'N/A',
           },
           { label: 'Validity', value: `${pkg.validity_days} days` },
         ].map((stat) => (

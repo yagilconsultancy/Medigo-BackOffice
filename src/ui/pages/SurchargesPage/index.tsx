@@ -107,7 +107,7 @@ export const SurchargesPage = () => {
   }>({ open: false, ruleId: null, ruleName: null });
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { deleteSurchargeRule } = useSurchargeApi();
+  const { deleteSurchargeRule, updateSurchargeRule } = useSurchargeApi();
   const { data: kpisData } = useResolvedApiQuery(useGetSurchargeKpis, null);
   const { data: rulesData, refetch } = useResolvedApiQuery(
     useListSurchargeRules,

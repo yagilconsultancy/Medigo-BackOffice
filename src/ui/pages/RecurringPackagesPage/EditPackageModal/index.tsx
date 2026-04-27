@@ -7,11 +7,7 @@ import {
   FormikAppTextField,
   RowStack,
 } from '../../../modules/components';
-import {
-  pxToRem,
-  RidePackage,
-  RidePackageUpdate,
-} from '../../../../common';
+import { pxToRem, RidePackage, RidePackageUpdate } from '../../../../common';
 import { usePaymentPricingApi } from '../../../../common/hooks/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { ROUTES, resolveRoute } from '../../../../common';
@@ -80,7 +76,7 @@ const initialValuesFromPackage = (
       : pkg?.discount_percentage !== undefined &&
           pkg?.discount_percentage !== null
         ? String(pkg.discount_percentage)
-      : '',
+        : '',
   validity_days: pkg ? String(pkg.validity_days) : '30',
   sort_order: '0',
   is_active: pkg?.is_active ?? true,

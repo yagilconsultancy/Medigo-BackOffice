@@ -368,15 +368,9 @@ export interface ServiceTypeConfigResponse {
 }
 
 export interface ServiceTypeConfigUpdate {
-  display_name?: string;
-  is_active?: boolean;
-  base_fare?: number;
-  per_km?: number;
-  per_minute?: number;
-  minimum_fare?: number;
-  cancellation_fee?: number;
-  waiting_time_per_minute?: number;
-  metadata?: Record<string, any> | null;
+  name: string;
+  config: Record<string, any>;
+  notes?: string;
 }
 
 export interface RoutePrice {

@@ -356,7 +356,7 @@ export const PricingConfigurationPage = () => {
                     value:
                       kpisData?.base_fare != null
                         ? `$${Number(kpisData.base_fare).toFixed(2)}`
-                      : '$0.00',
+                        : '$0.00',
                     label: 'Base Fare KPI',
                   },
                   {

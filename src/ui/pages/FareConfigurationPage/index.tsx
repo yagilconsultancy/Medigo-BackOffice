@@ -21,6 +21,9 @@ import {
   RowStack,
 } from '../../modules/components';
 import { AppDropdownMenu } from '../../modules/components/AppDropdownMenu';
+import { StandardServiceTypeEditModal } from './StandardServiceTypeEditModal';
+import { StretcherServiceTypeEditModal } from './StretcherServiceTypeEditModal';
+import { WheelchairWavServiceTypeEditModal } from './WheelchairWavServiceTypeEditModal';
 import { GridColSpec } from '../../modules/components/GridTable';
 import {
   pxToRem,
@@ -69,801 +72,10 @@ type FareTab = {
   surchargesInfo?: { title: string; items: string[] };
 };
 
-type VehicleConfig = {
-  tabs: FareTab[];
-};
-
-// ─── Vehicle Type Config ────────────────────────────────────────────────────
-
-const vehicleTypes = ['Standard Vehicle', 'Wheelchair (WAV)', 'Stretcher'];
-
 const vehicleTypeStyles: Record<string, { color: string; bg: string }> = {
   'Standard Vehicle': { color: '#2F6FED', bg: '#EBF2FF' },
   'Wheelchair (WAV)': { color: '#6366F1', bg: '#EEF2FF' },
-  Stretcher: { color: '#DC2626', bg: '#FEF2F2' },
-};
-
-// ─── Standard Vehicle Data ──────────────────────────────────────────────────
-
-const standardBasePricing: TableRow[] = [
-  {
-    id: '1',
-    setting: 'Base Fare (≤10 km)',
-    value: '12.00',
-    unit: '$',
-    description: 'Flat fee for trips up to 10 km',
-  },
-  {
-    id: '2',
-    setting: 'Base Fare (>10 km)',
-    value: '12.00',
-    unit: '$',
-    description: 'Base fee before per km charges apply',
-  },
-  {
-    id: '3',
-    setting: 'Additional Distance Rate',
-    value: '0.75',
-    unit: '$/km',
-    description: 'Charged per km after first 10 km',
-  },
-  {
-    id: '4',
-    setting: 'Surcharge Fee',
-    value: '0.06',
-    unit: '$',
-    description: 'Fixed surcharge applied to every trip',
-  },
-  {
-    id: '5',
-    setting: 'Insurance & Payment Fee',
-    value: '1.50',
-    unit: '$',
-    description: 'Covers insurance and payment processing',
-  },
-  {
-    id: '6',
-    setting: 'Free Wait Time',
-    value: '10',
-    unit: 'mins',
-    description: 'Complimentary wait time per trip',
-  },
-  {
-    id: '7',
-    setting: 'Wait Time Rate (After Free)',
-    value: '0.50',
-    unit: '$/min',
-    description: 'Charged after free wait time expires',
-  },
-  {
-    id: '8',
-    setting: 'Maximum Surcharge Cap',
-    value: '18.00',
-    unit: '$',
-    description: 'Max total surcharge allowed per trip',
-  },
-];
-
-const standardDistanceRules: TableRow[] = [
-  {
-    id: '1',
-    setting: 'Base Distance Limit',
-    value: '10',
-    unit: 'km',
-    description: 'Distance covered by base fare',
-  },
-  {
-    id: '2',
-    setting: 'Additional Distance Rate',
-    value: '0.75',
-    unit: '$/km',
-    description: 'Applied after base distance',
-  },
-];
-
-const standardRoutePricing: TableRow[] = [
-  {
-    id: '1',
-    route: 'Milton Local',
-    distance: 'Under 10 km',
-    baseFare: '$12.00',
-    avgWaitCharge: '$1.00 (2 min)',
-    typicalTotal: '$14.56',
-  },
-  {
-    id: '2',
-    route: 'Milton to Georgetown',
-    distance: '18 km',
-    baseFare: '$18.00',
-    avgWaitCharge: '$2.50 (5 min)',
-    typicalTotal: '$22.06',
-  },
-  {
-    id: '3',
-    route: 'Milton to Oakville',
-    distance: '26 km',
-    baseFare: '$24.00',
-    avgWaitCharge: '$10.00 (20 min)',
-    typicalTotal: '$35.56',
-  },
-  {
-    id: '4',
-    route: 'Milton to Burlington',
-    distance: '32 km',
-    baseFare: '$28.50',
-    avgWaitCharge: '$10.00 (20 min)',
-    typicalTotal: '$40.06',
-  },
-  {
-    id: '5',
-    route: 'Milton to Brampton',
-    distance: '38 km',
-    baseFare: '$33.00',
-    avgWaitCharge: '$10.00 (20 min)',
-    typicalTotal: '$44.56',
-  },
-  {
-    id: '6',
-    route: 'Milton to Mississauga',
-    distance: '45 km',
-    baseFare: '$38.25',
-    avgWaitCharge: '$17.50 (35 min)',
-    typicalTotal: '$57.31',
-  },
-];
-
-const standardSurcharges: SurchargeSection[] = [
-  {
-    id: 'weather',
-    label: 'A',
-    title: 'Weather',
-    subtitle: 'Surcharges triggered by weather conditions',
-    columns: ['Condition', 'Surcharge', 'Trigger'],
-    rows: [
-      ['Light snow / freezing rain', '$3.00', 'Advisory'],
-      ['Heavy snow / storm', '$5.00', 'Storm warning'],
-      ['Post-storm', '$3.00', 'Within 24 hrs'],
-    ],
-  },
-  {
-    id: 'rushHour',
-    label: 'B',
-    title: 'Rush Hour',
-    subtitle: 'Peak demand periods on weekdays',
-    columns: ['Period', 'Days', 'Surcharge'],
-    rows: [
-      ['7:00 am – 9:00 am', 'Mon–Fri', '$4.00'],
-      ['4:00 pm – 6:30 pm', 'Mon–Thu', '$4.00'],
-      ['Friday 4:00 pm – 7:00 pm', 'Friday', '$5.00'],
-    ],
-  },
-  {
-    id: 'weekendHolidays',
-    label: 'C',
-    title: 'Weekend & Holidays',
-    subtitle: 'Statutory and weekend premiums',
-    columns: ['Day', 'Surcharge'],
-    rows: [
-      ['Saturday', '$3.00'],
-      ['Sunday', '$4.00'],
-      ['Ontario Public Holidays', '$5.00'],
-    ],
-  },
-  {
-    id: 'timeBased',
-    label: 'D',
-    title: 'Time-Based',
-    subtitle: 'Overnight and off-peak hour premiums',
-    columns: ['Time Period', 'Surcharge'],
-    rows: [
-      ['Early Morning (5:00–6:59 am)', '$5.00'],
-      ['Late Night (9:00–11:59 pm)', '$4.00'],
-      ['Overnight (12:00–4:59 am)', '$8.00'],
-    ],
-  },
-];
-
-const standardTollCharges: TableRow[] = [
-  {
-    id: '1',
-    route: 'Milton to Oakville',
-    surcharge: '$8.00',
-    estimatedToll: '$4.50–$7.00',
-  },
-  {
-    id: '2',
-    route: 'Milton to Brampton',
-    surcharge: '$9.00',
-    estimatedToll: '$5.00–$8.00',
-  },
-  {
-    id: '3',
-    route: 'Milton to Mississauga',
-    surcharge: '$10.00',
-    estimatedToll: '$6.00–$9.00',
-  },
-];
-
-const standardDiscounts: TableRow[] = [
-  {
-    id: '1',
-    route: 'Milton to Georgetown',
-    standardRate: '$22.06',
-    dialysisRate: '$18.00',
-    monthlyPackage: '$195.00',
-    savings: '21 trips saved',
-  },
-  {
-    id: '2',
-    route: 'Milton to Oakville',
-    standardRate: '$35.56',
-    dialysisRate: '$28.00',
-    monthlyPackage: '$300.00',
-    savings: '36 trips saved',
-  },
-  {
-    id: '3',
-    route: 'Milton to Burlington',
-    standardRate: '$40.06',
-    dialysisRate: '$32.00',
-    monthlyPackage: '$345.00',
-    savings: '39 trips saved',
-  },
-  {
-    id: '4',
-    route: 'Milton to Mississauga',
-    standardRate: '$57.31',
-    dialysisRate: '$45.00',
-    monthlyPackage: '$490.00',
-    savings: '50 trips saved',
-  },
-];
-
-const standardRulesCaps: TableRow[] = [
-  {
-    id: '1',
-    rule: 'Maximum Surcharge Cap',
-    value: '$18.00',
-    valueType: 'text',
-  },
-  {
-    id: '2',
-    rule: 'Surcharge Stacking',
-    value: 'Enabled',
-    valueType: 'greenBadge',
-  },
-  { id: '3', rule: 'Applies Per Trip', value: 'Yes', valueType: 'blueBadge' },
-];
-
-// ─── Wheelchair (WAV) Data ──────────────────────────────────────────────────
-
-const wavRateComponents: TableRow[] = [
-  {
-    id: '1',
-    setting: 'Base Fare (under 10 km)',
-    value: '22.00',
-    unit: '$',
-    description: 'Flat — WAV overhead vs $12 ambulatory',
-  },
-  {
-    id: '2',
-    setting: 'Per km (beyond 10 km)',
-    value: '1.10',
-    unit: '$/km',
-    description: 'Higher — van fuel and maintenance',
-  },
-  {
-    id: '3',
-    setting: 'Accessibility Fee (every trip)',
-    value: '15.00',
-    unit: '$',
-    description: 'Ramp/lift, securement, training',
-  },
-  {
-    id: '4',
-    setting: 'Minimum Fare Protection',
-    value: '45.00',
-    unit: '$',
-    description: 'Base + access fee floor on every trip',
-  },
-  {
-    id: '5',
-    setting: 'Surcharge',
-    value: '0.06',
-    unit: '$',
-    description: 'Same as all services',
-  },
-  {
-    id: '6',
-    setting: 'Insurance & Gateway',
-    value: '1.50',
-    unit: '$',
-    description: 'Same as all services',
-  },
-  {
-    id: '7',
-    setting: 'Wait Time (first 10 min free)',
-    value: '0.80',
-    unit: '$/min',
-    description: 'Higher — WAV loading takes longer',
-  },
-];
-
-const wavFaresByRoute: TableRow[] = [
-  {
-    id: '1',
-    route: 'Milton Local (8 km)',
-    baseAccess: '$37.00',
-    minProtected: '$45.80 applied',
-    wait: '$8.00',
-    otherFees: '$1.56',
-    total: '$54.56',
-  },
-  {
-    id: '2',
-    route: 'Milton to Georgetown (15 km)',
-    baseAccess: '$45.80',
-    minProtected: '$45.80 (above min)',
-    wait: '$8.00',
-    otherFees: '$1.56',
-    total: '$55.36',
-  },
-  {
-    id: '3',
-    route: 'Milton to Oakville (29 km)',
-    baseAccess: '$54.60',
-    minProtected: '$54.60 (above min)',
-    wait: '$16.00',
-    otherFees: '$1.56',
-    total: '$72.16',
-  },
-  {
-    id: '4',
-    route: 'Milton to Burlington (32 km)',
-    baseAccess: '$61.20',
-    minProtected: '$61.20 (above min)',
-    wait: '$16.00',
-    otherFees: '$1.56',
-    total: '$78.76',
-  },
-  {
-    id: '5',
-    route: 'Milton to Brampton (38 km)',
-    baseAccess: '$67.80',
-    minProtected: '$67.80 (above min)',
-    wait: '$16.00',
-    otherFees: '$1.56',
-    total: '$85.36',
-  },
-  {
-    id: '6',
-    route: 'Milton to Mississauga (45 km)',
-    baseAccess: '$75.50',
-    minProtected: '$75.50 (above min)',
-    wait: '$28.00',
-    otherFees: '$1.56',
-    total: '$105.06',
-  },
-];
-
-const wavPlatformCommission: TableRow[] = [
-  {
-    id: '1',
-    route: 'Milton Local',
-    totalFare: '$54.56',
-    medigo18: '$9.82',
-    vendor82: '$44.74',
-    vendorNetEst: '~$29.00',
-  },
-  {
-    id: '2',
-    route: 'Milton to Georgetown',
-    totalFare: '$55.36',
-    medigo18: '$9.96',
-    vendor82: '$45.40',
-    vendorNetEst: '~$29.00',
-  },
-  {
-    id: '3',
-    route: 'Milton to Oakville',
-    totalFare: '$72.16',
-    medigo18: '$12.99',
-    vendor82: '$59.17',
-    vendorNetEst: '~$38.00',
-  },
-  {
-    id: '4',
-    route: 'Milton to Burlington',
-    totalFare: '$78.76',
-    medigo18: '$14.18',
-    vendor82: '$64.58',
-    vendorNetEst: '~$42.00',
-  },
-  {
-    id: '5',
-    route: 'Milton to Brampton',
-    totalFare: '$85.36',
-    medigo18: '$15.36',
-    vendor82: '$70.00',
-    vendorNetEst: '~$46.00',
-  },
-  {
-    id: '6',
-    route: 'Milton to Mississauga',
-    totalFare: '$105.06',
-    medigo18: '$18.91',
-    vendor82: '$86.15',
-    vendorNetEst: '~$56.00',
-  },
-];
-
-const wavVendorTerms = [
-  '18% platform commission deducted automatically at time of payment',
-  'Accessibility fee of $15.00 is collected by Medigo and passed to vendor in full',
-  'Minimum fare protection of $45.00 applies to base fare + accessibility fee on every trip',
-  'All WAV surcharges (snow, rush hour, 407, weekend, early/late) apply on top of base fare',
-  'Maximum surcharge cap of $18.00 per trip applies to all WAV trips',
-  'Vendor must maintain WAV certification, ramp/lift inspection records and accessible driver training',
-  'Off-platform bookings of Medigo clients prohibited for 12 months from first trip',
-  'One-time onboarding fee of $99 applies to all new WAV vendors',
-];
-
-// ─── Stretcher Data ────────────────────────────────────────────────────────
-
-const stretcherRateComponents: TableRow[] = [
-  {
-    id: '1',
-    setting: 'Base Fare (under 10 km)',
-    value: '85.00',
-    unit: '$',
-    description: 'Covers 2-person crew for short trips',
-  },
-  {
-    id: '2',
-    setting: 'Per km (beyond 10 km)',
-    value: '2.25',
-    unit: '$/km',
-    description: 'Highest rate — specialized vehicle + 2 crew',
-  },
-  {
-    id: '3',
-    setting: 'Attendant Fee (every trip)',
-    value: '35.00',
-    unit: '$',
-    description: 'Mandatory — second person required by law',
-  },
-  {
-    id: '4',
-    setting: 'Surcharge',
-    value: '0.06',
-    unit: '$',
-    description: 'Same as all services',
-  },
-  {
-    id: '5',
-    setting: 'Insurance & Gateway',
-    value: '1.50',
-    unit: '$',
-    description: 'Same as all services',
-  },
-  {
-    id: '6',
-    setting: 'Wait Time (first 10 min free)',
-    value: '1.00',
-    unit: '$/min',
-    description: 'Premium — 2 crew sitting idle',
-  },
-];
-
-const stretcherFaresByRoute: TableRow[] = [
-  {
-    id: '1',
-    route: 'Milton Local (8 km)',
-    baseFare: '$85.00',
-    attendFee: '$35.00',
-    wait: '$10.00',
-    otherFees: '$1.56',
-    total: '$131.56',
-  },
-  {
-    id: '2',
-    route: 'Milton to Georgetown (15 km)',
-    baseFare: '$103.00',
-    attendFee: '$35.00',
-    wait: '$10.00',
-    otherFees: '$1.56',
-    total: '$149.56',
-  },
-  {
-    id: '3',
-    route: 'Milton to Oakville (29 km)',
-    baseFare: '$121.00',
-    attendFee: '$35.00',
-    wait: '$20.00',
-    otherFees: '$1.56',
-    total: '$177.56',
-  },
-  {
-    id: '4',
-    route: 'Milton to Burlington (32 km)',
-    baseFare: '$134.50',
-    attendFee: '$35.00',
-    wait: '$20.00',
-    otherFees: '$1.56',
-    total: '$192.06',
-  },
-  {
-    id: '5',
-    route: 'Milton to Brampton (38 km)',
-    baseFare: '$148.00',
-    attendFee: '$35.00',
-    wait: '$20.00',
-    otherFees: '$1.56',
-    total: '$205.56',
-  },
-  {
-    id: '6',
-    route: 'Milton to Mississauga (45 km)',
-    baseFare: '$163.75',
-    attendFee: '$35.00',
-    wait: '$35.00',
-    otherFees: '$1.56',
-    total: '$236.31',
-  },
-];
-
-const stretcherRevenueSplit: TableRow[] = [
-  {
-    id: '1',
-    route: 'Milton Local',
-    totalFare: '$131.56',
-    opCosts: '$55.00',
-    net: '$76.56',
-    your50: '$38.28',
-    partner50: '$38.28',
-  },
-  {
-    id: '2',
-    route: 'Milton to Georgetown',
-    totalFare: '$149.56',
-    opCosts: '$62.00',
-    net: '$87.56',
-    your50: '$43.78',
-    partner50: '$43.78',
-  },
-  {
-    id: '3',
-    route: 'Milton to Oakville',
-    totalFare: '$177.56',
-    opCosts: '$72.00',
-    net: '$105.56',
-    your50: '$52.78',
-    partner50: '$52.78',
-  },
-  {
-    id: '4',
-    route: 'Milton to Burlington',
-    totalFare: '$192.06',
-    opCosts: '$78.00',
-    net: '$114.06',
-    your50: '$57.03',
-    partner50: '$57.03',
-  },
-  {
-    id: '5',
-    route: 'Milton to Brampton',
-    totalFare: '$205.56',
-    opCosts: '$83.00',
-    net: '$122.56',
-    your50: '$61.28',
-    partner50: '$61.28',
-  },
-  {
-    id: '6',
-    route: 'Milton to Mississauga',
-    totalFare: '$236.31',
-    opCosts: '$95.00',
-    net: '$141.31',
-    your50: '$70.66',
-    partner50: '$70.66',
-  },
-];
-
-const stretcherPartnershipTerms = [
-  'All stretcher trips require a driver plus one trained attendant — no exceptions',
-  'Attendant fee of $35.00 is disclosed to client at booking and collected on every trip',
-  'All surcharges (snow, rush hour, 407, weekend, early/late) apply and are split 50/50',
-  'Maximum surcharge cap of $18.00 per trip applies to stretcher trips',
-  'Operating costs (fuel, insurance, maintenance) are deducted before the 50/50 split',
-  'Both partners must agree in writing on what qualifies as an operating cost',
-  '24-hour cancellation notice required from client to avoid trip charge',
-  'Partnership agreement should be reviewed and signed before April 2026 launch',
-];
-
-const stretcherServiceComparison: TableRow[] = [
-  {
-    id: '1',
-    route: 'Milton Local',
-    ambulatory: '$14.56',
-    wav: '$54.56',
-    stretcher: '$131.56',
-  },
-  {
-    id: '2',
-    route: 'Milton to Georgetown',
-    ambulatory: '$22.06',
-    wav: '$55.36',
-    stretcher: '$149.56',
-  },
-  {
-    id: '3',
-    route: 'Milton to Oakville',
-    ambulatory: '$35.56',
-    wav: '$72.16',
-    stretcher: '$177.56',
-  },
-  {
-    id: '4',
-    route: 'Milton to Burlington',
-    ambulatory: '$40.06',
-    wav: '$78.76',
-    stretcher: '$192.06',
-  },
-  {
-    id: '5',
-    route: 'Milton to Brampton',
-    ambulatory: '$44.56',
-    wav: '$85.36',
-    stretcher: '$205.56',
-  },
-  {
-    id: '6',
-    route: 'Milton to Mississauga',
-    ambulatory: '$57.31',
-    wav: '$105.06',
-    stretcher: '$236.31',
-  },
-];
-
-const stretcherSurchargesInfo = {
-  title: 'Surcharges — Apply to All Three Services Equally',
-  items: [
-    'Snow / winter weather: +$3.00 to +$5.00 depending on severity',
-    'Rush hour (Mon–Fri morning and evening): +$4.00 | Friday evening: +$5.00',
-    'Highway 407 toll surcharge: +$8.00 to +$10.00 depending on route',
-    'Weekend: Saturday +$3.00 | Sunday +$4.00 | Public holidays +$5.00',
-    'Early morning (5:00–6:59 am): +$5.00 | Late night (9:00–11:59 pm): +$4.00 | Overnight: +$8.00',
-    'Maximum surcharge cap of $18.00 per trip applies to ALL service types',
-  ],
-};
-
-const vehicleConfigs: Record<string, VehicleConfig> = {
-  'Standard Vehicle': {
-    tabs: [
-      {
-        label: 'Base Pricing',
-        title: 'Base Pricing',
-        desc: 'Core fare rates and fees applied to every trip',
-        columnType: 'rate',
-        data: standardBasePricing,
-      },
-      {
-        label: 'Distance Rules',
-        title: 'Distance Rules',
-        desc: 'Distance thresholds and per-km rates',
-        columnType: 'rate',
-        rateLabels: { setting: 'Rule' },
-        data: standardDistanceRules,
-      },
-      {
-        label: 'Route Pricing',
-        title: 'Route Pricing',
-        desc: 'Estimated fares for common Milton-area routes',
-        columnType: 'stdRoute',
-        data: standardRoutePricing,
-      },
-      {
-        label: 'Surcharges',
-        title: 'Surcharges',
-        desc: 'Additional fees applied based on weather, time, and demand',
-        columnType: 'rate',
-        sections: standardSurcharges,
-        data: [],
-      },
-      {
-        label: 'Toll Charges',
-        title: 'Toll Charges',
-        desc: 'Surcharges applied to routes using tolled highways (Hwy 407)',
-        columnType: 'toll',
-        warningNote:
-          'Note: Driver must confirm 407 usage before trip begins. Surcharge is automatically added when confirmed.',
-        data: standardTollCharges,
-      },
-      {
-        label: 'Discounts (Dialysis)',
-        title: 'Discounts — Dialysis',
-        desc: 'Reduced rates and monthly packages for dialysis patients',
-        columnType: 'discount',
-        data: standardDiscounts,
-      },
-      {
-        label: 'Rules & Caps',
-        title: 'Rules & Caps',
-        desc: 'Global surcharge limits and stacking rules',
-        columnType: 'rules',
-        data: standardRulesCaps,
-      },
-    ],
-  },
-  'Wheelchair (WAV)': {
-    tabs: [
-      {
-        label: 'Rate Components',
-        title: 'WAV Rate Components',
-        desc: 'Base rates applied to every Wheelchair Accessible Vehicle trip',
-        footnote:
-          '* Minimum fare protection of $45.00 applies to base fare + accessibility fee combined. For short local trips where the calculated amount falls below $45.00, the minimum is applied automatically.',
-        columnType: 'rate',
-        data: wavRateComponents,
-      },
-      {
-        label: 'Fares by Route',
-        title: 'WAV Fares by Route',
-        desc: 'Includes accessibility fee, minimum fare protection, and standard billable wait time after the free 10-minute window',
-        footnote:
-          '* Other Fees column includes surcharge ($0.06) and insurance & gateway ($1.50) on every trip. Milton Local triggers minimum fare protection bringing base + access to $45.00.',
-        columnType: 'route',
-        data: wavFaresByRoute,
-      },
-      {
-        label: 'Platform Commission',
-        title: 'Medigo Platform Commission on WAV Trips',
-        desc: 'Medigo charges an 18% platform commission on all WAV trips. Vendor net estimate reflects fare after commission minus estimated fuel and operating costs.',
-        vendorTerms: wavVendorTerms,
-        columnType: 'commission',
-        data: wavPlatformCommission,
-      },
-    ],
-  },
-  Stretcher: {
-    tabs: [
-      {
-        label: 'Rate Components',
-        title: 'Stretcher Rate Components',
-        desc: 'Stretcher transport requires a driver and a trained attendant on every trip. The attendant fee is mandatory on all stretcher bookings.',
-        footnote:
-          '* The $85.00 base fare reflects the cost of deploying a 2-person crew. The attendant fee of $35.00 is a separate mandatory flat charge disclosed upfront on every booking confirmation.',
-        columnType: 'rate',
-        data: stretcherRateComponents,
-      },
-      {
-        label: 'Fares by Route',
-        title: 'Stretcher Fares by Route',
-        desc: 'Fares include the attendant fee and standard billable wait time after the free 10-minute window. Final fare varies with actual wait duration and applicable surcharges.',
-        footnote:
-          '* Other Fees column includes surcharge ($0.06) and insurance & gateway ($1.50) applied on every trip.',
-        columnType: 'stretcherRoute',
-        data: stretcherFaresByRoute,
-      },
-      {
-        label: 'Revenue Split',
-        title: '50/50 Partnership Revenue Split',
-        desc: 'Net is calculated after estimated operating costs including fuel, driver pay, attendant pay, insurance allocation and vehicle wear. Both partners receive equal share of net on every completed trip.',
-        vendorTerms: stretcherPartnershipTerms,
-        vendorTermsTitle: 'Stretcher Partnership Terms',
-        columnType: 'revenueSplit',
-        data: stretcherRevenueSplit,
-      },
-      {
-        label: 'Service Comparison',
-        title: 'All Three Services — Side by Side',
-        desc: 'Each tier reflects the equipment, staffing, and operational requirements of that service type across all Halton Region routes',
-        columnType: 'comparison',
-        data: stretcherServiceComparison,
-        surchargesInfo: stretcherSurchargesInfo,
-      },
-    ],
-  },
+  'Stretcher Transport': { color: '#DC2626', bg: '#FEF2F2' },
 };
 
 const renderSurchargeCell = (
@@ -938,6 +150,9 @@ export const FareConfigurationPage = () => {
   const [selectedServiceType, setSelectedServiceType] = useState('standard');
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [activeTab, setActiveTab] = useState(0);
+  const [isStandardEditOpen, setIsStandardEditOpen] = useState(false);
+  const [isWheelchairEditOpen, setIsWheelchairEditOpen] = useState(false);
+  const [isStretcherEditOpen, setIsStretcherEditOpen] = useState(false);
   const { data: serviceTypesData } = useResolvedApiQuery(
     useListServiceTypes,
     null
@@ -967,6 +182,24 @@ export const FareConfigurationPage = () => {
     }
     return null;
   }, [serviceTypeConfigResponse]);
+
+  const openStandardEditModal = () => {
+    if (selectedServiceType === 'standard') {
+      setIsStandardEditOpen(true);
+    }
+  };
+
+  const openWheelchairEditModal = () => {
+    if (selectedServiceType === 'wheelchair_wav') {
+      setIsWheelchairEditOpen(true);
+    }
+  };
+
+  const openStretcherEditModal = () => {
+    if (selectedServiceType === 'stretcher') {
+      setIsStretcherEditOpen(true);
+    }
+  };
 
   // Helper function to convert snake_case to Title Case
   const toTitleCase = (str: string) => {
@@ -1142,6 +375,80 @@ export const FareConfigurationPage = () => {
   const config = dynamicConfig;
   const safeTab = config ? Math.min(activeTab, config.tabs.length - 1) : 0;
   const currentTab = config?.tabs[safeTab];
+  const showStandardEditAction = selectedServiceType === 'standard';
+  const showWheelchairEditAction = selectedServiceType === 'wheelchair_wav';
+  const showStretcherEditAction = selectedServiceType === 'stretcher';
+  const getEditActionHandler = () => {
+    if (showWheelchairEditAction) return openWheelchairEditModal;
+    if (showStretcherEditAction) return openStretcherEditModal;
+    return openStandardEditModal;
+  };
+  const wheelchairEditActionColumn: GridColSpec<TableRow> = {
+    field: 'actions' as string,
+    headerName: '',
+    flex: 0.3,
+    minWidth: 50,
+    sortable: false,
+    renderCell: () =>
+      showWheelchairEditAction ? (
+        <IconButton
+          onClick={openWheelchairEditModal}
+          size="small"
+          sx={{
+            width: 30,
+            height: 30,
+            color: '#9CA3AF',
+            '&:hover': { color: '#374151', background: '#F3F4F6' },
+          }}
+        >
+          <EditOutlinedIcon sx={{ fontSize: 16 }} />
+        </IconButton>
+      ) : null,
+  };
+  const standardEditActionColumn: GridColSpec<TableRow> = {
+    field: 'actions' as string,
+    headerName: '',
+    flex: 0.3,
+    minWidth: 50,
+    sortable: false,
+    renderCell: () =>
+      showStandardEditAction ? (
+        <IconButton
+          onClick={openStandardEditModal}
+          size="small"
+          sx={{
+            width: 30,
+            height: 30,
+            color: '#9CA3AF',
+            '&:hover': { color: '#374151', background: '#F3F4F6' },
+          }}
+        >
+          <EditOutlinedIcon sx={{ fontSize: 16 }} />
+        </IconButton>
+      ) : null,
+  };
+  const stretcherEditActionColumn: GridColSpec<TableRow> = {
+    field: 'actions' as string,
+    headerName: '',
+    flex: 0.3,
+    minWidth: 50,
+    sortable: false,
+    renderCell: () =>
+      showStretcherEditAction ? (
+        <IconButton
+          onClick={openStretcherEditModal}
+          size="small"
+          sx={{
+            width: 30,
+            height: 30,
+            color: '#9CA3AF',
+            '&:hover': { color: '#374151', background: '#F3F4F6' },
+          }}
+        >
+          <EditOutlinedIcon sx={{ fontSize: 16 }} />
+        </IconButton>
+      ) : null,
+  };
 
   const emptyState = (
     <Stack
@@ -1259,19 +566,23 @@ export const FareConfigurationPage = () => {
       flex: 0.3,
       minWidth: 50,
       sortable: false,
-      renderCell: () => (
-        <IconButton
-          size="small"
-          sx={{
-            width: 30,
-            height: 30,
-            color: '#9CA3AF',
-            '&:hover': { color: '#374151', background: '#F3F4F6' },
-          }}
-        >
-          <EditOutlinedIcon sx={{ fontSize: 16 }} />
-        </IconButton>
-      ),
+      renderCell: () =>
+        showStandardEditAction ||
+        showWheelchairEditAction ||
+        showStretcherEditAction ? (
+          <IconButton
+            onClick={getEditActionHandler()}
+            size="small"
+            sx={{
+              width: 30,
+              height: 30,
+              color: '#9CA3AF',
+              '&:hover': { color: '#374151', background: '#F3F4F6' },
+            }}
+          >
+            <EditOutlinedIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        ) : null,
     },
   ];
 
@@ -2155,34 +1466,88 @@ export const FareConfigurationPage = () => {
 
   const columns =
     currentTab?.columnType === 'genericTable'
-      ? generateDynamicColumns(currentTab?.data || [])
-      : columnMap[currentTab?.columnType] || rateColumns;
+      ? showWheelchairEditAction
+        ? [
+            ...generateDynamicColumns(currentTab?.data || []),
+            wheelchairEditActionColumn,
+          ]
+        : showStandardEditAction
+          ? [
+              ...generateDynamicColumns(currentTab?.data || []),
+              standardEditActionColumn,
+            ]
+          : showStretcherEditAction
+            ? [
+                ...generateDynamicColumns(currentTab?.data || []),
+                stretcherEditActionColumn,
+              ]
+            : generateDynamicColumns(currentTab?.data || [])
+      : currentTab?.columnType === 'rate'
+        ? rateColumns
+        : showStandardEditAction
+          ? [
+              ...(columnMap[currentTab?.columnType] || rateColumns),
+              standardEditActionColumn,
+            ]
+          : showWheelchairEditAction
+            ? [
+                ...(columnMap[currentTab?.columnType] || rateColumns),
+                wheelchairEditActionColumn,
+              ]
+            : showStretcherEditAction
+              ? [
+                  ...(columnMap[currentTab?.columnType] || rateColumns),
+                  stretcherEditActionColumn,
+                ]
+              : (columnMap[currentTab?.columnType] || rateColumns).filter(
+                  (column) => column.field !== 'actions'
+                );
+  const columnsWithActions = columns;
   const hasSections = !!currentTab?.sections;
 
   const renderSurchargeSections = () => (
     <Box sx={{ padding: '20px 24px' }}>
-      <Stack spacing={'3px'} sx={{ mb: '20px' }}>
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 700,
-            fontSize: pxToRem(16),
-            color: '#111827',
-          }}
-        >
-          {currentTab?.title}
-        </Typography>
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 400,
-            fontSize: pxToRem(13),
-            color: '#6B7280',
-          }}
-        >
-          {currentTab?.desc}
-        </Typography>
-      </Stack>
+      <RowStack justifyContent="space-between" sx={{ mb: '20px' }}>
+        <Stack spacing={'3px'}>
+          <Typography
+            sx={{
+              fontFamily: (theme) => theme.typography.fontFamily,
+              fontWeight: 700,
+              fontSize: pxToRem(16),
+              color: '#111827',
+            }}
+          >
+            {currentTab?.title}
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: (theme) => theme.typography.fontFamily,
+              fontWeight: 400,
+              fontSize: pxToRem(13),
+              color: '#6B7280',
+            }}
+          >
+            {currentTab?.desc}
+          </Typography>
+        </Stack>
+        {(showStandardEditAction ||
+          showWheelchairEditAction ||
+          showStretcherEditAction) && (
+          <IconButton
+            onClick={getEditActionHandler()}
+            size="small"
+            sx={{
+              width: 34,
+              height: 34,
+              color: '#9CA3AF',
+              border: '1px solid #E8ECF0',
+              '&:hover': { color: '#374151', background: '#F3F4F6' },
+            }}
+          >
+            <EditOutlinedIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        )}
+      </RowStack>
 
       <Stack spacing="16px">
         {currentTab?.sections?.map((section) => (
@@ -2428,7 +1793,7 @@ export const FareConfigurationPage = () => {
               renderSurchargeSections()
             ) : (
               <AppGridtable
-                columns={columns}
+                columns={columnsWithActions}
                 data={currentTab?.data || []}
                 initialPageSize={10}
                 hidePagination
@@ -2619,6 +1984,22 @@ export const FareConfigurationPage = () => {
           )}
         </Box>
       </Stack>
+
+      <StandardServiceTypeEditModal
+        open={isStandardEditOpen}
+        setOpen={setIsStandardEditOpen}
+        configData={serviceTypeConfigData}
+      />
+      <WheelchairWavServiceTypeEditModal
+        open={isWheelchairEditOpen}
+        setOpen={setIsWheelchairEditOpen}
+        configData={serviceTypeConfigData}
+      />
+      <StretcherServiceTypeEditModal
+        open={isStretcherEditOpen}
+        setOpen={setIsStretcherEditOpen}
+        configData={serviceTypeConfigData}
+      />
     </AppDashboardLayout>
   );
 };
