@@ -1,3 +1,6 @@
+'use client';
+
+import { useMemo } from 'react';
 import { Formik, Form, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -13,10 +16,11 @@ import {
   FormControl,
   InputLabel,
   OutlinedInput,
-  Divider,
   styled,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { Dispatch, SetStateAction } from 'react';
 import {
   AppButton,
   AppModal,
@@ -24,11 +28,12 @@ import {
   RowStack,
 } from '../../../modules/components';
 import {
-  SurchargeRuleCreate,
   pxToRem,
   useSurchargeApi,
   ROUTES,
   resolveRoute,
+  SurchargeRule,
+  SurchargeRuleUpdate,
 } from '../../../../common';
 
 // ─── iOS Switch ─────────────────────────────────────────────────────────────
@@ -69,12 +74,13 @@ const IOSSwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
-interface CreateSurchargeModalProps {
+interface UpdateSurchargeModalProps {
   open: boolean;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setOpen: Dispatch<SetStateAction<boolean>>;
+  rule: SurchargeRule | null;
 }
 
-interface CreateSurchargeFormValues {
+interface UpdateSurchargeFormValues {
   name: string;
   description: string;
   surcharge_type: string;
@@ -122,31 +128,44 @@ const APPLIES_TO_OPTIONS = [
   { value: 'stretcher', label: 'Stretcher' },
 ];
 
-export const CreateSurchargeModal = ({
+const getInitialValues = (
+  rule: SurchargeRule | null
+): UpdateSurchargeFormValues => ({
+  name: rule?.name || '',
+  description: rule?.description || '',
+  surcharge_type: rule?.surcharge_type || '',
+  multiplier: rule?.multiplier || '',
+  flat_amount: rule?.flat_amount || '',
+  applies_to: rule?.applies_to?.length ? rule.applies_to : ['all'],
+  is_active: rule?.is_active ?? true,
+  sort_order:
+    rule?.sort_order !== undefined && rule?.sort_order !== null
+      ? String(rule.sort_order)
+      : '0',
+});
+
+export const UpdateSurchargeModal = ({
   open,
   setOpen,
-}: CreateSurchargeModalProps) => {
+  rule,
+}: UpdateSurchargeModalProps) => {
   const queryClient = useQueryClient();
-  const { createSurchargeRule } = useSurchargeApi();
+  const { updateSurchargeRule } = useSurchargeApi();
 
-  const initialValues: CreateSurchargeFormValues = {
-    name: '',
-    description: '',
-    surcharge_type: '',
-    multiplier: '',
-    flat_amount: '',
-    applies_to: ['all'],
-    is_active: true,
-    sort_order: '0',
-  };
+  const initialValues = useMemo(() => getInitialValues(rule), [rule]);
 
   const handleSubmit = async (
-    values: CreateSurchargeFormValues,
-    { setSubmitting }: FormikHelpers<CreateSurchargeFormValues>
+    values: UpdateSurchargeFormValues,
+    { setSubmitting }: FormikHelpers<UpdateSurchargeFormValues>
   ) => {
+    if (!rule) {
+      setSubmitting(false);
+      return;
+    }
+
     setSubmitting(true);
 
-    const payload: SurchargeRuleCreate = {
+    const payload: SurchargeRuleUpdate = {
       name: values.name,
       description: values.description || undefined,
       surcharge_type: values.surcharge_type,
@@ -155,13 +174,16 @@ export const CreateSurchargeModal = ({
       applies_to: values.applies_to,
       is_active: values.is_active,
       sort_order: values.sort_order ? parseInt(values.sort_order) : undefined,
-      schedule: null,
+      schedule: rule.schedule || null,
     };
 
-    const success = await createSurchargeRule(payload);
+    const success = await updateSurchargeRule({
+      ruleId: rule.id,
+      data: payload,
+    });
 
     if (success) {
-      // Invalidate surcharge queries to trigger refetch
+      toast.success('Surcharge updated successfully');
       await queryClient.invalidateQueries({
         queryKey: [resolveRoute(ROUTES.listSurchargeRules)],
       });
@@ -178,7 +200,7 @@ export const CreateSurchargeModal = ({
     <AppModal
       open={open}
       setOpen={setOpen}
-      label="create-surcharge-modal"
+      label="update-surcharge-modal"
       padding="0"
       sx={{
         '& .MuiDialog-paper': {
@@ -188,6 +210,7 @@ export const CreateSurchargeModal = ({
     >
       <Formik
         initialValues={initialValues}
+        enableReinitialize
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
       >
@@ -209,7 +232,7 @@ export const CreateSurchargeModal = ({
                     color: '#111827',
                   }}
                 >
-                  Create Surcharge
+                  Update Surcharge
                 </Typography>
               </Box>
 
@@ -395,7 +418,7 @@ export const CreateSurchargeModal = ({
                     isLoading={isSubmitting}
                     disabled={isSubmitting}
                   >
-                    Create Surcharge
+                    Update Surcharge
                   </AppButton>
                 </RowStack>
               </Box>

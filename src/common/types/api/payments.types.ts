@@ -495,8 +495,13 @@ export interface RidePackage {
   description?: string | null;
   price: number;
   rides_included: number;
+  ride_count?: number | null;
+  is_unlimited?: boolean;
   validity_days: number;
   is_active: boolean;
+  active_subscribers?: number;
+  sort_order?: number;
+  discount_percent?: number | string | null;
   discount_percentage?: number | null;
   created_at: string;
   updated_at: string;
@@ -520,11 +525,14 @@ export interface RidePackageCreate {
 export interface RidePackageUpdate {
   name?: string;
   description?: string | null;
+  package_type?: string;
   price?: number;
-  rides_included?: number;
+  ride_count?: number | null;
+  is_unlimited?: boolean;
+  discount_percent?: number | null;
   validity_days?: number;
+  sort_order?: number;
   is_active?: boolean;
-  discount_percentage?: number | null;
 }
 
 export interface RidePackageResponse {

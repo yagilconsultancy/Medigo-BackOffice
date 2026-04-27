@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Chip,
@@ -12,6 +12,7 @@ import {
   styled,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutlineOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
@@ -37,6 +38,7 @@ import {
 import { usePaymentPricingApi } from '../../../common/hooks/api';
 import { ReactNode } from 'react';
 import { CreatePackageModal } from './CreatePackageModal';
+import { EditPackageModal } from './EditPackageModal';
 
 // ─── iOS Switch ─────────────────────────────────────────────────────────────
 
@@ -134,6 +136,10 @@ const getPackageStyle = (packageType: string) => {
 
 export const RecurringPackagesPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<RidePackage | null>(
+    null
+  );
   const { togglePackage } = usePaymentPricingApi();
 
   // Fetch KPIs and packages from API
@@ -159,6 +165,17 @@ export const RecurringPackagesPage = () => {
   const handleToggle = async (id: string) => {
     await togglePackage(id);
   };
+
+  const handleEditClick = (pkg: RidePackage) => {
+    setSelectedPackage(pkg);
+    setIsEditModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (!isEditModalOpen) {
+      setSelectedPackage(null);
+    }
+  }, [isEditModalOpen]);
 
   const filteredPackages = packages;
 
@@ -402,7 +419,11 @@ export const RecurringPackagesPage = () => {
           <Grid container spacing={'16px'} sx={{ padding: '24px' }}>
             {filteredPackages.map((pkg) => (
               <Grid key={pkg.id} size={{ xs: 12, md: 6 }}>
-                <PackageCard pkg={pkg} onToggle={() => handleToggle(pkg.id)} />
+                <PackageCard
+                  pkg={pkg}
+                  onToggle={() => handleToggle(pkg.id)}
+                  onEdit={() => handleEditClick(pkg)}
+                />
               </Grid>
             ))}
           </Grid>
@@ -414,6 +435,13 @@ export const RecurringPackagesPage = () => {
         open={isCreateModalOpen}
         setOpen={setIsCreateModalOpen}
       />
+
+      {/* Edit Package Modal */}
+      <EditPackageModal
+        open={isEditModalOpen}
+        setOpen={setIsEditModalOpen}
+        pkg={selectedPackage}
+      />
     </AppDashboardLayout>
   );
 };
@@ -423,9 +451,11 @@ export const RecurringPackagesPage = () => {
 const PackageCard = ({
   pkg,
   onToggle,
+  onEdit,
 }: {
   pkg: RidePackage;
   onToggle: () => void;
+  onEdit: () => void;
 }) => {
   const isInactive = !pkg.is_active;
   const style = getPackageStyle(pkg.package_type);
@@ -441,7 +471,7 @@ const PackageCard = ({
         opacity: isInactive ? 0.7 : 1,
       }}
     >
-      {/* Top Row: Icon + Title/Category + Switch */}
+      {/* Top Row: Icon + Title/Category + Actions */}
       <RowStack justifyContent="space-between">
         <RowStack spacing={'12px'}>
           <Box
@@ -486,7 +516,27 @@ const PackageCard = ({
             </RowStack>
           </Stack>
         </RowStack>
-        <IOSSwitch checked={pkg.is_active} onChange={onToggle} />
+        <RowStack spacing={'8px'}>
+          <Box
+            onClick={onEdit}
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              '&:hover': {
+                backgroundColor: '#E5F0FF',
+              },
+            }}
+          >
+            <EditOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />
+          </Box>
+          <IOSSwitch checked={pkg.is_active} onChange={onToggle} />
+        </RowStack>
       </RowStack>
 
       {/* Description */}
@@ -516,8 +566,11 @@ const PackageCard = ({
           },
           {
             label: 'Discount',
-            value: (pkg as any).discount_percent
-              ? `${Number((pkg as any).discount_percent).toFixed(0)}% off`
+            value:
+              pkg.discount_percent != null || pkg.discount_percentage != null
+                ? `${Number(
+                    pkg.discount_percent ?? pkg.discount_percentage
+                  ).toFixed(0)}% off`
               : 'N/A',
           },
           { label: 'Validity', value: `${pkg.validity_days} days` },

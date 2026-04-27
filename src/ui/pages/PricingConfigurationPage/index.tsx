@@ -340,9 +340,10 @@ export const PricingConfigurationPage = () => {
                       />
                     ),
                     iconBg: '#EBF2FF',
-                    value: kpisData?.avg_trip_fare
-                      ? `$${kpisData.avg_trip_fare.toFixed(2)}`
-                      : '$0.00',
+                    value:
+                      kpisData?.avg_trip_fare != null
+                        ? `$${Number(kpisData.avg_trip_fare).toFixed(2)}`
+                        : '$0.00',
                     label: 'Avg Trip Fare',
                   },
                   {
@@ -352,28 +353,37 @@ export const PricingConfigurationPage = () => {
                       />
                     ),
                     iconBg: '#ECFDF5',
-                    value: `$${values.base_fare_flat_rate.toFixed(2)}`,
-                    label: 'Base Fare',
-                  },
-                  {
-                    icon: (
-                      <StraightenOutlinedIcon
-                        sx={{ fontSize: 20, color: '#F59E0B' }}
-                      />
-                    ),
-                    iconBg: '#FFFBEB',
-                    value: `${values.distance_threshold_km.toFixed(2)} km`,
-                    label: 'Distance Threshold',
+                    value:
+                      kpisData?.base_fare != null
+                        ? `$${Number(kpisData.base_fare).toFixed(2)}`
+                      : '$0.00',
+                    label: 'Base Fare KPI',
                   },
                   {
                     icon: (
                       <PercentOutlinedIcon
+                        sx={{ fontSize: 20, color: '#F59E0B' }}
+                      />
+                    ),
+                    iconBg: '#FFFBEB',
+                    value:
+                      kpisData?.surge_multiplier != null
+                        ? `${Number(kpisData.surge_multiplier).toFixed(1)}×`
+                        : '1.0×',
+                    label: 'Surge Multiplier',
+                  },
+                  {
+                    icon: (
+                      <AttachMoneyOutlinedIcon
                         sx={{ fontSize: 20, color: '#EF4444' }}
                       />
                     ),
                     iconBg: '#FEF2F2',
-                    value: `${(values.platform_fee_percent * 100).toFixed(0)}%`,
-                    label: 'Platform Fee',
+                    value:
+                      kpisData?.cancellation_fee_avg != null
+                        ? `$${Number(kpisData.cancellation_fee_avg).toFixed(2)}`
+                        : '$0.00',
+                    label: 'Cancellation Fee Avg',
                   },
                 ].map((card, index) => (
                   <Grid key={index} size={{ xs: 6, lg: 3 }}>

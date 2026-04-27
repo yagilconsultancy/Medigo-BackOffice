@@ -7,12 +7,19 @@ import {
   FormikAppTextField,
   RowStack,
 } from '../../../modules/components';
-import { pxToRem, RidePackageCreate } from '../../../../common';
+import {
+  pxToRem,
+  RidePackage,
+  RidePackageUpdate,
+} from '../../../../common';
 import { usePaymentPricingApi } from '../../../../common/hooks/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { ROUTES, resolveRoute } from '../../../../common';
 
-interface CreatePackageModalProps {
+interface EditPackageModalProps {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  pkg: RidePackage | null;
 }
 
 interface PackageFormValues {
@@ -25,6 +32,7 @@ interface PackageFormValues {
   discount_percent: string;
   validity_days: string;
   sort_order: string;
+  is_active: boolean;
 }
 
 const validationSchema = Yup.object({
@@ -53,57 +61,83 @@ const validationSchema = Yup.object({
     .min(1, 'Validity must be at least 1 day')
     .required('Validity is required'),
   sort_order: Yup.number().min(0, 'Sort order must be at least 0'),
+  is_active: Yup.boolean(),
 });
 
-export const CreatePackageModal = ({
+const initialValuesFromPackage = (
+  pkg: RidePackage | null
+): PackageFormValues => ({
+  name: pkg?.name || '',
+  description: pkg?.description || '',
+  package_type: pkg?.package_type || 'rider',
+  price: pkg ? String(pkg.price) : '',
+  ride_count:
+    pkg && pkg.rides_included !== -1 ? String(pkg.rides_included) : '',
+  is_unlimited: pkg?.rides_included === -1,
+  discount_percent:
+    pkg?.discount_percent !== undefined && pkg?.discount_percent !== null
+      ? String(pkg.discount_percent)
+      : pkg?.discount_percentage !== undefined &&
+          pkg?.discount_percentage !== null
+        ? String(pkg.discount_percentage)
+      : '',
+  validity_days: pkg ? String(pkg.validity_days) : '30',
+  sort_order: '0',
+  is_active: pkg?.is_active ?? true,
+});
+
+export const EditPackageModal = ({
   open,
   setOpen,
-}: CreatePackageModalProps) => {
-  const { createPackage } = usePaymentPricingApi();
-
-  const initialValues: PackageFormValues = {
-    name: '',
-    description: '',
-    package_type: 'rider',
-    price: '',
-    ride_count: '',
-    is_unlimited: false,
-    discount_percent: '',
-    validity_days: '30',
-    sort_order: '0',
-  };
+  pkg,
+}: EditPackageModalProps) => {
+  const queryClient = useQueryClient();
+  const { updatePackage } = usePaymentPricingApi();
 
   const handleSubmit = async (
     values: PackageFormValues,
     { setSubmitting, resetForm }: FormikHelpers<PackageFormValues>
   ) => {
-    const payload: RidePackageCreate = {
+    if (!pkg) {
+      setSubmitting(false);
+      return;
+    }
+
+    const payload: RidePackageUpdate = {
       name: values.name,
-      description: values.description,
+      description: values.description || undefined,
       package_type: values.package_type,
       price: Number(values.price),
-      rides_included: values.is_unlimited ? -1 : Number(values.ride_count),
-      validity_days: Number(values.validity_days),
-      is_active: true,
-      discount_percentage: values.discount_percent
+      ride_count: values.is_unlimited ? null : Number(values.ride_count),
+      is_unlimited: values.is_unlimited,
+      discount_percent: values.discount_percent
         ? Number(values.discount_percent)
         : null,
+      validity_days: Number(values.validity_days),
+      sort_order: values.sort_order ? Number(values.sort_order) : 0,
+      is_active: values.is_active,
     };
 
     setSubmitting(true);
-    const success = await createPackage(payload);
+    const success = await updatePackage(pkg.id, payload);
     setSubmitting(false);
 
     if (success) {
-      resetForm();
       setOpen(false);
+      resetForm();
+      await queryClient.invalidateQueries({
+        queryKey: [resolveRoute(ROUTES.listPackages)],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [resolveRoute(ROUTES.getPackageKpis)],
+      });
     }
   };
 
   return (
-    <AppModal open={open} setOpen={setOpen} label="Create New Package">
+    <AppModal open={open} setOpen={setOpen} label="Edit Package">
       <Formik<PackageFormValues>
-        initialValues={initialValues}
+        initialValues={initialValuesFromPackage(pkg)}
         enableReinitialize
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
@@ -184,6 +218,7 @@ export const CreatePackageModal = ({
                     name="package_type"
                     select
                     SelectProps={{ native: true }}
+                    disabled
                     sx={{
                       width: '100%',
                       '& .MuiOutlinedInput-root': {
@@ -342,6 +377,43 @@ export const CreatePackageModal = ({
                   />
                 </Stack>
 
+                {/* Active Toggle */}
+                <RowStack
+                  justifyContent="space-between"
+                  sx={{
+                    padding: '14px 16px',
+                    background: '#F7F9FB',
+                    borderRadius: '10px',
+                    border: '0.67px solid #E8ECF0',
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 600,
+                      fontSize: pxToRem(13),
+                      color: '#374151',
+                    }}
+                  >
+                    Active
+                  </Typography>
+                  <Switch
+                    checked={values.is_active}
+                    onChange={(e) =>
+                      setFieldValue('is_active', e.target.checked)
+                    }
+                    sx={{
+                      '& .MuiSwitch-switchBase.Mui-checked': {
+                        color: '#2F6FED',
+                      },
+                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track':
+                        {
+                          backgroundColor: '#2F6FED',
+                        },
+                    }}
+                  />
+                </RowStack>
+
                 {/* Action Buttons */}
                 <RowStack
                   spacing="12px"
@@ -394,7 +466,7 @@ export const CreatePackageModal = ({
                       },
                     }}
                   >
-                    Create Package
+                    Update Package
                   </AppButton>
                 </RowStack>
               </Stack>

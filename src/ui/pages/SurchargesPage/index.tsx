@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Box, Grid, Stack, Switch, Typography, styled } from '@mui/material';
 import BoltOutlinedIcon from '@mui/icons-material/BoltOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
@@ -12,6 +12,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Formik, Form, FormikHelpers } from 'formik';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
@@ -31,6 +32,8 @@ import {
 import { ReactNode } from 'react';
 import { toast } from 'sonner';
 import { CreateSurchargeModal } from './CreateSurchargeModal';
+import { UpdateSurchargeModal } from './UpdateSurchargeModal';
+import { SurchargeRule } from '../../../common';
 
 // ─── iOS Switch ─────────────────────────────────────────────────────────────
 
@@ -95,6 +98,8 @@ interface SurchargeFormValues {
 
 export const SurchargesPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedRule, setSelectedRule] = useState<SurchargeRule | null>(null);
   const [deleteModalState, setDeleteModalState] = useState<{
     open: boolean;
     ruleId: string | null;
@@ -102,14 +107,14 @@ export const SurchargesPage = () => {
   }>({ open: false, ruleId: null, ruleName: null });
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { updateSurchargeRule, deleteSurchargeRule } = useSurchargeApi();
+  const { deleteSurchargeRule } = useSurchargeApi();
   const { data: kpisData } = useResolvedApiQuery(useGetSurchargeKpis, null);
   const { data: rulesData, refetch } = useResolvedApiQuery(
     useListSurchargeRules,
     null
   );
 
-  const rules = rulesData?.rules || [];
+  const rules = useMemo(() => rulesData?.rules || [], [rulesData?.rules]);
 
   const handleDeleteClick = (ruleId: string, ruleName: string) => {
     setDeleteModalState({ open: true, ruleId, ruleName });
@@ -132,6 +137,17 @@ export const SurchargesPage = () => {
   const handleDeleteCancel = () => {
     setDeleteModalState({ open: false, ruleId: null, ruleName: null });
   };
+
+  const handleEditClick = (rule: SurchargeRule) => {
+    setSelectedRule(rule);
+    setIsUpdateModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (!isUpdateModalOpen) {
+      setSelectedRule(null);
+    }
+  }, [isUpdateModalOpen]);
 
   const initialValues: SurchargeFormValues = useMemo(() => {
     return {
@@ -485,6 +501,11 @@ export const SurchargesPage = () => {
                         <SurchargeCard
                           surcharge={surcharge}
                           onToggle={() => handleToggle(surcharge.id)}
+                          onEdit={() => {
+                            if (originalRule) {
+                              handleEditClick(originalRule);
+                            }
+                          }}
                           onDelete={() =>
                             handleDeleteClick(
                               surcharge.id,
@@ -518,6 +539,13 @@ export const SurchargesPage = () => {
       <CreateSurchargeModal
         open={isCreateModalOpen}
         setOpen={setIsCreateModalOpen}
+      />
+
+      {/* Update Surcharge Modal */}
+      <UpdateSurchargeModal
+        open={isUpdateModalOpen}
+        setOpen={setIsUpdateModalOpen}
+        rule={selectedRule}
       />
 
       {/* Delete Confirmation Modal */}
@@ -606,10 +634,12 @@ export const SurchargesPage = () => {
 const SurchargeCard = ({
   surcharge,
   onToggle,
+  onEdit,
   onDelete,
 }: {
   surcharge: Surcharge;
   onToggle: () => void;
+  onEdit: () => void;
   onDelete: () => void;
 }) => {
   const isInactive = !surcharge.active;
@@ -627,36 +657,68 @@ const SurchargeCard = ({
         position: 'relative',
       }}
     >
-      {/* Delete Icon */}
+      {/* Action Icons */}
       <Box
-        onClick={onDelete}
         sx={{
           position: 'absolute',
           top: '16px',
           right: '16px',
-          width: '32px',
-          height: '32px',
-          borderRadius: '8px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-          '&:hover': {
-            backgroundColor: '#FEE2E2',
-          },
+          gap: '4px',
         }}
       >
-        <DeleteOutlineIcon
+        <Box
+          onClick={onEdit}
           sx={{
-            fontSize: 18,
-            color: '#EF4444',
+            width: '32px',
+            height: '32px',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            '&:hover': {
+              backgroundColor: '#E5F0FF',
+            },
           }}
-        />
+        >
+          <EditOutlinedIcon
+            sx={{
+              fontSize: 18,
+              color: '#2F6FED',
+            }}
+          />
+        </Box>
+
+        <Box
+          onClick={onDelete}
+          sx={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            '&:hover': {
+              backgroundColor: '#FEE2E2',
+            },
+          }}
+        >
+          <DeleteOutlineIcon
+            sx={{
+              fontSize: 18,
+              color: '#EF4444',
+            }}
+          />
+        </Box>
       </Box>
 
       {/* Top Row: Icon + Title/Desc + Switch */}
-      <RowStack justifyContent="space-between" sx={{ paddingRight: '40px' }}>
+      <RowStack justifyContent="space-between" sx={{ paddingRight: '80px' }}>
         <RowStack spacing={'12px'}>
           <Box
             sx={{
