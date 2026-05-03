@@ -542,6 +542,18 @@ export const ROUTES_SPEC = {
   getTripDetail: (rideId: string) =>
     `/${API_VERSION}/tracking/admin/trips/${rideId}`,
   getLiveDrivers: `/${API_VERSION}/tracking/admin/live-drivers`,
+
+  // ============= DISPUTE RESOLUTION =============
+
+  // Dispute KPIs
+  getDisputeKpis: `/${API_VERSION}/payments/admin/disputes/kpis`,
+  listDisputes: `/${API_VERSION}/payments/admin/disputes`,
+  getDisputeDetail: (disputeId: string) =>
+    `/${API_VERSION}/payments/admin/disputes/${disputeId}`,
+  approveDispute: (disputeId: string) =>
+    `/${API_VERSION}/payments/admin/disputes/${disputeId}/approve`,
+  rejectDispute: (disputeId: string) =>
+    `/${API_VERSION}/payments/admin/disputes/${disputeId}/reject`,
 } as const;
 
 export const ROUTES = Object.fromEntries(

@@ -9,9 +9,9 @@ import {
   useGetAvailableDispatchDrivers,
   useResolvedApiQuery,
   useDispatchApi,
+  useGetAllBookings,
 } from '../../../common';
 import { useState, useMemo } from 'react';
-import { toast } from 'sonner';
 import {
   UnassignedRideCard,
   UnassignedRide,
@@ -37,6 +37,16 @@ export const RideAssignmentPage = () => {
   const [selectedRideForDetail, setSelectedRideForDetail] = useState<
     string | null
   >(null);
+  const { data: assignedDriver } = useResolvedApiQuery(
+    useGetAllBookings,
+    null,
+    {
+      status: 'driver_assigned',
+      search: undefined,
+      page: 1,
+      limit: 1,
+    }
+  );
 
   // Fetch unassigned rides and available drivers
   const { data: unassignedRidesData } = useResolvedApiQuery(
@@ -56,6 +66,10 @@ export const RideAssignmentPage = () => {
   const resolvedUnassignedRides = useMemo(() => {
     return unassignedRidesData?.rides || [];
   }, [unassignedRidesData]);
+
+  const resolvedAssignedDriver = useMemo(() => {
+    return assignedDriver || [];
+  }, [assignedDriver]);
 
   const resolvedAvailableDrivers = useMemo(() => {
     return availableDriversData || [];
@@ -142,7 +156,7 @@ export const RideAssignmentPage = () => {
         eta: driver.eta_minutes ? `${driver.eta_minutes} min` : 'N/A',
       };
     });
-  }, [availableDriversData]);
+  }, [resolvedAvailableDrivers]);
 
   const assignedDriverIds = new Set(
     Object.values(assignments).map((a) => a.driverId)
@@ -236,9 +250,9 @@ export const RideAssignmentPage = () => {
         </Stack>
 
         {/* Two-Column Layout */}
-        <Grid container spacing={'20px'}>
+        <Grid container spacing={'20px'} alignItems="stretch">
           {/* Left: Unassigned Rides */}
-          <Grid size={{ xs: 12, lg: 6 }}>
+          <Grid size={{ xs: 12, lg: 6 }} sx={{ height: 'auto' }}>
             <Stack
               spacing={'12px'}
               sx={{
@@ -302,7 +316,7 @@ export const RideAssignmentPage = () => {
           </Grid>
 
           {/* Right: Available Drivers */}
-          <Grid size={{ xs: 12, lg: 6 }}>
+          <Grid size={{ xs: 12, lg: 6 }} sx={{ height: 'auto' }}>
             <Stack
               spacing={'12px'}
               sx={{
@@ -354,6 +368,66 @@ export const RideAssignmentPage = () => {
                       driver={driver}
                       isActive={!!selectedRideId}
                       onAssign={() => handleAssign(driver.id)}
+                    />
+                  ))}
+                </>
+              )}
+            </Stack>
+          </Grid>
+        </Grid>
+        <Grid container spacing={'20px'}>
+          <Grid size={{ xs: 12, lg: 6 }}>
+            <Stack
+              spacing={'12px'}
+              sx={{
+                background: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '20px',
+                border: '0.67px solid #EAECF0',
+              }}
+            >
+              <Stack spacing={'2px'}>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(15),
+                    color: (theme) => theme.color.deepBlue,
+                  }}
+                >
+                  Assigned Drivers
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 400,
+                    fontSize: pxToRem(12),
+                    color: (theme) => theme.color.lightGrey,
+                  }}
+                >
+                  List of assigned driver
+                </Typography>
+              </Stack>
+
+              {resolvedAssignedDriver.length === 0 ? (
+                <Stack
+                  sx={{
+                    height: '400px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <EmptyState emptyState="No Driver Assigned yet" />
+                </Stack>
+              ) : (
+                <>
+                  {resolvedAssignedDriver.map((driver) => (
+                    <RideDriverCard
+                      key={driver.id}
+                      driver={driver}
+                      // isActive={!!selectedRideId}
+                      // onAssign={() => handleAssign(driver.id)}
                     />
                   ))}
                 </>

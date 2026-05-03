@@ -22,3 +22,4 @@ export * from './locations';
 export * from './roles-permissions';
 export * from './caregivers';
 export * from './admin-invitations';
+export * from './trip-resolution';

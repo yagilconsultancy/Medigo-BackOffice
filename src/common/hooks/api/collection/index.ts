@@ -25,3 +25,4 @@ export * from './useCitiesApi';
 export * from './useRolesPermissionsApi';
 export * from './useCaregiversApi';
 export * from './useAdminInvitationsApi';
+export * from './useTripResolutionApi';

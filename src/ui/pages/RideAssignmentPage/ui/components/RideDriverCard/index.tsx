@@ -3,21 +3,29 @@ import { AppButton, RowStack } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 
 export type RideDriver = {
-  id: string;
-  initials: string;
-  initialsColor: string;
-  name: string;
-  vehicle: string;
-  rating: number;
-  trips: number;
-  distance: string;
-  eta: string;
+  id?: string;
+  initials?: string;
+  initialsColor?: string;
+  name?: string;
+  driver_name?: string;
+  driver_phone?: null;
+  driver_rating?: null;
+  driver_vehicle_color?: null;
+  driver_vehicle_make?: null;
+  driver_vehicle_model?: null;
+  driver_vehicle_plate?: null;
+  driver_vehicle_type?: string;
+  vehicle?: string;
+  rating?: number;
+  trips?: number;
+  distance?: string;
+  eta?: string;
 };
 
 type RideDriverCardProps = {
   driver: RideDriver;
-  isActive: boolean;
-  onAssign: () => void;
+  isActive?: boolean;
+  onAssign?: () => void;
 };
 
 export const RideDriverCard = ({
@@ -117,29 +125,31 @@ export const RideDriverCard = ({
       </Stack>
 
       {/* Assign Button */}
-      <AppButton
-        onClick={isActive ? onAssign : undefined}
-        sx={{
-          background: isActive
-            ? (theme) => theme.palette.primary.main
-            : 'transparent',
-          color: isActive ? '#FFFFFF' : (theme) => theme.color.lightGrey,
-          border: isActive ? 'none' : '1px solid #D1D5DB',
-          fontWeight: 600,
-          fontSize: pxToRem(12),
-          borderRadius: '8px',
-          padding: '6px 16px',
-          minWidth: 'auto',
-          flexShrink: 0,
-          cursor: isActive ? 'pointer' : 'default',
-          opacity: isActive ? 1 : 0.6,
-          '&:hover': isActive
-            ? { background: '#2563EB' }
-            : { background: 'transparent' },
-        }}
-      >
-        Assign
-      </AppButton>
+      {onAssign && (
+        <AppButton
+          onClick={isActive ? onAssign : undefined}
+          sx={{
+            background: isActive
+              ? (theme) => theme.palette.primary.main
+              : 'transparent',
+            color: isActive ? '#FFFFFF' : (theme) => theme.color.lightGrey,
+            border: isActive ? 'none' : '1px solid #D1D5DB',
+            fontWeight: 600,
+            fontSize: pxToRem(12),
+            borderRadius: '8px',
+            padding: '6px 16px',
+            minWidth: 'auto',
+            flexShrink: 0,
+            cursor: isActive ? 'pointer' : 'default',
+            opacity: isActive ? 1 : 0.6,
+            '&:hover': isActive
+              ? { background: '#2563EB' }
+              : { background: 'transparent' },
+          }}
+        >
+          Assign
+        </AppButton>
+      )}
     </RowStack>
   );
 };

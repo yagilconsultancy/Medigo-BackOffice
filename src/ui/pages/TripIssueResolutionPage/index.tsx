@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   alpha,
   Box,
   Chip,
   Grid,
   IconButton,
+  Skeleton,
   Stack,
   Typography,
 } from '@mui/material';
@@ -17,7 +18,14 @@ import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  TripResolutionKpis,
+  useGetTripResolutionDetail,
+  useGetTripResolutionKpis,
+  useGetTripResolutionTickets,
+  useResolvedApiQuery,
+} from '../../../common';
 import {
   IssueStatCard,
   DisputeViewModal,
@@ -141,9 +149,84 @@ export const TripIssueResolutionPage = () => {
   const [selectedDispute, setSelectedDispute] = useState<DisputeRow | null>(
     null
   );
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'all' | 'under_review' | 'approved' | 'rejected'
+  >('all');
+  const [typeFilter, setTypeFilter] = useState<
+    'all' | 'all' | 'fare_dispute' | 'refund_request' | 'trip_fraud'
+  >('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
   const [viewOpen, setViewOpen] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const listTripResolutionTicketsPayload = useMemo(
+    () => ({
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      dispute_type: typeFilter === 'all' ? undefined : typeFilter,
+      search: searchTerm || undefined,
+      page: page,
+      page_size: 10,
+    }),
+    [statusFilter, typeFilter, searchTerm, page]
+  );
+  const detailpayload = useMemo(
+    () => ({
+      dispute_id: !!selectedDispute?.id ? selectedDispute.id : '',
+    }),
+    [selectedDispute]
+  );
+
+  const { data: dashboardTripKPIs, isLoading: kpiDataLoading } =
+    useResolvedApiQuery(useGetTripResolutionKpis, null);
+
+  const { data: tripResolutionList } = useResolvedApiQuery(
+    useGetTripResolutionTickets,
+    null,
+    listTripResolutionTicketsPayload
+  );
+  const { data: tripResolutionDetail } = useResolvedApiQuery(
+    useGetTripResolutionDetail,
+    null,
+    detailpayload
+  );
+  const kpiDashboardData = useMemo<TripResolutionKpis>(() => {
+    if (!dashboardTripKPIs)
+      return {
+        open_disputes: 0,
+        refunds_approved: 0,
+        rejected: 0,
+      };
+
+    return (
+      dashboardTripKPIs || {
+        open_disputes: 0,
+        refunds_approved: 0,
+        rejected: 0,
+      }
+    );
+  }, [dashboardTripKPIs]);
+
+  console.log('Dashboard KPIs:', dashboardTripKPIs);
+  console.log('Trip Resolution List:', tripResolutionList);
+
+  const statCards = [
+    {
+      value: kpiDashboardData.open_disputes.toString(),
+      label: 'Open Disputes',
+      valueColor: '#2F6FED',
+    },
+    {
+      value: kpiDashboardData.refunds_approved.toString(),
+      label: 'Refunds Approved',
+      valueColor: '#059669',
+    },
+    {
+      value: kpiDashboardData.rejected.toString(),
+      label: 'Rejected',
+      valueColor: '#EF4444',
+    },
+  ];
 
   return (
     <AppDashboardLayout>
@@ -156,15 +239,23 @@ export const TripIssueResolutionPage = () => {
 
         {/* Stat Cards */}
         <Grid container spacing={'12px'}>
-          {statCards.map((card, index) => (
-            <Grid key={index} size={{ xs: 6, lg: 4 }}>
-              <IssueStatCard
-                value={card.value}
-                label={card.label}
-                valueColor={card.valueColor}
-              />
+          {kpiDataLoading ? (
+            <Grid container size={{ xs: 6, lg: 4 }}>
+              <Grid>
+                <Skeleton sx={{ width: '100%', height: '50px' }} />
+              </Grid>
             </Grid>
-          ))}
+          ) : (
+            statCards.map((card, index) => (
+              <Grid key={index} size={{ xs: 6, lg: 4 }}>
+                <IssueStatCard
+                  value={card.value}
+                  label={card.label}
+                  valueColor={card.valueColor}
+                />
+              </Grid>
+            ))
+          )}
         </Grid>
 
         {/* Dispute List */}
