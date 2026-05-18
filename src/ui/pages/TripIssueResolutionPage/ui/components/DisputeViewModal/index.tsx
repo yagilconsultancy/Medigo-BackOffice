@@ -19,7 +19,7 @@ import { pxToRem } from '../../../../../../common';
 type DisputeStatus = 'Under Review' | 'Approved' | 'Rejected';
 type IssueType = 'Fare Dispute' | 'Refund Request' | 'Trip Fraud';
 
-type DisputeViewModalProps = {
+export type DisputeViewModalProps = {
   open: boolean;
   onClose: () => void;
   data: {
