@@ -39,13 +39,13 @@ export type AddCaregiverDrawerProps = {
 // ─── Dropdown Options ───────────────────────────────────────────────────────
 
 const specialtyOptions = [
-  'Personal Support Worker',
-  'Registered Nurse',
-  'Home Health Aide',
-  'Certified Nursing Assistant',
-  'Occupational Therapist',
-  'Licensed Practical Nurse',
-];
+  { label: 'Personal Support Worker', value: 'psw' },
+  { label: 'Registered Practical Nurse', value: 'rpn' },
+  { label: 'Registered Nurse', value: 'rn' },
+  { label: 'Home Care Aide', value: 'hca' },
+  { label: 'Paramedic', value: 'paramedic' },
+  { label: 'Other', value: 'other' },
+] as const;
 
 const statusOptions = ['Available', 'On Assignment', 'Suspended'];
 
@@ -147,12 +147,18 @@ const FormikDropdownField = ({
 }: {
   name: string;
   label: string;
-  options: string[];
+  options: ReadonlyArray<string | { label: string; value: string }>;
   placeholder: string;
   required?: boolean;
 }) => {
   const [field, meta, helpers] = useField(name);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const normalizedOptions = options.map((option) =>
+    typeof option === 'string' ? { label: option, value: option } : option
+  );
+  const selectedOptionLabel =
+    normalizedOptions.find((option) => option.value === field.value)?.label ??
+    '';
 
   return (
     <Stack spacing={'6px'}>
@@ -182,11 +188,11 @@ const FormikDropdownField = ({
             fontFamily: (theme) => theme.typography.fontFamily,
             fontWeight: 500,
             fontSize: pxToRem(12),
-            color: field.value ? '#374151' : 'rgba(55, 65, 81, 0.4)',
+            color: selectedOptionLabel ? '#374151' : 'rgba(55, 65, 81, 0.4)',
             flex: 1,
           }}
         >
-          {field.value || placeholder}
+          {selectedOptionLabel || placeholder}
         </Typography>
         <KeyboardArrowDownIcon sx={{ fontSize: 14, color: '#9CA3AF' }} />
       </Box>
@@ -209,10 +215,10 @@ const FormikDropdownField = ({
           setAnchorEl(null);
           helpers.setTouched(true);
         }}
-        options={options}
-        selectedOption={field.value}
-        onOptionSelected={(option) => {
-          helpers.setValue(option);
+        options={normalizedOptions.map((option) => option.label)}
+        selectedOption={selectedOptionLabel}
+        onOptionSelected={(_, optionIndex) => {
+          helpers.setValue(normalizedOptions[optionIndex]?.value ?? '');
           helpers.setTouched(true);
           setAnchorEl(null);
         }}
@@ -351,7 +357,7 @@ export const AddCaregiverDrawer = ({
               city: values.city.trim() || null,
               province: null,
               capabilities: capabilities.length ? capabilities : null,
-              fleet_id: null,
+              // fleet_id: null,
             };
 
             const success = await createCaregiver(payload);

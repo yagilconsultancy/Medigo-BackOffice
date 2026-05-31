@@ -18,7 +18,6 @@ import {
 import { RideResponse } from '../../../common/types';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { EmptyState } from '../../modules/blocks';
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import dayjs from 'dayjs';

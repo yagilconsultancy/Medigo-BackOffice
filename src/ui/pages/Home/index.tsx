@@ -375,6 +375,7 @@ export const HomePage = () => {
         icon: iconConfig.icon,
         iconBg: iconConfig.iconBg,
         activityTitle: item.title,
+        riderName: item.rider_name ?? undefined,
         activityDesc: item.description ?? '',
         time: timeAgo(item.timestamp),
       };

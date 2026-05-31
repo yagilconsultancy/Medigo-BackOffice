@@ -375,7 +375,7 @@ export const RideAssignmentPage = () => {
             </Stack>
           </Grid>
         </Grid>
-        <Grid container spacing={'20px'}>
+        {/* <Grid container spacing={'20px'}>
           <Grid size={{ xs: 12, lg: 6 }}>
             <Stack
               spacing={'12px'}
@@ -434,7 +434,7 @@ export const RideAssignmentPage = () => {
               )}
             </Stack>
           </Grid>
-        </Grid>
+        </Grid> */}
       </Stack>
       {selectedRideDetail && (
         <BookingDetailModal

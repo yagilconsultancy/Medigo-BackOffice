@@ -1,4 +1,4 @@
-import { alpha, Divider, Stack, Typography, useTheme } from '@mui/material';
+import { alpha, Divider, Stack, Typography } from '@mui/material';
 import {
   AppButton,
   AppModal,
@@ -33,7 +33,6 @@ export const ApproveDeclineModal = ({
   onConfirm,
   isLoading,
 }: ApproveDeclineModalprops) => {
-  const theme = useTheme();
   return (
     <AppModal label={modalLabel} open={open} setOpen={handleClose}>
       <Stack spacing={2} divider={<Divider />}>

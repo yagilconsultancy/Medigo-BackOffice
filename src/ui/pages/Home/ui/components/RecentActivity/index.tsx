@@ -12,6 +12,7 @@ type RecentActivityProps = {
   icon: StaticImageData;
   activityTitle: string;
   activityDesc: string;
+  riderName?: string;
   time: string;
 };
 
@@ -20,6 +21,7 @@ export const RecentActivity = ({
   icon,
   activityTitle,
   activityDesc,
+  riderName,
   time,
 }: RecentActivityProps) => {
   return (
@@ -54,6 +56,19 @@ export const RecentActivity = ({
           >
             {activityTitle}
           </Typography>
+          {!!riderName && (
+            <Typography
+              sx={{
+                color: '#111827',
+                fontWeight: 600,
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontSize: pxToRem(12),
+                lineHeight: '18px',
+              }}
+            >
+              {riderName}
+            </Typography>
+          )}
           <Typography
             sx={{
               color: '#6A7282',

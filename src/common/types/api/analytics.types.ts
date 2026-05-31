@@ -67,6 +67,8 @@ export interface RecentActivityItem {
   title: string;
   description?: string | null;
   ride_id?: string | null;
+  rider_name?: string | null;
+  passenger_name?: string | null;
   timestamp: string; // ISO date-time
 }
 

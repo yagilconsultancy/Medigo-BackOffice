@@ -105,8 +105,10 @@ const getTripProgress = (d: AdminBookingDetailResponse) => {
 
 const getServiceTypeInfo = (d: AdminBookingDetailResponse) => {
   const hasDriver = !!d.driver_name;
-  const hasCareAssistant = d.assistance_level && d.assistance_level !== 'none';
-  if (hasCareAssistant) {
+  const isCareAssistantTrip =
+    d.trip_type === 'transport_care_assistant' ||
+    d.trip_type === 'transport_care_assistance';
+  if (isCareAssistantTrip) {
     return {
       title: 'Transport + Care Assistant',
       description: 'Driver + Care Assistant required',
@@ -115,7 +117,7 @@ const getServiceTypeInfo = (d: AdminBookingDetailResponse) => {
     };
   }
   return {
-    title: 'Standard Transport',
+    title: 'Medigo Standard',
     description: 'Driver only',
     driverStatus: hasDriver ? 'Assigned' : 'Unassigned',
     careAssistantStatus: 'Not Required',
@@ -138,6 +140,9 @@ export const BookingDetailPage = () => {
     apiResponse && 'data' in apiResponse ? apiResponse.data : null;
 
   const hasDriver = !!booking?.driver_id;
+  const isCareAssistantTrip =
+    booking?.trip_type === 'transport_care_assistant' ||
+    booking?.trip_type === 'transport_care_assistance';
 
   const handleAssignDriver = (driverId: string) => {
     assignDriverMutation.mutate(
@@ -361,26 +366,28 @@ export const BookingDetailPage = () => {
           </Stack>
 
           <RowStack spacing={'8px'}>
-            <AppButton
-              sx={{
-                background: '#F0FDF4',
-                border: '0.67px solid #BBF7D0',
-                color: '#16A34A',
-                fontWeight: 600,
-                fontSize: pxToRem(12.5),
-                borderRadius: '14px',
-                '&:hover': {
-                  background: alpha('#16A34A', 0.12),
-                },
-              }}
-              startIcon={
-                <PersonAddAltOutlinedIcon
-                  sx={{ fontSize: 13, color: '#16A34A' }}
-                />
-              }
-            >
-              Assign Care Assistant
-            </AppButton>
+            {isCareAssistantTrip && (
+              <AppButton
+                sx={{
+                  background: '#F0FDF4',
+                  border: '0.67px solid #BBF7D0',
+                  color: '#16A34A',
+                  fontWeight: 600,
+                  fontSize: pxToRem(12.5),
+                  borderRadius: '14px',
+                  '&:hover': {
+                    background: alpha('#16A34A', 0.12),
+                  },
+                }}
+                startIcon={
+                  <PersonAddAltOutlinedIcon
+                    sx={{ fontSize: 13, color: '#16A34A' }}
+                  />
+                }
+              >
+                Assign Care Assistant
+              </AppButton>
+            )}
             {hasDriver ? (
               <AppButton
                 sx={{
@@ -714,9 +721,13 @@ export const BookingDetailPage = () => {
                   initials="—"
                   initialsColor="#16A34A"
                   name={
-                    booking.assistance_level
-                      ? formatStatus(booking.assistance_level)
-                      : 'Not Required'
+                    isCareAssistantTrip
+                      ? booking.assistance_level
+                        ? formatStatus(booking.assistance_level)
+                        : 'Required'
+                      : booking.assistance_level
+                        ? formatStatus(booking.assistance_level)
+                        : 'Not Required'
                   }
                 />
               </InfoCard>
