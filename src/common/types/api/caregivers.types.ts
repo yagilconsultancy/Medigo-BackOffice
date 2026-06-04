@@ -98,11 +98,22 @@ export interface CaregiverRating {
   date: string;
 }
 
+export interface CaregiverDocument {
+  id: string;
+  document_type: string;
+  file_name: string;
+  file_uri?: string | null;
+  mime_type?: string | null;
+  verification_status?: string | null;
+  created_at?: string | null;
+}
+
 export interface CaregiverDetailResponse {
   caregiver_id: string;
   caregiver_profile_id: string;
   personal_info: CaregiverPersonalInfo;
   certifications: CaregiverCertification[];
+  documents?: CaregiverDocument[];
   assignments: CaregiverAssignment[];
   ratings: CaregiverRating[];
   total_assignments: number;

@@ -5,3 +5,4 @@ export * from './LiveRouteCard';
 export * from './TripTimeline';
 export * from './FareBreakdown';
 export * from './AssignDriverModal';
+export * from './AssignCareAssistantModal';

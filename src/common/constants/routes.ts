@@ -78,6 +78,9 @@ export const ROUTES_SPEC = {
   assignDriverToBooking: (rideId: string) =>
     `/${API_VERSION}/rides/admin/bookings/${rideId}/assign-driver`,
 
+  assignCareAssistantToBooking: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}/assign-caregiver`,
+
   // Reassign driver on an active booking
   reassignDriver: (rideId: string) =>
     `/${API_VERSION}/rides/admin/bookings/${rideId}/reassign-driver`,

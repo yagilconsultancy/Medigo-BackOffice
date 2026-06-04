@@ -260,6 +260,8 @@ export const RideAssignmentPage = () => {
                 borderRadius: '16px',
                 padding: '20px',
                 border: '0.67px solid #EAECF0',
+                maxHeight: '700px',
+                overflowY: 'auto',
               }}
             >
               <Stack spacing={'2px'}>

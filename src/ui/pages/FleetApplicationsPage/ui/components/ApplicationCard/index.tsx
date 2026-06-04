@@ -4,7 +4,9 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import FolderOpenOutlinedIcon from '@mui/icons-material/FolderOpenOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import { ImagePdfViewer } from '../../../../../modules/blocks';
 import { RowStack } from '../../../../../modules/components';
+import { FleetDocumentResponse } from '../../../../../../common/types/api/fleet.types';
 import { pxToRem } from '../../../../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -27,7 +29,7 @@ export type FleetApplicationRow = {
   submittedDate: string;
   status: ApplicationStatus;
   message: string;
-  documents: string[];
+  documents: FleetDocumentResponse[];
 };
 
 // ─── Status Badge Config ────────────────────────────────────────────────────
@@ -291,28 +293,42 @@ export const ApplicationCard = ({
           Docs:
         </Typography>
         {application.documents.map((doc) => (
-          <RowStack
-            key={doc}
-            spacing={'6px'}
-            sx={{
-              background: '#F7F9FB',
-              border: '0.67px solid #E8ECF0',
-              borderRadius: '10px',
-              padding: '5px 10px',
-            }}
+          <ImagePdfViewer
+            key={doc.id}
+            imageFileName={doc.file_name}
+            fileUri={doc.file_name}
           >
-            <DescriptionOutlinedIcon sx={{ fontSize: 12, color: '#2F6FED' }} />
-            <Typography
+            <RowStack
+              spacing={'6px'}
               sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 500,
-                fontSize: pxToRem(11),
-                color: '#374151',
+                cursor: 'pointer',
+                background: '#F7F9FB',
+                border: '0.67px solid #E8ECF0',
+                borderRadius: '10px',
+                padding: '5px 10px',
+                '&:hover': {
+                  background: '#EEF4FF',
+                  borderColor: '#C7D7FE',
+                },
               }}
             >
-              {doc}
-            </Typography>
-          </RowStack>
+              <DescriptionOutlinedIcon
+                sx={{ fontSize: 12, color: '#2F6FED' }}
+              />
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 500,
+                  fontSize: pxToRem(11),
+                  color: '#374151',
+                }}
+              >
+                {doc.document_type
+                  .replace(/_/g, ' ')
+                  .replace(/\b\w/g, (c) => c.toUpperCase())}
+              </Typography>
+            </RowStack>
+          </ImagePdfViewer>
         ))}
       </RowStack>
     </Stack>

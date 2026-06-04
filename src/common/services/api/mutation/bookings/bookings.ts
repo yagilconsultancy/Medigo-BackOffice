@@ -5,6 +5,7 @@ import {
   ApproveBookingRequest,
   DeclineBookingRequest,
   AssignDriverRequest,
+  AssignCareAssistantRequest,
   ReassignDriverRequest,
   CancelTripRequest,
   CreateAdminNoteRequest,
@@ -43,6 +44,17 @@ export const assignDriverToBooking = async (
     ApiRideActionResponse,
     AxiosResponse<ApiRideActionResponse>
   >(resolveRoute(ROUTES.assignDriverToBooking, rideId), body);
+};
+
+export const assignCareAssistantToBooking = async (
+  payload: { rideId: string } & AssignCareAssistantRequest
+) => {
+  const { rideId, ...body } = payload;
+
+  return await getApiClient().put<
+    ApiRideActionResponse,
+    AxiosResponse<ApiRideActionResponse>
+  >(resolveRoute(ROUTES.assignCareAssistantToBooking, rideId), body);
 };
 
 export const reassignDriver = async (

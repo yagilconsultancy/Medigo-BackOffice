@@ -5,6 +5,7 @@ export interface RideResponse {
   id: string;
   rider_id: string;
   driver_id?: string | null;
+  caregiver_id?: string | null;
   business_id?: string | null;
   ride_type: string;
   trip_type: string;
@@ -97,6 +98,7 @@ export interface AdminBookingDetailResponse {
   id: string;
   rider_id: string;
   driver_id?: string | null;
+  caregiver_id?: string | null;
   business_id?: string | null;
   ride_type: string;
   trip_type: string;
@@ -249,6 +251,10 @@ export interface DeclineBookingRequest {
 
 export interface AssignDriverRequest {
   driver_id: string;
+}
+
+export interface AssignCareAssistantRequest {
+  caregiver_id: string;
 }
 
 export interface ReassignDriverRequest {

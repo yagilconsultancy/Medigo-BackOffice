@@ -5,8 +5,9 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import { ImagePdfViewer } from '../../../../../modules/blocks';
 import { AppModal, RowStack } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import { pxToRem, useGetFleetApplicationById } from '../../../../../../common';
 import { FleetApplicationRow, ApplicationStatus } from '../ApplicationCard';
 
 // ─── Status Badge Config ────────────────────────────────────────────────────
@@ -37,9 +38,18 @@ export const FleetApplicationDetailModal = ({
   onReject,
   onRequestDocs,
 }: FleetApplicationDetailModalProps) => {
+  const applicationId = application?.id ?? '';
+  const { data: applicationDetailResponse, isFetching } =
+    useGetFleetApplicationById(applicationId);
+
   if (!application) return null;
 
   const badge = statusConfig[application.status];
+  const documents =
+    applicationDetailResponse?.success &&
+    applicationDetailResponse.data?.documents
+      ? applicationDetailResponse.data.documents
+      : application.documents;
 
   return (
     <AppModal
@@ -243,32 +253,57 @@ export const FleetApplicationDetailModal = ({
         >
           <SectionLabel>SUBMITTED DOCUMENTS</SectionLabel>
           <RowStack spacing={'8px'}>
-            {application.documents.map((doc) => (
-              <RowStack
-                key={doc}
-                spacing={'6px'}
+            {isFetching && documents.length === 0 ? (
+              <Typography
                 sx={{
-                  background: '#F7F9FB',
-                  border: '0.67px solid #E8ECF0',
-                  borderRadius: '10px',
-                  padding: '6px 12px',
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 400,
+                  fontSize: pxToRem(12.5),
+                  color: '#6B7280',
                 }}
               >
-                <DescriptionOutlinedIcon
-                  sx={{ fontSize: 12, color: '#2F6FED' }}
-                />
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 500,
-                    fontSize: pxToRem(12.5),
-                    color: '#374151',
-                  }}
+                Loading documents...
+              </Typography>
+            ) : (
+              documents.map((doc) => (
+                <ImagePdfViewer
+                  key={doc.id}
+                  imageFileName={doc.file_name}
+                  fileUri={doc.file_name}
                 >
-                  {doc}
-                </Typography>
-              </RowStack>
-            ))}
+                  <RowStack
+                    spacing={'6px'}
+                    sx={{
+                      cursor: 'pointer',
+                      background: '#F7F9FB',
+                      border: '0.67px solid #E8ECF0',
+                      borderRadius: '10px',
+                      padding: '6px 12px',
+                      '&:hover': {
+                        background: '#EEF4FF',
+                        borderColor: '#C7D7FE',
+                      },
+                    }}
+                  >
+                    <DescriptionOutlinedIcon
+                      sx={{ fontSize: 12, color: '#2F6FED' }}
+                    />
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 500,
+                        fontSize: pxToRem(12.5),
+                        color: '#374151',
+                      }}
+                    >
+                      {doc.document_type
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, (c) => c.toUpperCase())}
+                    </Typography>
+                  </RowStack>
+                </ImagePdfViewer>
+              ))
+            )}
           </RowStack>
         </Stack>
 

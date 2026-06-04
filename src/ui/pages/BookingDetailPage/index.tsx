@@ -21,7 +21,11 @@ import {
   RowStack,
   StyledImage,
 } from '../../modules/components';
-import { pxToRem } from '../../../common';
+import {
+  extractValidationErrorMessage,
+  pxToRem,
+  useAssignCareAssistantToBooking,
+} from '../../../common';
 import {
   useGetBookingDetail,
   useAssignDriverToBooking,
@@ -36,6 +40,7 @@ import {
   TripTimeline,
   FareBreakdown,
   AssignDriverModal,
+  AssignCareAssistantModal,
 } from './ui/components';
 import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined';
 import LoopIcon from '@mui/icons-material/Loop';
@@ -105,6 +110,7 @@ const getTripProgress = (d: AdminBookingDetailResponse) => {
 
 const getServiceTypeInfo = (d: AdminBookingDetailResponse) => {
   const hasDriver = !!d.driver_name;
+  const hasCareAssistant = !!d.caregiver_id;
   const isCareAssistantTrip =
     d.trip_type === 'transport_care_assistant' ||
     d.trip_type === 'transport_care_assistance';
@@ -113,14 +119,14 @@ const getServiceTypeInfo = (d: AdminBookingDetailResponse) => {
       title: 'Transport + Care Assistant',
       description: 'Driver + Care Assistant required',
       driverStatus: hasDriver ? 'Assigned' : 'Unassigned',
-      careAssistantStatus: 'Required',
+      careAssistantStatus: hasCareAssistant ? 'Assigned' : 'Required',
     };
   }
   return {
     title: 'Medigo Standard',
     description: 'Driver only',
     driverStatus: hasDriver ? 'Assigned' : 'Unassigned',
-    careAssistantStatus: 'Not Required',
+    careAssistantStatus: hasCareAssistant ? 'Assigned' : 'Not Required',
   };
 };
 
@@ -131,8 +137,10 @@ export const BookingDetailPage = () => {
   const id = (params?.id as string) || '';
   const bookingQuery = useGetBookingDetail(id);
   const assignDriverMutation = useAssignDriverToBooking();
+  const assignCareAssistantMutation = useAssignCareAssistantToBooking();
   const reassignDriverMutation = useReassignDriver();
   const [openAssignDriver, setOpenAssignDriver] = useState(false);
+  const [openAssignCareAssistant, setOpenAssignCareAssistant] = useState(false);
   const [openReassignDriver, setOpenReassignDriver] = useState(false);
 
   const apiResponse = bookingQuery.data;
@@ -143,6 +151,7 @@ export const BookingDetailPage = () => {
   const isCareAssistantTrip =
     booking?.trip_type === 'transport_care_assistant' ||
     booking?.trip_type === 'transport_care_assistance';
+  const hasCareAssistant = !!booking?.caregiver_id;
 
   const handleAssignDriver = (driverId: string) => {
     assignDriverMutation.mutate(
@@ -155,6 +164,27 @@ export const BookingDetailPage = () => {
         },
         onError: () => {
           toast.error('Failed to assign driver');
+        },
+      }
+    );
+  };
+
+  const handleAssignCareAssistant = (caregiverId: string) => {
+    assignCareAssistantMutation.mutate(
+      { rideId: id, caregiver_id: caregiverId },
+      {
+        onSuccess: () => {
+          toast.success('Care assistant assigned successfully');
+          setOpenAssignCareAssistant(false);
+          bookingQuery.refetch();
+        },
+        onError: (error) => {
+          toast.error(
+            extractValidationErrorMessage(
+              error,
+              'Failed to assign care assistant'
+            )
+          );
         },
       }
     );
@@ -366,7 +396,7 @@ export const BookingDetailPage = () => {
           </Stack>
 
           <RowStack spacing={'8px'}>
-            {isCareAssistantTrip && (
+            {isCareAssistantTrip && !hasCareAssistant && (
               <AppButton
                 sx={{
                   background: '#F0FDF4',
@@ -384,6 +414,7 @@ export const BookingDetailPage = () => {
                     sx={{ fontSize: 13, color: '#16A34A' }}
                   />
                 }
+                onClick={() => setOpenAssignCareAssistant(true)}
               >
                 Assign Care Assistant
               </AppButton>
@@ -773,6 +804,13 @@ export const BookingDetailPage = () => {
         rideId={id}
         onAssign={handleAssignDriver}
         isAssigning={assignDriverMutation.isPending}
+      />
+
+      <AssignCareAssistantModal
+        open={openAssignCareAssistant}
+        handleClose={() => setOpenAssignCareAssistant(false)}
+        onAssign={handleAssignCareAssistant}
+        isAssigning={assignCareAssistantMutation.isPending}
       />
 
       <AssignDriverModal

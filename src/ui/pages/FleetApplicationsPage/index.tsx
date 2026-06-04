@@ -101,11 +101,7 @@ export const FleetApplicationsPage = () => {
       submittedDate: dayjs(item.created_at).format('MMM D, YYYY'),
       status: apiStatusToUiStatus[item.status] ?? 'Pending',
       message: item.description ?? '',
-      documents: item.documents.map((doc) =>
-        doc.document_type
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (c) => c.toUpperCase())
-      ),
+      documents: item.documents,
     }));
   }, [applicationsList]);
 
@@ -154,29 +150,35 @@ export const FleetApplicationsPage = () => {
     []
   );
 
-  const handleActionConfirm = useCallback(async () => {
-    if (!actionApplication) return;
+  const handleActionConfirm = useCallback(
+    async (message?: string) => {
+      if (!actionApplication) return;
 
-    if (actionType === 'approve') {
-      await approveApplication({ appId: actionApplication.id });
-    } else if (actionType === 'reject') {
-      await rejectApplication({
-        appId: actionApplication.id,
-        reason: 'Application rejected by admin',
-      });
-    } else if (actionType === 'request-docs') {
-      await requestInfoApplication({
-        appId: actionApplication.id,
-        message: 'Please provide additional documentation',
-      });
-    }
-  }, [
-    actionApplication,
-    actionType,
-    approveApplication,
-    rejectApplication,
-    requestInfoApplication,
-  ]);
+      if (actionType === 'approve') {
+        await approveApplication({ appId: actionApplication.id });
+      } else if (actionType === 'reject') {
+        await rejectApplication({
+          appId: actionApplication.id,
+          reason: 'Application rejected by admin',
+        });
+      } else if (actionType === 'request-docs') {
+        const trimmedMessage = message?.trim();
+        if (!trimmedMessage) return;
+
+        await requestInfoApplication({
+          appId: actionApplication.id,
+          message: trimmedMessage,
+        });
+      }
+    },
+    [
+      actionApplication,
+      actionType,
+      approveApplication,
+      rejectApplication,
+      requestInfoApplication,
+    ]
+  );
 
   return (
     <AppDashboardLayout>

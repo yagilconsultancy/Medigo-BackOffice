@@ -1,4 +1,5 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, TextField, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 import { AppModal, RowStack } from '../../../../../modules/components';
 import { pxToRem } from '../../../../../../common';
 import { FleetApplicationRow } from '../ApplicationCard';
@@ -47,7 +48,7 @@ type FleetActionModalProps = {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   actionType: FleetActionType;
   application: FleetApplicationRow | null;
-  onConfirm?: () => void;
+  onConfirm?: (message?: string) => void;
 };
 
 export const FleetActionModal = ({
@@ -57,12 +58,19 @@ export const FleetActionModal = ({
   application,
   onConfirm,
 }: FleetActionModalProps) => {
+  const config = actionConfig[actionType];
+  const [requestMessage, setRequestMessage] = useState('');
+
+  useEffect(() => {
+    if (actionType !== 'request-docs') {
+      setRequestMessage('');
+    }
+  }, [actionType]);
+
   if (!application) return null;
 
-  const config = actionConfig[actionType];
-
   const handleConfirm = () => {
-    onConfirm?.();
+    onConfirm?.(requestMessage.trim());
     setOpen(false);
   };
 
@@ -126,6 +134,23 @@ export const FleetActionModal = ({
             {config.message}
           </Typography>
 
+          {actionType === 'request-docs' && (
+            <TextField
+              fullWidth
+              multiline
+              minRows={4}
+              value={requestMessage}
+              onChange={(e) => setRequestMessage(e.target.value)}
+              placeholder="Specify the exact document(s) you need, e.g. Please upload the certificate of insurance and vehicle registration."
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '10px',
+                  background: '#FFFFFF',
+                },
+              }}
+            />
+          )}
+
           {/* Buttons */}
           <RowStack spacing={'12px'}>
             <Box
@@ -168,8 +193,19 @@ export const FleetActionModal = ({
                 background: config.confirmBg,
                 border: `0.67px solid ${config.confirmBorder || config.confirmBg}`,
                 borderRadius: '9px',
-                cursor: 'pointer',
+                cursor:
+                  actionType === 'request-docs' && !requestMessage.trim()
+                    ? 'not-allowed'
+                    : 'pointer',
                 transition: 'opacity 0.15s ease',
+                opacity:
+                  actionType === 'request-docs' && !requestMessage.trim()
+                    ? 0.55
+                    : 1,
+                pointerEvents:
+                  actionType === 'request-docs' && !requestMessage.trim()
+                    ? 'none'
+                    : 'auto',
                 '&:hover': { opacity: 0.85 },
               }}
             >

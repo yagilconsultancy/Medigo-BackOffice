@@ -5,6 +5,7 @@ import {
   Avatar,
   Box,
   Chip,
+  CircularProgress,
   Drawer,
   IconButton,
   Rating,
@@ -21,7 +22,8 @@ import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import StarOutlineIcon from '@mui/icons-material/StarOutline';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
-import { pxToRem } from '../../../../../../common';
+import { pxToRem, useGetCaregiverDetail } from '../../../../../../common';
+import { EmptyState, ImagePdfViewer } from '../../../../../modules/blocks';
 import { RowStack } from '../../../../../modules/components';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -40,6 +42,7 @@ export type CaregiverViewData = {
   assignments: number;
   certifications: string;
   capabilities: string[];
+  languages?: string[];
 };
 
 export type ViewCaregiverDrawerProps = {
@@ -47,8 +50,6 @@ export type ViewCaregiverDrawerProps = {
   onClose: () => void;
   caregiver: CaregiverViewData | null;
 };
-
-// ─── Status Badge Config ────────────────────────────────────────────────────
 
 const statusBadgeConfig: Record<
   string,
@@ -58,88 +59,6 @@ const statusBadgeConfig: Record<
   'On Assignment': { color: '#3730A3', bg: '#EEF2FF', border: '#C7D2FE' },
   Suspended: { color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
 };
-
-// ─── Mock Certifications Data ───────────────────────────────────────────────
-
-const certificationsData = [
-  {
-    title: 'Personal Support Worker (PSW)',
-    subtitle: 'Ontario College of Social Workers',
-    expiry: '2027-01-15',
-  },
-  {
-    title: 'First Aid & CPR Level C',
-    subtitle: 'Canadian Red Cross',
-    expiry: '2026-08-22',
-  },
-  {
-    title: 'Dementia Care Specialist',
-    subtitle: 'Alzheimer Society of Canada',
-    expiry: '2027-03-10',
-  },
-];
-
-const backgroundCheck = {
-  status: 'Verified',
-  expiry: '2027-05-15',
-};
-
-// ─── Mock Assignments Data ──────────────────────────────────────────────────
-
-const assignmentsData = [
-  {
-    id: 'AS-9821',
-    patient: 'Margaret Wilson',
-    route: '120 King St W, Toronto → Toronto General Hospital',
-    date: 'Mar 18, 2026',
-    duration: '2h 15m',
-    status: 'Completed',
-  },
-  {
-    id: 'AS-9818',
-    patient: 'Robert Beaumont',
-    route: '455 René-Lévesque Blvd W → Montreal General Hospital',
-    date: 'Mar 17, 2026',
-    duration: '1h 45m',
-    status: 'Completed',
-  },
-  {
-    id: 'AS-9812',
-    patient: "Patricia O'Brien",
-    route: '1225 Gladstone Ave, Ottawa → Civic Hospital',
-    date: 'Mar 16, 2026',
-    duration: '3h 10m',
-    status: 'Completed',
-  },
-];
-
-// ─── Mock Reviews Data ──────────────────────────────────────────────────────
-
-const reviewsData = [
-  {
-    name: 'Margaret Wilson',
-    rating: 5,
-    date: 'Mar 18, 2026',
-    comment:
-      'Emma was incredibly caring and attentive. Made my mother feel comfortable throughout the entire appointment.',
-  },
-  {
-    name: 'Robert Beaumont',
-    rating: 5,
-    date: 'Mar 17, 2026',
-    comment:
-      'Professional and punctual. Excellent medical knowledge and very reassuring presence.',
-  },
-  {
-    name: "Patricia O'Brien",
-    rating: 4,
-    date: 'Mar 16, 2026',
-    comment:
-      'Very helpful and friendly. Only minor issue with timing but overall great experience.',
-  },
-];
-
-// ─── Reusable Section Card ──────────────────────────────────────────────────
 
 const SectionCard = ({
   icon,
@@ -159,9 +78,8 @@ const SectionCard = ({
       overflow: 'hidden',
     }}
   >
-    {/* Card Header */}
     <RowStack
-      justifyContent={'space-between'}
+      justifyContent="space-between"
       sx={{
         background: '#FAFBFF',
         borderBottom: '0.67px solid #F0F2F5',
@@ -183,15 +101,11 @@ const SectionCard = ({
       </RowStack>
       {trailing}
     </RowStack>
-
-    {/* Card Body */}
     <Stack sx={{ padding: '20px' }} spacing={'16px'}>
       {children}
     </Stack>
   </Box>
 );
-
-// ─── Reusable Read-Only Field ───────────────────────────────────────────────
 
 const ReadOnlyField = ({ label, value }: { label: string; value: string }) => (
   <Stack spacing={'4px'}>
@@ -220,7 +134,16 @@ const ReadOnlyField = ({ label, value }: { label: string; value: string }) => (
   </Stack>
 );
 
-// ─── Main Component ─────────────────────────────────────────────────────────
+const formatDateLabel = (value?: string | null) => {
+  if (!value) return '—';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
 
 export const ViewCaregiverDrawer = ({
   open,
@@ -228,26 +151,67 @@ export const ViewCaregiverDrawer = ({
   caregiver,
 }: ViewCaregiverDrawerProps) => {
   const [activeTab, setActiveTab] = useState(0);
+  const { data: caregiverDetailResponse, isLoading } = useGetCaregiverDetail(
+    caregiver?.caregiverId ?? ''
+  );
 
   if (!caregiver) return null;
 
-  const nameParts = caregiver.name.split(' ');
+  const caregiverDetail = caregiverDetailResponse?.success
+    ? caregiverDetailResponse.data
+    : null;
+
+  const personalInfo = caregiverDetail?.personal_info;
+  const documents = caregiverDetail?.documents ?? [];
+  const certifications = caregiverDetail?.certifications ?? [];
+  const assignments = caregiverDetail?.assignments ?? [];
+  const ratings = caregiverDetail?.ratings ?? [];
+
+  const resolvedName = personalInfo?.full_name ?? caregiver.name;
+  const resolvedSpecialty = personalInfo?.specialty ?? caregiver.specialty;
+  const resolvedPhone = personalInfo?.phone ?? caregiver.phone;
+  const resolvedEmail = personalInfo?.email ?? caregiver.email;
+  const resolvedLocation =
+    [personalInfo?.city, personalInfo?.province].filter(Boolean).join(', ') ||
+    caregiver.location;
+  const resolvedJoinedDate =
+    personalInfo?.joined && !Number.isNaN(Date.parse(personalInfo.joined))
+      ? new Date(personalInfo.joined).toLocaleDateString('en-US', {
+          month: 'short',
+          year: 'numeric',
+        })
+      : caregiver.joinedDate;
+  const resolvedRating = caregiverDetail?.avg_rating ?? caregiver.rating ?? 0;
+  const resolvedAssignments =
+    caregiverDetail?.total_assignments ?? caregiver.assignments ?? 0;
+  const resolvedCapabilities = personalInfo?.capabilities?.length
+    ? personalInfo.capabilities
+    : caregiver.capabilities;
+  const resolvedLanguages = personalInfo?.languages?.length
+    ? personalInfo.languages
+    : (caregiver.languages ?? []);
+  const badge =
+    statusBadgeConfig[caregiver.status] || statusBadgeConfig['Available'];
+
+  const nameParts = resolvedName.split(' ');
   const initials =
     nameParts.length > 1
       ? `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`
       : nameParts[0].charAt(0);
 
-  const badge =
-    statusBadgeConfig[caregiver.status] || statusBadgeConfig['Available'];
+  const renderLoading = () => (
+    <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
+      <CircularProgress size={24} />
+    </Stack>
+  );
 
-  // ─── Tab Content Renderers ──────────────────────────────────────────────
+  const renderEmpty = () => <EmptyState animationSrc="/empty.json" />;
 
   const renderPersonalInfo = () => (
     <SectionCard
       icon={<PersonOutlineIcon sx={{ fontSize: 16, color: '#2F6FED' }} />}
       title="Personal Information"
     >
-      {/* 2-column grid fields */}
       <Box
         sx={{
           display: 'grid',
@@ -255,15 +219,14 @@ export const ViewCaregiverDrawer = ({
           gap: '16px',
         }}
       >
-        <ReadOnlyField label="Full Name" value={caregiver.name} />
-        <ReadOnlyField label="Specialty" value={caregiver.specialty} />
-        <ReadOnlyField label="Phone" value={caregiver.phone} />
-        <ReadOnlyField label="Email" value={caregiver.email} />
-        <ReadOnlyField label="City" value={caregiver.location} />
-        <ReadOnlyField label="Joined" value={caregiver.joinedDate} />
+        <ReadOnlyField label="Full Name" value={resolvedName} />
+        <ReadOnlyField label="Specialty" value={resolvedSpecialty} />
+        <ReadOnlyField label="Phone" value={resolvedPhone} />
+        <ReadOnlyField label="Email" value={resolvedEmail} />
+        <ReadOnlyField label="City" value={resolvedLocation} />
+        <ReadOnlyField label="Joined" value={resolvedJoinedDate} />
       </Box>
 
-      {/* Languages */}
       <Stack spacing={'8px'}>
         <Typography
           sx={{
@@ -277,27 +240,30 @@ export const ViewCaregiverDrawer = ({
         >
           Languages
         </Typography>
-        <RowStack spacing={'8px'}>
-          {['English', 'French'].map((lang) => (
-            <Chip
-              key={lang}
-              label={lang}
-              size="small"
-              sx={{
-                background: '#F7F9FB',
-                color: '#374151',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                fontSize: pxToRem(12),
-                height: '28px',
-                borderRadius: '100px',
-              }}
-            />
-          ))}
-        </RowStack>
+        {resolvedLanguages.length ? (
+          <RowStack spacing={'8px'} sx={{ flexWrap: 'wrap' }}>
+            {resolvedLanguages.map((lang) => (
+              <Chip
+                key={lang}
+                label={lang}
+                size="small"
+                sx={{
+                  background: '#F7F9FB',
+                  color: '#374151',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 500,
+                  fontSize: pxToRem(12),
+                  height: '28px',
+                  borderRadius: '100px',
+                }}
+              />
+            ))}
+          </RowStack>
+        ) : (
+          renderEmpty()
+        )}
       </Stack>
 
-      {/* Capabilities */}
       <Stack spacing={'8px'}>
         <Typography
           sx={{
@@ -311,25 +277,29 @@ export const ViewCaregiverDrawer = ({
         >
           Capabilities
         </Typography>
-        <RowStack spacing={'8px'} sx={{ flexWrap: 'wrap' }}>
-          {caregiver.capabilities.map((cap) => (
-            <Chip
-              key={cap}
-              label={cap}
-              size="small"
-              sx={{
-                background: '#EEF3FF',
-                color: '#2F6FED',
-                border: '0.67px solid #C7D7F9',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 600,
-                fontSize: pxToRem(12),
-                height: '28px',
-                borderRadius: '100px',
-              }}
-            />
-          ))}
-        </RowStack>
+        {resolvedCapabilities.length ? (
+          <RowStack spacing={'8px'} sx={{ flexWrap: 'wrap' }}>
+            {resolvedCapabilities.map((cap) => (
+              <Chip
+                key={cap}
+                label={cap}
+                size="small"
+                sx={{
+                  background: '#EEF3FF',
+                  color: '#2F6FED',
+                  border: '0.67px solid #C7D7F9',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 600,
+                  fontSize: pxToRem(12),
+                  height: '28px',
+                  borderRadius: '100px',
+                }}
+              />
+            ))}
+          </RowStack>
+        ) : (
+          renderEmpty()
+        )}
       </Stack>
     </SectionCard>
   );
@@ -337,140 +307,173 @@ export const ViewCaregiverDrawer = ({
   const renderCertifications = () => (
     <SectionCard
       icon={<VerifiedOutlinedIcon sx={{ fontSize: 16, color: '#2F6FED' }} />}
-      title="Certifications & Documents"
+      title="Certifications"
     >
-      {/* Certification cards */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '12px',
-        }}
-      >
-        {certificationsData.map((cert) => (
-          <RowStack
-            key={cert.title}
-            justifyContent={'space-between'}
-            sx={{
-              background: '#F7F9FB',
-              border: '0.67px solid #E8ECF0',
-              borderRadius: '14px',
-              padding: '14px 16px',
-            }}
-          >
-            <RowStack spacing={'12px'}>
-              <Box
-                sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '10px',
-                  background: '#EBF2FF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <DescriptionOutlinedIcon
-                  sx={{ fontSize: 16, color: '#2F6FED' }}
-                />
-              </Box>
-              <Stack spacing={0}>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(12.5),
-                    color: '#111827',
-                    lineHeight: '1.4em',
-                  }}
-                >
-                  {cert.title}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(11),
-                    color: '#9CA3AF',
-                    lineHeight: '1.4em',
-                  }}
-                >
-                  {cert.subtitle}
-                </Typography>
-              </Stack>
-            </RowStack>
-            <CheckCircleOutlinedIcon
-              sx={{ fontSize: 16, color: '#10B981', flexShrink: 0 }}
-            />
-          </RowStack>
-        ))}
-      </Box>
-
-      {/* Background Check */}
-      <RowStack
-        justifyContent={'space-between'}
-        sx={{
-          background: '#F7F9FB',
-          border: '0.67px solid #E8ECF0',
-          borderRadius: '14px',
-          padding: '16px 20px',
-        }}
-      >
-        <RowStack spacing={'12px'}>
-          <Box
-            sx={{
-              width: 36,
-              height: 36,
-              borderRadius: '10px',
-              background: '#EBF2FF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <CheckCircleOutlinedIcon sx={{ fontSize: 16, color: '#2F6FED' }} />
-          </Box>
-          <Stack spacing={0}>
-            <Typography
+      {isLoading ? (
+        renderLoading()
+      ) : certifications.length ? (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '12px',
+          }}
+        >
+          {certifications.map((cert) => (
+            <RowStack
+              key={cert.name}
+              justifyContent="space-between"
               sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 600,
-                fontSize: pxToRem(13),
-                color: '#111827',
+                background: '#F7F9FB',
+                border: '0.67px solid #E8ECF0',
+                borderRadius: '14px',
+                padding: '14px 16px',
               }}
             >
-              Background Check
-            </Typography>
-            <RowStack spacing={'8px'}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(13),
-                  color: '#374151',
-                }}
-              >
-                Status: {backgroundCheck.status}
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(12),
-                  color: '#6B7280',
-                }}
-              >
-                · Certification Expiry: {backgroundCheck.expiry}
-              </Typography>
+              <RowStack spacing={'12px'}>
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '10px',
+                    background: '#EBF2FF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <DescriptionOutlinedIcon
+                    sx={{ fontSize: 16, color: '#2F6FED' }}
+                  />
+                </Box>
+                <Stack spacing={0}>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 600,
+                      fontSize: pxToRem(12.5),
+                      color: '#111827',
+                      lineHeight: '1.4em',
+                    }}
+                  >
+                    {cert.name}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(11),
+                      color: '#9CA3AF',
+                      lineHeight: '1.4em',
+                    }}
+                  >
+                    {cert.status}
+                    {cert.expiry_date
+                      ? ` · ${formatDateLabel(cert.expiry_date)}`
+                      : ''}
+                  </Typography>
+                </Stack>
+              </RowStack>
+              <CheckCircleOutlinedIcon
+                sx={{ fontSize: 16, color: '#10B981', flexShrink: 0 }}
+              />
             </RowStack>
-          </Stack>
-        </RowStack>
-        <CheckCircleOutlinedIcon
-          sx={{ fontSize: 20, color: '#10B981', flexShrink: 0 }}
-        />
-      </RowStack>
+          ))}
+        </Box>
+      ) : (
+        renderEmpty()
+      )}
+    </SectionCard>
+  );
+
+  const renderDocuments = () => (
+    <SectionCard
+      icon={<DescriptionOutlinedIcon sx={{ fontSize: 16, color: '#2F6FED' }} />}
+      title="Documents"
+    >
+      {isLoading ? (
+        renderLoading()
+      ) : documents.length ? (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+            gap: '12px',
+          }}
+        >
+          {documents.map((doc) => (
+            <ImagePdfViewer
+              key={doc.id}
+              imageFileName={doc.file_name}
+              fileUri={doc.file_uri || doc.file_name}
+            >
+              <Box
+                sx={{
+                  background: '#F7F9FB',
+                  border: '0.67px solid #E8ECF0',
+                  borderRadius: '14px',
+                  padding: '14px 16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  '&:hover': {
+                    background: '#EEF4FF',
+                    borderColor: '#C7D7FE',
+                  },
+                }}
+              >
+                <RowStack spacing={'12px'} alignItems="flex-start">
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: '10px',
+                      background: '#EBF2FF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <DescriptionOutlinedIcon
+                      sx={{ fontSize: 16, color: '#2F6FED' }}
+                    />
+                  </Box>
+                  <Stack spacing={'4px'} sx={{ minWidth: 0 }}>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 600,
+                        fontSize: pxToRem(12.5),
+                        color: '#111827',
+                        lineHeight: '1.4em',
+                      }}
+                    >
+                      {doc.document_type}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 400,
+                        fontSize: pxToRem(11),
+                        color: '#6B7280',
+                        lineHeight: '1.4em',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {doc.file_name}
+                    </Typography>
+                  </Stack>
+                </RowStack>
+              </Box>
+            </ImagePdfViewer>
+          ))}
+        </Box>
+      ) : (
+        renderEmpty()
+      )}
     </SectionCard>
   );
 
@@ -480,7 +483,7 @@ export const ViewCaregiverDrawer = ({
       title="Recent Assignments"
       trailing={
         <Chip
-          label={`${caregiver.assignments} Total`}
+          label={`${resolvedAssignments} Total`}
           size="small"
           sx={{
             background: '#EBF2FF',
@@ -494,116 +497,90 @@ export const ViewCaregiverDrawer = ({
         />
       }
     >
-      {/* Table Header */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: '0.8fr 1fr 1.8fr 0.9fr 0.7fr 0.8fr',
-          gap: '8px',
-          background: '#F7F9FB',
-          borderRadius: '10px',
-          padding: '10px 16px',
-        }}
-      >
-        {['Assignment', 'Patient', 'Route', 'Date', 'Duration', 'Status'].map(
-          (header) => (
-            <Typography
-              key={header}
+      {isLoading ? (
+        renderLoading()
+      ) : assignments.length ? (
+        <Stack spacing={'12px'}>
+          {assignments.map((assignment) => (
+            <Box
+              key={assignment.assignment_id}
               sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 600,
-                fontSize: pxToRem(12),
-                color: '#6B7280',
+                display: 'grid',
+                gridTemplateColumns: '0.8fr 1fr 1.8fr 0.9fr 0.7fr 0.8fr',
+                gap: '8px',
+                padding: '12px 16px',
+                borderBottom: '0.67px solid #F3F4F6',
+                '&:last-child': { borderBottom: 'none' },
               }}
             >
-              {header}
-            </Typography>
-          )
-        )}
-      </Box>
-
-      {/* Table Rows */}
-      {assignmentsData.map((assignment) => (
-        <Box
-          key={assignment.id}
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: '0.8fr 1fr 1.8fr 0.9fr 0.7fr 0.8fr',
-            gap: '8px',
-            padding: '12px 16px',
-            borderBottom: '0.67px solid #F3F4F6',
-            '&:last-child': { borderBottom: 'none' },
-          }}
-        >
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 600,
-              fontSize: pxToRem(12.5),
-              color: '#2F6FED',
-            }}
-          >
-            {assignment.id}
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 500,
-              fontSize: pxToRem(12.5),
-              color: '#374151',
-            }}
-          >
-            {assignment.patient}
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: pxToRem(12),
-              color: '#6B7280',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {assignment.route}
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: pxToRem(12),
-              color: '#6B7280',
-            }}
-          >
-            {assignment.date}
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 500,
-              fontSize: pxToRem(12),
-              color: '#374151',
-            }}
-          >
-            {assignment.duration}
-          </Typography>
-          <Chip
-            label={assignment.status}
-            size="small"
-            sx={{
-              background: '#ECFDF5',
-              color: '#059669',
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 600,
-              fontSize: pxToRem(10.5),
-              height: '22px',
-              borderRadius: '100px',
-              width: 'fit-content',
-            }}
-          />
-        </Box>
-      ))}
+              <Typography
+                sx={{
+                  fontSize: pxToRem(12.5),
+                  fontWeight: 600,
+                  color: '#2F6FED',
+                }}
+              >
+                {assignment.assignment_id}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: pxToRem(12.5),
+                  fontWeight: 500,
+                  color: '#374151',
+                }}
+              >
+                {assignment.patient_name}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: pxToRem(12),
+                  fontWeight: 400,
+                  color: '#6B7280',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {assignment.route}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: pxToRem(12),
+                  fontWeight: 400,
+                  color: '#6B7280',
+                }}
+              >
+                {assignment.date}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: pxToRem(12),
+                  fontWeight: 500,
+                  color: '#374151',
+                }}
+              >
+                {assignment.duration}
+              </Typography>
+              <Chip
+                label={assignment.status}
+                size="small"
+                sx={{
+                  background: '#ECFDF5',
+                  color: '#059669',
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 600,
+                  fontSize: pxToRem(10.5),
+                  height: '22px',
+                  borderRadius: '100px',
+                  width: 'fit-content',
+                }}
+              />
+            </Box>
+          ))}
+        </Stack>
+      ) : (
+        renderEmpty()
+      )}
     </SectionCard>
   );
 
@@ -622,74 +599,69 @@ export const ViewCaregiverDrawer = ({
               color: '#111827',
             }}
           >
-            {caregiver.rating.toFixed(1)}
+            {resolvedRating.toFixed(1)}
           </Typography>
         </RowStack>
       }
     >
-      {reviewsData.map((review) => (
-        <Stack
-          key={review.name + review.date}
-          spacing={'10px'}
-          sx={{
-            background: '#F7F9FB',
-            border: '0.67px solid #E8ECF0',
-            borderRadius: '14px',
-            padding: '16px 20px',
-          }}
-        >
-          {/* Review header */}
-          <RowStack justifyContent={'space-between'}>
-            <RowStack spacing={'10px'}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(13),
-                  color: '#111827',
-                }}
-              >
-                {review.name}
-              </Typography>
-              <Rating
-                value={review.rating}
-                max={5}
-                readOnly
-                size="small"
-                icon={<StarIcon sx={{ fontSize: 12, color: '#F59E0B' }} />}
-                emptyIcon={<StarIcon sx={{ fontSize: 12, color: '#E5E7EB' }} />}
-              />
-            </RowStack>
-            <Typography
+      {isLoading ? (
+        renderLoading()
+      ) : ratings.length ? (
+        <Stack spacing={'10px'}>
+          {ratings.map((review) => (
+            <Stack
+              key={`${review.patient_name}-${review.date}`}
+              spacing={'10px'}
               sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
-                fontSize: pxToRem(11.5),
-                color: '#9CA3AF',
+                background: '#F7F9FB',
+                border: '0.67px solid #E8ECF0',
+                borderRadius: '14px',
+                padding: '16px 20px',
               }}
             >
-              {review.date}
-            </Typography>
-          </RowStack>
-
-          {/* Review text */}
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: pxToRem(13),
-              color: '#374151',
-              lineHeight: 1.6,
-            }}
-          >
-            {review.comment}
-          </Typography>
+              <RowStack justifyContent="space-between">
+                <RowStack spacing={'10px'}>
+                  <Typography
+                    sx={{
+                      fontSize: pxToRem(13),
+                      fontWeight: 600,
+                      color: '#111827',
+                    }}
+                  >
+                    {review.patient_name}
+                  </Typography>
+                  <Rating
+                    value={review.rating}
+                    max={5}
+                    readOnly
+                    size="small"
+                    icon={<StarIcon sx={{ fontSize: 12, color: '#F59E0B' }} />}
+                    emptyIcon={
+                      <StarIcon sx={{ fontSize: 12, color: '#E5E7EB' }} />
+                    }
+                  />
+                </RowStack>
+                <Typography sx={{ fontSize: pxToRem(11.5), color: '#9CA3AF' }}>
+                  {review.date}
+                </Typography>
+              </RowStack>
+              <Typography
+                sx={{
+                  fontSize: pxToRem(13),
+                  color: '#374151',
+                  lineHeight: 1.6,
+                }}
+              >
+                {review.review || 'No review provided.'}
+              </Typography>
+            </Stack>
+          ))}
         </Stack>
-      ))}
+      ) : (
+        renderEmpty()
+      )}
     </SectionCard>
   );
-
-  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <Drawer
@@ -703,7 +675,6 @@ export const ViewCaregiverDrawer = ({
         },
       }}
     >
-      {/* ─── Sticky Header ──────────────────────────────────────────── */}
       <Stack
         sx={{
           padding: '20px 24px 0',
@@ -711,8 +682,7 @@ export const ViewCaregiverDrawer = ({
         }}
         spacing={'16px'}
       >
-        {/* Avatar + Name + Close */}
-        <RowStack justifyContent={'space-between'}>
+        <RowStack justifyContent="space-between">
           <RowStack spacing={'12px'}>
             <Avatar
               src={caregiver.avatar || undefined}
@@ -726,7 +696,7 @@ export const ViewCaregiverDrawer = ({
                 color: '#059669',
               }}
             >
-              {initials}
+              {nameParts[0]?.charAt(0)}
             </Avatar>
             <Stack spacing={'2px'}>
               <Typography
@@ -738,7 +708,7 @@ export const ViewCaregiverDrawer = ({
                   lineHeight: '1.5em',
                 }}
               >
-                {caregiver.name}
+                {resolvedName}
               </Typography>
               <RowStack spacing={'6px'}>
                 <Typography
@@ -749,7 +719,7 @@ export const ViewCaregiverDrawer = ({
                     color: '#6B7280',
                   }}
                 >
-                  {caregiver.specialty} · {caregiver.caregiverId}
+                  {resolvedSpecialty} · {caregiver.caregiverId}
                 </Typography>
                 <Chip
                   label={caregiver.status}
@@ -783,7 +753,6 @@ export const ViewCaregiverDrawer = ({
           </IconButton>
         </RowStack>
 
-        {/* Tabs */}
         <Tabs
           value={activeTab}
           onChange={(_, newValue) => setActiveTab(newValue)}
@@ -811,12 +780,12 @@ export const ViewCaregiverDrawer = ({
         >
           <Tab label="Personal Info" />
           <Tab label="Certifications" />
+          <Tab label="Documents" />
           <Tab label="Assignments" />
           <Tab label="Ratings" />
         </Tabs>
       </Stack>
 
-      {/* ─── Scrollable Content ──────────────────────────────────────── */}
       <Stack
         sx={{
           flex: 1,
@@ -827,8 +796,9 @@ export const ViewCaregiverDrawer = ({
       >
         {activeTab === 0 && renderPersonalInfo()}
         {activeTab === 1 && renderCertifications()}
-        {activeTab === 2 && renderAssignments()}
-        {activeTab === 3 && renderRatings()}
+        {activeTab === 2 && renderDocuments()}
+        {activeTab === 3 && renderAssignments()}
+        {activeTab === 4 && renderRatings()}
       </Stack>
     </Drawer>
   );
