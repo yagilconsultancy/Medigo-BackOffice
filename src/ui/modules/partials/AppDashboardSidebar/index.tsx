@@ -68,8 +68,8 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
         text: 'Dispatch Center',
         moduleId: 'dispatch_center',
         dropdown: [
-          { text: 'Live Dispatch Map', link: '/dispatch' },
           { text: 'Ride Management', link: '/dispatch/rides' },
+          { text: 'Live Dispatch Map', link: '/dispatch' },
           { text: 'Auto Dispatch Settings', link: '/dispatch/settings' },
         ],
       },

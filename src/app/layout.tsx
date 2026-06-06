@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import '@cyntler/react-doc-viewer/dist/index.css';
 import './globals.css';
 import { ReactNode } from 'react';
 import { Header } from './header';
