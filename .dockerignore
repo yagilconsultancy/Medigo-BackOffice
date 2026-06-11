@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+.env
+.env.*
+.DS_Store
+npm-debug.log*
+.vscode
+.idea
+certificates
+.yalc
+yalc.lock
+extra.json
