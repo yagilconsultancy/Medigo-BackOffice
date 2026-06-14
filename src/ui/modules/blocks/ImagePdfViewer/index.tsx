@@ -112,7 +112,7 @@ const getExtension = (url: string) => {
       : '';
   }
 };
-
+ 
 export const ImagePdfViewer = ({
   imageFileName,
   fileUri,
