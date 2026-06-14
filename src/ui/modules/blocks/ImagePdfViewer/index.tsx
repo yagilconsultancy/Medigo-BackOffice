@@ -69,6 +69,33 @@ const OFFICE_EXTENSIONS = new Set([
   'xlsx',
 ]);
 
+const getBrowserFileUrl = (fileUri: string) => {
+  const publicStorageUrl = process.env.NEXT_PUBLIC_FILE_STORAGE_URL;
+
+  if (!publicStorageUrl) {
+    return fileUri;
+  }
+
+  try {
+    const fileUrl = new URL(fileUri);
+
+    if (fileUrl.hostname !== 'minio') {
+      return fileUri;
+    }
+
+    const storageUrl = new URL(publicStorageUrl);
+    storageUrl.pathname = `${storageUrl.pathname.replace(/\/$/, '')}${
+      fileUrl.pathname
+    }`;
+    storageUrl.search = fileUrl.search;
+    storageUrl.hash = fileUrl.hash;
+
+    return storageUrl.toString();
+  } catch {
+    return fileUri;
+  }
+};
+
 const getExtension = (url: string) => {
   const normalizedUrl = url.split('?')[0].split('#')[0];
 
@@ -100,7 +127,7 @@ export const ImagePdfViewer = ({
 
   const handleClose = () => setOpenViewerModal(false);
 
-  const uri = useMemo(() => fileUri, [fileUri]);
+  const uri = useMemo(() => getBrowserFileUrl(fileUri), [fileUri]);
 
   const fileExtension = useMemo(() => getExtension(uri), [uri]);
   const isPdfFile = fileExtension === 'pdf';

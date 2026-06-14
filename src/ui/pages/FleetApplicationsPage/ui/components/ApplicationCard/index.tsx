@@ -296,7 +296,7 @@ export const ApplicationCard = ({
           <ImagePdfViewer
             key={doc.id}
             imageFileName={doc.file_name}
-            fileUri={doc.file_name}
+            fileUri={doc.file_url}
           >
             <RowStack
               spacing={'6px'}
