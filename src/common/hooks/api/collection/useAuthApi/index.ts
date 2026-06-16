@@ -1,8 +1,22 @@
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { useLogin, useLogout, useRefresh } from '../../mutation';
-import { ApiLoginPayload, ApiLoginRefreshRequest } from '../../../../types';
 import {
+  useChangePassword,
+  useForgotPassword,
+  useLogin,
+  useLogout,
+  useRefresh,
+  useResetPassword,
+} from '../../mutation';
+import {
+  ApiChangePasswordPayload,
+  ApiForgotPasswordPayload,
+  ApiLoginPayload,
+  ApiLoginRefreshRequest,
+  ApiResetPasswordPayload,
+} from '../../../../types';
+import {
+  extractApiErrorMessage,
   extractResponseErrors,
   setAuthToken,
   setRefreshToken,
@@ -15,6 +29,9 @@ export const useAuthApi = () => {
   const router = useRouter();
   const doLogout = useLogout();
   const doRefresh = useRefresh();
+  const doForgotPassword = useForgotPassword();
+  const doResetPassword = useResetPassword();
+  const doChangePassword = useChangePassword();
 
   const login = async (payload: ApiLoginPayload): Promise<boolean> => {
     let success = false;
@@ -40,8 +57,8 @@ export const useAuthApi = () => {
           toast.error('An error occurred');
         }
       },
-      async () => {
-        toast.error('An error occurred');
+      async (error) => {
+        toast.error(extractApiErrorMessage(error));
       }
     );
 
@@ -57,8 +74,8 @@ export const useAuthApi = () => {
         toast.success('Logged out successfully');
         router.push('/login');
       },
-      async () => {
-        toast.error('An error occurred during logout');
+      async (error) => {
+        toast.error(extractApiErrorMessage(error));
       }
     );
   };
@@ -84,17 +101,98 @@ export const useAuthApi = () => {
           toast.error('An error occurred');
         }
       },
-      async () => {
-        toast.error('An error occurred during token refresh');
+      async (error) => {
+        toast.error(extractApiErrorMessage(error));
       }
     );
 
     return success;
   };
 
+  const forgotPassword = async (
+    payload: ApiForgotPasswordPayload
+  ): Promise<boolean> => {
+    return await tryExecute(
+      () => doForgotPassword.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
+
+        if (responseData.success) {
+          toast.success('Password reset instructions sent to your email');
+          return true;
+        } else {
+          toast.error(extractResponseErrors(responseData));
+          return false;
+        }
+      },
+      async (error) => {
+        toast.error(extractApiErrorMessage(error));
+        return false;
+      }
+    );
+  };
+
+  const resetPassword = async (
+    payload: ApiResetPasswordPayload
+  ): Promise<boolean> => {
+    return await tryExecute(
+      () => doResetPassword.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
+
+        if (responseData.success) {
+          toast.success(
+            'Password reset successfully. Please sign in with your new password.'
+          );
+          return true;
+        } else {
+          toast.error(extractResponseErrors(responseData));
+          return false;
+        }
+      },
+      async (error) => {
+        toast.error(extractApiErrorMessage(error));
+        return false;
+      }
+    );
+  };
+
+  const changePassword = async (
+    payload: ApiChangePasswordPayload
+  ): Promise<boolean> => {
+    return await tryExecute(
+      () => doChangePassword.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
+
+        if (responseData.success) {
+          toast.success('Password changed successfully');
+          return true;
+        } else {
+          toast.error(extractResponseErrors(responseData));
+          return false;
+        }
+      },
+      async (error) => {
+        toast.error(
+          extractApiErrorMessage(
+            error,
+            error?.response?.status === 401
+              ? 'Current password is incorrect'
+              : 'An error occurred while changing password'
+          )
+        );
+        return false;
+      }
+    );
+  };
+
   return {
     login,
     refresh,
     logout,
+    forgotPassword,
+    resetPassword,
+    changePassword,
   };
 };

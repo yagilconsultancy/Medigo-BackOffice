@@ -1,42 +1,45 @@
 'use client';
-import { Box, Checkbox, Stack, Typography } from '@mui/material';
+
+import { Box, Stack, Typography } from '@mui/material';
 import {
   AppButton,
   AppLabelField,
   Centered,
-  FormikAppPasswordField,
   FormikAppTextField,
-  RowStack,
   StyledImage,
   StyledLink,
 } from '../../modules/components';
 import appLogo from '../../assets/icons/app-logo.svg';
-import { ApiLoginPayload, pxToRem } from '../../../common';
+import { ApiForgotPasswordPayload, pxToRem } from '../../../common';
 import { Form, Formik, FormikHelpers } from 'formik';
-import { toast } from 'sonner';
 import * as Yup from 'yup';
 import { useAuthApi } from '../../../common/hooks/api';
+import { useRouter } from 'next/navigation';
 
-const LoginSchema = Yup.object().shape({
+const ForgotPasswordSchema = Yup.object().shape({
   email: Yup.string().email('must be an email').required('email is required'),
-  password: Yup.string().required('Enter your Password'),
 });
 
-export const LoginPage = () => {
-  const { login } = useAuthApi();
-  const label = { slotProps: { input: { 'aria-label': 'checkbox remember' } } };
-  const initialValues: ApiLoginPayload = {
+export const ForgotPasswordPage = () => {
+  const { forgotPassword } = useAuthApi();
+  const router = useRouter();
+
+  const initialValues: ApiForgotPasswordPayload = {
     email: '',
-    password: '',
   };
+
   const handleSubmit = async (
-    values: ApiLoginPayload,
-    { setSubmitting }: FormikHelpers<ApiLoginPayload>
+    values: ApiForgotPasswordPayload,
+    { setSubmitting }: FormikHelpers<ApiForgotPasswordPayload>
   ) => {
     setSubmitting(true);
-    await login(values);
+    const success = await forgotPassword({ email: values.email });
+    if (success) {
+      router.push('/reset-password');
+    }
     setSubmitting(false);
   };
+
   return (
     <Box
       sx={{
@@ -51,17 +54,11 @@ export const LoginPage = () => {
         width: '100%',
         height: '100vh',
         display: 'flex',
-        alignitems: 'center',
+        alignItems: 'center',
         justifyContent: 'center',
       }}
     >
-      <Centered
-        spacing={'49px'}
-        sx={{
-          width: '560px',
-        }}
-        direction={'column'}
-      >
+      <Centered spacing={'49px'} sx={{ width: '560px' }} direction={'column'}>
         <Stack spacing={0.5} alignItems={'center'}>
           <StyledImage
             src={appLogo}
@@ -107,7 +104,7 @@ export const LoginPage = () => {
                 fontWeight: 600,
               }}
             >
-              Welcome Back
+              Forgot Password
             </Typography>
             <Typography
               sx={{
@@ -118,12 +115,12 @@ export const LoginPage = () => {
                 fontWeight: 400,
               }}
             >
-              Sign in to access all dashboards and analytics
+              Enter your admin email to receive password reset instructions
             </Typography>
           </Stack>
           <Formik
             initialValues={initialValues}
-            validationSchema={LoginSchema}
+            validationSchema={ForgotPasswordSchema}
             onSubmit={handleSubmit}
           >
             {({ values, isSubmitting, isValid }) => (
@@ -136,55 +133,32 @@ export const LoginPage = () => {
                       placeholder="admin@medigo.com"
                     />
                   </Stack>
-                  <Stack spacing={0.5}>
-                    <AppLabelField label="Password" />
-                    <FormikAppPasswordField
-                      name="password"
-                      placeholder="Enter your password"
-                    />
-                  </Stack>
-                  <RowStack width={'100%'} justifyContent={'space-between'}>
-                    <RowStack spacing={0.5}>
-                      <Checkbox {...label} />
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          color: '#475569',
-                          fontSize: pxToRem(14),
-                          lineHeight: '21px',
-                          fontWeight: 400,
-                        }}
-                      >
-                        Remember me
-                      </Typography>
-                    </RowStack>
-                    <StyledLink
-                      href={'/forgot-password'}
-                      sx={{
-                        color: '#3B82F6',
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontSize: pxToRem(14),
-                        textAlign: 'center',
-                        fontWeight: 500,
-                        lineHeight: '21px',
-                      }}
-                    >
-                      Forgot password?
-                    </StyledLink>
-                  </RowStack>
                   <AppButton
                     type="submit"
-                    disabled={!isValid || !values.email || !values.password}
+                    disabled={!isValid || !values.email}
                     isLoading={isSubmitting}
                   >
-                    Sign In to Dashboard
+                    Send Reset Instructions
                   </AppButton>
+                  <StyledLink
+                    href={'/login'}
+                    sx={{
+                      color: '#3B82F6',
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontSize: pxToRem(14),
+                      textAlign: 'center',
+                      fontWeight: 500,
+                      lineHeight: '21px',
+                    }}
+                  >
+                    Back to login
+                  </StyledLink>
                 </Stack>
               </Form>
             )}
           </Formik>
         </Stack>
-        <Centered sx={{}}>
+        <Centered>
           <Typography
             sx={{
               color: '#FFFFFF99',

@@ -1,42 +1,65 @@
 'use client';
-import { Box, Checkbox, Stack, Typography } from '@mui/material';
+
+import { Box, Stack, Typography } from '@mui/material';
 import {
   AppButton,
   AppLabelField,
   Centered,
   FormikAppPasswordField,
   FormikAppTextField,
-  RowStack,
   StyledImage,
   StyledLink,
 } from '../../modules/components';
 import appLogo from '../../assets/icons/app-logo.svg';
-import { ApiLoginPayload, pxToRem } from '../../../common';
+import { ApiResetPasswordPayload, pxToRem } from '../../../common';
 import { Form, Formik, FormikHelpers } from 'formik';
-import { toast } from 'sonner';
 import * as Yup from 'yup';
 import { useAuthApi } from '../../../common/hooks/api';
+import { useRouter } from 'next/navigation';
 
-const LoginSchema = Yup.object().shape({
-  email: Yup.string().email('must be an email').required('email is required'),
-  password: Yup.string().required('Enter your Password'),
+type ResetPasswordFormValues = {
+  token: string;
+  newPassword: string;
+  confirmNewPassword: string;
+};
+
+const ResetPasswordSchema = Yup.object().shape({
+  token: Yup.string().required('token is required'),
+  newPassword: Yup.string()
+    .min(8, 'new password must be at least 8 characters')
+    .required('new password is required'),
+  confirmNewPassword: Yup.string()
+    .oneOf([Yup.ref('newPassword')], 'confirm password must match new password')
+    .required('confirm password is required'),
 });
 
-export const LoginPage = () => {
-  const { login } = useAuthApi();
-  const label = { slotProps: { input: { 'aria-label': 'checkbox remember' } } };
-  const initialValues: ApiLoginPayload = {
-    email: '',
-    password: '',
+export const ResetPasswordPage = () => {
+  const { resetPassword } = useAuthApi();
+  const router = useRouter();
+
+  const initialValues: ResetPasswordFormValues = {
+    token: '',
+    newPassword: '',
+    confirmNewPassword: '',
   };
+
   const handleSubmit = async (
-    values: ApiLoginPayload,
-    { setSubmitting }: FormikHelpers<ApiLoginPayload>
+    values: ResetPasswordFormValues,
+    { setSubmitting }: FormikHelpers<ResetPasswordFormValues>
   ) => {
+    const payload: ApiResetPasswordPayload = {
+      token: values.token,
+      new_password: values.newPassword,
+    };
+
     setSubmitting(true);
-    await login(values);
+    const success = await resetPassword(payload);
+    if (success) {
+      router.push('/login');
+    }
     setSubmitting(false);
   };
+
   return (
     <Box
       sx={{
@@ -51,17 +74,11 @@ export const LoginPage = () => {
         width: '100%',
         height: '100vh',
         display: 'flex',
-        alignitems: 'center',
+        alignItems: 'center',
         justifyContent: 'center',
       }}
     >
-      <Centered
-        spacing={'49px'}
-        sx={{
-          width: '560px',
-        }}
-        direction={'column'}
-      >
+      <Centered spacing={'49px'} sx={{ width: '560px' }} direction={'column'}>
         <Stack spacing={0.5} alignItems={'center'}>
           <StyledImage
             src={appLogo}
@@ -107,7 +124,7 @@ export const LoginPage = () => {
                 fontWeight: 600,
               }}
             >
-              Welcome Back
+              Reset Password
             </Typography>
             <Typography
               sx={{
@@ -118,73 +135,69 @@ export const LoginPage = () => {
                 fontWeight: 400,
               }}
             >
-              Sign in to access all dashboards and analytics
+              Enter the reset token and choose a new admin password
             </Typography>
           </Stack>
           <Formik
             initialValues={initialValues}
-            validationSchema={LoginSchema}
+            validationSchema={ResetPasswordSchema}
             onSubmit={handleSubmit}
           >
             {({ values, isSubmitting, isValid }) => (
               <Form>
                 <Stack spacing={'20px'}>
                   <Stack spacing={0.5}>
-                    <AppLabelField label="Email Address" />
+                    <AppLabelField label="Reset Token" />
                     <FormikAppTextField
-                      name="email"
-                      placeholder="admin@medigo.com"
+                      name="token"
+                      placeholder="Enter reset token"
                     />
                   </Stack>
                   <Stack spacing={0.5}>
-                    <AppLabelField label="Password" />
+                    <AppLabelField label="New Password" />
                     <FormikAppPasswordField
-                      name="password"
-                      placeholder="Enter your password"
+                      name="newPassword"
+                      placeholder="Enter new password"
                     />
                   </Stack>
-                  <RowStack width={'100%'} justifyContent={'space-between'}>
-                    <RowStack spacing={0.5}>
-                      <Checkbox {...label} />
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          color: '#475569',
-                          fontSize: pxToRem(14),
-                          lineHeight: '21px',
-                          fontWeight: 400,
-                        }}
-                      >
-                        Remember me
-                      </Typography>
-                    </RowStack>
-                    <StyledLink
-                      href={'/forgot-password'}
-                      sx={{
-                        color: '#3B82F6',
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontSize: pxToRem(14),
-                        textAlign: 'center',
-                        fontWeight: 500,
-                        lineHeight: '21px',
-                      }}
-                    >
-                      Forgot password?
-                    </StyledLink>
-                  </RowStack>
+                  <Stack spacing={0.5}>
+                    <AppLabelField label="Confirm New Password" />
+                    <FormikAppPasswordField
+                      name="confirmNewPassword"
+                      placeholder="Confirm new password"
+                    />
+                  </Stack>
                   <AppButton
                     type="submit"
-                    disabled={!isValid || !values.email || !values.password}
+                    disabled={
+                      !isValid ||
+                      !values.token ||
+                      !values.newPassword ||
+                      !values.confirmNewPassword
+                    }
                     isLoading={isSubmitting}
                   >
-                    Sign In to Dashboard
+                    Reset Password
                   </AppButton>
+                  <StyledLink
+                    href={'/login'}
+                    sx={{
+                      color: '#3B82F6',
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontSize: pxToRem(14),
+                      textAlign: 'center',
+                      fontWeight: 500,
+                      lineHeight: '21px',
+                    }}
+                  >
+                    Back to login
+                  </StyledLink>
                 </Stack>
               </Form>
             )}
           </Formik>
         </Stack>
-        <Centered sx={{}}>
+        <Centered>
           <Typography
             sx={{
               color: '#FFFFFF99',

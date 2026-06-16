@@ -5,11 +5,27 @@ export const ROUTES_SPEC = {
   // Base
   ping: `/${API_VERSION}/ping`,
 
-  // System logs
+  // Auth
+  register: `/${API_VERSION}/auth/register`,
+  verifyOtp: `/${API_VERSION}/auth/verify-otp`,
+  login: `/${API_VERSION}/auth/login`,
   adminLogin: `/${API_VERSION}/auth/admin/login`,
   adminRefresh: `/${API_VERSION}/auth/refresh`,
   adminLogout: `/${API_VERSION}/auth/logout`,
+  changePassword: `/${API_VERSION}/auth/change-password`,
+  resendOtp: `/${API_VERSION}/auth/resend-otp`,
+  forgotPassword: `/${API_VERSION}/auth/forgot-password`,
+  resetPassword: `/${API_VERSION}/auth/reset-password`,
+  verifyDriverInvite: `/${API_VERSION}/auth/driver/verify-invite`,
+  registerDriver: `/${API_VERSION}/auth/driver/register`,
+  verifyAdminInvite: `/${API_VERSION}/auth/admin/verify-invite`,
+  registerAdmin: `/${API_VERSION}/auth/admin/register`,
+  listActiveSessions: `/${API_VERSION}/auth/sessions`,
+  revokeAllAuthSessions: `/${API_VERSION}/auth/sessions`,
+  revokeAuthSession: (sessionId: string) =>
+    `/${API_VERSION}/auth/sessions/${sessionId}`,
 
+  // System logs
   getUserProfile: `/${API_VERSION}/users/me`,
   getActivityKPI: `/${API_VERSION}/auth/admin/activity-logs/kpis`,
   getActivityList: `/${API_VERSION}/auth/admin/activity-logs`,
@@ -20,6 +36,7 @@ export const ROUTES_SPEC = {
   getSecurityKpi: `/${API_VERSION}/auth/admin/security/kpis`,
   SecurityData: `/${API_VERSION}/auth/admin/security/settings`,
   getSecurityData: `/${API_VERSION}/auth/admin/security/settings`,
+  updateSecuritySettings: `/${API_VERSION}/auth/admin/security/settings`,
   // Admin Sessions
   getActiveSessions: `/${API_VERSION}/users/admin/sessions`,
   revokeSession: (sessionId: string) =>
