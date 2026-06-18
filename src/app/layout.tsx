@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import '@cyntler/react-doc-viewer/dist/index.css';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import './globals.css';
 import { ReactNode } from 'react';
 import { Header } from './header';

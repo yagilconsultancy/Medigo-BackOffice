@@ -7,16 +7,21 @@ export const extractResponseErrors = (
   if (apiResponse.success) {
     return null;
   }
-  // @ts-ignore
-  if (!apiResponse.error) {
+
+  const responseErrors =
+    'error' in apiResponse
+      ? apiResponse.error
+      : 'message' in apiResponse
+        ? apiResponse.message
+        : null;
+
+  if (!responseErrors) {
     return 'An error occurred';
   }
-  // @ts-ignore
-  const errors = Array.isArray(apiResponse.error)
-    ? // @ts-ignore
-      apiResponse.error
-    : // @ts-ignore
-      [apiResponse.error];
+
+  const errors = Array.isArray(responseErrors)
+    ? responseErrors
+    : [responseErrors];
   if (errors.length === 1) {
     return errors[0];
   }
@@ -26,6 +31,65 @@ export const extractResponseErrors = (
   ));
 
   return <ul>{errorNodes}</ul>;
+};
+
+export const extractApiErrorMessage = (
+  error: any,
+  fallback = 'An error occurred'
+): ReactNode => {
+  const responseData = error?.response?.data || error?.data || error;
+
+  if (responseData && typeof responseData === 'object') {
+    if ('success' in responseData) {
+      return extractResponseErrors(responseData as ApiResponse<any>);
+    }
+
+    if (Array.isArray(responseData.detail) && responseData.detail.length > 0) {
+      const messages = responseData.detail
+        .map((item: any) => item?.msg)
+        .filter((msg: any): msg is string => Boolean(msg));
+
+      if (messages.length === 1) {
+        return messages[0];
+      }
+
+      if (messages.length > 1) {
+        return (
+          <ul>
+            {messages.map((message, index) => (
+              <li key={index}>{message}</li>
+            ))}
+          </ul>
+        );
+      }
+    }
+
+    const backendError = responseData.error || responseData.message;
+
+    if (Array.isArray(backendError)) {
+      if (backendError.length === 1) {
+        return backendError[0];
+      }
+
+      return (
+        <ul>
+          {backendError.map((message, index) => (
+            <li key={index}>{message}</li>
+          ))}
+        </ul>
+      );
+    }
+
+    if (typeof backendError === 'string' && backendError) {
+      return backendError;
+    }
+  }
+
+  if (typeof responseData === 'string' && responseData) {
+    return responseData;
+  }
+
+  return fallback;
 };
 
 export const extractValidationErrorMessage = (

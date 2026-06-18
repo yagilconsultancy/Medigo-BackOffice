@@ -22,10 +22,11 @@ import {
 } from 'react';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import { TransitionProps } from '@mui/material/transitions';
-import { Viewer, Worker } from '@react-pdf-viewer/core';
+import { SpecialZoomLevel, Viewer, Worker } from '@react-pdf-viewer/core';
 import DocViewer, { DocViewerRenderers } from '@cyntler/react-doc-viewer';
 import { Loader, RowStack } from '../../components';
 import { pxToRem } from '../../../../common';
+
 export interface ImagePdfViewerProps {
   imageFileName: string;
   fileUri: string;
@@ -69,6 +70,33 @@ const OFFICE_EXTENSIONS = new Set([
   'xlsx',
 ]);
 
+const getBrowserFileUrl = (fileUri: string) => {
+  const publicStorageUrl = process.env.NEXT_PUBLIC_FILE_STORAGE_URL;
+
+  if (!publicStorageUrl) {
+    return fileUri;
+  }
+
+  try {
+    const fileUrl = new URL(fileUri);
+
+    if (fileUrl.hostname !== 'minio') {
+      return fileUri;
+    }
+
+    const storageUrl = new URL(publicStorageUrl);
+    storageUrl.pathname = `${storageUrl.pathname.replace(/\/$/, '')}${
+      fileUrl.pathname
+    }`;
+    storageUrl.search = fileUrl.search;
+    storageUrl.hash = fileUrl.hash;
+
+    return storageUrl.toString();
+  } catch {
+    return fileUri;
+  }
+};
+
 const getExtension = (url: string) => {
   const normalizedUrl = url.split('?')[0].split('#')[0];
 
@@ -100,12 +128,13 @@ export const ImagePdfViewer = ({
 
   const handleClose = () => setOpenViewerModal(false);
 
-  const uri = useMemo(() => fileUri, [fileUri]);
+  const uri = useMemo(() => getBrowserFileUrl(fileUri), [fileUri]);
 
   const fileExtension = useMemo(() => getExtension(uri), [uri]);
   const isPdfFile = fileExtension === 'pdf';
   const isImageFile = IMAGE_EXTENSIONS.has(fileExtension);
   const isOfficeFile = OFFICE_EXTENSIONS.has(fileExtension) && !isPdfFile;
+  const isDocumentFile = isPdfFile || isOfficeFile;
 
   return (
     <>
@@ -150,18 +179,23 @@ export const ImagePdfViewer = ({
             elevation: 0,
             sx: {
               background: '#FFF',
-              padding: '40px',
-              width: {
-                xs: '85vw',
-                sm: '80vw',
-                md: '65vw',
-                lg: '55vw',
-                xl: '50vw',
-              },
-              maxHeight: '85vh',
-              height: 'auto',
+              padding: isDocumentFile ? 0 : '40px',
+              width: isDocumentFile
+                ? { xs: '96vw', sm: '94vw', md: '92vw' }
+                : {
+                    xs: '85vw',
+                    sm: '80vw',
+                    md: '65vw',
+                    lg: '55vw',
+                    xl: '50vw',
+                  },
+              maxWidth: isDocumentFile ? '1400px' : undefined,
+              maxHeight: isDocumentFile ? '92vh' : '85vh',
+              height: isDocumentFile ? '92vh' : 'auto',
               position: 'relative',
               overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
             },
           },
         }}
@@ -169,17 +203,27 @@ export const ImagePdfViewer = ({
         onClose={handleClose}
         keepMounted
       >
-        <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1 }}>
-          <IconButton onClick={handleClose}>
+        <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
+          <IconButton
+            onClick={handleClose}
+            sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.92)',
+              boxShadow: '0 2px 10px rgba(15, 23, 42, 0.16)',
+              '&:hover': {
+                backgroundColor: '#FFF',
+              },
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </Box>
 
         {isPdfFile ? (
-          <Box sx={{ height: '65vh', width: '100%' }}>
+          <Box sx={{ flex: 1, minHeight: 0, width: '100%' }}>
             <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
               <Viewer
                 fileUrl={uri}
+                defaultScale={SpecialZoomLevel.PageWidth}
                 plugins={[defaultLayoutPluginInstance]}
                 renderLoader={() => (
                   <Stack
@@ -219,15 +263,33 @@ export const ImagePdfViewer = ({
         ) : isOfficeFile ? (
           <Box
             sx={{
-              height: '65vh',
+              flex: 1,
+              minHeight: 0,
               width: '100%',
               overflow: 'hidden',
+              '& #react-doc-viewer': {
+                height: '100%',
+              },
+              '& #proxy-renderer': {
+                flex: 1,
+                minHeight: 0,
+                overflow: 'hidden',
+              },
+              '& #msdoc-renderer, & #msdoc-iframe': {
+                width: '100%',
+                height: '100%',
+              },
             }}
           >
             <DocViewer
               documents={[{ uri, fileName: imageFileName }]}
               pluginRenderers={DocViewerRenderers}
               prefetchMethod="GET"
+              config={{
+                header: {
+                  disableHeader: true,
+                },
+              }}
               style={{
                 width: '100%',
                 height: '100%',

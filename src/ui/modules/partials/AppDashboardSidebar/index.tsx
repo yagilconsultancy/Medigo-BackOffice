@@ -9,7 +9,12 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { AdminInfo, Header, LogoutModal } from './ui/components';
+import {
+  AdminInfo,
+  ChangePasswordModal,
+  Header,
+  LogoutModal,
+} from './ui/components';
 import { SidebarLinks, SidebarLinksProps } from './ui/blocks';
 import {
   useGetMyPermissions,
@@ -20,6 +25,7 @@ import {
 } from '../../../../common';
 import type { UserPermissionsResponse } from '../../../../common';
 import LogoutIcon from '@mui/icons-material/Logout';
+import LockResetIcon from '@mui/icons-material/LockReset';
 
 // Sidebar icons
 import dashboardIcon from './ui/assets/icons/dashboard-icon.svg';
@@ -220,7 +226,8 @@ export function AppDashboardSideBar({
   const DRAWER_WIDTH = isXs ? '80%' : 259; // Width when sidebar is open
   const COLLAPSED_WIDTH = isXs ? 0 : 72;
   const [openLogoutModal, setOpenLogoutModal] = useState(false);
-  const { logout } = useAuthApi();
+  const [openChangePasswordModal, setOpenChangePasswordModal] = useState(false);
+  const { changePassword, logout } = useAuthApi();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Fetch user permissions
@@ -231,8 +238,16 @@ export function AppDashboardSideBar({
     setOpenLogoutModal(true);
   };
 
+  const handleChangePasswordClick = () => {
+    setOpenChangePasswordModal(true);
+  };
+
   const handleCloseLogoutModal = () => {
     setOpenLogoutModal(false);
+  };
+
+  const handleCloseChangePasswordModal = () => {
+    setOpenChangePasswordModal(false);
   };
 
   const handleConfirmLogout = async () => {
@@ -381,7 +396,32 @@ export function AppDashboardSideBar({
             <Box sx={{ padding: '12px' }}>
               <AdminInfo isSideBarOpen={open} />
             </Box>
-            <Box sx={{ padding: '12px', paddingTop: 0 }}>
+            <Stack spacing={1} sx={{ padding: '12px', paddingTop: 0 }}>
+              <Button
+                fullWidth
+                startIcon={<LockResetIcon sx={{ fontSize: 18 }} />}
+                onClick={handleChangePasswordClick}
+                sx={{
+                  justifyContent: open ? 'flex-start' : 'center',
+                  color: '#2563EB',
+                  fontWeight: 600,
+                  fontSize: pxToRem(13),
+                  lineHeight: '19.5px',
+                  fontFamily: theme.typography.fontFamily,
+                  textTransform: 'none',
+                  padding: open ? '10px 12px' : '10px',
+                  borderRadius: '12px',
+                  '&:hover': {
+                    background: 'rgba(37, 99, 235, 0.08)',
+                  },
+                  '& .MuiButton-startIcon': {
+                    marginRight: open ? '8px' : 0,
+                    marginLeft: 0,
+                  },
+                }}
+              >
+                {open && 'Change Password'}
+              </Button>
               <Button
                 fullWidth
                 startIcon={
@@ -409,7 +449,7 @@ export function AppDashboardSideBar({
               >
                 {open && 'Logout'}
               </Button>
-            </Box>
+            </Stack>
           </Stack>
         </Stack>
       </Drawer>
@@ -419,6 +459,11 @@ export function AppDashboardSideBar({
         handleClose={handleCloseLogoutModal}
         onConfirm={handleConfirmLogout}
         isLoading={isLoggingOut}
+      />
+      <ChangePasswordModal
+        open={openChangePasswordModal}
+        handleClose={handleCloseChangePasswordModal}
+        onSubmit={changePassword}
       />
     </Box>
   );

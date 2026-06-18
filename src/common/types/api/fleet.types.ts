@@ -474,6 +474,7 @@ export interface AdminRiderActivityKPIs {
 export interface FleetDocumentResponse {
   id: string;
   document_type: string;
+  file_url: string;
   file_name: string;
   file_size: number;
   mime_type: string;

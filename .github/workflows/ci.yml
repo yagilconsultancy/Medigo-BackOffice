@@ -13,36 +13,55 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Setup Node.js environment
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      # Install dependencies
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
-      # Check TypeScript types
-      # - name: TypeScript Type Check
-      #   run: npm run type-check # Ensure this script is in your package.json
-
-      # Run ESLint for linting
       - name: Lint Code
-        run: npm run lint # Ensure this script is in your package.json
+        run: npm run lint
 
-      # Run tests
-      # - name: Run Tests
-      #   run: npm test # Ensure this script is in your package.json
-
-      # Build the project
       - name: Build Project
-        run: npm run build # Ensure this script is in your package.json
-
+        run: npm run build
         env:
           NODE_ENV: production
+          NEXT_PUBLIC_BASE_API_URL: ${{ secrets.NEXT_PUBLIC_BASE_API_URL }}
+          NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
+          NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: NEXT_PUBLIC_BASE_API_URL,NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,NEXT_PUBLIC_SOCKET_URL
+          script: |
+            cd ~/medigo-interface
+            git pull origin main
+            cat > .env << EOF
+            NEXT_PUBLIC_BASE_API_URL=${NEXT_PUBLIC_BASE_API_URL}
+            NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+            NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
+            EOF
+            docker compose down
+            docker compose build --no-cache
+            docker compose up -d
+            docker image prune -f
+        env:
+          NEXT_PUBLIC_BASE_API_URL: ${{ secrets.NEXT_PUBLIC_BASE_API_URL }}
+          NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
+          NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL }}

@@ -95,15 +95,29 @@ export interface ChangePasswordRequest {
   new_password: string; // minLength: 8, maxLength: 128
 }
 
+export type ApiChangePasswordPayload = ChangePasswordRequest;
+export type ApiChangePasswordResponse = ApiResponse<null>;
+
 export interface ForgotPasswordRequest {
   email?: string | null; // email format
   phone?: string | null;
 }
 
+export interface ForgotPasswordResponse {
+  user_id: string;
+  message?: string;
+}
+
+export type ApiForgotPasswordPayload = Pick<ForgotPasswordRequest, 'email'>;
+export type ApiForgotPasswordResponse = ApiResponse<ForgotPasswordResponse>;
+
 export interface ResetPasswordRequest {
   token: string;
   new_password: string; // minLength: 8, maxLength: 128
 }
+
+export type ApiResetPasswordPayload = ResetPasswordRequest;
+export type ApiResetPasswordResponse = ApiResponse<null>;
 
 export interface VerifyOTPRequest {
   user_id: string; // uuid
