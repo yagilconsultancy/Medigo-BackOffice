@@ -296,17 +296,17 @@ export type ApiRefundDetailResponse = ApiResponse<RefundDetailResponse>;
 // ====================== PRICING DASHBOARD ======================
 
 export interface PricingDashboardKPIs {
-  monthly_revenue?: string;
-  avg_trip_fare?: string;
-  active_service_types?: number;
-  premium_ride_percent?: string;
+  monthly_revenue?: string | number;
+  avg_trip_fare?: string | number;
+  active_service_types?: number | string;
+  premium_ride_percent?: string | number;
 }
 
 export interface RouteComparisonItem {
   route: string;
-  standard: number | null;
-  wheelchair_wav: number | null;
-  stretcher: number | null;
+  standard: number | string | null;
+  wheelchair_wav: number | string | null;
+  stretcher: number | string | null;
 }
 
 export interface RouteComparisonResponse {

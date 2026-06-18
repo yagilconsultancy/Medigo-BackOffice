@@ -56,7 +56,7 @@ export const AppDashBoardHeader = ({
           {/* <AppSearchField placeholder="Search bookings, drivers, or trips…" /> */}
           <Box />
           <RowStack spacing={1}>
-            <IconComponent
+            {/* <IconComponent
               icon={
                 <Badge color="secondary" variant="dot">
                   <NotificationsNoneIcon />
@@ -67,7 +67,7 @@ export const AppDashBoardHeader = ({
             <IconComponent
               icon={<SettingsOutlinedIcon />}
               handleClick={() => toast.success('Settings')}
-            />
+            /> */}
             <Avatar
               src={userProfile?.avatar_url}
               alt={fullName}

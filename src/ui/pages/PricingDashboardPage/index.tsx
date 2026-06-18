@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Box, Grid, Stack, Typography, Skeleton } from '@mui/material';
+import { Box, Grid, Stack, Typography } from '@mui/material';
 import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
 import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
@@ -29,6 +29,10 @@ import {
   useResolvedApiQuery,
 } from '../../../common';
 import { EmptyState } from '../../modules/blocks';
+import type {
+  PricingDashboardKPIs,
+  RouteComparisonItem,
+} from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -60,6 +64,42 @@ type HealthItem = {
   type: 'ok' | 'warning';
 };
 
+const toNumber = (value: unknown): number => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.replace(/,/g, '').trim();
+    const parsed = Number.parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
+};
+
+const formatCurrency = (value: unknown) => {
+  return `$${toNumber(value).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+const formatCount = (value: unknown) => {
+  const count = toNumber(value);
+  return Number.isInteger(count)
+    ? count.toLocaleString('en-US')
+    : count.toLocaleString('en-US', { maximumFractionDigits: 2 });
+};
+
+const formatPercent = (value: unknown) => {
+  const percent = toNumber(value);
+  return `${percent.toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}%`;
+};
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const PricingDashboardPage = () => {
@@ -81,14 +121,14 @@ export const PricingDashboardPage = () => {
 
   // Transform API data
   const statCards = useMemo(() => {
-    const kpis = kpisData || {};
+    const kpis: PricingDashboardKPIs = kpisData || {};
     return [
       {
         icon: (
           <AttachMoneyOutlinedIcon sx={{ fontSize: 22, color: '#2F6FED' }} />
         ),
         iconBg: '#EBF2FF',
-        value: `$${parseFloat(kpis.monthly_revenue || '0').toLocaleString()}`,
+        value: formatCurrency(kpis.monthly_revenue),
         label: 'Monthly Revenue',
         badge: 'This month',
       },
@@ -97,14 +137,14 @@ export const PricingDashboardPage = () => {
           <TrendingUpOutlinedIcon sx={{ fontSize: 22, color: '#10B981' }} />
         ),
         iconBg: '#ECFDF5',
-        value: `$${parseFloat(kpis.avg_trip_fare || '0').toFixed(2)}`,
+        value: formatCurrency(kpis.avg_trip_fare),
         label: 'Avg. Trip Fare',
         badge: 'Per ride',
       },
       {
         icon: <CategoryOutlinedIcon sx={{ fontSize: 22, color: '#6366F1' }} />,
         iconBg: '#EEF2FF',
-        value: kpis.active_service_types?.toLocaleString() || '0',
+        value: formatCount(kpis.active_service_types),
         label: 'Active Service Types',
         badge: 'Configured',
       },
@@ -115,7 +155,7 @@ export const PricingDashboardPage = () => {
           />
         ),
         iconBg: '#FFFBEB',
-        value: `${kpis.premium_ride_percent || '0'}%`,
+        value: formatPercent(kpis.premium_ride_percent),
         label: 'Premium Services',
         badge: 'Of total rides',
       },
@@ -123,13 +163,13 @@ export const PricingDashboardPage = () => {
   }, [kpisData]);
 
   const routeRows = useMemo(() => {
-    const routes = routeComparisonData?.routes || [];
-    return routes.map((route: any, index: number) => ({
+    const routes: RouteComparisonItem[] = routeComparisonData?.routes || [];
+    return routes.map((route, index) => ({
       id: `${index + 1}`,
       route: route.route || '',
-      standard: `$${(route.standard ?? 0).toFixed(2)}`,
-      wheelchair: `$${(route.wheelchair_wav ?? 0).toFixed(2)}`,
-      stretcher: `$${(route.stretcher ?? 0).toFixed(2)}`,
+      standard: formatCurrency(route.standard),
+      wheelchair: formatCurrency(route.wheelchair_wav),
+      stretcher: formatCurrency(route.stretcher),
     }));
   }, [routeComparisonData]);
 
