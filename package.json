@@ -18,6 +18,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@googlemaps/polyline-codec": "^1.0.28",
+    "@guideai/scanner": "^0.1.1",
     "@lottiefiles/react-lottie-player": "^3.5.4",
     "@mui/icons-material": ">=7.0.0 <=7.0.2",
     "@mui/lab": "7.0.0-beta.11",
