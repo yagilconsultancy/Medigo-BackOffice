@@ -1,4 +1,4 @@
-import Script from "next/script";
+import Script from 'next/script';
 
 export const Header = () => {
   return (
@@ -13,17 +13,17 @@ export const Header = () => {
         data-token="pk_live_QGIfFSNUNTJPbXJWYTUkAOZueAb-ZSnbv00bY6rkylw"
         data-track-all="true"
         data-behavioral-triggers="true"
-        data-bubble-label="MediGo AI"
-        data-bubble-image="/logo.svg"
+        data-bubble-label="Explore MediGo"
+        // data-bubble-image="/logo.svg"
         data-bubble-mode="hybrid"
         data-theme-primary="#2F6FED"
         data-theme-background="#111827"
         data-theme-text="#ffffff"
-        data-bubble-background="#0514311A"
-        data-bubble-text-color="#dc2626"
-        data-bubble-background-hover="#0514311A"
-        data-bubble-border="#051431"
-        data-bubble-border-hover="#051431"
+        data-bubble-background="#3B82F62E"
+        data-bubble-text-color="#3B82F680"
+        data-bubble-background-hover="#3B82F62E"
+        data-bubble-border="#2F6FED"
+        data-bubble-border-hover="#2F6FED"
         data-theme-font="Inter, sans-serif"
       ></Script>
     </head>

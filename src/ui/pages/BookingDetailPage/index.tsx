@@ -23,6 +23,7 @@ import {
 } from '../../modules/components';
 import {
   extractValidationErrorMessage,
+  milesToKilometers,
   pxToRem,
   useAssignCareAssistantToBooking,
 } from '../../../common';
@@ -508,9 +509,9 @@ export const BookingDetailPage = () => {
               ),
               label: 'Distance',
               value: booking.actual_distance_miles
-                ? `${booking.actual_distance_miles.toFixed(1)} mi`
+                ? `${milesToKilometers(booking.actual_distance_miles).toFixed(1)} km`
                 : booking.estimated_distance_miles
-                  ? `${booking.estimated_distance_miles.toFixed(1)} mi`
+                  ? `${milesToKilometers(booking.estimated_distance_miles).toFixed(1)} km`
                   : '—',
             },
             {
