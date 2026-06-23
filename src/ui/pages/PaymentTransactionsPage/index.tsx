@@ -197,7 +197,7 @@ export const PaymentTransactionsPage = () => {
         icon: (
           <AttachMoneyOutlinedIcon sx={{ fontSize: 20, color: '#10B981' }} />
         ),
-        value: `$${kpis.total_amount?.toLocaleString() || '0'}`,
+        value: `$${kpis.total_collected?.toLocaleString() || '0'}`,
         label: 'Total Collected',
         subtext: '+18.4% vs last month',
       },
@@ -205,7 +205,7 @@ export const PaymentTransactionsPage = () => {
         icon: (
           <CheckCircleOutlinedIcon sx={{ fontSize: 20, color: '#059669' }} />
         ),
-        value: kpis.completed_transactions?.toLocaleString() || '0',
+        value: kpis.settled_count?.toLocaleString() || '0',
         label: 'Settled',
         subtext: '95.5% success rate',
       },
@@ -213,7 +213,7 @@ export const PaymentTransactionsPage = () => {
         icon: (
           <WarningAmberOutlinedIcon sx={{ fontSize: 20, color: '#D97706' }} />
         ),
-        value: kpis.pending_transactions?.toLocaleString() || '0',
+        value: kpis.pending_count?.toLocaleString() || '0',
         label: 'Pending',
         subtext: 'Awaiting settlement',
       },
@@ -284,9 +284,9 @@ export const PaymentTransactionsPage = () => {
     const kpis = kpisData || {};
     return {
       All: kpis.total_transactions || 0,
-      Settled: kpis.completed_transactions || 0,
-      Pending: kpis.pending_transactions || 0,
-      Failed: kpis.failed_transactions || 0,
+      Settled: kpis.settled_count || 0,
+      Pending: kpis.pending_count || 0,
+      // Failed: kpis.failed_count || 0,
     };
   }, [kpisData]);
 
