@@ -37,7 +37,6 @@ import { GridColSpec } from '../../modules/components/GridTable';
 import {
   pxToRem,
   useGetTransactionKpis,
-  useGetPaymentMethodBreakdown,
   useGetAllTransactions,
   useResolvedApiQuery,
 } from '../../../common';
@@ -45,7 +44,7 @@ import { EmptyState } from '../../modules/blocks';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type TransactionStatus = 'Settled' | 'Pending' | 'Failed';
+type TransactionStatus = 'completed' | 'pending' | 'failed';
 type TabValue = 'All' | TransactionStatus;
 
 type Transaction = {
@@ -97,9 +96,9 @@ const statusConfig: Record<
   TransactionStatus,
   { dot: string; bg: string; color: string }
 > = {
-  Settled: { dot: '#10B981', bg: '#ECFDF5', color: '#059669' },
-  Pending: { dot: '#F59E0B', bg: '#FFFBEB', color: '#D97706' },
-  Failed: { dot: '#EF4444', bg: '#FEF2F2', color: '#EF4444' },
+  completed: { dot: '#10B981', bg: '#ECFDF5', color: '#059669' },
+  pending: { dot: '#F59E0B', bg: '#FFFBEB', color: '#D97706' },
+  failed: { dot: '#EF4444', bg: '#FEF2F2', color: '#EF4444' },
 };
 
 const normalizeTransactionStatus = (
@@ -113,14 +112,14 @@ const normalizeTransactionStatus = (
     normalized === 'successful' ||
     normalized === 'success'
   ) {
-    return 'Settled';
+    return 'completed';
   }
 
   if (normalized === 'pending' || normalized === 'processing') {
-    return 'Pending';
+    return 'pending';
   }
 
-  return 'Failed';
+  return 'failed';
 };
 
 const getTransactionItems = (data: unknown): RawTransaction[] => {
@@ -168,20 +167,15 @@ export const PaymentTransactionsPage = () => {
 
   // API Integration
   const { data: kpisData } = useResolvedApiQuery(useGetTransactionKpis, null);
-  const { data: paymentMethodData } = useResolvedApiQuery(
-    useGetPaymentMethodBreakdown,
-    null
-  );
-  const { data: transactionsData } = useResolvedApiQuery(
-    useGetAllTransactions,
-    null,
-    {
-      status: activeTab === 'All' ? null : activeTab,
-      search: searchQuery || null,
-      page: paginationModel.page + 1,
-      limit: paginationModel.pageSize,
-    }
-  );
+  const transactionsQuery = useGetAllTransactions({
+    status: activeTab === 'All' ? null : activeTab,
+    search: searchQuery || null,
+    page: paginationModel.page + 1,
+    limit: paginationModel.pageSize,
+  });
+  const transactionsData = transactionsQuery.data as
+    | (typeof transactionsQuery.data & { total?: number })
+    | undefined;
 
   // Transform API data
   const statCards = useMemo(() => {
@@ -220,32 +214,32 @@ export const PaymentTransactionsPage = () => {
     ];
   }, [kpisData]);
 
-  const paymentMethods = useMemo(() => {
-    const methods = paymentMethodData || [];
-    const methodColors: Record<string, { color: string; label?: string }> = {
-      medicare: { color: '#2F6FED', label: 'Medicare' },
-      medicaid: { color: '#6366F1', label: 'Medicaid' },
-      private_insurance: { color: '#10B981', label: 'Private Insurance' },
-      credit_debit: { color: '#F59E0B', label: 'Credit / Debit Card' },
-      direct_pay: { color: '#EC4899', label: 'Direct Pay' },
-    };
+  // const paymentMethods = useMemo(() => {
+  //   const methods = paymentMethodData || [];
+  //   const methodColors: Record<string, { color: string; label?: string }> = {
+  //     medicare: { color: '#2F6FED', label: 'Medicare' },
+  //     medicaid: { color: '#6366F1', label: 'Medicaid' },
+  //     private_insurance: { color: '#10B981', label: 'Private Insurance' },
+  //     credit_debit: { color: '#F59E0B', label: 'Credit / Debit Card' },
+  //     direct_pay: { color: '#EC4899', label: 'Direct Pay' },
+  //   };
 
-    return methods.map((pm: any) => {
-      const colorConfig = methodColors[
-        pm.method?.toLowerCase().replace(/\s+/g, '_')
-      ] || {
-        color: '#6B7280',
-        label: pm.method,
-      };
-      return {
-        label: colorConfig.label || pm.method || 'Unknown',
-        color: colorConfig.color,
-        amount: `$${pm.total_amount?.toLocaleString() || '0'}`,
-        detail: `${pm.count || 0} rides · ${pm.percentage || 0}%`,
-        progress: pm.percentage || 0,
-      };
-    });
-  }, [paymentMethodData]);
+  //   return methods.map((pm: any) => {
+  //     const colorConfig = methodColors[
+  //       pm.method?.toLowerCase().replace(/\s+/g, '_')
+  //     ] || {
+  //       color: '#6B7280',
+  //       label: pm.method,
+  //     };
+  //     return {
+  //       label: colorConfig.label || pm.method || 'Unknown',
+  //       color: colorConfig.color,
+  //       amount: `$${pm.total_amount?.toLocaleString() || '0'}`,
+  //       detail: `${pm.count || 0} rides · ${pm.percentage || 0}%`,
+  //       progress: pm.percentage || 0,
+  //     };
+  //   });
+  // }, [paymentMethodData]);
 
   const transactionRows = useMemo<Transaction[]>(() => {
     const items = getTransactionItems(transactionsData);
@@ -297,9 +291,9 @@ export const PaymentTransactionsPage = () => {
 
   const tabs: { label: string; value: TabValue }[] = [
     { label: 'All', value: 'All' },
-    { label: 'Settled', value: 'Settled' },
-    { label: 'Pending', value: 'Pending' },
-    { label: 'Failed', value: 'Failed' },
+    { label: 'Settled', value: 'completed' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Failed', value: 'failed' },
   ];
 
   const columns: GridColSpec<Transaction>[] = [
@@ -549,7 +543,7 @@ export const PaymentTransactionsPage = () => {
         </Grid>
 
         {/* Payment Method Breakdown */}
-        <Stack
+        {/* <Stack
           spacing={'16px'}
           sx={{
             background: '#FFFFFF',
@@ -657,13 +651,19 @@ export const PaymentTransactionsPage = () => {
               ))}
             </Grid>
           )}
-        </Stack>
+        </Stack> */}
 
         {/* All Transactions Table */}
         <AppGridtable
           columns={columns}
           data={transactionRows}
+          disableAutoPagination
+          totalRows={transactionsData?.total ?? 0}
           initialPageSize={paginationModel.pageSize}
+          isFetchingData={transactionsQuery.isFetching}
+          onPaginationModelChange={(model) => {
+            setPaginationModel(model);
+          }}
           onRowClick={(row) => handleViewTransaction(row)}
           emptyState={
             <Stack
@@ -709,7 +709,7 @@ export const PaymentTransactionsPage = () => {
                   color: '#9CA3AF',
                 }}
               >
-                {transactionRows.length} transactions
+                {transactionsData?.total ?? 0} transactions
               </Typography>
             </RowStack>
 
@@ -721,7 +721,10 @@ export const PaymentTransactionsPage = () => {
                   return (
                     <Box
                       key={tab.value}
-                      onClick={() => setActiveTab(tab.value)}
+                      onClick={() => {
+                        setActiveTab(tab.value);
+                        setPaginationModel((prev) => ({ ...prev, page: 0 }));
+                      }}
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
@@ -774,7 +777,10 @@ export const PaymentTransactionsPage = () => {
                 name="search"
                 placeholder="Search transactions..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPaginationModel((prev) => ({ ...prev, page: 0 }));
+                }}
                 boxProps={{
                   sx: { width: '240px' },
                 }}
