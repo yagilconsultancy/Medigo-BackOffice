@@ -83,6 +83,10 @@ export const ROUTES_SPEC = {
   getBookingDetail: (rideId: string) =>
     `/${API_VERSION}/rides/admin/bookings/${rideId}`,
 
+  // Edit a booking's trip and medical details
+  editBooking: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}`,
+
   // Approve a booking (REQUESTED → CONFIRMED)
   approveBooking: (rideId: string) =>
     `/${API_VERSION}/rides/admin/bookings/${rideId}/approve`,

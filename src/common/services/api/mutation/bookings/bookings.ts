@@ -9,6 +9,7 @@ import {
   ReassignDriverRequest,
   CancelTripRequest,
   CreateAdminNoteRequest,
+  UpdateBookingRequest,
   ApiRideActionResponse,
   ApiBookingNoteResponse,
 } from '../../../../types';
@@ -22,6 +23,17 @@ export const approveBooking = async (
     ApiRideActionResponse,
     AxiosResponse<ApiRideActionResponse>
   >(resolveRoute(ROUTES.approveBooking, rideId), body);
+};
+
+export const editBooking = async (
+  payload: { rideId: string } & UpdateBookingRequest
+) => {
+  const { rideId, ...body } = payload;
+
+  return await getApiClient().put<
+    ApiRideActionResponse,
+    AxiosResponse<ApiRideActionResponse>
+  >(resolveRoute(ROUTES.editBooking, rideId), body);
 };
 
 export const declineBooking = async (

@@ -1,4 +1,5 @@
 export * from './useApproveBooking';
+export * from './useEditBooking';
 export * from './useDeclineBooking';
 export * from './useAssignDriverToBooking';
 export * from './useAssignCareAssistantToBooking';

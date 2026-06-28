@@ -126,6 +126,9 @@ export interface AdminBookingDetailResponse {
   visit_type?: string | null;
   facility_name?: string | null;
   appointment_time?: string | null;
+  passenger_first_name?: string | null;
+  passenger_last_name?: string | null;
+  passenger_phone?: string | null;
   cancellation_reason?: string | null;
   cancelled_at?: string | null;
   cancelled_by?: string | null;
@@ -135,6 +138,7 @@ export interface AdminBookingDetailResponse {
   rider_phone?: string | null;
   rider_rating: number;
   rider_trip_count: number;
+  caregiver_name?: string | null;
   driver_name?: string | null;
   driver_phone?: string | null;
   driver_rating?: number | null;
@@ -247,6 +251,27 @@ export interface ApproveBookingRequest {
 
 export interface DeclineBookingRequest {
   reason: string;
+}
+
+export interface UpdateBookingRequest {
+  pickup_address?: string | null;
+  pickup_latitude?: number | null;
+  pickup_longitude?: number | null;
+  destination_address?: string | null;
+  destination_latitude?: number | null;
+  destination_longitude?: number | null;
+  scheduled_at?: string | null;
+  ride_type?: string | null;
+  trip_type?: string | null;
+  trip_structure?: string | null;
+  visit_type?: string | null;
+  facility_name?: string | null;
+  mobility_level?: string | null;
+  assistance_level?: string | null;
+  special_instructions?: string | null;
+  passenger_first_name?: string | null;
+  passenger_last_name?: string | null;
+  passenger_phone?: string | null;
 }
 
 export interface AssignDriverRequest {
