@@ -5,6 +5,7 @@ import {
   useForgotPassword,
   useLogin,
   useLogout,
+  useResendOtp,
   useRefresh,
   useResetPassword,
 } from '../../mutation';
@@ -14,11 +15,14 @@ import {
   ApiLoginPayload,
   ApiLoginRefreshRequest,
   ApiResetPasswordPayload,
+  ApiResendOtpPayload,
 } from '../../../../types';
 import {
   extractApiErrorMessage,
   extractResponseErrors,
+  removeForgotPasswordUserId,
   setAuthToken,
+  setForgotPasswordUserId,
   setRefreshToken,
   tryExecute,
 } from '../../../../utils';
@@ -31,6 +35,7 @@ export const useAuthApi = () => {
   const doRefresh = useRefresh();
   const doForgotPassword = useForgotPassword();
   const doResetPassword = useResetPassword();
+  const doResendOtp = useResendOtp();
   const doChangePassword = useChangePassword();
 
   const login = async (payload: ApiLoginPayload): Promise<boolean> => {
@@ -118,6 +123,13 @@ export const useAuthApi = () => {
         const responseData = response.data;
 
         if (responseData.success) {
+          if (responseData.data?.user_id) {
+            setForgotPasswordUserId(responseData.data.user_id);
+          } else {
+            toast.error('Unable to start password reset. Please try again.');
+            return false;
+          }
+
           toast.success('Password reset instructions sent to your email');
           return true;
         } else {
@@ -141,8 +153,35 @@ export const useAuthApi = () => {
         const responseData = response.data;
 
         if (responseData.success) {
+          removeForgotPasswordUserId();
           toast.success(
             'Password reset successfully. Please sign in with your new password.'
+          );
+          return true;
+        } else {
+          toast.error(extractResponseErrors(responseData));
+          return false;
+        }
+      },
+      async (error) => {
+        toast.error(extractApiErrorMessage(error));
+        return false;
+      }
+    );
+  };
+
+  const resendResetPasswordOtp = async (
+    payload: ApiResendOtpPayload
+  ): Promise<boolean> => {
+    return await tryExecute(
+      () => doResendOtp.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
+
+        if (responseData.success) {
+          toast.success(
+            responseData.message ??
+              'A new password reset code has been sent to your email.'
           );
           return true;
         } else {
@@ -193,6 +232,7 @@ export const useAuthApi = () => {
     logout,
     forgotPassword,
     resetPassword,
+    resendResetPasswordOtp,
     changePassword,
   };
 };

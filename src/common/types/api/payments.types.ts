@@ -5,9 +5,9 @@ import { ApiResponse } from './common';
 export interface TransactionKPIs {
   total_transactions?: number;
   total_amount?: number;
-  total_collected?: number,
-  settled_count?: number,
-  pending_count?: number
+  total_collected?: number;
+  settled_count?: number;
+  pending_count?: number;
 }
 
 export interface PaymentMethodBreakdownItem {

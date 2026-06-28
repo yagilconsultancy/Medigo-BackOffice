@@ -112,12 +112,21 @@ export type ApiForgotPasswordPayload = Pick<ForgotPasswordRequest, 'email'>;
 export type ApiForgotPasswordResponse = ApiResponse<ForgotPasswordResponse>;
 
 export interface ResetPasswordRequest {
-  token: string;
+  user_id: string;
+  code: string;
   new_password: string; // minLength: 8, maxLength: 128
 }
 
 export type ApiResetPasswordPayload = ResetPasswordRequest;
 export type ApiResetPasswordResponse = ApiResponse<null>;
+
+export interface ResendOtpRequest {
+  user_id: string; // uuid
+  purpose?: string; // default: "registration"
+}
+
+export type ApiResendOtpPayload = ResendOtpRequest;
+export type ApiResendOtpResponse = ApiResponse<null>;
 
 export interface VerifyOTPRequest {
   user_id: string; // uuid

@@ -9,15 +9,41 @@ export const useAppButton = ({
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
 
-  const buttonVariant = variant as keyof typeof theme.button;
-  const buttonColor =
-    color as keyof (typeof theme.button)[typeof buttonVariant];
+  const buttonTheme = theme.button as
+    | Record<
+        string,
+        Record<
+          string,
+          {
+            background: string;
+            color: string;
+            hoverBackground: string;
+            hoverColor: string;
+          }
+        >
+      >
+    | undefined;
+
+  const buttonVariant = variant as string;
+  const buttonColor = color as string;
+  const fallbackStyles = {
+    background: 'transparent',
+    color: theme.palette.primary.main,
+    hoverBackground: 'transparent',
+    hoverColor: theme.palette.primary.dark ?? theme.palette.primary.main,
+  };
+
+  const resolvedStyles =
+    buttonTheme?.[buttonVariant]?.[buttonColor] ??
+    buttonTheme?.contained?.primary ??
+    fallbackStyles;
+
   const {
     background,
     color: themeColor,
     hoverBackground,
     hoverColor,
-  } = theme.button[buttonVariant][buttonColor];
+  } = resolvedStyles;
 
   const styles: AppButtonProps['sx'] = {
     background,

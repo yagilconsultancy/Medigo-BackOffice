@@ -11,20 +11,28 @@ import {
   StyledLink,
 } from '../../modules/components';
 import appLogo from '../../assets/icons/app-logo.svg';
-import { ApiResetPasswordPayload, pxToRem } from '../../../common';
+import {
+  ApiResetPasswordPayload,
+  getForgotPasswordUserId,
+  pxToRem,
+} from '../../../common';
 import { Form, Formik, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import { useAuthApi } from '../../../common/hooks/api';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { useState } from 'react';
+
+const RESET_OTP_PURPOSE = 'forgot_password';
 
 type ResetPasswordFormValues = {
-  token: string;
+  code: string;
   newPassword: string;
   confirmNewPassword: string;
 };
 
 const ResetPasswordSchema = Yup.object().shape({
-  token: Yup.string().required('token is required'),
+  code: Yup.string().required('reset code is required'),
   newPassword: Yup.string()
     .min(8, 'new password must be at least 8 characters')
     .required('new password is required'),
@@ -34,21 +42,46 @@ const ResetPasswordSchema = Yup.object().shape({
 });
 
 export const ResetPasswordPage = () => {
-  const { resetPassword } = useAuthApi();
+  const { resetPassword, resendResetPasswordOtp } = useAuthApi();
   const router = useRouter();
+  const [isResending, setIsResending] = useState(false);
 
   const initialValues: ResetPasswordFormValues = {
-    token: '',
+    code: '',
     newPassword: '',
     confirmNewPassword: '',
+  };
+
+  const handleResendCode = async () => {
+    const user_id = getForgotPasswordUserId();
+
+    if (!user_id) {
+      toast.error('Please request a new password reset link.');
+      router.push('/forgot-password');
+      return;
+    }
+
+    setIsResending(true);
+    await resendResetPasswordOtp({ user_id, purpose: RESET_OTP_PURPOSE });
+    setIsResending(false);
   };
 
   const handleSubmit = async (
     values: ResetPasswordFormValues,
     { setSubmitting }: FormikHelpers<ResetPasswordFormValues>
   ) => {
+    const user_id = getForgotPasswordUserId();
+
+    if (!user_id) {
+      toast.error('Please request a new password reset link.');
+      setSubmitting(false);
+      router.push('/forgot-password');
+      return;
+    }
+
     const payload: ApiResetPasswordPayload = {
-      token: values.token,
+      user_id,
+      code: values.code,
       new_password: values.newPassword,
     };
 
@@ -135,7 +168,7 @@ export const ResetPasswordPage = () => {
                 fontWeight: 400,
               }}
             >
-              Enter the reset token and choose a new admin password
+              Enter the reset code and choose a new admin password
             </Typography>
           </Stack>
           <Formik
@@ -147,10 +180,10 @@ export const ResetPasswordPage = () => {
               <Form>
                 <Stack spacing={'20px'}>
                   <Stack spacing={0.5}>
-                    <AppLabelField label="Reset Token" />
+                    <AppLabelField label="Reset Code" />
                     <FormikAppTextField
-                      name="token"
-                      placeholder="Enter reset token"
+                      name="code"
+                      placeholder="Enter reset code"
                     />
                   </Stack>
                   <Stack spacing={0.5}>
@@ -171,13 +204,32 @@ export const ResetPasswordPage = () => {
                     type="submit"
                     disabled={
                       !isValid ||
-                      !values.token ||
+                      !values.code ||
                       !values.newPassword ||
                       !values.confirmNewPassword
                     }
                     isLoading={isSubmitting}
                   >
                     Reset Password
+                  </AppButton>
+                  <AppButton
+                    type="button"
+                    variant="text"
+                    onClick={handleResendCode}
+                    disabled={isResending}
+                    sx={{
+                      alignSelf: 'center',
+                      color: '#2563EB',
+                      background: 'transparent',
+                      padding: 0,
+                      minWidth: 'auto',
+                      '&:hover': {
+                        background: 'transparent',
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    {isResending ? 'Resending code...' : 'Resend code'}
                   </AppButton>
                   <StyledLink
                     href={'/login'}
