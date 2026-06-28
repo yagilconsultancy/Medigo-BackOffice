@@ -14,12 +14,15 @@ import { toast } from 'sonner';
 import {
   AppButton,
   AppModal,
+  AppPasswordField,
   RowStack,
 } from '../../../../../modules/components';
 import {
   pxToRem,
   useGetBookingDetail,
   useEditBooking,
+  useVerifyPassword,
+  useChangeBookingStatus,
   useAssignDriverToBooking,
   useReassignDriver,
   useAssignCareAssistantToBooking,
@@ -41,6 +44,21 @@ const DRIVER_REASSIGN_STATUSES = [
   'driver_arrived',
 ];
 const CARE_ASSISTANT_ASSIGN_STATUSES = ['requested', 'confirmed'];
+
+const STATUS_LABELS: Record<string, string> = {
+  requested: 'Requested',
+  pending_business_assignment: 'Pending Assignment',
+  confirmed: 'Approved',
+  driver_assigned: 'Driver Assigned',
+  driver_en_route: 'En Route',
+  driver_arrived: 'Driver Arrived',
+  in_progress: 'In Progress',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  no_show: 'No Show',
+};
+
+const statusLabel = (s: string) => STATUS_LABELS[s] || s;
 
 type EditBookingModalProps = {
   open: boolean;
@@ -152,14 +170,52 @@ export const EditBookingModal = ({
   const { data, isFetching, refetch } = useGetBookingDetail(open ? rideId : '');
   const detail = data && data.success ? data.data : undefined;
   const editMutation = useEditBooking();
+  const verifyPasswordMutation = useVerifyPassword();
+  const changeStatusMutation = useChangeBookingStatus();
   const assignDriverMutation = useAssignDriverToBooking();
   const reassignDriverMutation = useReassignDriver();
   const assignCareAssistantMutation = useAssignCareAssistantToBooking();
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [initial, setInitial] = useState<FormState>(EMPTY_FORM);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [openAssignDriver, setOpenAssignDriver] = useState(false);
   const [openAssignCareAssistant, setOpenAssignCareAssistant] = useState(false);
+
+  const allowedStatuses = detail?.allowed_status_transitions ?? [];
+  const statusOptions = detail?.status
+    ? [detail.status, ...allowedStatuses]
+    : [];
+  const canChangeStatus =
+    !!selectedStatus && !!detail?.status && selectedStatus !== detail.status;
+
+  const handleChangeStatus = () => {
+    if (!canChangeStatus) return;
+    changeStatusMutation.mutate(
+      { rideId, status: selectedStatus },
+      {
+        onSuccess: () => {
+          toast.success(`Status changed to ${statusLabel(selectedStatus)}`);
+          refetch();
+        },
+        onError: (error) => {
+          toast.error(
+            extractValidationErrorMessage(error, 'Failed to change status')
+          );
+        },
+      }
+    );
+  };
+
+  // Reset the confirmation password whenever the dialog closes.
+  useEffect(() => {
+    if (!open) {
+      setPassword('');
+      setPasswordError('');
+    }
+  }, [open]);
 
   const status = detail?.status ?? '';
   const hasDriver = !!detail?.driver_id;
@@ -231,6 +287,7 @@ export const EditBookingModal = ({
       const next = toForm(detail);
       setForm(next);
       setInitial(next);
+      setSelectedStatus(detail.status ?? '');
     }
   }, [detail]);
 
@@ -255,11 +312,7 @@ export const EditBookingModal = ({
 
   const hasChanges = Object.keys(changedPayload).length > 0;
 
-  const handleSave = () => {
-    if (!hasChanges) {
-      toast.info('No changes to save');
-      return;
-    }
+  const saveEdit = () => {
     editMutation.mutate(
       { rideId, ...changedPayload },
       {
@@ -273,6 +326,36 @@ export const EditBookingModal = ({
       }
     );
   };
+
+  const handleSave = () => {
+    if (!hasChanges) {
+      toast.info('No changes to save');
+      return;
+    }
+    if (!password.trim()) {
+      setPasswordError('Enter your password to confirm');
+      return;
+    }
+    setPasswordError('');
+    // Re-authenticate the admin before applying the edit.
+    verifyPasswordMutation.mutate(
+      { password },
+      {
+        onSuccess: () => saveEdit(),
+        onError: (error: unknown) => {
+          const status = (error as { response?: { status?: number } })?.response
+            ?.status;
+          if (status === 401) {
+            setPasswordError('Incorrect password');
+          } else {
+            toast.error('Could not verify password. Please try again.');
+          }
+        },
+      }
+    );
+  };
+
+  const isSaving = verifyPasswordMutation.isPending || editMutation.isPending;
 
   const renderText = (
     key: keyof FormState,
@@ -447,6 +530,70 @@ export const EditBookingModal = ({
               }}
             >
               <Stack spacing={4.5}>
+                {/* Status */}
+                <Stack spacing={2}>
+                  {sectionTitle('Status')}
+                  <RowStack spacing={2} sx={{ alignItems: 'stretch' }}>
+                    <TextField
+                      select
+                      label="Booking Status"
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
+                      fullWidth
+                      size="small"
+                      sx={fieldSx}
+                    >
+                      {statusOptions.map((s) => (
+                        <MenuItem
+                          key={s}
+                          value={s}
+                          sx={{ fontSize: pxToRem(13) }}
+                        >
+                          {statusLabel(s)}
+                          {s === detail?.status ? ' (current)' : ''}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                    <AppButton
+                      sx={{
+                        flexShrink: 0,
+                        px: 2.5,
+                        background: (theme) => theme.palette.primary.main,
+                        color: '#FFFFFF',
+                        fontWeight: 600,
+                        fontSize: pxToRem(12.5),
+                        '&:hover': { background: alpha('#2F6FED', 0.9) },
+                        '&.Mui-disabled': {
+                          background: alpha('#2F6FED', 0.4),
+                          color: '#fff',
+                        },
+                      }}
+                      onClick={handleChangeStatus}
+                      disabled={
+                        !canChangeStatus || changeStatusMutation.isPending
+                      }
+                    >
+                      {changeStatusMutation.isPending
+                        ? 'Updating...'
+                        : 'Update'}
+                    </AppButton>
+                  </RowStack>
+                  {allowedStatuses.length === 0 && (
+                    <Typography
+                      sx={{
+                        color: 'text.secondary',
+                        fontSize: pxToRem(12),
+                        lineHeight: '18px',
+                      }}
+                    >
+                      This booking is in a final state — no further status
+                      changes are available.
+                    </Typography>
+                  )}
+                </Stack>
+
+                <Divider />
+
                 {/* Trip Details */}
                 <Stack spacing={3}>
                   {sectionTitle('Trip Details')}
@@ -534,6 +681,34 @@ export const EditBookingModal = ({
 
           {/* Footer */}
           <Divider />
+          {hasChanges && (
+            <Stack spacing={0.75} sx={{ pt: 2.5 }}>
+              <Typography
+                sx={{
+                  color: (theme) => theme.color.deepBlue,
+                  fontSize: pxToRem(12.5),
+                  fontWeight: 600,
+                }}
+              >
+                Confirm with your password
+              </Typography>
+              <AppPasswordField
+                placeholder="Enter your password to apply changes"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError('');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSave();
+                }}
+                error={!!passwordError}
+                errorMessage={passwordError}
+                fullWidth
+                size="small"
+              />
+            </Stack>
+          )}
           <RowStack spacing={'14px'} width={'100%'} sx={{ pt: 2.5 }}>
             <AppButton
               sx={{
@@ -547,6 +722,7 @@ export const EditBookingModal = ({
               }}
               fullWidth
               onClick={handleClose}
+              disabled={isSaving}
             >
               Cancel
             </AppButton>
@@ -565,9 +741,13 @@ export const EditBookingModal = ({
               }}
               fullWidth
               onClick={handleSave}
-              disabled={editMutation.isPending || !hasChanges}
+              disabled={isSaving || !hasChanges || !password.trim()}
             >
-              {editMutation.isPending ? 'Saving...' : 'Save Changes'}
+              {verifyPasswordMutation.isPending
+                ? 'Verifying...'
+                : editMutation.isPending
+                  ? 'Saving...'
+                  : 'Save Changes'}
             </AppButton>
           </RowStack>
         </Box>

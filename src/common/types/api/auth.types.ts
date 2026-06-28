@@ -98,6 +98,13 @@ export interface ChangePasswordRequest {
 export type ApiChangePasswordPayload = ChangePasswordRequest;
 export type ApiChangePasswordResponse = ApiResponse<null>;
 
+export interface VerifyPasswordRequest {
+  password: string;
+}
+
+export type ApiVerifyPasswordPayload = VerifyPasswordRequest;
+export type ApiVerifyPasswordResponse = ApiResponse<null>;
+
 export interface ForgotPasswordRequest {
   email?: string | null; // email format
   phone?: string | null;

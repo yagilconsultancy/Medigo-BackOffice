@@ -152,6 +152,7 @@ export interface AdminBookingDetailResponse {
   fare_breakdown?: FareBreakdownDetail | null;
   recurring_ride_id?: string | null;
   is_recurring: boolean;
+  allowed_status_transitions?: string[];
 }
 
 export interface PendingBookingResponse {
@@ -272,6 +273,11 @@ export interface UpdateBookingRequest {
   passenger_first_name?: string | null;
   passenger_last_name?: string | null;
   passenger_phone?: string | null;
+}
+
+export interface ChangeBookingStatusRequest {
+  status: string;
+  notes?: string | null;
 }
 
 export interface AssignDriverRequest {
