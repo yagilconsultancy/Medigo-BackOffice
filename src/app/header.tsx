@@ -14,16 +14,9 @@ export const Header = () => {
         data-track-all="true"
         data-behavioral-triggers="true"
         data-bubble-label="Explore MediGo"
-        // data-bubble-image="/logo.svg"
         data-bubble-mode="hybrid"
         data-theme-primary="#2F6FED"
-        data-theme-background="#111827"
-        data-theme-text="#ffffff"
-        data-bubble-background="#3B82F62E"
         data-bubble-text-color="#3B82F680"
-        data-bubble-background-hover="#3B82F62E"
-        data-bubble-border="#2F6FED"
-        data-bubble-border-hover="#2F6FED"
         data-theme-font="Inter, sans-serif"
       ></Script>
     </head>
