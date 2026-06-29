@@ -324,6 +324,24 @@ export const removeRefreshToken = () => {
   Cookies.remove('medi_refresh');
 };
 
+const FORGOT_PASSWORD_USER_ID_COOKIE = 'medi_forgot_password_user_id';
+
+export const setForgotPasswordUserId = (userId: string) => {
+  Cookies.set(FORGOT_PASSWORD_USER_ID_COOKIE, userId, {
+    expires: 1 / 24, // 1 hour
+    secure: true,
+    sameSite: 'strict',
+  });
+};
+
+export const getForgotPasswordUserId = () => {
+  return Cookies.get(FORGOT_PASSWORD_USER_ID_COOKIE);
+};
+
+export const removeForgotPasswordUserId = () => {
+  Cookies.remove(FORGOT_PASSWORD_USER_ID_COOKIE);
+};
+
 export const toSnakeCase = (value: string): string => {
   return value.trim().toLowerCase().replace(/\s+/g, '_');
 };
