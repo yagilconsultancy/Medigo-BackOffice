@@ -3,17 +3,19 @@ import {
   Box,
   CircularProgress,
   Divider,
+  Drawer,
+  IconButton,
   MenuItem,
   Stack,
   TextField,
   Typography,
   alpha,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import {
   AppButton,
-  AppModal,
   AppPasswordField,
   RowStack,
 } from '../../../../../modules/components';
@@ -476,40 +478,71 @@ export const EditBookingModal = ({
 
   return (
     <>
-      <AppModal label="edit-booking-modal" open={open} setOpen={handleClose}>
-        <Box
-          sx={{
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={handleClose}
+        sx={{
+          '& .MuiDrawer-paper': {
             width: { xs: '100%', sm: 720 },
             maxWidth: '100%',
+            boxShadow: '-4px 0px 48px rgba(0, 0, 0, 0.14)',
+          },
+        }}
+      >
+        <Box
+          sx={{
             display: 'flex',
             flexDirection: 'column',
-            maxHeight: 'calc(100vh - 120px)',
+            height: '100%',
           }}
         >
           {/* Header */}
-          <Stack spacing={0.75} sx={{ pb: 2.5 }}>
-            <Typography
+          <RowStack
+            justifyContent="space-between"
+            alignItems="flex-start"
+            sx={{
+              px: 4,
+              py: 2.5,
+              borderBottom: '0.67px solid #EAECF0',
+            }}
+          >
+            <Stack spacing={0.75}>
+              <Typography
+                sx={{
+                  color: (theme) => theme.color.deepBlue,
+                  fontWeight: 700,
+                  fontSize: pxToRem(17),
+                  lineHeight: '26px',
+                }}
+              >
+                Edit Booking
+              </Typography>
+              <Typography
+                sx={{
+                  color: 'text.secondary',
+                  fontWeight: 400,
+                  fontSize: pxToRem(13),
+                  lineHeight: '19px',
+                }}
+              >
+                Booking #{bookingId} · Update trip and medical details
+              </Typography>
+            </Stack>
+            <IconButton
+              onClick={handleClose}
               sx={{
-                color: (theme) => theme.color.deepBlue,
-                fontWeight: 700,
-                fontSize: pxToRem(17),
-                lineHeight: '26px',
+                width: 32,
+                height: 32,
+                background: '#F3F4F6',
+                border: '0.67px solid #E5E7EB',
+                borderRadius: '8px',
+                '&:hover': { background: '#E5E7EB' },
               }}
             >
-              Edit Booking
-            </Typography>
-            <Typography
-              sx={{
-                color: 'text.secondary',
-                fontWeight: 400,
-                fontSize: pxToRem(13),
-                lineHeight: '19px',
-              }}
-            >
-              Booking #{bookingId} · Update trip and medical details
-            </Typography>
-          </Stack>
-          <Divider />
+              <CloseIcon sx={{ fontSize: 14, color: '#6B7280' }} />
+            </IconButton>
+          </RowStack>
 
           {isFetching && !detail ? (
             <Stack
@@ -524,9 +557,8 @@ export const EditBookingModal = ({
               sx={{
                 flex: 1,
                 overflowY: 'auto',
+                px: 4,
                 py: 3.5,
-                pr: 0.5,
-                mr: -0.5,
                 // Hide the scrollbar while keeping the content scrollable.
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
@@ -684,9 +716,9 @@ export const EditBookingModal = ({
           )}
 
           {/* Footer */}
-          <Divider />
-          {hasChanges && (
-            <Stack spacing={0.75} sx={{ pt: 2.5 }}>
+          <Box sx={{ borderTop: '0.67px solid #EAECF0', px: 4, py: 2.5 }}>
+            {hasChanges && (
+              <Stack spacing={0.75} sx={{ pb: 2 }}>
               <Typography
                 sx={{
                   color: (theme) => theme.color.deepBlue,
@@ -713,7 +745,7 @@ export const EditBookingModal = ({
               />
             </Stack>
           )}
-          <RowStack spacing={'14px'} width={'100%'} sx={{ pt: 2.5 }}>
+            <RowStack spacing={'14px'} width={'100%'}>
             <AppButton
               sx={{
                 background: '#F7F9FB',
@@ -753,9 +785,10 @@ export const EditBookingModal = ({
                   ? 'Saving...'
                   : 'Save Changes'}
             </AppButton>
-          </RowStack>
+            </RowStack>
+          </Box>
         </Box>
-      </AppModal>
+      </Drawer>
 
       <AssignDriverModal
         open={openAssignDriver}
