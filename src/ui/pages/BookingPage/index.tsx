@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { IconButton, Stack } from '@mui/material';
+import { IconButton, Stack, Tooltip } from '@mui/material';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppGridtable,
@@ -14,12 +14,23 @@ import {
   useGetAllBookings,
   useApproveBooking,
   useDeclineBooking,
+  useAssignDriverToBooking,
+  useReassignDriver,
+  useAssignCareAssistantToBooking,
+  extractValidationErrorMessage,
 } from '../../../common';
+import {
+  AssignDriverModal,
+  AssignCareAssistantModal,
+} from '../BookingDetailPage/ui/components';
 import { RideResponse } from '../../../common/types';
 import { GridColSpec } from '../../modules/components/GridTable';
 import { EmptyState } from '../../modules/blocks';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import LocalTaxiOutlinedIcon from '@mui/icons-material/LocalTaxiOutlined';
+import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import {
@@ -27,8 +38,17 @@ import {
   BookingDetailModal,
   BookingIdComponent,
   ClientComponent,
+  EditBookingModal,
   StatusComponent,
 } from './ui/components';
+
+// Bookings can only be edited before they are in transit or finished.
+const NON_EDITABLE_STATUSES: BookingRow['status'][] = [
+  'in_progress',
+  'completed',
+  'cancelled',
+  'no_show',
+];
 
 export type BookingRow = {
   id: string;
@@ -48,7 +68,28 @@ export type BookingRow = {
     | 'completed'
     | 'cancelled'
     | 'no_show';
+  tripType: string;
+  driverId?: string | null;
+  caregiverId?: string | null;
 };
+
+// A driver can be assigned before one exists (requested/confirmed)...
+const DRIVER_ASSIGN_STATUSES: BookingRow['status'][] = [
+  'requested',
+  'confirmed',
+];
+// ...or reassigned to another once one is already on the trip.
+const DRIVER_REASSIGN_STATUSES: BookingRow['status'][] = [
+  'driver_assigned',
+  'driver_en_route',
+  'driver_arrived',
+];
+
+// Care assistants are only assignable on care-assistant trips before pickup.
+const CARE_ASSISTANT_ASSIGNABLE_STATUSES: BookingRow['status'][] = [
+  'requested',
+  'confirmed',
+];
 
 export const BookingPage = () => {
   const [activeFilter, setActiveFilter] = useState('All');
@@ -61,9 +102,16 @@ export const BookingPage = () => {
   const [openApprove, setOpenApprove] = useState<boolean>(false);
   const [openDecline, setOpenDecline] = useState<boolean>(false);
   const [openDetail, setOpenDetail] = useState<boolean>(false);
+  const [openEdit, setOpenEdit] = useState<boolean>(false);
+  const [openAssignDriver, setOpenAssignDriver] = useState<boolean>(false);
+  const [openAssignCareAssistant, setOpenAssignCareAssistant] =
+    useState<boolean>(false);
 
   const approveBookingMutation = useApproveBooking();
   const declineBookingMutation = useDeclineBooking();
+  const assignDriverMutation = useAssignDriverToBooking();
+  const reassignDriverMutation = useReassignDriver();
+  const assignCareAssistantMutation = useAssignCareAssistantToBooking();
 
   const filterToApiStatus: Record<string, string | undefined> = {
     All: 'requested,confirmed,cancelled,completed',
@@ -130,6 +178,9 @@ export const BookingPage = () => {
       destination: ride.destination_address,
       dateTime: dayjs(ride.scheduled_at).format('MMM D, YYYY · hh:mm A'),
       status: statusMap[ride.status?.toLowerCase()] || 'requested',
+      tripType: ride.trip_type,
+      driverId: ride.driver_id,
+      caregiverId: ride.caregiver_id,
     }));
   }, [bookingsData]);
 
@@ -176,9 +227,86 @@ export const BookingPage = () => {
   //   setOpenDetail(true);
   // };
 
+  const handleOpenEdit = (booking: BookingRow) => {
+    setSelectedBooking(booking);
+    setOpenEdit(true);
+  };
+
+  const handleOpenAssignDriver = (booking: BookingRow) => {
+    setSelectedBooking(booking);
+    setOpenAssignDriver(true);
+  };
+
+  const handleOpenAssignCareAssistant = (booking: BookingRow) => {
+    setSelectedBooking(booking);
+    setOpenAssignCareAssistant(true);
+  };
+
   const handleCloseApprove = () => setOpenApprove(false);
   const handleCloseDecline = () => setOpenDecline(false);
   const handleCloseDetail = () => setOpenDetail(false);
+  const handleCloseEdit = () => setOpenEdit(false);
+  const handleCloseAssignDriver = () => setOpenAssignDriver(false);
+  const handleCloseAssignCareAssistant = () =>
+    setOpenAssignCareAssistant(false);
+
+  // A driver already on the trip is reassigned; otherwise it's a fresh assign.
+  const driverIsReassign = !!selectedBooking?.driverId;
+
+  const handleAssignDriver = (driverId: string) => {
+    if (!selectedBooking) return;
+    const mutation = driverIsReassign
+      ? reassignDriverMutation
+      : assignDriverMutation;
+    mutation.mutate(
+      { rideId: selectedBooking.id, driver_id: driverId },
+      {
+        onSuccess: () => {
+          toast.success(
+            driverIsReassign
+              ? 'Driver reassigned successfully'
+              : 'Driver assigned successfully'
+          );
+          handleCloseAssignDriver();
+        },
+        onError: (error) => {
+          toast.error(
+            extractValidationErrorMessage(
+              error,
+              driverIsReassign
+                ? 'Failed to reassign driver'
+                : 'Failed to assign driver'
+            )
+          );
+        },
+      }
+    );
+  };
+
+  const handleAssignCareAssistant = (caregiverId: string) => {
+    if (!selectedBooking) return;
+    assignCareAssistantMutation.mutate(
+      { rideId: selectedBooking.id, caregiver_id: caregiverId },
+      {
+        onSuccess: () => {
+          toast.success(
+            selectedBooking.caregiverId
+              ? 'Care assistant reassigned successfully'
+              : 'Care assistant assigned successfully'
+          );
+          handleCloseAssignCareAssistant();
+        },
+        onError: (error) => {
+          toast.error(
+            extractValidationErrorMessage(
+              error,
+              'Failed to assign care assistant'
+            )
+          );
+        },
+      }
+    );
+  };
 
   const handleConfirmApprove = () => {
     if (!selectedBooking) return;
@@ -264,6 +392,16 @@ export const BookingPage = () => {
       sortable: false,
       renderCell: (params) => {
         const row = params.row;
+        const isEditable = !NON_EDITABLE_STATUSES.includes(row.status);
+        const canAssignDriver =
+          (!row.driverId && DRIVER_ASSIGN_STATUSES.includes(row.status)) ||
+          (!!row.driverId && DRIVER_REASSIGN_STATUSES.includes(row.status));
+        const isCareAssistantTrip =
+          row.tripType === 'transport_care_assistant' ||
+          row.tripType === 'transport_care_assistance';
+        const canAssignCareAssistant =
+          isCareAssistantTrip &&
+          CARE_ASSISTANT_ASSIGNABLE_STATUSES.includes(row.status);
         return (
           <RowStack spacing={0.5}>
             {/* <IconButton
@@ -275,6 +413,54 @@ export const BookingPage = () => {
             >
               <VisibilityOutlinedIcon sx={{ fontSize: 15 }} />
             </IconButton> */}
+            {isEditable && (
+              <IconButton
+                size="small"
+                sx={{ color: '#9CA3AF' }}
+                onClick={() => handleOpenEdit(row)}
+                aria-label="Edit booking"
+              >
+                <EditOutlinedIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            )}
+            {canAssignDriver && (
+              <Tooltip
+                title={row.driverId ? 'Reassign driver' : 'Assign driver'}
+              >
+                <IconButton
+                  size="small"
+                  sx={{ color: '#9CA3AF' }}
+                  onClick={() => handleOpenAssignDriver(row)}
+                  aria-label={
+                    row.driverId ? 'Reassign driver' : 'Assign driver'
+                  }
+                >
+                  <LocalTaxiOutlinedIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+            )}
+            {canAssignCareAssistant && (
+              <Tooltip
+                title={
+                  row.caregiverId
+                    ? 'Reassign care assistant'
+                    : 'Assign care assistant'
+                }
+              >
+                <IconButton
+                  size="small"
+                  sx={{ color: '#9CA3AF' }}
+                  onClick={() => handleOpenAssignCareAssistant(row)}
+                  aria-label={
+                    row.caregiverId
+                      ? 'Reassign care assistant'
+                      : 'Assign care assistant'
+                  }
+                >
+                  <MedicalServicesOutlinedIcon sx={{ fontSize: 15 }} />
+                </IconButton>
+              </Tooltip>
+            )}
             {row.status === 'requested' && (
               <>
                 <IconButton
@@ -392,6 +578,49 @@ export const BookingPage = () => {
         destination={selectedBooking?.destination ?? ''}
         onApprove={() => setOpenApprove(true)}
         onDecline={() => setOpenDecline(true)}
+      />
+      <EditBookingModal
+        open={openEdit}
+        handleClose={handleCloseEdit}
+        rideId={selectedBooking?.id ?? ''}
+        bookingId={selectedBooking?.bookingId.slice(0, 7) ?? ''}
+      />
+      <AssignDriverModal
+        open={openAssignDriver}
+        handleClose={handleCloseAssignDriver}
+        rideId={selectedBooking?.id ?? ''}
+        onAssign={handleAssignDriver}
+        isAssigning={
+          assignDriverMutation.isPending || reassignDriverMutation.isPending
+        }
+        title={driverIsReassign ? 'Reassign Driver' : 'Assign Driver'}
+        description={
+          driverIsReassign
+            ? 'The current driver is unavailable. Select another driver to take over this booking.'
+            : 'Select a driver from the available list to assign to this booking.'
+        }
+        confirmLabel={driverIsReassign ? 'Reassign Driver' : 'Assign Driver'}
+      />
+      <AssignCareAssistantModal
+        open={openAssignCareAssistant}
+        handleClose={handleCloseAssignCareAssistant}
+        onAssign={handleAssignCareAssistant}
+        isAssigning={assignCareAssistantMutation.isPending}
+        title={
+          selectedBooking?.caregiverId
+            ? 'Reassign Care Assistant'
+            : 'Assign Care Assistant'
+        }
+        description={
+          selectedBooking?.caregiverId
+            ? 'The current care assistant is unavailable. Select another to assign to this booking.'
+            : 'Select a care assistant from the available list to assign to this booking.'
+        }
+        confirmLabel={
+          selectedBooking?.caregiverId
+            ? 'Reassign Care Assistant'
+            : 'Assign Care Assistant'
+        }
       />
     </AppDashboardLayout>
   );

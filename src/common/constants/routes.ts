@@ -13,6 +13,7 @@ export const ROUTES_SPEC = {
   adminRefresh: `/${API_VERSION}/auth/refresh`,
   adminLogout: `/${API_VERSION}/auth/logout`,
   changePassword: `/${API_VERSION}/auth/change-password`,
+  verifyPassword: `/${API_VERSION}/auth/verify-password`,
   resendOtp: `/${API_VERSION}/auth/resend-otp`,
   forgotPassword: `/${API_VERSION}/auth/forgot-password`,
   resetPassword: `/${API_VERSION}/auth/reset-password`,
@@ -82,6 +83,14 @@ export const ROUTES_SPEC = {
   // Get full booking detail (with notes, timeline, fare, etc.)
   getBookingDetail: (rideId: string) =>
     `/${API_VERSION}/rides/admin/bookings/${rideId}`,
+
+  // Edit a booking's trip and medical details
+  editBooking: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}`,
+
+  // Change a booking's status (admin)
+  changeBookingStatus: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}/status`,
 
   // Approve a booking (REQUESTED → CONFIRMED)
   approveBooking: (rideId: string) =>
