@@ -527,6 +527,10 @@ export const EditBookingModal = ({
                 py: 3.5,
                 pr: 0.5,
                 mr: -0.5,
+                // Hide the scrollbar while keeping the content scrollable.
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                '&::-webkit-scrollbar': { display: 'none' },
               }}
             >
               <Stack spacing={4.5}>
