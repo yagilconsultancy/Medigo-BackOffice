@@ -53,7 +53,6 @@ import {
   DriverProfileCard,
   DriverProfileCardData,
   SuspendDriverModal,
-  EditDriverModal,
   CaregiverProfileCard,
   ViewCaregiverDrawer,
   AddCaregiverDrawer,
@@ -365,9 +364,6 @@ export const ServiceProviderPage = () => {
   // Modal state (drivers)
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [suspendDriver, setSuspendDriver] =
-    useState<DriverProfileCardData | null>(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editModalDriver, setEditModalDriver] =
     useState<DriverProfileCardData | null>(null);
 
   // Caregiver state
@@ -1236,8 +1232,8 @@ export const ServiceProviderPage = () => {
                     <DriverProfileCard
                       driver={driver}
                       onEdit={() => {
-                        setEditModalDriver(driver);
-                        setEditModalOpen(true);
+                        setEditingDriverId(driver.id);
+                        setEditDriverOpen(true);
                       }}
                       onDocuments={() => {
                         router.push('/drivers/documents');
@@ -1413,13 +1409,6 @@ export const ServiceProviderPage = () => {
         open={suspendModalOpen}
         setOpen={setSuspendModalOpen}
         driver={suspendDriver}
-      />
-
-      {/* Edit Driver Modal */}
-      <EditDriverModal
-        open={editModalOpen}
-        setOpen={setEditModalOpen}
-        driver={editModalDriver}
       />
 
       {/* Add Caregiver Drawer */}
