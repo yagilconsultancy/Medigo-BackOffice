@@ -25,27 +25,12 @@ import {
   useEditBooking,
   useVerifyPassword,
   useChangeBookingStatus,
-  useAssignDriverToBooking,
-  useReassignDriver,
-  useAssignCareAssistantToBooking,
   extractValidationErrorMessage,
 } from '../../../../../../common';
 import {
   AdminBookingDetailResponse,
   UpdateBookingRequest,
 } from '../../../../../../common/types';
-import {
-  AssignDriverModal,
-  AssignCareAssistantModal,
-} from '../../../../BookingDetailPage/ui/components';
-
-const DRIVER_ASSIGN_STATUSES = ['requested', 'confirmed'];
-const DRIVER_REASSIGN_STATUSES = [
-  'driver_assigned',
-  'driver_en_route',
-  'driver_arrived',
-];
-const CARE_ASSISTANT_ASSIGN_STATUSES = ['requested', 'confirmed'];
 
 const STATUS_LABELS: Record<string, string> = {
   requested: 'Requested',
@@ -174,17 +159,12 @@ export const EditBookingModal = ({
   const editMutation = useEditBooking();
   const verifyPasswordMutation = useVerifyPassword();
   const changeStatusMutation = useChangeBookingStatus();
-  const assignDriverMutation = useAssignDriverToBooking();
-  const reassignDriverMutation = useReassignDriver();
-  const assignCareAssistantMutation = useAssignCareAssistantToBooking();
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [initial, setInitial] = useState<FormState>(EMPTY_FORM);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
-  const [openAssignDriver, setOpenAssignDriver] = useState(false);
-  const [openAssignCareAssistant, setOpenAssignCareAssistant] = useState(false);
 
   const allowedStatuses = detail?.allowed_status_transitions ?? [];
   const statusOptions = detail?.status
@@ -218,71 +198,6 @@ export const EditBookingModal = ({
       setPasswordError('');
     }
   }, [open]);
-
-  const status = detail?.status ?? '';
-  const hasDriver = !!detail?.driver_id;
-  const hasCareAssistant = !!detail?.caregiver_id;
-  const isCareAssistantTrip =
-    detail?.trip_type === 'transport_care_assistant' ||
-    detail?.trip_type === 'transport_care_assistance';
-  const canAssignDriver =
-    (!hasDriver && DRIVER_ASSIGN_STATUSES.includes(status)) ||
-    (hasDriver && DRIVER_REASSIGN_STATUSES.includes(status));
-  const canAssignCareAssistant =
-    isCareAssistantTrip && CARE_ASSISTANT_ASSIGN_STATUSES.includes(status);
-
-  const handleAssignDriver = (driverId: string) => {
-    const mutation = hasDriver ? reassignDriverMutation : assignDriverMutation;
-    mutation.mutate(
-      { rideId, driver_id: driverId },
-      {
-        onSuccess: () => {
-          toast.success(
-            hasDriver
-              ? 'Driver reassigned successfully'
-              : 'Driver assigned successfully'
-          );
-          setOpenAssignDriver(false);
-          refetch();
-        },
-        onError: (error) => {
-          toast.error(
-            extractValidationErrorMessage(
-              error,
-              hasDriver
-                ? 'Failed to reassign driver'
-                : 'Failed to assign driver'
-            )
-          );
-        },
-      }
-    );
-  };
-
-  const handleAssignCareAssistant = (caregiverId: string) => {
-    assignCareAssistantMutation.mutate(
-      { rideId, caregiver_id: caregiverId },
-      {
-        onSuccess: () => {
-          toast.success(
-            hasCareAssistant
-              ? 'Care assistant reassigned successfully'
-              : 'Care assistant assigned successfully'
-          );
-          setOpenAssignCareAssistant(false);
-          refetch();
-        },
-        onError: (error) => {
-          toast.error(
-            extractValidationErrorMessage(
-              error,
-              'Failed to assign care assistant'
-            )
-          );
-        },
-      }
-    );
-  };
 
   useEffect(() => {
     if (detail) {
@@ -414,72 +329,9 @@ export const EditBookingModal = ({
     </Typography>
   );
 
-  const assignmentRow = (
-    label: string,
-    value: string,
-    actionLabel: string,
-    onAction: () => void,
-    showAction: boolean
-  ) => (
-    <RowStack
-      justifyContent="space-between"
-      sx={{
-        border: '1px solid #E8ECF0',
-        borderRadius: '10px',
-        px: 2,
-        py: 1.5,
-      }}
-    >
-      <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-        <Typography
-          sx={{
-            color: '#9CA3AF',
-            fontSize: pxToRem(11),
-            fontWeight: 500,
-            textTransform: 'uppercase',
-            letterSpacing: '0.4px',
-          }}
-        >
-          {label}
-        </Typography>
-        <Typography
-          sx={{
-            color: (theme) => theme.color.deepBlue,
-            fontSize: pxToRem(13.5),
-            fontWeight: 600,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {value}
-        </Typography>
-      </Stack>
-      {showAction && (
-        <AppButton
-          sx={{
-            flexShrink: 0,
-            background: '#F7F9FB',
-            border: '0.67px solid #E8ECF0',
-            color: (theme) => theme.palette.primary.main,
-            fontWeight: 600,
-            fontSize: pxToRem(12.5),
-            px: 2,
-            py: 0.75,
-            '&:hover': { background: alpha('#2F6FED', 0.06) },
-          }}
-          onClick={onAction}
-        >
-          {actionLabel}
-        </AppButton>
-      )}
-    </RowStack>
-  );
-
   return (
-    <>
-      <Drawer
-        anchor="right"
+    <Drawer
+      anchor="right"
         open={open}
         onClose={handleClose}
         sx={{
@@ -688,29 +540,6 @@ export const EditBookingModal = ({
                     multiline: true,
                   })}
                 </Stack>
-
-                <Divider />
-
-                {/* Assignment */}
-                <Stack spacing={3}>
-                  {sectionTitle('Assignment')}
-                  {assignmentRow(
-                    'Driver',
-                    detail?.driver_name || 'Not assigned',
-                    hasDriver ? 'Reassign' : 'Assign',
-                    () => setOpenAssignDriver(true),
-                    canAssignDriver
-                  )}
-                  {isCareAssistantTrip &&
-                    assignmentRow(
-                      'Care Assistant',
-                      detail?.caregiver_name ||
-                        (hasCareAssistant ? 'Assigned' : 'Not assigned'),
-                      hasCareAssistant ? 'Reassign' : 'Assign',
-                      () => setOpenAssignCareAssistant(true),
-                      canAssignCareAssistant
-                    )}
-                </Stack>
               </Stack>
             </Box>
           )}
@@ -788,41 +617,6 @@ export const EditBookingModal = ({
             </RowStack>
           </Box>
         </Box>
-      </Drawer>
-
-      <AssignDriverModal
-        open={openAssignDriver}
-        handleClose={() => setOpenAssignDriver(false)}
-        rideId={rideId}
-        onAssign={handleAssignDriver}
-        isAssigning={
-          assignDriverMutation.isPending || reassignDriverMutation.isPending
-        }
-        title={hasDriver ? 'Reassign Driver' : 'Assign Driver'}
-        description={
-          hasDriver
-            ? 'The current driver is unavailable. Select another driver to take over this booking.'
-            : 'Select a driver from the available list to assign to this booking.'
-        }
-        confirmLabel={hasDriver ? 'Reassign Driver' : 'Assign Driver'}
-      />
-      <AssignCareAssistantModal
-        open={openAssignCareAssistant}
-        handleClose={() => setOpenAssignCareAssistant(false)}
-        onAssign={handleAssignCareAssistant}
-        isAssigning={assignCareAssistantMutation.isPending}
-        title={
-          hasCareAssistant ? 'Reassign Care Assistant' : 'Assign Care Assistant'
-        }
-        description={
-          hasCareAssistant
-            ? 'The current care assistant is unavailable. Select another to assign to this booking.'
-            : 'Select a care assistant from the available list to assign to this booking.'
-        }
-        confirmLabel={
-          hasCareAssistant ? 'Reassign Care Assistant' : 'Assign Care Assistant'
-        }
-      />
-    </>
+    </Drawer>
   );
 };
