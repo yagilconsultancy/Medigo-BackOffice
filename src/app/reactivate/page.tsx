@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import { getApiClient } from '../../common/lib';
-import { ROUTES } from '../../common/constants';
+import { resolveRoute, ROUTES } from '../../common/constants';
 
 type Status = 'loading' | 'success' | 'error';
 
@@ -22,7 +22,7 @@ function ReactivateInner() {
     }
     let active = true;
     getApiClient()
-      .post(ROUTES.reactivateAccount, { token })
+      .post(resolveRoute(ROUTES.reactivateAccount), { token })
       .then(() => {
         if (!active) return;
         setStatus('success');
