@@ -4,6 +4,7 @@ import {
   useSuspendDriver,
   useReactivateDriver,
   useResendDriverInvite,
+  useResendDriverReactivation,
   useReAssignDriver,
   useCreateDriver,
   useUpdateDriver,
@@ -16,6 +17,7 @@ import {
   ReactivateDriverPayload,
   ReassignDriverFleetPayload,
   ResendDriverInvitePayload,
+  ResendDriverReactivationPayload,
   SuspendDriverPayload,
   UpdateDriverPayload,
 } from '../../../../types';
@@ -26,6 +28,7 @@ export const useDriversApi = () => {
   const doSuspendDriver = useSuspendDriver();
   const doReactivateDriver = useReactivateDriver();
   const doResendDriverInvite = useResendDriverInvite();
+  const doResendDriverReactivation = useResendDriverReactivation();
   const doReAssignDriver = useReAssignDriver();
   const doCreateDriver = useCreateDriver();
   const doUpdateDriver = useUpdateDriver();
@@ -125,6 +128,31 @@ export const useDriversApi = () => {
       },
       async () => {
         toast.error('An error occurred while resending the invitation');
+      }
+    );
+
+    return success;
+  };
+
+  const resendDriverReactivation = async (
+    payload: ResendDriverReactivationPayload
+  ): Promise<boolean> => {
+    let success = false;
+
+    await tryExecute(
+      () => doResendDriverReactivation.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
+
+        if (responseData.success) {
+          success = true;
+          toast.success('Reactivation email resent successfully');
+        } else {
+          toast.error(extractResponseErrors(responseData));
+        }
+      },
+      async () => {
+        toast.error('An error occurred while resending the reactivation email');
       }
     );
 
@@ -236,6 +264,7 @@ export const useDriversApi = () => {
     suspendDriver,
     reactivateDriver,
     resendDriverInvite,
+    resendDriverReactivation,
     reassignDriver,
     createDriver,
     updateDriver,

@@ -596,8 +596,19 @@ export const EditDriverDrawer = ({
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
   const [certFile, setCertFile] = useState<File | null>(null);
 
-  const { updateDriver } = useDriversApi();
+  const { updateDriver, resendDriverReactivation } = useDriversApi();
+  const [isResendingReactivation, setIsResendingReactivation] = useState(false);
   const resolvedDriverId = driverId ?? '';
+
+  const handleResendReactivation = async () => {
+    if (!resolvedDriverId) return;
+    setIsResendingReactivation(true);
+    try {
+      await resendDriverReactivation({ driverId: resolvedDriverId });
+    } finally {
+      setIsResendingReactivation(false);
+    }
+  };
 
   const {
     data: detail,
@@ -729,6 +740,7 @@ export const EditDriverDrawer = ({
               first_name: values.firstName.trim() || null,
               last_name: values.lastName.trim() || null,
               phone: values.phone.trim() || null,
+              email: values.email.trim() || null,
               fleet_id: fleetId,
               license_number: values.licenseNumber.trim() || null,
               license_expiry: toIsoDate(values.licenseExpiry),
@@ -965,6 +977,44 @@ export const EditDriverDrawer = ({
                           />
                         </Stack>
                       </Box>
+
+                      {/* Pending reactivation: driver changed email but hasn't
+                          reactivated yet — allow resending the reactivation email */}
+                      {detail?.pending_reactivation && (
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '12px',
+                            p: '10px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid #FCD9B6',
+                            bgcolor: '#FFF7ED',
+                          }}
+                        >
+                          <Typography
+                            sx={{ fontSize: 12.5, color: '#9A5B12', flex: 1 }}
+                          >
+                            Email changed — the driver hasn&apos;t reactivated
+                            their account yet.
+                          </Typography>
+                          <AppButton
+                            variant="outlined"
+                            onClick={handleResendReactivation}
+                            disabled={isResendingReactivation}
+                            sx={{
+                              textTransform: 'none',
+                              whiteSpace: 'nowrap',
+                              minWidth: 'auto',
+                            }}
+                          >
+                            {isResendingReactivation
+                              ? 'Sending…'
+                              : 'Resend reactivation'}
+                          </AppButton>
+                        </Box>
+                      )}
 
                       {/* Date of Birth */}
                       <FormikDateField

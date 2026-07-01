@@ -357,6 +357,7 @@ export interface AdminDriverDetailResponse {
   account_status: string;
   is_online: boolean;
   is_approved: boolean;
+  pending_reactivation?: boolean;
   rating: number;
   total_trips: number;
   specialty?: string | null;
@@ -1126,6 +1127,10 @@ export interface ResendDriverInvitePayload {
   driverId: string;
 }
 
+export interface ResendDriverReactivationPayload {
+  driverId: string;
+}
+
 export interface ReassignDriverFleetPayload {
   driverId: string;
   fleet_id: string;
@@ -1157,6 +1162,7 @@ export interface UpdateDriverPayload {
   first_name?: string | null;
   last_name?: string | null;
   phone?: string | null;
+  email?: string | null;
   fleet_id?: string | null;
   license_number?: string | null;
   license_expiry?: string | null;

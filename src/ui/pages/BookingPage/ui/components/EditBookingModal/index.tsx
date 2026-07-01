@@ -32,20 +32,31 @@ import {
   UpdateBookingRequest,
 } from '../../../../../../common/types';
 
-const STATUS_LABELS: Record<string, string> = {
-  requested: 'Requested',
-  pending_business_assignment: 'Pending Assignment',
-  confirmed: 'Approved',
-  driver_assigned: 'Driver Assigned',
-  driver_en_route: 'En Route',
-  driver_arrived: 'Driver Arrived',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
-  no_show: 'No Show',
+// Booking edit exposes a simplified 4-status model.
+const STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: 'requested', label: 'Pending' },
+  { value: 'confirmed', label: 'Approved' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Declined' },
+];
+
+// Collapse a raw backend status into one of the 4 simplified buckets.
+const STATUS_TO_BUCKET: Record<string, string> = {
+  requested: 'requested',
+  pending_business_assignment: 'requested',
+  confirmed: 'confirmed',
+  driver_assigned: 'confirmed',
+  driver_en_route: 'confirmed',
+  driver_arrived: 'confirmed',
+  in_progress: 'confirmed',
+  completed: 'completed',
+  cancelled: 'cancelled',
+  no_show: 'cancelled',
 };
 
-const statusLabel = (s: string) => STATUS_LABELS[s] || s;
+const toBucket = (s: string) => STATUS_TO_BUCKET[s] ?? s;
+const statusLabel = (s: string) =>
+  STATUS_OPTIONS.find((o) => o.value === s)?.label ?? s;
 
 type EditBookingModalProps = {
   open: boolean;
@@ -166,12 +177,9 @@ export const EditBookingModal = ({
   const [passwordError, setPasswordError] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
 
-  const allowedStatuses = detail?.allowed_status_transitions ?? [];
-  const statusOptions = detail?.status
-    ? [detail.status, ...allowedStatuses]
-    : [];
+  const currentBucket = toBucket(detail?.status ?? '');
   const canChangeStatus =
-    !!selectedStatus && !!detail?.status && selectedStatus !== detail.status;
+    !!selectedStatus && !!detail?.status && selectedStatus !== currentBucket;
 
   const handleChangeStatus = () => {
     if (!canChangeStatus) return;
@@ -204,7 +212,7 @@ export const EditBookingModal = ({
       const next = toForm(detail);
       setForm(next);
       setInitial(next);
-      setSelectedStatus(detail.status ?? '');
+      setSelectedStatus(toBucket(detail.status ?? ''));
     }
   }, [detail]);
 
@@ -431,14 +439,14 @@ export const EditBookingModal = ({
                       size="small"
                       sx={fieldSx}
                     >
-                      {statusOptions.map((s) => (
+                      {STATUS_OPTIONS.map((opt) => (
                         <MenuItem
-                          key={s}
-                          value={s}
+                          key={opt.value}
+                          value={opt.value}
                           sx={{ fontSize: pxToRem(13) }}
                         >
-                          {statusLabel(s)}
-                          {s === detail?.status ? ' (current)' : ''}
+                          {opt.label}
+                          {opt.value === currentBucket ? ' (current)' : ''}
                         </MenuItem>
                       ))}
                     </TextField>
@@ -466,18 +474,6 @@ export const EditBookingModal = ({
                         : 'Update'}
                     </AppButton>
                   </RowStack>
-                  {allowedStatuses.length === 0 && (
-                    <Typography
-                      sx={{
-                        color: 'text.secondary',
-                        fontSize: pxToRem(12),
-                        lineHeight: '18px',
-                      }}
-                    >
-                      This booking is in a final state — no further status
-                      changes are available.
-                    </Typography>
-                  )}
                 </Stack>
 
                 <Divider />

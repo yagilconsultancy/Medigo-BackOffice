@@ -19,6 +19,9 @@ export const getTrackingSocket = (): Socket => {
   const token = getAuthToken();
 
   socket = io(`${SOCKET_URL}${TRACKING_NAMESPACE}`, {
+    // nginx proxies /socket.io/tracking/ -> tracking-service; the default
+    // /socket.io/ path is not routed, so the connection must use this path.
+    path: '/socket.io/tracking',
     auth: {
       token: token,
     },

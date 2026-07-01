@@ -2,6 +2,7 @@ export * from './useApproveDriver';
 export * from './useSuspendDriver';
 export * from './useReactivateDriver';
 export * from './useResendDriverInvite';
+export * from './useResendDriverReactivation';
 export * from './useReAssignDriver';
 export * from './useCreateDriver';
 export * from './useUpdateDriver';
