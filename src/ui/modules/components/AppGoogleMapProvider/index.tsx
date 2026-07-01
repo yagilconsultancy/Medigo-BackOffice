@@ -1,5 +1,9 @@
-import { useJsApiLoader } from '@react-google-maps/api';
+import { useJsApiLoader, type Libraries } from '@react-google-maps/api';
 import React from 'react';
+
+// Hoisted to a stable reference. Passing a new array literal on every render
+// makes useJsApiLoader reload the script ("LoadScript reloaded" warning).
+const GOOGLE_MAPS_LIBRARIES: Libraries = ['places', 'maps', 'routes'];
 
 export function AppGoogleMapsProvider({
   apiKey,
@@ -10,7 +14,7 @@ export function AppGoogleMapsProvider({
 }) {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey,
-    libraries: ['places', 'maps', 'routes'], // Added 'routes' for directions
+    libraries: GOOGLE_MAPS_LIBRARIES,
     version: 'beta', // Use beta to get access to new Places API
   });
 

@@ -17,6 +17,7 @@ export const ROUTES_SPEC = {
   resendOtp: `/${API_VERSION}/auth/resend-otp`,
   forgotPassword: `/${API_VERSION}/auth/forgot-password`,
   resetPassword: `/${API_VERSION}/auth/reset-password`,
+  reactivateAccount: `/${API_VERSION}/auth/reactivate`,
   verifyDriverInvite: `/${API_VERSION}/auth/driver/verify-invite`,
   registerDriver: `/${API_VERSION}/auth/driver/register`,
   verifyAdminInvite: `/${API_VERSION}/auth/admin/verify-invite`,
@@ -342,6 +343,8 @@ export const ROUTES_SPEC = {
     `/${API_VERSION}/users/admin/drivers/${driverId}/reactivate`,
   resendDriverInvite: (driverId: string) =>
     `/${API_VERSION}/users/admin/drivers/${driverId}/resend-invite`,
+  resendDriverReactivation: (driverId: string) =>
+    `/${API_VERSION}/users/admin/drivers/${driverId}/resend-reactivation`,
   reAssignDriver: (driverId: string) =>
     `/${API_VERSION}/users/admin/drivers/${driverId}/reassign-fleet`,
   getDriverDocuments: (driverId: string) =>

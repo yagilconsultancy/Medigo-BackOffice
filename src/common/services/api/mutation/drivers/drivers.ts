@@ -10,6 +10,7 @@ import {
   ReactivateDriverPayload,
   ReassignDriverFleetPayload,
   ResendDriverInvitePayload,
+  ResendDriverReactivationPayload,
   SuspendDriverPayload,
   UpdateDriverPayload,
 } from '../../../../types';
@@ -50,6 +51,17 @@ export const resendDriverInvite = async (
     ApiResponse<any>,
     AxiosResponse<ApiResponse<any>>
   >(resolveRoute(ROUTES.resendDriverInvite, driverId));
+};
+
+export const resendDriverReactivation = async (
+  payload: ResendDriverReactivationPayload
+) => {
+  const { driverId } = payload;
+
+  return await getApiClient().post<
+    ApiResponse<any>,
+    AxiosResponse<ApiResponse<any>>
+  >(resolveRoute(ROUTES.resendDriverReactivation, driverId));
 };
 
 export const reAssignDriver = async (payload: ReassignDriverFleetPayload) => {

@@ -393,26 +393,8 @@ export const BookingPage = () => {
       renderCell: (params) => {
         const row = params.row;
         const isEditable = !NON_EDITABLE_STATUSES.includes(row.status);
-        const canAssignDriver =
-          (!row.driverId && DRIVER_ASSIGN_STATUSES.includes(row.status)) ||
-          (!!row.driverId && DRIVER_REASSIGN_STATUSES.includes(row.status));
-        const isCareAssistantTrip =
-          row.tripType === 'transport_care_assistant' ||
-          row.tripType === 'transport_care_assistance';
-        const canAssignCareAssistant =
-          isCareAssistantTrip &&
-          CARE_ASSISTANT_ASSIGNABLE_STATUSES.includes(row.status);
         return (
           <RowStack spacing={0.5}>
-            {/* <IconButton
-              size="small"
-              sx={{
-                color: '#9CA3AF',
-              }}
-              onClick={() => handleOpenDetail(row)}
-            >
-              <VisibilityOutlinedIcon sx={{ fontSize: 15 }} />
-            </IconButton> */}
             {isEditable && (
               <IconButton
                 size="small"
@@ -422,44 +404,6 @@ export const BookingPage = () => {
               >
                 <EditOutlinedIcon sx={{ fontSize: 18 }} />
               </IconButton>
-            )}
-            {canAssignDriver && (
-              <Tooltip
-                title={row.driverId ? 'Reassign driver' : 'Assign driver'}
-              >
-                <IconButton
-                  size="small"
-                  sx={{ color: '#9CA3AF' }}
-                  onClick={() => handleOpenAssignDriver(row)}
-                  aria-label={
-                    row.driverId ? 'Reassign driver' : 'Assign driver'
-                  }
-                >
-                  <LocalTaxiOutlinedIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-              </Tooltip>
-            )}
-            {canAssignCareAssistant && (
-              <Tooltip
-                title={
-                  row.caregiverId
-                    ? 'Reassign care assistant'
-                    : 'Assign care assistant'
-                }
-              >
-                <IconButton
-                  size="small"
-                  sx={{ color: '#9CA3AF' }}
-                  onClick={() => handleOpenAssignCareAssistant(row)}
-                  aria-label={
-                    row.caregiverId
-                      ? 'Reassign care assistant'
-                      : 'Assign care assistant'
-                  }
-                >
-                  <MedicalServicesOutlinedIcon sx={{ fontSize: 15 }} />
-                </IconButton>
-              </Tooltip>
             )}
             {row.status === 'requested' && (
               <>

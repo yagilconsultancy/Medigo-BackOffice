@@ -5,6 +5,7 @@ const publicRoutes = [
   '/forgot-password',
   '/reset-password',
   '/activate',
+  '/reactivate',
 ];
 const exactProtectedRoutes = ['/'];
 
