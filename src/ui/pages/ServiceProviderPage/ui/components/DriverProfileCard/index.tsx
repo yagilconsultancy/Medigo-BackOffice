@@ -456,34 +456,35 @@ export const DriverProfileCard = ({
             </Typography>
           </Box>
 
-          {/* Delete */}
-          <Box
-            onClick={() => onDelete?.(driver)}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: '6px 12px',
-              background: '#FEF2F2',
-              border: '0.67px solid #FECACA',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              '&:hover': { background: '#FEE2E2' },
-            }}
-          >
-            <DeleteOutlinedIcon sx={{ fontSize: 11, color: '#EF4444' }} />
-            <Typography
+          {(String(driver.status ?? '').toLowerCase() !== 'deactivated') && (
+            <Box
+              onClick={() => onDelete?.(driver)}
               sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 600,
-                fontSize: pxToRem(12),
-                lineHeight: '1.5em',
-                color: '#EF4444',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '6px 12px',
+                background: '#FEF2F2',
+                border: '0.67px solid #FECACA',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                '&:hover': { background: '#FEE2E2' },
               }}
             >
-              Delete
-            </Typography>
-          </Box>
+              <DeleteOutlinedIcon sx={{ fontSize: 11, color: '#EF4444' }} />
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 600,
+                  fontSize: pxToRem(12),
+                  lineHeight: '1.5em',
+                  color: '#EF4444',
+                }}
+              >
+                Delete
+              </Typography>
+            </Box>
+          )}
 
           {/* Suspend */}
           <Box
