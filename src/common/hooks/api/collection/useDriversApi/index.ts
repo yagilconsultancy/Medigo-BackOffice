@@ -246,13 +246,13 @@ export const useDriversApi = () => {
 
         if (responseData.success) {
           success = true;
-          toast.success('Driver deactivated successfully');
+          toast.success('Driver deleted successfully');
         } else {
           toast.error(extractResponseErrors(responseData));
         }
       },
       async () => {
-        toast.error('An error occurred while deactivating the driver');
+        toast.error('An error occurred while deleting the driver');
       }
     );
 
