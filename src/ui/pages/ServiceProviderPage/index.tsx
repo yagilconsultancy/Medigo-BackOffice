@@ -7,11 +7,18 @@ import {
   alpha,
   Avatar,
   Box,
+  Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Grid,
   IconButton,
   Rating,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
@@ -22,6 +29,7 @@ import SpeedOutlinedIcon from '@mui/icons-material/SpeedOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
@@ -40,6 +48,7 @@ import {
   useResolvedApiQuery,
   useGetCaregiverKpis,
   useListCaregivers,
+  useDriversApi,
   type AdminDriverListItem,
   type AdminDriverListResponse,
   type CaregiverRosterRow,
@@ -331,6 +340,7 @@ const formatCaregiverStatus = (status?: string | null): CaregiverStatus => {
 
 export const ServiceProviderPage = () => {
   const router = useRouter();
+  const { deactivateDriver } = useDriversApi();
 
   // Dropdown state
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -360,6 +370,12 @@ export const ServiceProviderPage = () => {
   const [addDriverOpen, setAddDriverOpen] = useState(false);
   const [editDriverOpen, setEditDriverOpen] = useState(false);
   const [editingDriverId, setEditingDriverId] = useState<string | null>(null);
+
+  // Delete confirmation state
+  const [deleteDriverDialogOpen, setDeleteDriverDialogOpen] = useState(false);
+  const [deletingDriver, setDeletingDriver] = useState<DriverRow | DriverProfileCardData | null>(null);
+  const [deleteDriverConfirmation, setDeleteDriverConfirmation] = useState('');
+  const [isDeletingDriverRequest, setIsDeletingDriverRequest] = useState(false);
 
   // Modal state (drivers)
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
@@ -419,6 +435,40 @@ export const ServiceProviderPage = () => {
   const handleDriverSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, []);
+
+  const handleDeleteDriver = useCallback(async () => {
+    if (!deletingDriver) return;
+    if (deleteDriverConfirmation.trim() !== 'DELETE DRIVER') return;
+
+    setIsDeletingDriverRequest(true);
+    const success = await deactivateDriver({ driverId: deletingDriver.id });
+    setIsDeletingDriverRequest(false);
+
+    if (success) {
+      setDrawerOpen(false);
+      setSelectedDriver(null);
+      setEditDriverOpen(false);
+      setEditingDriverId(null);
+      setSuspendModalOpen(false);
+      setSuspendDriver(null);
+      setDeleteDriverDialogOpen(false);
+      setDeletingDriver(null);
+      setDeleteDriverConfirmation('');
+      refetchDrivers();
+    }
+  }, [deactivateDriver, deletingDriver, deleteDriverConfirmation, refetchDrivers]);
+
+  const openDeleteDriverDialog = useCallback((driver: DriverRow | DriverProfileCardData) => {
+    setDeletingDriver(driver);
+    setDeleteDriverConfirmation('');
+    setDeleteDriverDialogOpen(true);
+  }, []);
+
+  const closeDeleteDriverDialog = useCallback(() => {
+    setDeleteDriverDialogOpen(false);
+    setDeletingDriver(null);
+    setDeleteDriverConfirmation('');
   }, []);
 
   // Caregivers API
@@ -787,6 +837,19 @@ export const ServiceProviderPage = () => {
             }}
           >
             <EditOutlinedIcon sx={{ fontSize: 17 }} />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={() => openDeleteDriverDialog(params.row)}
+            sx={{
+              width: 30,
+              height: 30,
+              color: '#DC2626',
+              background: '#FEF2F2',
+              '&:hover': { background: '#FEE2E2' },
+            }}
+          >
+            <DeleteOutlinedIcon sx={{ fontSize: 17 }} />
           </IconButton>
         </RowStack>
       ),
@@ -1242,6 +1305,7 @@ export const ServiceProviderPage = () => {
                         setSuspendDriver(driver);
                         setSuspendModalOpen(true);
                       }}
+                      onDelete={() => openDeleteDriverDialog(driver)}
                     />
                   </Grid>
                 ))}
@@ -1364,6 +1428,46 @@ export const ServiceProviderPage = () => {
           </Stack>
         )}
       </Stack>
+
+      <Dialog
+        open={deleteDriverDialogOpen}
+        onClose={closeDeleteDriverDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Delete Driver</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            To delete {deletingDriver?.name ?? 'this driver'}, type{' '}
+            <strong>DELETE DRIVER</strong> in the box below.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Confirmation"
+            placeholder="DELETE DRIVER"
+            value={deleteDriverConfirmation}
+            onChange={(e) => setDeleteDriverConfirmation(e.target.value.toUpperCase())}
+            inputProps={{ spellCheck: false }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={closeDeleteDriverDialog} disabled={isDeletingDriverRequest}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteDriver}
+            color="error"
+            variant="contained"
+            disabled={
+              isDeletingDriverRequest ||
+              deleteDriverConfirmation.trim() !== 'DELETE DRIVER'
+            }
+          >
+            {isDeletingDriverRequest ? 'Deleting...' : 'Delete Driver'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Driver Detail Drawer */}
       <DriverViewDrawer

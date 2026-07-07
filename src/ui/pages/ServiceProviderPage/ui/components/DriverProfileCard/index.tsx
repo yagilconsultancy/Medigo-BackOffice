@@ -3,6 +3,7 @@
 import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
@@ -34,6 +35,7 @@ type DriverProfileCardProps = {
   onEdit?: (driver: DriverProfileCardData) => void;
   onDocuments?: (driver: DriverProfileCardData) => void;
   onSuspend?: (driver: DriverProfileCardData) => void;
+  onDelete?: (driver: DriverProfileCardData) => void;
 };
 
 // ─── Status Config ──────────────────────────────────────────────────────────
@@ -62,6 +64,7 @@ export const DriverProfileCard = ({
   onEdit,
   onDocuments,
   onSuspend,
+  onDelete,
 }: DriverProfileCardProps) => {
   const status = statusStyles[driver.status] || statusStyles['Available'];
 
@@ -450,6 +453,35 @@ export const DriverProfileCard = ({
               }}
             >
               Documents
+            </Typography>
+          </Box>
+
+          {/* Delete */}
+          <Box
+            onClick={() => onDelete?.(driver)}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '6px 12px',
+              background: '#FEF2F2',
+              border: '0.67px solid #FECACA',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              '&:hover': { background: '#FEE2E2' },
+            }}
+          >
+            <DeleteOutlinedIcon sx={{ fontSize: 11, color: '#EF4444' }} />
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 600,
+                fontSize: pxToRem(12),
+                lineHeight: '1.5em',
+                color: '#EF4444',
+              }}
+            >
+              Delete
             </Typography>
           </Box>
 
