@@ -838,21 +838,19 @@ export const ServiceProviderPage = () => {
           >
             <EditOutlinedIcon sx={{ fontSize: 17 }} />
           </IconButton>
-          {(String(params.row.status ?? '').toLowerCase() !== 'deactivated') && (
-            <IconButton
-              size="small"
-              onClick={() => openDeleteDriverDialog(params.row)}
-              sx={{
-                width: 30,
-                height: 30,
-                color: '#DC2626',
-                background: '#FEF2F2',
-                '&:hover': { background: '#FEE2E2' },
-              }}
-            >
-              <DeleteOutlinedIcon sx={{ fontSize: 17 }} />
-            </IconButton>
-          )}
+          <IconButton
+            size="small"
+            onClick={() => openDeleteDriverDialog(params.row)}
+            sx={{
+              width: 30,
+              height: 30,
+              color: '#DC2626',
+              background: '#FEF2F2',
+              '&:hover': { background: '#FEE2E2' },
+            }}
+          >
+            <DeleteOutlinedIcon sx={{ fontSize: 17 }} />
+          </IconButton>
         </RowStack>
       ),
     },
@@ -1203,6 +1201,7 @@ export const ServiceProviderPage = () => {
             <Stack spacing={'24px'}>
               {/* Sub-header: Title + Add Button */}
               <RowStack justifyContent={'space-between'}>
+                <DashboardTitleAndDesc title="All Drivers" desc="" />
                 <DashboardTitleAndDesc title="All Drivers" desc="" />
                 <AppButton
                   startIcon={<AddIcon />}
