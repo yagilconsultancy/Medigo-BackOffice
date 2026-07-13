@@ -2,9 +2,11 @@ import { AxiosResponse } from 'axios';
 import { getApiClient } from '../../../../lib';
 import { resolveRoute, ROUTES } from '../../../../constants';
 import {
+  ApiFleetApplicationDeleteResponse,
   ApiFleetApplicationDetailResponse,
   ApiFleetDocumentUploadResponse,
   ApproveFleetApplicationPayload,
+  DeleteFleetApplicationPayload,
   RejectFleetApplicationPayload,
   RequestInfoFleetApplicationPayload,
   UploadFleetApplicationDocumentPayload,
@@ -41,6 +43,17 @@ export const requestInfoFleetApplication = async (
     ApiFleetApplicationDetailResponse,
     AxiosResponse<ApiFleetApplicationDetailResponse>
   >(resolveRoute(ROUTES.requestInfoFleetApplication, appId), rest);
+};
+
+export const deleteFleetApplication = async (
+  payload: DeleteFleetApplicationPayload
+) => {
+  const { appId } = payload;
+
+  return await getApiClient().delete<
+    ApiFleetApplicationDeleteResponse,
+    AxiosResponse<ApiFleetApplicationDeleteResponse>
+  >(resolveRoute(ROUTES.deleteFleetApplication, appId));
 };
 
 export const uploadFleetApplicationDocument = async (

@@ -6,7 +6,7 @@ import { FleetApplicationRow } from '../ApplicationCard';
 
 // ─── Action Config ──────────────────────────────────────────────────────────
 
-export type FleetActionType = 'approve' | 'reject' | 'request-docs';
+export type FleetActionType = 'approve' | 'reject' | 'request-docs' | 'delete';
 
 const actionConfig: Record<
   FleetActionType,
@@ -38,6 +38,13 @@ const actionConfig: Record<
     confirmBg: '#F7F9FB',
     confirmColor: '#374151',
     confirmBorder: '#E8ECF0',
+  },
+  delete: {
+    title: 'Delete Application',
+    message:
+      'This will permanently delete the application and its uploaded documents. This action cannot be undone.',
+    confirmBg: '#EF4444',
+    confirmColor: '#FFFFFF',
   },
 };
 

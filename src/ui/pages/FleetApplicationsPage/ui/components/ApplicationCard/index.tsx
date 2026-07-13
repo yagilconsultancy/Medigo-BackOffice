@@ -2,6 +2,7 @@ import { Box, IconButton, Stack, Typography } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import FolderOpenOutlinedIcon from '@mui/icons-material/FolderOpenOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import { ImagePdfViewer } from '../../../../../modules/blocks';
@@ -56,6 +57,7 @@ type ApplicationCardProps = {
   onApprove: () => void;
   onReject: () => void;
   onRequestDocs: () => void;
+  onDelete: () => void;
 };
 
 export const ApplicationCard = ({
@@ -64,6 +66,7 @@ export const ApplicationCard = ({
   onApprove,
   onReject,
   onRequestDocs,
+  onDelete,
 }: ApplicationCardProps) => {
   const badge = statusConfig[application.status];
 
@@ -258,6 +261,13 @@ export const ApplicationCard = ({
               }}
             />
           )}
+          <ActionIcon
+            icon={<DeleteOutlineIcon sx={{ fontSize: 15, color: '#EF4444' }} />}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          />
         </RowStack>
       </RowStack>
 
