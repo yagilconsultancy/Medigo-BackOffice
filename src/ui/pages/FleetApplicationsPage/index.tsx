@@ -83,8 +83,12 @@ export const FleetApplicationsPage = () => {
   const { data: applicationsList } = applicationsQuery;
   const isFetchingApplications = applicationsQuery.isFetching;
 
-  const { approveApplication, rejectApplication, requestInfoApplication } =
-    useFleetApplicationsApi();
+  const {
+    approveApplication,
+    rejectApplication,
+    requestInfoApplication,
+    deleteApplication,
+  } = useFleetApplicationsApi();
 
   const applications = useMemo<FleetApplicationRow[]>(() => {
     if (!applicationsList?.success || !applicationsList?.data?.length)
@@ -169,6 +173,8 @@ export const FleetApplicationsPage = () => {
           appId: actionApplication.id,
           message: trimmedMessage,
         });
+      } else if (actionType === 'delete') {
+        await deleteApplication({ appId: actionApplication.id });
       }
     },
     [
@@ -177,6 +183,7 @@ export const FleetApplicationsPage = () => {
       approveApplication,
       rejectApplication,
       requestInfoApplication,
+      deleteApplication,
     ]
   );
 
@@ -273,6 +280,7 @@ export const FleetApplicationsPage = () => {
                 onRequestDocs={() =>
                   openActionModal('request-docs', application)
                 }
+                onDelete={() => openActionModal('delete', application)}
               />
             ))
           ) : (
@@ -302,6 +310,12 @@ export const FleetApplicationsPage = () => {
           if (selectedApplication) {
             setModalOpen(false);
             openActionModal('request-docs', selectedApplication);
+          }
+        }}
+        onDelete={() => {
+          if (selectedApplication) {
+            setModalOpen(false);
+            openActionModal('delete', selectedApplication);
           }
         }}
       />

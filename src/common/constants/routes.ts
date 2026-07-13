@@ -278,6 +278,8 @@ export const ROUTES_SPEC = {
   fleetApplications: `/${API_VERSION}/users/admin/fleet/applications`,
   getFleetApplicationId: (appId: string) =>
     `/${API_VERSION}/users/admin/fleet/applications/${appId}`,
+  deleteFleetApplication: (appId: string) =>
+    `/${API_VERSION}/users/admin/fleet/applications/${appId}`,
   approveFleetApplication: (appId: string) =>
     `/${API_VERSION}/users/admin/fleet/applications/${appId}/approve`,
   rejectFleetApplication: (appId: string) =>

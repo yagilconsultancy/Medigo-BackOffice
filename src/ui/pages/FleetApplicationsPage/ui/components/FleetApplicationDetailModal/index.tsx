@@ -28,6 +28,7 @@ type FleetApplicationDetailModalProps = {
   onApprove?: () => void;
   onReject?: () => void;
   onRequestDocs?: () => void;
+  onDelete?: () => void;
 };
 
 export const FleetApplicationDetailModal = ({
@@ -37,6 +38,7 @@ export const FleetApplicationDetailModal = ({
   onApprove,
   onReject,
   onRequestDocs,
+  onDelete,
 }: FleetApplicationDetailModalProps) => {
   const applicationId = application?.id ?? '';
   const { data: applicationDetailResponse, isFetching } =
@@ -344,6 +346,27 @@ export const FleetApplicationDetailModal = ({
             />
           </RowStack>
         )}
+
+        {/* Delete — available for any status */}
+        <RowStack
+          sx={{
+            padding: '0 24px 20px',
+            paddingTop:
+              application.status === 'Pending' ||
+              application.status === 'Rejected'
+                ? 0
+                : '20px',
+          }}
+        >
+          <ActionButton
+            label="Delete Application"
+            bg="#FEF2F2"
+            color="#EF4444"
+            border="#FECACA"
+            fullWidth
+            onClick={onDelete}
+          />
+        </RowStack>
       </Stack>
     </AppModal>
   );

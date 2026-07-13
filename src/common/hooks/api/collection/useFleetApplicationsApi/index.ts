@@ -1,12 +1,14 @@
 import { toast } from 'sonner';
 import {
   useApproveFleetApplication,
+  useDeleteFleetApplication,
   useRejectFleetApplication,
   useRequestInfoFleetApplication,
   useUploadFleetApplicationDocument,
 } from '../../mutation';
 import {
   ApproveFleetApplicationPayload,
+  DeleteFleetApplicationPayload,
   RejectFleetApplicationPayload,
   RequestInfoFleetApplicationPayload,
   UploadFleetApplicationDocumentPayload,
@@ -18,6 +20,7 @@ export const useFleetApplicationsApi = () => {
   const doReject = useRejectFleetApplication();
   const doRequestInfo = useRequestInfoFleetApplication();
   const doUploadDocument = useUploadFleetApplicationDocument();
+  const doDelete = useDeleteFleetApplication();
 
   const approveApplication = async (
     payload: ApproveFleetApplicationPayload
@@ -94,6 +97,31 @@ export const useFleetApplicationsApi = () => {
     return success;
   };
 
+  const deleteApplication = async (
+    payload: DeleteFleetApplicationPayload
+  ): Promise<boolean> => {
+    let success = false;
+
+    await tryExecute(
+      () => doDelete.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
+
+        if (responseData.success) {
+          success = true;
+          toast.success('Application deleted successfully');
+        } else {
+          toast.error(extractResponseErrors(responseData));
+        }
+      },
+      async () => {
+        toast.error('An error occurred while deleting the application');
+      }
+    );
+
+    return success;
+  };
+
   const uploadApplicationDocument = async (
     payload: UploadFleetApplicationDocumentPayload
   ): Promise<boolean> => {
@@ -123,6 +151,7 @@ export const useFleetApplicationsApi = () => {
     approveApplication,
     rejectApplication,
     requestInfoApplication,
+    deleteApplication,
     uploadApplicationDocument,
   };
 };

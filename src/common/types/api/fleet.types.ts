@@ -18,6 +18,8 @@ export type ApiFleetApplicationKPIsResponse = ApiResponse<FleetApplicationKPIs>;
 
 export type ApiFleetDocumentUploadResponse = ApiResponse<FleetDocumentResponse>;
 
+export type ApiFleetApplicationDeleteResponse = ApiResponse<null>;
+
 // Mutation payloads
 export interface ApproveFleetApplicationPayload {
   appId: string;
@@ -32,6 +34,10 @@ export interface RejectFleetApplicationPayload {
 export interface RequestInfoFleetApplicationPayload {
   appId: string;
   message: string;
+}
+
+export interface DeleteFleetApplicationPayload {
+  appId: string;
 }
 
 export interface UploadFleetApplicationDocumentPayload {
