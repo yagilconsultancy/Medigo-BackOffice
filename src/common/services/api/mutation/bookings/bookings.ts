@@ -13,6 +13,7 @@ import {
   ChangeBookingStatusRequest,
   ApiRideActionResponse,
   ApiBookingNoteResponse,
+  ApiResponse,
 } from '../../../../types';
 
 export const approveBooking = async (
@@ -101,6 +102,15 @@ export const adminCancelTrip = async (
     ApiRideActionResponse,
     AxiosResponse<ApiRideActionResponse>
   >(resolveRoute(ROUTES.adminCancelTrip, rideId), body);
+};
+
+export const deleteBooking = async (payload: { rideId: string }) => {
+  const { rideId } = payload;
+
+  return await getApiClient().delete<
+    ApiResponse<null>,
+    AxiosResponse<ApiResponse<null>>
+  >(resolveRoute(ROUTES.deleteBooking, rideId));
 };
 
 export const addBookingNote = async (

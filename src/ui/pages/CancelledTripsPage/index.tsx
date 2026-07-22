@@ -9,6 +9,7 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import {
   pxToRem,
   useGetCancelledTrips,
@@ -19,7 +20,11 @@ import dayjs from 'dayjs';
 import { GridColSpec } from '../../modules/components/GridTable';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-import { CancelledTripDetailModal, CancelledTripDetail } from './ui/components';
+import {
+  CancelledTripDetailModal,
+  CancelledTripDetail,
+  DeleteBookingModal,
+} from './ui/components';
 import {
   BookingIdComponent,
   StatusComponent,
@@ -46,6 +51,11 @@ export const CancelledTripsPage = () => {
   const [selectedTrip, setSelectedTrip] = useState<CancelledTripDetail | null>(
     null
   );
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    rideId: string;
+    bookingId: string;
+  } | null>(null);
 
   const kpisQuery = useGetCancelledTripsKpis();
   const { data: kpis } = useResolvedApiQuery(useGetCancelledTripsKpis, null);
@@ -116,6 +126,11 @@ export const CancelledTripsPage = () => {
     setDetailOpen(true);
   };
 
+  const handleDeleteTrip = (rideId: string, bookingId: string) => {
+    setDeleteTarget({ rideId, bookingId });
+    setDeleteOpen(true);
+  };
+
   const columns: GridColSpec<CancelledTripRow>[] = [
     {
       field: 'bookingId',
@@ -183,16 +198,29 @@ export const CancelledTripsPage = () => {
       field: 'actions' as string,
       headerName: 'Actions',
       flex: 0.5,
-      minWidth: 60,
+      minWidth: 90,
       sortable: false,
       renderCell: (params) => (
-        <IconButton
-          size="small"
-          sx={{ color: '#9CA3AF' }}
-          onClick={() => handleViewTrip(params.row.id)}
-        >
-          <VisibilityOutlinedIcon sx={{ fontSize: 15 }} />
-        </IconButton>
+        <RowStack spacing={0.5}>
+          <IconButton
+            size="small"
+            sx={{ color: '#9CA3AF' }}
+            onClick={() => handleViewTrip(params.row.id)}
+            aria-label="View booking"
+          >
+            <VisibilityOutlinedIcon sx={{ fontSize: 15 }} />
+          </IconButton>
+          <IconButton
+            size="small"
+            sx={{ color: '#EF4444' }}
+            onClick={() =>
+              handleDeleteTrip(params.row.id, params.row.bookingId)
+            }
+            aria-label="Delete booking"
+          >
+            <DeleteOutlineIcon sx={{ fontSize: 15 }} />
+          </IconButton>
+        </RowStack>
       ),
     },
   ];
@@ -312,6 +340,14 @@ export const CancelledTripsPage = () => {
         open={detailOpen}
         setOpen={setDetailOpen}
         trip={selectedTrip}
+      />
+
+      <DeleteBookingModal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onSuccess={() => setDeleteTarget(null)}
+        rideId={deleteTarget?.rideId ?? ''}
+        bookingId={deleteTarget?.bookingId ?? ''}
       />
     </AppDashboardLayout>
   );

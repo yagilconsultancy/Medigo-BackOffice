@@ -5,6 +5,7 @@ import {
   useAssignDriverToBooking,
   useReassignDriver,
   useAdminCancelTrip,
+  useDeleteBooking,
   useAddBookingNote,
 } from '../../mutation';
 import {
@@ -23,6 +24,7 @@ export const useBookingsApi = () => {
   const doAssignDriver = useAssignDriverToBooking();
   const doReassignDriver = useReassignDriver();
   const doCancelTrip = useAdminCancelTrip();
+  const doDeleteBooking = useDeleteBooking();
   const doAddNote = useAddBookingNote();
 
   const approveBooking = async (
@@ -150,6 +152,31 @@ export const useBookingsApi = () => {
     return success;
   };
 
+  const deleteBooking = async (payload: {
+    rideId: string;
+  }): Promise<boolean> => {
+    let success = false;
+
+    await tryExecute(
+      () => doDeleteBooking.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
+
+        if (responseData.success) {
+          success = true;
+          toast.success('Booking deleted successfully');
+        } else {
+          toast.error(extractResponseErrors(responseData));
+        }
+      },
+      async () => {
+        toast.error('An error occurred while deleting the booking');
+      }
+    );
+
+    return success;
+  };
+
   const addNote = async (
     payload: { rideId: string } & CreateAdminNoteRequest
   ): Promise<boolean> => {
@@ -181,6 +208,7 @@ export const useBookingsApi = () => {
     assignDriverToBooking,
     reassignDriver,
     cancelTrip,
+    deleteBooking,
     addNote,
   };
 };
