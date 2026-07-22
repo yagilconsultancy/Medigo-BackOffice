@@ -29,8 +29,10 @@ import { EmptyState } from '../../modules/blocks';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import LocalTaxiOutlinedIcon from '@mui/icons-material/LocalTaxiOutlined';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
+import { DeleteBookingModal } from '../CancelledTripsPage/ui/components';
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import {
@@ -106,6 +108,7 @@ export const BookingPage = () => {
   const [openAssignDriver, setOpenAssignDriver] = useState<boolean>(false);
   const [openAssignCareAssistant, setOpenAssignCareAssistant] =
     useState<boolean>(false);
+  const [openDelete, setOpenDelete] = useState<boolean>(false);
 
   const approveBookingMutation = useApproveBooking();
   const declineBookingMutation = useDeclineBooking();
@@ -242,6 +245,11 @@ export const BookingPage = () => {
     setOpenAssignCareAssistant(true);
   };
 
+  const handleOpenDelete = (booking: BookingRow) => {
+    setSelectedBooking(booking);
+    setOpenDelete(true);
+  };
+
   const handleCloseApprove = () => setOpenApprove(false);
   const handleCloseDecline = () => setOpenDecline(false);
   const handleCloseDetail = () => setOpenDetail(false);
@@ -249,6 +257,7 @@ export const BookingPage = () => {
   const handleCloseAssignDriver = () => setOpenAssignDriver(false);
   const handleCloseAssignCareAssistant = () =>
     setOpenAssignCareAssistant(false);
+  const handleCloseDelete = () => setOpenDelete(false);
 
   // A driver already on the trip is reassigned; otherwise it's a fresh assign.
   const driverIsReassign = !!selectedBooking?.driverId;
@@ -427,6 +436,18 @@ export const BookingPage = () => {
                 </IconButton>
               </>
             )}
+            {row.status === 'cancelled' && (
+              <Tooltip title="Delete booking">
+                <IconButton
+                  size="small"
+                  sx={{ color: '#EF4444' }}
+                  onClick={() => handleOpenDelete(row)}
+                  aria-label="Delete booking"
+                >
+                  <DeleteOutlineIcon sx={{ fontSize: 15 }} />
+                </IconButton>
+              </Tooltip>
+            )}
           </RowStack>
         );
       },
@@ -526,6 +547,13 @@ export const BookingPage = () => {
       <EditBookingModal
         open={openEdit}
         handleClose={handleCloseEdit}
+        rideId={selectedBooking?.id ?? ''}
+        bookingId={selectedBooking?.bookingId.slice(0, 7) ?? ''}
+      />
+      <DeleteBookingModal
+        open={openDelete}
+        onClose={handleCloseDelete}
+        onSuccess={handleCloseDelete}
         rideId={selectedBooking?.id ?? ''}
         bookingId={selectedBooking?.bookingId.slice(0, 7) ?? ''}
       />
