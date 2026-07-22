@@ -6,4 +6,5 @@ export * from './useAssignDriverToBooking';
 export * from './useAssignCareAssistantToBooking';
 export * from './useReassignDriver';
 export * from './useAdminCancelTrip';
+export * from './useDeleteBooking';
 export * from './useAddBookingNote';

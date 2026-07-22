@@ -120,6 +120,10 @@ export const ROUTES_SPEC = {
   adminCancelTrip: (rideId: string) =>
     `/${API_VERSION}/rides/admin/bookings/${rideId}/cancel`,
 
+  // Admin soft-delete a cancelled booking
+  deleteBooking: (rideId: string) =>
+    `/${API_VERSION}/rides/admin/bookings/${rideId}`,
+
   // Get all admin notes for a booking
   getBookingNotes: (rideId: string) =>
     `/${API_VERSION}/rides/admin/bookings/${rideId}/notes`,
