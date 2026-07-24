@@ -29,6 +29,7 @@ import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ForwardToInboxOutlinedIcon from '@mui/icons-material/ForwardToInboxOutlined';
 import dayjs from 'dayjs';
 import {
   pxToRem,
@@ -476,8 +477,13 @@ export const DriverViewDrawer = ({
       limit: 50,
     });
 
-  const { suspendDriver, reactivateDriver, reassignDriver, updateDriver } =
-    useDriversApi();
+  const {
+    suspendDriver,
+    reactivateDriver,
+    reassignDriver,
+    updateDriver,
+    resendDriverInvite,
+  } = useDriversApi();
 
   // ─── Derived values ──────────────────────────────────────────────────────
   const hasDetail = Boolean(detail && detail.user_id);
@@ -604,6 +610,13 @@ export const DriverViewDrawer = ({
     if (!resolvedDriverId) return;
     setIsSubmittingAction(true);
     await reactivateDriver({ driverId: resolvedDriverId });
+    setIsSubmittingAction(false);
+  };
+
+  const handleResendInvite = async () => {
+    if (!resolvedDriverId) return;
+    setIsSubmittingAction(true);
+    await resendDriverInvite({ driverId: resolvedDriverId });
     setIsSubmittingAction(false);
   };
 
@@ -1284,6 +1297,26 @@ export const DriverViewDrawer = ({
                         }}
                       />
                     )}
+
+                    {/* Resend Invitation — re-send the sign-up link/token to a
+                        driver who hasn't completed registration, instead of
+                        deleting and re-adding them. */}
+                    <ActionButton
+                      icon={
+                        <ForwardToInboxOutlinedIcon
+                          sx={{ fontSize: 13, color: '#2F6FED' }}
+                        />
+                      }
+                      label={
+                        isSubmittingAction
+                          ? 'Resending...'
+                          : 'Resend Invitation'
+                      }
+                      variant="default"
+                      onClick={
+                        isSubmittingAction ? undefined : handleResendInvite
+                      }
+                    />
                   </Stack>
                 </Stack>
               </Stack>

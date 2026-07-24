@@ -436,7 +436,7 @@ export const BookingPage = () => {
                 </IconButton>
               </>
             )}
-            {row.status === 'cancelled' && (
+            {(row.status === 'cancelled' || row.status === 'no_show') && (
               <Tooltip title="Delete booking">
                 <IconButton
                   size="small"
