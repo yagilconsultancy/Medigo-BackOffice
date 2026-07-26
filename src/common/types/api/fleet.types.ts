@@ -1109,6 +1109,8 @@ export interface DriverTripsPayload {
   driverId: string;
   page?: number;
   limit?: number;
+  /** 'all' returns past, current and upcoming assignments. Defaults to completed. */
+  status?: 'all' | 'upcoming' | 'completed' | 'cancelled' | (string & {});
 }
 
 export interface DriverRatingsPayload {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import {
   Avatar,
   Box,
@@ -39,28 +39,20 @@ import {
   RowStack,
   AppNotificationSnackbar,
 } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import {
+  pxToRem,
+  useDriversApi,
+  useGetFleetCompanies,
+  useGetFleetVehicles,
+} from '../../../../../../common';
 
 // ─── Dropdown Options ───────────────────────────────────────────────────────
 
-const fleetOptions = [
-  'Independent (MediGo Direct)',
-  'MediRide Express',
-  'QuickHealth Transport',
-  'SwiftCare Logistics',
-  'RapidMed Transit',
-  'HealthLink Services',
-];
-
-const bgCheckOptions = ['Verified', 'Pending', 'Not Verified'];
-
-const vehicleOptions = [
-  'Toyota Sienna · 2022',
-  'Honda Odyssey · 2022',
-  'Chrysler Pacifica · 2022',
-  'Honda Odyssey · 2023',
-  'Kia Carnival · 2022',
-  'Wheelchair Van · 2022',
+/** Values match the API's background_check_status. */
+const bgCheckOptions = [
+  { value: 'verified', label: 'Verified' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'not_verified', label: 'Not Verified' },
 ];
 
 const capabilityOptions = [
@@ -98,14 +90,26 @@ const capabilityOptions = [
 
 type DriverStatusOption = 'Active' | 'Pending Verification' | 'Suspended';
 
+const driverStatusToApi = (status: DriverStatusOption): string => {
+  if (status === 'Suspended') return 'suspended';
+  if (status === 'Pending Verification') return 'pending';
+  return 'active';
+};
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 type AddDriverDrawerProps = {
   open: boolean;
   onClose: () => void;
+  /** Fired after a driver is created so the roster can refetch. */
+  onCreated?: () => void;
 };
 
-export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
+export const AddDriverDrawer = ({
+  open,
+  onClose,
+  onCreated,
+}: AddDriverDrawerProps) => {
   // Personal Info
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -140,10 +144,38 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
   }>({ open: false, message: '' });
+
+  const { createDriver } = useDriversApi();
+  const fleetsQuery = useGetFleetCompanies({ limit: 50, page: 1 });
+  const vehiclesQuery = useGetFleetVehicles({ limit: 50, page: 1 });
+
+  // Both selects carry the record id as their value — createDriver takes
+  // fleet_id / vehicle_id, not display names.
+  const fleetOptions = useMemo(
+    () =>
+      (fleetsQuery.data?.data ?? []).map((company: any) => ({
+        id: company.id,
+        label: company.name,
+      })),
+    [fleetsQuery.data]
+  );
+
+  const vehicleOptions = useMemo(
+    () =>
+      (vehiclesQuery.data?.data ?? []).map((v: any) => ({
+        id: v.id,
+        label:
+          [v.make, v.model, v.year].filter(Boolean).join(' · ') ||
+          v.plate_number ||
+          v.id,
+      })),
+    [vehiclesQuery.data]
+  );
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -172,7 +204,7 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!firstName.trim() || !lastName.trim()) {
       setSnackbar({
         open: true,
@@ -180,11 +212,43 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
       });
       return;
     }
-    setSnackbar({
-      open: true,
-      message: `${firstName} ${lastName} added successfully`,
+    if (!email.trim()) {
+      setSnackbar({ open: true, message: 'Email is required' });
+      return;
+    }
+    if (!fleet) {
+      setSnackbar({ open: true, message: 'Please select a fleet' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    const created = await createDriver({
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      email: email.trim(),
+      fleet_id: fleet,
+      phone: phone.trim() || null,
+      license_number: licenseNumber.trim() || null,
+      license_expiry: licenseExpiry || null,
+      medical_transport_certification: certId.trim() || null,
+      background_check_status: bgCheck || undefined,
+      vehicle_id: vehicle || null,
+      service_capabilities: capabilities.length ? capabilities.join(',') : null,
+      date_of_birth: dob || null,
+      account_status: driverStatusToApi(driverStatus),
+      drivers_license_file: licenseFile,
+      certificate_file: certFile,
     });
-    onClose();
+    setIsSubmitting(false);
+
+    if (created) {
+      setSnackbar({
+        open: true,
+        message: `${firstName} ${lastName} added successfully`,
+      });
+      onCreated?.();
+      onClose();
+    }
   };
 
   const selectSx = {
@@ -541,9 +605,9 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
                     )
                   }
                 >
-                  {fleetOptions.map((opt) => (
-                    <MenuItem key={opt} value={opt} sx={menuItemSx}>
-                      {opt}
+                  {fleetOptions.map((opt: { id: string; label: string }) => (
+                    <MenuItem key={opt.id} value={opt.id} sx={menuItemSx}>
+                      {opt.label}
                     </MenuItem>
                   ))}
                 </Select>
@@ -670,8 +734,12 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
                     }
                   >
                     {bgCheckOptions.map((opt) => (
-                      <MenuItem key={opt} value={opt} sx={menuItemSx}>
-                        {opt}
+                      <MenuItem
+                        key={opt.value}
+                        value={opt.value}
+                        sx={menuItemSx}
+                      >
+                        {opt.label}
                       </MenuItem>
                     ))}
                   </Select>
@@ -729,9 +797,9 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
                     )
                   }
                 >
-                  {vehicleOptions.map((opt) => (
-                    <MenuItem key={opt} value={opt} sx={menuItemSx}>
-                      {opt}
+                  {vehicleOptions.map((opt: { id: string; label: string }) => (
+                    <MenuItem key={opt.id} value={opt.id} sx={menuItemSx}>
+                      {opt.label}
                     </MenuItem>
                   ))}
                 </Select>
@@ -1032,7 +1100,7 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
                 </Typography>
               </Box>
               <Box
-                onClick={handleSubmit}
+                onClick={isSubmitting ? undefined : handleSubmit}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -1042,8 +1110,9 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
                   padding: '0 24px',
                   background: '#2F6FED',
                   borderRadius: '10px',
-                  cursor: 'pointer',
-                  '&:hover': { opacity: 0.9 },
+                  cursor: isSubmitting ? 'wait' : 'pointer',
+                  opacity: isSubmitting ? 0.7 : 1,
+                  '&:hover': { opacity: isSubmitting ? 0.7 : 0.9 },
                 }}
               >
                 <PersonAddAltOutlinedIcon
@@ -1057,7 +1126,7 @@ export const AddDriverDrawer = ({ open, onClose }: AddDriverDrawerProps) => {
                     color: '#FFFFFF',
                   }}
                 >
-                  Add Driver
+                  {isSubmitting ? 'Adding...' : 'Add Driver'}
                 </Typography>
               </Box>
             </RowStack>

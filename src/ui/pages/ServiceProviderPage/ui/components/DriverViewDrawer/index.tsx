@@ -30,6 +30,7 @@ import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ForwardToInboxOutlinedIcon from '@mui/icons-material/ForwardToInboxOutlined';
+import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import dayjs from 'dayjs';
 import {
   pxToRem,
@@ -42,7 +43,12 @@ import {
   type AdminDriverRatingItem,
   type DriverDocumentSummary,
 } from '../../../../../../common';
-import { RowStack } from '../../../../../modules/components';
+import {
+  RowStack,
+  DriverTripSchedule,
+  bucketForTrip,
+  type TripCardData,
+} from '../../../../../modules/components';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -306,134 +312,6 @@ const DocumentRow = ({ name, status }: { name: string; status: string }) => {
   );
 };
 
-// ─── Reusable Trip Card ─────────────────────────────────────────────────────
-
-type TripCardData = {
-  id: string;
-  fare: string;
-  status: string;
-  rider: string;
-  pickup: string;
-  dropoff: string;
-  date: string;
-};
-
-const TripCard = ({ trip }: { trip: TripCardData }) => (
-  <Stack
-    spacing={'8px'}
-    sx={{
-      background: '#F7F9FB',
-      border: '0.67px solid #F0F2F5',
-      borderRadius: '14px',
-      padding: '16px',
-    }}
-  >
-    <RowStack justifyContent={'space-between'}>
-      <Typography
-        sx={{
-          fontFamily: (theme) => theme.typography.fontFamily,
-          fontWeight: 700,
-          fontSize: pxToRem(11.5),
-          color: '#2F6FED',
-        }}
-      >
-        {trip.id}
-      </Typography>
-      <RowStack spacing={'8px'}>
-        <Typography
-          sx={{
-            fontFamily: (theme) => theme.typography.fontFamily,
-            fontWeight: 700,
-            fontSize: pxToRem(12.5),
-            color: '#059669',
-          }}
-        >
-          {trip.fare}
-        </Typography>
-        <Chip
-          label={titleCase(trip.status)}
-          size="small"
-          sx={{
-            background: '#ECFDF5',
-            color: '#059669',
-            fontFamily: 'Inter, sans-serif',
-            fontWeight: 600,
-            fontSize: pxToRem(10.5),
-            height: '20px',
-            borderRadius: '100px',
-          }}
-        />
-      </RowStack>
-    </RowStack>
-
-    <Typography
-      sx={{
-        fontFamily: (theme) => theme.typography.fontFamily,
-        fontWeight: 600,
-        fontSize: pxToRem(12.5),
-        color: '#111827',
-      }}
-    >
-      {trip.rider}
-    </Typography>
-
-    <RowStack spacing={'8px'}>
-      <Box
-        sx={{
-          width: 5,
-          height: 5,
-          borderRadius: '2.5px',
-          border: '1.33px solid #6B7280',
-          flexShrink: 0,
-        }}
-      />
-      <Typography
-        sx={{
-          fontFamily: (theme) => theme.typography.fontFamily,
-          fontWeight: 400,
-          fontSize: pxToRem(11.5),
-          color: '#6B7280',
-        }}
-      >
-        {trip.pickup}
-      </Typography>
-    </RowStack>
-
-    <RowStack spacing={'8px'}>
-      <Box
-        sx={{
-          width: 5,
-          height: 5,
-          borderRadius: '2.5px',
-          background: '#2F6FED',
-          flexShrink: 0,
-        }}
-      />
-      <Typography
-        sx={{
-          fontFamily: (theme) => theme.typography.fontFamily,
-          fontWeight: 400,
-          fontSize: pxToRem(11.5),
-          color: '#6B7280',
-        }}
-      >
-        {trip.dropoff}
-      </Typography>
-    </RowStack>
-
-    <Typography
-      sx={{
-        fontFamily: (theme) => theme.typography.fontFamily,
-        fontWeight: 400,
-        fontSize: pxToRem(11),
-        color: '#9CA3AF',
-      }}
-    >
-      {trip.date}
-    </Typography>
-  </Stack>
-);
-
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export const DriverViewDrawer = ({
@@ -467,8 +345,15 @@ export const DriverViewDrawer = ({
   const { data: tripsResponse, isFetching: isFetchingTrips } =
     useResolvedApiQuery(
       useGetDriverTrips,
-      { items: [], total: 0, page: 1, limit: 10 } as any,
-      { driverId: activeTab === 2 ? resolvedDriverId : '', page: 1, limit: 20 }
+      { rides: [], total: 0, page: 1, limit: 10 } as any,
+      {
+        driverId: activeTab === 2 ? resolvedDriverId : '',
+        page: 1,
+        limit: 50,
+        // Past, current and upcoming assignments in one call so the schedule
+        // view can group them without three round-trips.
+        status: 'all',
+      }
     );
 
   const { data: ratingsResponse, isFetching: isFetchingRatings } =
@@ -544,23 +429,45 @@ export const DriverViewDrawer = ({
   );
 
   const tripCards = useMemo<TripCardData[]>(() => {
-    const items = Array.isArray(tripsResponse?.items)
-      ? (tripsResponse as any).items
-      : Array.isArray(tripsResponse?.trips)
-        ? (tripsResponse as any).trips
-        : Array.isArray(tripsResponse)
-          ? (tripsResponse as any)
-          : [];
+    const raw = tripsResponse as any;
+    const items = Array.isArray(raw?.rides)
+      ? raw.rides
+      : Array.isArray(raw?.items)
+        ? raw.items
+        : Array.isArray(raw?.trips)
+          ? raw.trips
+          : Array.isArray(raw)
+            ? raw
+            : [];
 
-    return items.map((raw: any) => ({
-      id: raw.ride_code || raw.id || raw.ride_id || 'TR-—',
-      fare: raw.fare != null ? `$${Number(raw.fare).toFixed(2)}` : '—',
-      status: raw.status || 'Completed',
-      rider: raw.rider_name || raw.passenger_name || 'Rider',
-      pickup: raw.pickup_address || raw.pickup || '—',
-      dropoff: raw.dropoff_address || raw.destination || raw.dropoff || '—',
-      date: raw.created_at ? dayjs(raw.created_at).format('MMM D') : '—',
-    }));
+    return items.map((ride: any, idx: number) => {
+      const scheduledAt =
+        ride.scheduled_at || ride.pickup_at || ride.created_at;
+      const fare = ride.final_fare ?? ride.estimated_fare ?? ride.fare;
+      const passenger = [ride.passenger_first_name, ride.passenger_last_name]
+        .filter(Boolean)
+        .join(' ');
+
+      return {
+        key: `${ride.id ?? ride.ride_id ?? 'trip'}-${idx}`,
+        id:
+          ride.ride_code || (ride.id ? `#${String(ride.id).slice(0, 8)}` : '—'),
+        fare: fare != null ? `$${Number(fare).toFixed(2)}` : '—',
+        status: ride.status || 'pending',
+        rider: passenger || ride.rider_name || ride.passenger_name || 'Rider',
+        pickup: ride.pickup_address || ride.pickup || '—',
+        dropoff:
+          ride.destination_address ||
+          ride.dropoff_address ||
+          ride.dropoff ||
+          '—',
+        date: scheduledAt
+          ? dayjs(scheduledAt).format('MMM D, YYYY · h:mm A')
+          : '—',
+        bucket: bucketForTrip(ride.status, scheduledAt),
+        sortValue: scheduledAt ? dayjs(scheduledAt).valueOf() : 0,
+      };
+    });
   }, [tripsResponse]);
 
   // ─── Mutation handlers ───────────────────────────────────────────────────
@@ -707,11 +614,12 @@ export const DriverViewDrawer = ({
             border: '0.67px solid #F0F2F5',
             borderRadius: '14px',
             padding: '12px 16px',
-            position: 'relative',
           }}
         >
           <RowStack spacing={'16px'}>
-            <Stack spacing={'2px'}>
+            {/* minWidth: 0 lets long fleet names ellipsize instead of pushing
+                the status chip off the card. */}
+            <Stack spacing={'2px'} sx={{ flex: 1, minWidth: 0 }}>
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
@@ -724,6 +632,8 @@ export const DriverViewDrawer = ({
                 FLEET
               </Typography>
               <Typography
+                noWrap
+                title={fleetLabel}
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
                   fontWeight: 600,
@@ -739,7 +649,7 @@ export const DriverViewDrawer = ({
               flexItem
               sx={{ borderColor: '#E5E7EB' }}
             />
-            <Stack spacing={'2px'}>
+            <Stack spacing={'2px'} sx={{ flex: 1, minWidth: 0 }}>
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
@@ -752,6 +662,8 @@ export const DriverViewDrawer = ({
                 VEHICLE
               </Typography>
               <Typography
+                noWrap
+                title={vehicleLabel}
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
                   fontWeight: 600,
@@ -762,26 +674,52 @@ export const DriverViewDrawer = ({
                 {vehicleLabel}
               </Typography>
             </Stack>
+            <Chip
+              label={statusLabel}
+              size="small"
+              sx={{
+                flexShrink: 0,
+                background: badge.bg,
+                color: badge.color,
+                border: `0.67px solid ${badge.border}`,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: 700,
+                fontSize: pxToRem(11.5),
+                height: '24px',
+                borderRadius: '100px',
+              }}
+            />
           </RowStack>
-          <Chip
-            label={statusLabel}
-            size="small"
-            sx={{
-              position: 'absolute',
-              right: 16,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: badge.bg,
-              color: badge.color,
-              border: `0.67px solid ${badge.border}`,
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 700,
-              fontSize: pxToRem(11.5),
-              height: '24px',
-              borderRadius: '100px',
-            }}
-          />
         </Box>
+
+        {/* Trip Schedule shortcut — jumps straight to the grouped
+            previous / current / upcoming assignment view. */}
+        <RowStack
+          justifyContent={'center'}
+          spacing={'8px'}
+          onClick={() => setActiveTab(2)}
+          sx={{
+            height: '40px',
+            borderRadius: '10px',
+            background: '#EEF3FF',
+            border: '0.67px solid #C7D7F9',
+            cursor: 'pointer',
+            transition: 'background 0.15s ease',
+            '&:hover': { background: '#E3ECFF' },
+          }}
+        >
+          <CalendarMonthOutlinedIcon sx={{ fontSize: 15, color: '#2F6FED' }} />
+          <Typography
+            sx={{
+              fontFamily: (theme) => theme.typography.fontFamily,
+              fontWeight: 600,
+              fontSize: pxToRem(13),
+              color: '#2F6FED',
+            }}
+          >
+            View Trip Schedule
+          </Typography>
+        </RowStack>
 
         {/* Tabs */}
         <Tabs
@@ -1357,7 +1295,7 @@ export const DriverViewDrawer = ({
             {activeTab === 2 && (
               <Stack spacing={'16px'}>
                 <RowStack justifyContent={'space-between'}>
-                  <SectionLabel text="Recent Trips" />
+                  <SectionLabel text="Trip Schedule" />
                   <Chip
                     label={`${tripStats.total_trips ?? 0} total`}
                     size="small"
@@ -1372,30 +1310,11 @@ export const DriverViewDrawer = ({
                     }}
                   />
                 </RowStack>
-                {isFetchingTrips && !tripCards.length ? (
-                  <Stack alignItems="center" sx={{ py: '24px' }}>
-                    <CircularProgress size={20} sx={{ color: '#2F6FED' }} />
-                  </Stack>
-                ) : tripCards.length ? (
-                  <Stack spacing={'12px'}>
-                    {tripCards.map((trip, idx) => (
-                      <TripCard key={`${trip.id}-${idx}`} trip={trip} />
-                    ))}
-                  </Stack>
-                ) : (
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(12),
-                      color: '#9CA3AF',
-                      textAlign: 'center',
-                      py: '24px',
-                    }}
-                  >
-                    No recent trips.
-                  </Typography>
-                )}
+
+                <DriverTripSchedule
+                  trips={tripCards}
+                  isLoading={isFetchingTrips}
+                />
               </Stack>
             )}
 

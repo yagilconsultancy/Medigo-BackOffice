@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Avatar,
   Box,
@@ -20,25 +20,21 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { toast } from 'sonner';
 import { RowStack } from '../../../../../modules/components';
-import { pxToRem } from '../../../../../../common';
+import {
+  pxToRem,
+  useDriversApi,
+  useGetFleetCompanies,
+} from '../../../../../../common';
 import { AllDriverRow } from '../../../index';
 
 // ─── Dropdown Options ───────────────────────────────────────────────────────
 
-const fleetOptions = [
-  'Independent (MediGo Direct)',
-  'MediRide Express',
-  'QuickHealth Transport',
-  'SwiftCare Logistics',
-  'RapidMed Transit',
-  'HealthLink Services',
+/** Values match the API's account_status; labels are what admins see. */
+const accountStatusOptions = [
+  { value: 'active', label: 'Active' },
+  { value: 'pending', label: 'Pending Verification' },
+  { value: 'suspended', label: 'Suspended' },
 ];
-
-const tripStatusOptions = ['Available', 'On Trip', 'Off Duty'];
-
-const accountStatusOptions = ['Active', 'Pending Verification', 'Suspended'];
-
-const documentStatusOptions = ['Complete', 'Pending'];
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -46,12 +42,15 @@ type EditDriverDrawerProps = {
   open: boolean;
   onClose: () => void;
   driver: AllDriverRow | null;
+  /** Fired after a successful save so the roster can refetch. */
+  onSaved?: () => void;
 };
 
 export const EditDriverDrawer = ({
   open,
   onClose,
   driver,
+  onSaved,
 }: EditDriverDrawerProps) => {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -61,24 +60,38 @@ export const EditDriverDrawer = ({
   const [accountStatus, setAccountStatus] = useState('');
   const [documentStatus, setDocumentStatus] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { updateDriver } = useDriversApi();
+  const fleetsQuery = useGetFleetCompanies({ limit: 50, page: 1 });
+
+  const fleetOptions = useMemo(
+    () =>
+      (fleetsQuery.data?.data ?? []).map((company: any) => ({
+        id: company.id,
+        label: company.name,
+      })),
+    [fleetsQuery.data]
+  );
 
   useEffect(() => {
     if (driver) {
       setFullName(driver.name);
-      setPhone(driver.phone);
-      setEmail(driver.email);
-      setFleet(
-        driver.fleet === 'MediGo Direct'
-          ? 'Independent (MediGo Direct)'
-          : driver.fleet
+      setPhone(driver.phone === '—' ? '' : driver.phone);
+      setEmail(driver.email === '—' ? '' : driver.email);
+      // The roster carries the fleet name; match it back to an id so the
+      // mutation sends a real fleet_id.
+      const matchedFleet = fleetOptions.find(
+        (opt: { id: string; label: string }) => opt.label === driver.fleet
       );
+      setFleet(matchedFleet?.id ?? '');
       setTripStatus(driver.status === 'Suspended' ? 'Off Duty' : driver.status);
-      setAccountStatus(driver.status === 'Suspended' ? 'Suspended' : 'Active');
+      setAccountStatus(driver.status === 'Suspended' ? 'suspended' : 'active');
       setDocumentStatus(driver.docsStatus);
       setAvatarPreview(driver.avatar || '');
     }
-  }, [driver]);
+  }, [driver, fleetOptions]);
 
   if (!driver) return null;
 
@@ -110,9 +123,33 @@ export const EditDriverDrawer = ({
     e.target.value = '';
   };
 
-  const handleSave = () => {
-    toast.success(`${fullName} updated successfully`);
-    onClose();
+  const handleSave = async () => {
+    if (!driver) return;
+    const trimmedName = fullName.trim();
+    if (!trimmedName) {
+      toast.error('Name is required');
+      return;
+    }
+
+    const [firstName, ...restName] = trimmedName.split(' ');
+
+    setIsSaving(true);
+    const ok = await updateDriver({
+      driverId: driver.driverId,
+      first_name: firstName,
+      last_name: restName.join(' ') || null,
+      phone: phone.trim() || null,
+      email: email.trim() || null,
+      ...(fleet ? { fleet_id: fleet } : {}),
+      ...(accountStatus ? { account_status: accountStatus } : {}),
+    });
+    setIsSaving(false);
+
+    if (ok) {
+      toast.success(`${trimmedName} updated successfully`);
+      onSaved?.();
+      onClose();
+    }
   };
 
   const selectSx = {
@@ -436,29 +473,27 @@ export const EditDriverDrawer = ({
                   },
                 }}
               >
-                {fleetOptions.map((opt) => (
-                  <MenuItem key={opt} value={opt} sx={menuItemSx}>
-                    {opt}
+                {fleetOptions.map((opt: { id: string; label: string }) => (
+                  <MenuItem key={opt.id} value={opt.id} sx={menuItemSx}>
+                    {opt.label}
                   </MenuItem>
                 ))}
               </Select>
             </Box>
           </FormField>
 
-          {/* Trip Status */}
-          <FormField label="Trip Status">
+          {/* Trip Status — derived from live driver presence, not editable. */}
+          <FormField label="Trip Status (read-only)">
             <Select
               value={tripStatus}
-              onChange={(e) => setTripStatus(e.target.value)}
+              disabled
               size="small"
               IconComponent={KeyboardArrowDownIcon}
               sx={{ ...selectSx, width: '100%' }}
             >
-              {tripStatusOptions.map((opt) => (
-                <MenuItem key={opt} value={opt} sx={menuItemSx}>
-                  {opt}
-                </MenuItem>
-              ))}
+              <MenuItem value={tripStatus} sx={menuItemSx}>
+                {tripStatus || '—'}
+              </MenuItem>
             </Select>
           </FormField>
 
@@ -472,27 +507,25 @@ export const EditDriverDrawer = ({
               sx={{ ...selectSx, width: '100%' }}
             >
               {accountStatusOptions.map((opt) => (
-                <MenuItem key={opt} value={opt} sx={menuItemSx}>
-                  {opt}
+                <MenuItem key={opt.value} value={opt.value} sx={menuItemSx}>
+                  {opt.label}
                 </MenuItem>
               ))}
             </Select>
           </FormField>
 
-          {/* Document Status */}
-          <FormField label="Document Status">
+          {/* Document Status — derived from uploaded documents, not editable. */}
+          <FormField label="Document Status (read-only)">
             <Select
               value={documentStatus}
-              onChange={(e) => setDocumentStatus(e.target.value)}
+              disabled
               size="small"
               IconComponent={KeyboardArrowDownIcon}
               sx={{ ...selectSx, width: '100%' }}
             >
-              {documentStatusOptions.map((opt) => (
-                <MenuItem key={opt} value={opt} sx={menuItemSx}>
-                  {opt}
-                </MenuItem>
-              ))}
+              <MenuItem value={documentStatus} sx={menuItemSx}>
+                {documentStatus || '—'}
+              </MenuItem>
             </Select>
           </FormField>
         </Stack>
@@ -534,7 +567,7 @@ export const EditDriverDrawer = ({
             </Typography>
           </Box>
           <Box
-            onClick={handleSave}
+            onClick={isSaving ? undefined : handleSave}
             sx={{
               flex: 1,
               display: 'flex',
@@ -544,8 +577,9 @@ export const EditDriverDrawer = ({
               height: '41px',
               background: '#2F6FED',
               borderRadius: '10px',
-              cursor: 'pointer',
-              '&:hover': { opacity: 0.9 },
+              cursor: isSaving ? 'wait' : 'pointer',
+              opacity: isSaving ? 0.7 : 1,
+              '&:hover': { opacity: isSaving ? 0.7 : 0.9 },
             }}
           >
             <SaveOutlinedIcon sx={{ fontSize: 14, color: '#FFFFFF' }} />
@@ -559,7 +593,7 @@ export const EditDriverDrawer = ({
                 textAlign: 'center',
               }}
             >
-              Save Changes
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Typography>
           </Box>
         </RowStack>
