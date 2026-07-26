@@ -21,6 +21,7 @@ import SpeedOutlinedIcon from '@mui/icons-material/SpeedOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import dayjs from 'dayjs';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppGridtable,
@@ -28,13 +29,20 @@ import {
   DashboardTitleAndDesc,
   RowStack,
 } from '../../modules/components';
+import { EmptyState } from '../../modules/blocks';
 import { GridColSpec } from '../../modules/components/GridTable';
 import {
   DriverDetailDrawer,
   EditDriverDrawer,
   AddDriverDrawer,
 } from './ui/components';
-import { pxToRem } from '../../../common';
+import {
+  pxToRem,
+  useSearchDrivers,
+  useResolvedApiQuery,
+  type AdminDriverListItem,
+  type AdminDriverListResponse,
+} from '../../../common';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -108,194 +116,89 @@ const statusChipConfig: Record<
   },
 };
 
-// ─── Sample Data ────────────────────────────────────────────────────────────
+// ─── API Mapping ────────────────────────────────────────────────────────────
 
-const driversData: AllDriverRow[] = [
-  {
-    id: '1',
-    driverId: 'DRV-001',
-    name: 'Marcus Johnson',
-    avatar: '',
-    fleet: 'MediGo Direct',
-    vehicle: 'Toyota Sienna · 2022',
-    plate: 'ABC-1234',
-    status: 'On Trip',
-    rating: 4.9,
-    trips: 312,
-    docs: 'Complete',
-    joinedDate: 'Jan 2023',
-    phone: '+1 (555) 201-3344',
-    email: 'marcus.j@medigo.com',
-    dateOfBirth: '1988-03-14',
-    memberSince: 'Jan 2023',
-    license: 'DL-NY-448821',
-    bgCheck: 'Verified',
-    licenseExpiry: '2027-03-14',
-    docsStatus: 'Complete',
-    capabilities: ['Wheelchair Assistance', 'Senior Assistance'],
+const DEFAULT_DRIVERS_RESPONSE: AdminDriverListResponse = {
+  kpis: {
+    total_drivers: 0,
+    active_count: 0,
+    suspended_count: 0,
+    pending_count: 0,
+    online_count: 0,
+    available_now: 0,
+    on_trip: 0,
+    total_mileage: 0,
+    approval_rate: 0,
   },
-  {
-    id: '2',
-    driverId: 'DRV-002',
-    name: 'Sarah Williams',
-    avatar: '',
-    fleet: 'MedRide Express',
-    vehicle: 'Honda Odyssey · 2021',
-    plate: 'DEF-5678',
-    status: 'Available',
-    rating: 4.8,
-    trips: 287,
-    docs: 'Complete',
-    joinedDate: 'Feb 2023',
-    phone: '+1 (555) 202-4455',
-    email: 's.williams@medride.com',
-    dateOfBirth: '1990-07-22',
-    memberSince: 'Feb 2023',
-    license: 'DL-NY-559932',
-    bgCheck: 'Verified',
-    licenseExpiry: '2026-11-08',
-    docsStatus: 'Complete',
-    capabilities: ['Senior Assistance'],
-  },
-  {
-    id: '3',
-    driverId: 'DRV-003',
-    name: 'David Chen',
-    avatar: '',
-    fleet: 'MediGo Direct',
-    vehicle: 'Ford Escape · 2023',
-    plate: 'GHI-9012',
-    status: 'Available',
-    rating: 4.8,
-    trips: 264,
-    docs: 'Complete',
-    joinedDate: 'Mar 2023',
-    phone: '+1 (555) 303-5566',
-    email: 'd.chen@medigo.com',
-    dateOfBirth: '1985-11-30',
-    memberSince: 'Mar 2023',
-    license: 'DL-CA-337710',
-    bgCheck: 'Verified',
-    licenseExpiry: '2027-05-20',
-    docsStatus: 'Complete',
-    capabilities: ['Wheelchair Assistance'],
-  },
-  {
-    id: '4',
-    driverId: 'DRV-004',
-    name: 'Emily Rodriguez',
-    avatar: '',
-    fleet: 'CareTransit Co.',
-    vehicle: 'Chrysler Pacifica · 2020',
-    plate: 'JKL-3456',
-    status: 'On Trip',
-    rating: 4.7,
-    trips: 241,
-    docs: 'Pending',
-    joinedDate: 'Apr 2023',
-    phone: '+1 (555) 404-7788',
-    email: 'e.rodriguez@caretransit.com',
-    dateOfBirth: '1992-01-15',
-    memberSince: 'Apr 2023',
-    license: 'DL-TX-226609',
-    bgCheck: 'Verified',
-    licenseExpiry: '2026-09-12',
-    docsStatus: 'Pending',
-    capabilities: ['Senior Assistance'],
-  },
-  {
-    id: '5',
-    driverId: 'DRV-005',
-    name: 'James Thompson',
-    avatar: '',
-    fleet: 'HealthHaul LLC',
-    vehicle: 'Dodge Caravan · 2021',
-    plate: 'MNO-7890',
-    status: 'On Trip',
-    rating: 4.7,
-    trips: 218,
-    docs: 'Complete',
-    joinedDate: 'May 2023',
-    phone: '+1 (555) 505-9900',
-    email: 'j.thompson@healthhaul.com',
-    dateOfBirth: '1987-06-08',
-    memberSince: 'May 2023',
-    license: 'DL-FL-115508',
-    bgCheck: 'Verified',
-    licenseExpiry: '2027-01-25',
-    docsStatus: 'Complete',
-    capabilities: ['Wheelchair Assistance', 'Senior Assistance'],
-  },
-  {
-    id: '6',
-    driverId: 'DRV-006',
-    name: 'Anna Kim',
-    avatar: '',
-    fleet: 'MediGo Direct',
-    vehicle: 'Toyota Camry · 2022',
-    plate: 'PQR-1234',
-    status: 'Available',
-    rating: 4.6,
-    trips: 195,
-    docs: 'Complete',
-    joinedDate: 'Jun 2023',
-    phone: '+1 (555) 606-1122',
-    email: 'a.kim@medigo.com',
-    dateOfBirth: '1994-09-03',
-    memberSince: 'Jun 2023',
-    license: 'DL-WA-004407',
-    bgCheck: 'Verified',
-    licenseExpiry: '2027-08-15',
-    docsStatus: 'Complete',
-    capabilities: ['Senior Assistance'],
-  },
-  {
-    id: '7',
-    driverId: 'DRV-007',
-    name: 'Tom Roberts',
-    avatar: '',
-    fleet: 'SafeRide Medical',
-    vehicle: 'Kia Sedona · 2020',
-    plate: 'STU-5678',
-    status: 'Suspended',
-    rating: 4.5,
-    trips: 178,
-    docs: 'Pending',
-    joinedDate: 'Jul 2023',
-    phone: '+1 (555) 707-3344',
-    email: 't.roberts@saferidemd.com',
-    dateOfBirth: '1991-12-20',
-    memberSince: 'Jul 2023',
-    license: 'DL-OH-993306',
-    bgCheck: 'Pending',
-    licenseExpiry: '2026-04-10',
-    docsStatus: 'Pending',
+  drivers: [],
+  total: 0,
+  page: 1,
+  limit: 10,
+  total_pages: 0,
+};
+
+const buildVehicleLabel = (item: AdminDriverListItem): string => {
+  const parts = [item.vehicle_make, item.vehicle_model].filter(Boolean);
+  const label = parts.join(' ').trim();
+  const withYear = item.vehicle_year
+    ? `${label} · ${item.vehicle_year}`
+    : label;
+  return withYear.trim() || item.vehicle_type || '—';
+};
+
+/**
+ * The roster shows an operational status, which the API splits across two
+ * fields: account_status carries suspension, is_online carries availability.
+ */
+const mapDriverStatus = (item: AdminDriverListItem): DriverStatus => {
+  const accountStatus = (item.account_status || '').toLowerCase();
+  if (accountStatus === 'suspended') return 'Suspended';
+  if (!item.is_online) return 'Off Duty';
+  return accountStatus === 'on_trip' ? 'On Trip' : 'Available';
+};
+
+const mapDocsStatus = (status?: string | null): 'Complete' | 'Pending' => {
+  const normalized = (status || '').toLowerCase();
+  return normalized === 'complete' || normalized === 'verified'
+    ? 'Complete'
+    : 'Pending';
+};
+
+const mapApiDriver = (item: AdminDriverListItem): AllDriverRow => {
+  const fullName =
+    `${item.first_name ?? ''} ${item.last_name ?? ''}`.trim() || 'Unknown';
+  const joinedLabel = item.created_at
+    ? dayjs(item.created_at).format('MMM YYYY')
+    : '—';
+
+  return {
+    id: item.user_id,
+    driverId: item.user_id,
+    name: fullName,
+    avatar: item.avatar_url ?? '',
+    fleet: item.fleet_name ?? '—',
+    vehicle: buildVehicleLabel(item),
+    plate: item.vehicle_plate ?? '—',
+    status: mapDriverStatus(item),
+    rating: item.rating ?? 0,
+    trips: item.total_trips ?? 0,
+    docs: mapDocsStatus(item.document_status),
+    joinedDate: joinedLabel,
+    phone: item.phone ?? '—',
+    email: item.email ?? '—',
+    // Detail-only fields; the drawer refetches the full record by id.
+    dateOfBirth: '—',
+    memberSince: joinedLabel,
+    license: '—',
+    bgCheck: '—',
+    licenseExpiry: '—',
+    docsStatus: item.document_status ?? '—',
     capabilities: [],
-  },
-  {
-    id: '8',
-    driverId: 'DRV-008',
-    name: 'Grace Miller',
-    avatar: '',
-    fleet: 'MobiCare Transport',
-    vehicle: 'Buick Enclave · 2021',
-    plate: 'VWX-9012',
-    status: 'Available',
-    rating: 4.4,
-    trips: 156,
-    docs: 'Complete',
-    joinedDate: 'Aug 2023',
-    phone: '+1 (555) 808-5566',
-    email: 'g.miller@mobicare.com',
-    dateOfBirth: '1989-04-17',
-    memberSince: 'Aug 2023',
-    license: 'DL-PA-882205',
-    bgCheck: 'Verified',
-    licenseExpiry: '2027-02-28',
-    docsStatus: 'Complete',
-    capabilities: ['Wheelchair Assistance'],
-  },
-];
+  };
+};
+
+const formatMileage = (value: number): string =>
+  `${new Intl.NumberFormat('en-US').format(value)} mi`;
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -308,51 +211,55 @@ export const AllDriversPage = () => {
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [editDriver, setEditDriver] = useState<AllDriverRow | null>(null);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
 
-  const filteredDrivers = useMemo(() => {
-    if (!searchQuery.trim()) return driversData;
-    const query = searchQuery.toLowerCase();
-    return driversData.filter(
-      (d) =>
-        d.name.toLowerCase().includes(query) ||
-        d.fleet.toLowerCase().includes(query) ||
-        d.vehicle.toLowerCase().includes(query)
-    );
-  }, [searchQuery]);
+  const {
+    data: driversResponse,
+    isFetching: isFetchingDrivers,
+    isLoading: isLoadingDrivers,
+    refetch: refetchDrivers,
+  } = useResolvedApiQuery(useSearchDrivers, DEFAULT_DRIVERS_RESPONSE, {
+    search: searchQuery.trim() || undefined,
+    page: paginationModel.page + 1,
+    limit: paginationModel.pageSize,
+    sort_by: 'created_at',
+  });
 
-  const statusCounts = useMemo(() => {
-    return {
-      total: driversData.length,
-      available: driversData.filter((d) => d.status === 'Available').length,
-      onTrip: driversData.filter((d) => d.status === 'On Trip').length,
-      offDuty: driversData.filter((d) => d.status === 'Off Duty').length,
-    };
-  }, []);
+  const drivers = useMemo<AllDriverRow[]>(
+    () => driversResponse.drivers.map(mapApiDriver),
+    [driversResponse]
+  );
+
+  const kpis = driversResponse.kpis;
+  const totalDriverCount = driversResponse.total ?? 0;
 
   const statCards = [
     {
-      value: '148',
+      value: String(kpis.total_drivers ?? 0),
       label: 'Total Drivers',
       valueColor: '#2F6FED',
       iconBg: '#EBF2FF',
       icon: <PeopleOutlineIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
     },
     {
-      value: '32',
+      value: String(kpis.available_now ?? kpis.online_count ?? 0),
       label: 'Available Now',
       valueColor: '#10B981',
       iconBg: '#ECFDF5',
       icon: <CheckCircleOutlineIcon sx={{ fontSize: 18, color: '#10B981' }} />,
     },
     {
-      value: '62',
+      value: String(kpis.on_trip ?? 0),
       label: 'On Trip',
       valueColor: '#D97706',
       iconBg: '#EEF2FF',
       icon: <NearMeOutlinedIcon sx={{ fontSize: 18, color: '#2F6FED' }} />,
     },
     {
-      value: '84,320 mi',
+      value: formatMileage(kpis.total_mileage ?? 0),
       label: 'Total Mileage',
       valueColor: '#6B7280',
       iconBg: '#FFF7ED',
@@ -685,8 +592,19 @@ export const AllDriversPage = () => {
         {/* Table */}
         <AppGridtable
           columns={columns}
-          data={filteredDrivers}
-          initialPageSize={8}
+          data={drivers}
+          initialPageSize={10}
+          disableAutoPagination
+          totalRows={totalDriverCount}
+          onPaginationModelChange={(model) =>
+            setPaginationModel({ page: model.page, pageSize: model.pageSize })
+          }
+          isFetchingData={isFetchingDrivers || isLoadingDrivers}
+          emptyState={
+            <Box sx={{ height: 400, width: '100%' }}>
+              <EmptyState animationSrc="/empty.json" />
+            </Box>
+          }
           onRowClick={(row) => handleRowClick(row)}
           sx={{
             height: 'auto',
@@ -719,15 +637,18 @@ export const AllDriversPage = () => {
                   color: '#9CA3AF',
                 }}
               >
-                {filteredDrivers.length} registered drivers — fleet association
-                shown
+                {totalDriverCount} registered drivers — fleet association shown
               </Typography>
             </RowStack>
             <AppSearchField
               name="search"
               placeholder="Search drivers..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                // A narrower result set can be shorter than the current page.
+                setPaginationModel((prev) => ({ ...prev, page: 0 }));
+              }}
               boxProps={{
                 sx: { width: '240px' },
               }}
@@ -741,6 +662,7 @@ export const AllDriversPage = () => {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         driver={selectedDriver}
+        onDriverChanged={() => void refetchDrivers()}
       />
 
       {/* Edit Driver Drawer */}
@@ -748,12 +670,14 @@ export const AllDriversPage = () => {
         open={editDrawerOpen}
         onClose={() => setEditDrawerOpen(false)}
         driver={editDriver}
+        onSaved={() => void refetchDrivers()}
       />
 
       {/* Add Driver Drawer */}
       <AddDriverDrawer
         open={addDrawerOpen}
         onClose={() => setAddDrawerOpen(false)}
+        onCreated={() => void refetchDrivers()}
       />
     </AppDashboardLayout>
   );
