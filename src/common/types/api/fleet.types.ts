@@ -317,6 +317,8 @@ export interface AdminDriverListItem {
   fleet_name?: string | null;
   account_status: string;
   is_online: boolean;
+  /** True while the driver is en route to / on an active ride. */
+  is_on_trip?: boolean;
   is_approved: boolean;
   rating: number;
   total_trips: number;
@@ -362,6 +364,8 @@ export interface AdminDriverDetailResponse {
   fleet_name?: string | null;
   account_status: string;
   is_online: boolean;
+  /** True while the driver is en route to / on an active ride. */
+  is_on_trip?: boolean;
   is_approved: boolean;
   pending_reactivation?: boolean;
   rating: number;

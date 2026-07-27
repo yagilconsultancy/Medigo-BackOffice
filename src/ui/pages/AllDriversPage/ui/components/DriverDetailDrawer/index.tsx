@@ -406,7 +406,9 @@ export const DriverDetailDrawer = ({
         titleCase(cap)
       ),
       rating: detail.rating ?? driver.rating,
-      trips: detail.total_trips ?? driver.trips,
+      // trip_stats is counted live off the rides table, so prefer it over the
+      // denormalized profile counter, which can drift.
+      trips: detail.trip_stats?.total_trips ?? detail.total_trips ?? driver.trips,
     };
   }, [driver, hasDetail, detail, documents]);
 
