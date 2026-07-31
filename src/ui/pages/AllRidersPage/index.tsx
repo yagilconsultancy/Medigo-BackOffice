@@ -2,12 +2,23 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import dayjs from 'dayjs';
-import { Box, Grid, IconButton, Stack, Typography, alpha } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Grid,
+  IconButton,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+  alpha,
+} from '@mui/material';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppGridtable,
@@ -18,14 +29,21 @@ import {
 } from '../../modules/components';
 import { EmptyState } from '../../modules/blocks';
 import { GridColSpec } from '../../modules/components/GridTable';
-import { RiderDetailModal, RideHistoryModal } from './ui/components';
+import {
+  RiderDetailModal,
+  RideHistoryModal,
+  EditRiderDrawer,
+  KYC_STATUS_META,
+} from './ui/components';
 import {
   pxToRem,
   useSearchRiders,
   useRidersApi,
   useResolvedApiQuery,
+  useDebouncedValue,
   type AdminRiderListItem,
   type AdminRiderListResponse,
+  type KYCStatusValue,
 } from '../../../common';
 
 const DEFAULT_RIDERS: AdminRiderListResponse = {
@@ -57,6 +75,7 @@ export type RiderRow = {
   frequency: string;
   tickets: string;
   status: RiderStatus;
+  kycStatus: KYCStatusValue;
 };
 
 // ─── Config ─────────────────────────────────────────────────────────────────
@@ -103,6 +122,7 @@ const mapRider = (item: AdminRiderListItem): RiderRow => ({
   frequency: item.frequency || '—',
   tickets: item.open_tickets > 0 ? String(item.open_tickets) : '—',
   status: apiStatusToUi(item.status),
+  kycStatus: item.kyc_status ?? 'not_started',
 });
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -117,16 +137,21 @@ export const AllRidersPage = () => {
   const [selectedRider, setSelectedRider] = useState<RiderRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [kycFilter, setKycFilter] = useState<'All' | KYCStatusValue>('All');
+
+  const debouncedSearch = useDebouncedValue(searchQuery);
 
   const {
     data: ridersData,
     isFetching: isFetchingRiders,
     isLoading: isLoadingRiders,
   } = useResolvedApiQuery(useSearchRiders, DEFAULT_RIDERS, {
-    search: searchQuery.trim() || undefined,
+    search: debouncedSearch.trim() || undefined,
     status: activeFilter === 'All' ? undefined : uiStatusToApi[activeFilter],
+    kyc_status: kycFilter === 'All' ? undefined : kycFilter,
     page: paginationModel.page + 1,
     limit: paginationModel.pageSize,
   });
@@ -400,26 +425,63 @@ export const AllRidersPage = () => {
       },
     },
     {
+      field: 'kycStatus',
+      headerName: 'KYC',
+      flex: 0.7,
+      minWidth: 110,
+      renderCell: (params) => {
+        const meta = KYC_STATUS_META[params.row.kycStatus];
+        return (
+          <Chip
+            label={meta.label}
+            size="small"
+            sx={{
+              background: meta.bg,
+              color: meta.color,
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 600,
+              fontSize: pxToRem(10.5),
+              height: '20px',
+            }}
+          />
+        );
+      },
+    },
+    {
       field: 'actions' as string,
       headerName: '',
-      flex: 0.4,
-      minWidth: 50,
+      flex: 0.5,
+      minWidth: 90,
       sortable: false,
       renderCell: (params) => (
-        <IconButton
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleViewRider(params.row);
-          }}
-          sx={{
-            background: alpha('#2F6FED', 0.1),
-            color: '#2F6FED',
-            '&:hover': { background: alpha('#2F6FED', 0.18) },
-          }}
-        >
-          <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
-        </IconButton>
+        <RowStack spacing={0.5}>
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewRider(params.row);
+            }}
+            sx={{
+              background: alpha('#2F6FED', 0.1),
+              color: '#2F6FED',
+              '&:hover': { background: alpha('#2F6FED', 0.18) },
+            }}
+          >
+            <VisibilityOutlinedIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+          <IconButton
+            size="small"
+            aria-label="Edit rider"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedRider(params.row);
+              setEditOpen(true);
+            }}
+            sx={{ color: '#9CA3AF' }}
+          >
+            <EditOutlinedIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </RowStack>
       ),
     },
   ];
@@ -537,14 +599,52 @@ export const AllRidersPage = () => {
               ))}
             </RowStack>
 
-            {/* Search */}
-            <AppSearchField
-              name="search"
-              placeholder="Search riders..."
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              boxProps={{ sx: { width: '240px' } }}
-            />
+            <RowStack spacing={'12px'}>
+              {/* KYC filter */}
+              <TextField
+                select
+                size="small"
+                value={kycFilter}
+                onChange={(e) => {
+                  setKycFilter(e.target.value as 'All' | KYCStatusValue);
+                  setPaginationModel((prev) => ({ ...prev, page: 0 }));
+                }}
+                sx={{
+                  minWidth: 150,
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '20px',
+                    fontSize: pxToRem(12),
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#E8ECF0',
+                  },
+                }}
+              >
+                <MenuItem value="All" sx={{ fontSize: pxToRem(12.5) }}>
+                  All KYC
+                </MenuItem>
+                {(Object.keys(KYC_STATUS_META) as KYCStatusValue[]).map(
+                  (key) => (
+                    <MenuItem
+                      key={key}
+                      value={key}
+                      sx={{ fontSize: pxToRem(12.5) }}
+                    >
+                      {KYC_STATUS_META[key].label}
+                    </MenuItem>
+                  )
+                )}
+              </TextField>
+
+              {/* Search */}
+              <AppSearchField
+                name="search"
+                placeholder="Search riders..."
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                boxProps={{ sx: { width: '240px' } }}
+              />
+            </RowStack>
           </RowStack>
         </AppGridtable>
       </Stack>
@@ -560,6 +660,13 @@ export const AllRidersPage = () => {
           setDetailOpen(false);
           setHistoryOpen(true);
         }}
+      />
+
+      {/* Edit Rider Drawer */}
+      <EditRiderDrawer
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        riderId={selectedRider?.id ?? null}
       />
 
       {/* Ride History Modal */}

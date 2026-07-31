@@ -9,6 +9,7 @@ import {
   ApiRiderIssueDetailResponse,
   ApiRiderIssueListResponse,
   RiderActivityPayload,
+  RiderDocumentInfo,
   RiderIssueListPayload,
   RiderListPayload,
   RiderProfileCardsPaginatedResponse,
@@ -75,4 +76,11 @@ export const getRiderRides = async (payload: RiderRidesPayload) => {
   >(resolveRoute(ROUTES.riderRides, riderId), {
     params: { ...rest },
   });
+};
+
+export const getUserDocuments = async (userId: string) => {
+  return await getApiClient().get<
+    ApiResponse<RiderDocumentInfo[]>,
+    AxiosResponse<ApiResponse<RiderDocumentInfo[]>>
+  >(resolveRoute(ROUTES.getUserDocuments, userId));
 };

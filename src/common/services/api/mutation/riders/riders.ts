@@ -4,11 +4,17 @@ import { resolveRoute, ROUTES } from '../../../../constants';
 import {
   AddRiderIssueNotePayload,
   ApiAdminRiderDetailResponse,
+  ApiResponse,
+  ApproveRiderKYCPayload,
   ApiRiderIssueDetailResponse,
   CreateRiderIssuePayload,
+  RejectRiderKYCPayload,
   ReinstateRiderPayload,
+  RiderDocumentInfo,
   SuspendRiderPayload,
   UpdateRiderIssueStatusPayload,
+  UpdateRiderPayload,
+  VerifyUserDocumentPayload,
 } from '../../../../types';
 
 export const createRiderIssue = async (payload: CreateRiderIssuePayload) => {
@@ -54,4 +60,42 @@ export const reinstateRider = async (payload: ReinstateRiderPayload) => {
     ApiAdminRiderDetailResponse,
     AxiosResponse<ApiAdminRiderDetailResponse>
   >(resolveRoute(ROUTES.reinstateRider, riderId));
+};
+
+export const updateRider = async (payload: UpdateRiderPayload) => {
+  const { riderId, ...rest } = payload;
+
+  return await getApiClient().put<
+    ApiAdminRiderDetailResponse,
+    AxiosResponse<ApiAdminRiderDetailResponse>
+  >(resolveRoute(ROUTES.updateRider, riderId), rest);
+};
+
+export const approveRiderKyc = async (payload: ApproveRiderKYCPayload) => {
+  const { riderId } = payload;
+
+  return await getApiClient().put<
+    ApiAdminRiderDetailResponse,
+    AxiosResponse<ApiAdminRiderDetailResponse>
+  >(resolveRoute(ROUTES.approveRiderKyc, riderId));
+};
+
+export const rejectRiderKyc = async (payload: RejectRiderKYCPayload) => {
+  const { riderId, ...rest } = payload;
+
+  return await getApiClient().put<
+    ApiAdminRiderDetailResponse,
+    AxiosResponse<ApiAdminRiderDetailResponse>
+  >(resolveRoute(ROUTES.rejectRiderKyc, riderId), rest);
+};
+
+export const verifyUserDocument = async (
+  payload: VerifyUserDocumentPayload
+) => {
+  const { userId, documentId, ...rest } = payload;
+
+  return await getApiClient().put<
+    ApiResponse<RiderDocumentInfo>,
+    AxiosResponse<ApiResponse<RiderDocumentInfo>>
+  >(resolveRoute(ROUTES.verifyUserDocument, userId, documentId), rest);
 };

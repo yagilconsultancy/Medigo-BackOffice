@@ -147,14 +147,17 @@ const buildVehicleLabel = (item: AdminDriverListItem): string => {
 };
 
 /**
- * The roster shows an operational status, which the API splits across two
- * fields: account_status carries suspension, is_online carries availability.
+ * The roster shows an operational status, which the API splits across three
+ * fields: account_status carries suspension, is_online carries duty state and
+ * is_on_trip carries live ride engagement. account_status is never 'on_trip' —
+ * it only ever holds pending/active/suspended/deactivated.
  */
 const mapDriverStatus = (item: AdminDriverListItem): DriverStatus => {
   const accountStatus = (item.account_status || '').toLowerCase();
   if (accountStatus === 'suspended') return 'Suspended';
+  if (item.is_on_trip) return 'On Trip';
   if (!item.is_online) return 'Off Duty';
-  return accountStatus === 'on_trip' ? 'On Trip' : 'Available';
+  return 'Available';
 };
 
 const mapDocsStatus = (status?: string | null): 'Complete' | 'Pending' => {

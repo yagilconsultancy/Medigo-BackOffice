@@ -1,4 +1,4 @@
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography, alpha } from '@mui/material';
 import {
   Timeline,
   TimelineItem,
@@ -28,6 +28,8 @@ type AdminNote = {
   author: string;
   time: string;
   text: string;
+  /** Marks a note the assigned driver can also see. */
+  isDriverVisible?: boolean;
 };
 
 type TripTimelineProps = {
@@ -294,16 +296,32 @@ export const TripTimeline = ({
                     {note.author}
                   </Typography>
                 </RowStack>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(11),
-                    color: (theme) => theme.color.lightGrey,
-                  }}
-                >
-                  {note.time}
-                </Typography>
+                <RowStack spacing={'6px'}>
+                  {note.isDriverVisible && (
+                    <Chip
+                      label="Driver visible"
+                      size="small"
+                      sx={{
+                        background: alpha('#2F6FED', 0.1),
+                        color: '#2F6FED',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: pxToRem(10),
+                        height: '18px',
+                      }}
+                    />
+                  )}
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(11),
+                      color: (theme) => theme.color.lightGrey,
+                    }}
+                  >
+                    {note.time}
+                  </Typography>
+                </RowStack>
               </RowStack>
               <Typography
                 sx={{

@@ -317,6 +317,8 @@ export interface AdminDriverListItem {
   fleet_name?: string | null;
   account_status: string;
   is_online: boolean;
+  /** True while the driver is en route to / on an active ride. */
+  is_on_trip?: boolean;
   is_approved: boolean;
   rating: number;
   total_trips: number;
@@ -362,12 +364,16 @@ export interface AdminDriverDetailResponse {
   fleet_name?: string | null;
   account_status: string;
   is_online: boolean;
+  /** True while the driver is en route to / on an active ride. */
+  is_on_trip?: boolean;
   is_approved: boolean;
   pending_reactivation?: boolean;
   rating: number;
   total_trips: number;
   specialty?: string | null;
   service_capabilities: string[];
+  /** The assigned vehicles row, so an edit form can preselect it. */
+  vehicle_id?: string | null;
   vehicle_type?: string | null;
   vehicle_make?: string | null;
   vehicle_model?: string | null;
@@ -380,6 +386,7 @@ export interface AdminDriverDetailResponse {
   license_expiry?: string | null;
   medical_transport_certification?: string | null;
   date_of_birth?: string | null;
+  gender?: string | null;
   address?: string | null;
   city?: string | null;
   province?: string | null;
@@ -422,6 +429,90 @@ export interface AdminRiderListItem {
   frequency: string;
   open_tickets: number;
   status: string;
+  kyc_status: KYCStatusValue;
+}
+
+/** Mirrors KYCStatus in the backend's shared enums. */
+export type KYCStatusValue =
+  | 'not_started'
+  | 'submitted'
+  | 'under_review'
+  | 'verified'
+  | 'rejected';
+
+/** Mirrors IDType in the backend's shared enums. */
+export type IDTypeValue =
+  | 'drivers_license'
+  | 'passport'
+  | 'provincial_id'
+  | 'health_card'
+  | 'permanent_resident_card'
+  | 'other';
+
+export interface RiderKYCInfo {
+  kyc_status: KYCStatusValue;
+  id_type?: IDTypeValue | null;
+  id_number?: string | null;
+  id_issuing_country?: string | null;
+  id_issuing_authority?: string | null;
+  id_expiry?: string | null;
+  dob_verified: boolean;
+  submitted_at?: string | null;
+  verified_at?: string | null;
+  verified_by?: string | null;
+  rejection_reason?: string | null;
+}
+
+export interface RiderDocumentInfo {
+  id: string;
+  document_type: string;
+  file_name?: string | null;
+  verification_status: string;
+  rejection_reason?: string | null;
+  expires_at?: string | null;
+  created_at?: string | null;
+}
+
+export interface UpdateRiderPayload {
+  riderId: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  date_of_birth?: string | null;
+  gender?: string | null;
+  home_address?: string | null;
+  city?: string | null;
+  province?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  medical_notes?: string | null;
+  insurance_provider?: string | null;
+  insurance_policy_number?: string | null;
+  insurance_group_number?: string | null;
+  insurance_member_id?: string | null;
+  insurance_expiry?: string | null;
+  id_type?: IDTypeValue | null;
+  id_number?: string | null;
+  id_issuing_country?: string | null;
+  id_issuing_authority?: string | null;
+  id_expiry?: string | null;
+  dob_verified?: boolean | null;
+}
+
+export interface RejectRiderKYCPayload {
+  riderId: string;
+  rejection_reason: string;
+}
+
+export interface ApproveRiderKYCPayload {
+  riderId: string;
+}
+
+export interface VerifyUserDocumentPayload {
+  userId: string;
+  documentId: string;
+  status: 'approved' | 'rejected';
+  rejection_reason?: string | null;
 }
 
 export interface AdminRiderListResponse {
@@ -450,9 +541,16 @@ export interface AdminRiderDetailResponse {
   date_of_birth?: string | null;
   gender?: string | null;
   home_address?: string | null;
+  city?: string | null;
+  province?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
   medical_notes?: string | null;
   insurance_provider?: string | null;
   insurance_policy_number?: string | null;
+  insurance_group_number?: string | null;
+  insurance_member_id?: string | null;
+  insurance_expiry?: string | null;
   status: string;
   suspension_reason?: string | null;
   suspended_at?: string | null;
@@ -460,6 +558,8 @@ export interface AdminRiderDetailResponse {
   trip_stats: RiderTripStats;
   emergency_contacts: RiderEmergencyContactInfo[];
   payment_methods: RiderPaymentMethodInfo[];
+  kyc: RiderKYCInfo;
+  documents: RiderDocumentInfo[];
 }
 
 export interface AdminRiderActivityResponse {
@@ -971,6 +1071,7 @@ export interface RiderActivityPayload {
 export interface RiderListPayload {
   search?: string;
   status?: string;
+  kyc_status?: KYCStatusValue;
   sort_by?: 'created_at' | 'name';
   page?: number;
   limit?: number;
@@ -1188,6 +1289,17 @@ export interface UpdateDriverPayload {
   postal_code?: string | null;
   account_status?: string | null;
   notes?: string | null;
+  gender?: string | null;
+  // Denormalized copies on driver_profiles. Normally synced from the assigned
+  // vehicle; settable for a driver with no vehicle record yet.
+  vehicle_type?: string | null;
+  vehicle_make?: string | null;
+  vehicle_model?: string | null;
+  vehicle_year?: number | null;
+  vehicle_plate?: string | null;
+  vehicle_color?: string | null;
+  vehicle_vin?: string | null;
+  vehicle_verified?: boolean | null;
 }
 
 export interface DeactivateDriverPayload {

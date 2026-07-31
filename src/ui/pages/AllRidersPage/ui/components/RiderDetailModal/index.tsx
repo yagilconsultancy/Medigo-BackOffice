@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import dayjs from 'dayjs';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, TextField, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
@@ -21,12 +22,23 @@ import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
-import { AppModal, RowStack } from '../../../../../modules/components';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import {
+  AppButton,
+  AppModal,
+  RowStack,
+} from '../../../../../modules/components';
+import { toast } from 'sonner';
 import {
   pxToRem,
   useGetRiderDetail,
   useResolvedApiQuery,
+  useRidersApi,
+  useVerifyUserDocument,
+  extractValidationErrorMessage,
   type AdminRiderDetailResponse,
+  type KYCStatusValue,
 } from '../../../../../../common';
 import type { RiderRow } from '../../..';
 
@@ -51,6 +63,26 @@ const formatCurrency = (value?: number | null): string => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
+};
+
+const titleCase = (value?: string | null, fallback = '—') => {
+  if (!value) return fallback;
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ');
+};
+
+export const KYC_STATUS_META: Record<
+  KYCStatusValue,
+  { label: string; color: string; bg: string }
+> = {
+  not_started: { label: 'Not Started', color: '#6B7280', bg: '#F3F4F6' },
+  submitted: { label: 'Submitted', color: '#B45309', bg: '#FEF3C7' },
+  under_review: { label: 'Under Review', color: '#4338CA', bg: '#EEF2FF' },
+  verified: { label: 'Verified', color: '#059669', bg: '#ECFDF5' },
+  rejected: { label: 'Rejected', color: '#DC2626', bg: '#FEF2F2' },
 };
 
 const statusConfig: Record<
@@ -218,6 +250,70 @@ export const RiderDetailModal = ({
     null as unknown as AdminRiderDetailResponse,
     rider?.id ?? ''
   );
+  const { approveRiderKyc, rejectRiderKyc } = useRidersApi();
+  const [isReviewingKyc, setIsReviewingKyc] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+
+  const verifyDocument = useVerifyUserDocument();
+  const [pendingDocId, setPendingDocId] = useState<string | null>(null);
+  const [rejectingDocId, setRejectingDocId] = useState<string | null>(null);
+  const [docRejectReason, setDocRejectReason] = useState('');
+
+  const kyc = detail?.kyc;
+  const kycStatus: KYCStatusValue = kyc?.kyc_status ?? 'not_started';
+  // Only a submission that's actually waiting on us can be actioned.
+  const canReviewKyc =
+    kycStatus === 'submitted' || kycStatus === 'under_review';
+  const documents = detail?.documents ?? [];
+
+  const reviewDocument = (
+    documentId: string,
+    status: 'approved' | 'rejected',
+    // The backend requires a reason on rejection, so never send an empty one.
+    rejection_reason: string | null = null
+  ) => {
+    if (!rider) return;
+    setPendingDocId(documentId);
+    verifyDocument.mutate(
+      { userId: rider.id, documentId, status, rejection_reason },
+      {
+        onSuccess: () => {
+          toast.success(`Document ${status}`);
+          setPendingDocId(null);
+          setRejectingDocId(null);
+          setDocRejectReason('');
+        },
+        onError: (error) => {
+          toast.error(
+            extractValidationErrorMessage(error, 'Failed to review document')
+          );
+          setPendingDocId(null);
+        },
+      }
+    );
+  };
+
+  const handleApproveKyc = async () => {
+    if (!rider) return;
+    setIsReviewingKyc(true);
+    await approveRiderKyc({ riderId: rider.id });
+    setIsReviewingKyc(false);
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rider || !rejectReason.trim()) return;
+    setIsReviewingKyc(true);
+    const ok = await rejectRiderKyc({
+      riderId: rider.id,
+      rejection_reason: rejectReason.trim(),
+    });
+    setIsReviewingKyc(false);
+    if (ok) {
+      setIsRejecting(false);
+      setRejectReason('');
+    }
+  };
 
   if (!rider) return null;
 
@@ -237,6 +333,18 @@ export const RiderDetailModal = ({
             : ''
         }`.trim()
       : '—';
+
+  // Free-text line plus the structured parts, whichever are filled in.
+  const fullAddress =
+    [
+      detail?.home_address,
+      detail?.city,
+      detail?.province,
+      detail?.postal_code,
+      detail?.country,
+    ]
+      .filter(Boolean)
+      .join(', ') || '—';
 
   const primaryContact = detail?.emergency_contacts?.[0];
   const emergencyContact = primaryContact
@@ -526,7 +634,443 @@ export const RiderDetailModal = ({
                     rider.tickets === '—' ? '0 open' : `${rider.tickets} open`
                   }
                 />
+                {/* gender / home_address / medical_notes were already returned
+                    by the API but nothing rendered them. */}
+                <InfoField
+                  icon={<PersonOutlinedIcon sx={iconSx} />}
+                  label="Gender"
+                  value={titleCase(detail?.gender)}
+                />
+                <InfoField
+                  icon={<HomeOutlinedIcon sx={iconSx} />}
+                  label="Address"
+                  value={fullAddress}
+                />
               </Box>
+              {detail?.medical_notes ? (
+                <Stack
+                  spacing={'4px'}
+                  sx={{
+                    background: '#F7F9FB',
+                    border: '0.67px solid #F0F4F8',
+                    borderRadius: '14px',
+                    padding: '12px 16px',
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 500,
+                      fontSize: pxToRem(10.5),
+                      color: '#9CA3AF',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    Medical Notes
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontSize: pxToRem(12.5),
+                      color: '#111827',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {detail.medical_notes}
+                  </Typography>
+                </Stack>
+              ) : null}
+            </Stack>
+
+            {/* KYC & Verification */}
+            <Stack spacing={'12px'}>
+              <SectionHeader
+                icon={
+                  <BadgeOutlinedIcon sx={{ fontSize: 13, color: '#2F6FED' }} />
+                }
+                label="KYC & Verification"
+              />
+              <Stack
+                spacing={'12px'}
+                sx={{
+                  background: '#F7F9FB',
+                  border: '0.67px solid #F0F4F8',
+                  borderRadius: '14px',
+                  padding: '14px 16px',
+                }}
+              >
+                <RowStack justifyContent="space-between">
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 600,
+                      fontSize: pxToRem(12.5),
+                      color: '#111827',
+                    }}
+                  >
+                    Identity Status
+                  </Typography>
+                  <Chip
+                    label={KYC_STATUS_META[kycStatus].label}
+                    size="small"
+                    sx={{
+                      background: KYC_STATUS_META[kycStatus].bg,
+                      color: KYC_STATUS_META[kycStatus].color,
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      fontSize: pxToRem(10.5),
+                      height: '20px',
+                    }}
+                  />
+                </RowStack>
+
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '8px',
+                  }}
+                >
+                  <InfoField
+                    icon={<BadgeOutlinedIcon sx={iconSx} />}
+                    label="ID Type"
+                    value={titleCase(kyc?.id_type)}
+                  />
+                  <InfoField
+                    icon={<BadgeOutlinedIcon sx={iconSx} />}
+                    label="ID Number"
+                    value={kyc?.id_number || '—'}
+                  />
+                  <InfoField
+                    icon={<CalendarTodayOutlinedIcon sx={iconSx} />}
+                    label="ID Expiry"
+                    value={
+                      kyc?.id_expiry
+                        ? dayjs(kyc.id_expiry).format('MMM D, YYYY')
+                        : '—'
+                    }
+                  />
+                  <InfoField
+                    icon={<VerifiedOutlinedIcon sx={iconSx} />}
+                    label="DOB Verified"
+                    value={kyc?.dob_verified ? 'Yes' : 'No'}
+                  />
+                </Box>
+
+                {kyc?.verified_at ? (
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontSize: pxToRem(11.5),
+                      color: '#6B7280',
+                    }}
+                  >
+                    Verified {dayjs(kyc.verified_at).format('MMM D, YYYY')}
+                  </Typography>
+                ) : null}
+
+                {/* Identity documents the rider uploaded. Each is reviewed
+                    individually, separately from the overall KYC decision. */}
+                <Stack spacing={'8px'}>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 600,
+                      fontSize: pxToRem(11),
+                      color: '#6B7280',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    Identity Documents
+                  </Typography>
+                  {documents.length ? (
+                    documents.map((doc) => (
+                      <Stack
+                        key={doc.id}
+                        spacing={'6px'}
+                        sx={{
+                          background: '#FFFFFF',
+                          border: '0.67px solid #EAECF0',
+                          borderRadius: '10px',
+                          padding: '10px 12px',
+                        }}
+                      >
+                        <RowStack justifyContent="space-between" spacing={1}>
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(12),
+                              color: '#111827',
+                            }}
+                          >
+                            {titleCase(doc.document_type)}
+                          </Typography>
+                          <Chip
+                            label={titleCase(doc.verification_status)}
+                            size="small"
+                            sx={{
+                              background:
+                                doc.verification_status === 'approved'
+                                  ? '#ECFDF5'
+                                  : doc.verification_status === 'rejected'
+                                    ? '#FEF2F2'
+                                    : '#FEF3C7',
+                              color:
+                                doc.verification_status === 'approved'
+                                  ? '#059669'
+                                  : doc.verification_status === 'rejected'
+                                    ? '#DC2626'
+                                    : '#B45309',
+                              fontFamily: 'Inter, sans-serif',
+                              fontWeight: 600,
+                              fontSize: pxToRem(10),
+                              height: '18px',
+                            }}
+                          />
+                        </RowStack>
+                        <Typography
+                          sx={{ fontSize: pxToRem(11), color: '#9CA3AF' }}
+                        >
+                          {doc.file_name || '—'}
+                        </Typography>
+                        {doc.rejection_reason ? (
+                          <Typography
+                            sx={{ fontSize: pxToRem(11), color: '#DC2626' }}
+                          >
+                            {doc.rejection_reason}
+                          </Typography>
+                        ) : null}
+                        {doc.verification_status === 'pending' &&
+                        rejectingDocId !== doc.id ? (
+                          <RowStack spacing={'8px'}>
+                            <AppButton
+                              onClick={() => reviewDocument(doc.id, 'approved')}
+                              disabled={pendingDocId === doc.id}
+                              sx={{
+                                flex: 1,
+                                background: '#ECFDF5',
+                                color: '#059669',
+                                fontWeight: 600,
+                                fontSize: pxToRem(11.5),
+                                textTransform: 'none',
+                              }}
+                            >
+                              Approve
+                            </AppButton>
+                            <AppButton
+                              onClick={() => {
+                                setRejectingDocId(doc.id);
+                                setDocRejectReason('');
+                              }}
+                              disabled={pendingDocId === doc.id}
+                              sx={{
+                                flex: 1,
+                                background: '#FEF2F2',
+                                color: '#DC2626',
+                                fontWeight: 600,
+                                fontSize: pxToRem(11.5),
+                                textTransform: 'none',
+                              }}
+                            >
+                              Reject
+                            </AppButton>
+                          </RowStack>
+                        ) : null}
+
+                        {rejectingDocId === doc.id ? (
+                          <Stack spacing={'6px'}>
+                            <TextField
+                              value={docRejectReason}
+                              onChange={(e) =>
+                                setDocRejectReason(e.target.value)
+                              }
+                              placeholder="Why is this document being rejected?"
+                              size="small"
+                              multiline
+                              minRows={2}
+                              autoFocus
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '8px',
+                                  fontSize: pxToRem(11.5),
+                                },
+                              }}
+                            />
+                            <RowStack spacing={'8px'}>
+                              <AppButton
+                                onClick={() => {
+                                  setRejectingDocId(null);
+                                  setDocRejectReason('');
+                                }}
+                                disabled={pendingDocId === doc.id}
+                                sx={{
+                                  flex: 1,
+                                  background: '#F7F9FB',
+                                  border: '0.67px solid #E5E7EB',
+                                  color: '#374151',
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(11.5),
+                                  textTransform: 'none',
+                                }}
+                              >
+                                Cancel
+                              </AppButton>
+                              <AppButton
+                                onClick={() =>
+                                  reviewDocument(
+                                    doc.id,
+                                    'rejected',
+                                    docRejectReason.trim()
+                                  )
+                                }
+                                disabled={
+                                  pendingDocId === doc.id ||
+                                  !docRejectReason.trim()
+                                }
+                                sx={{
+                                  flex: 1,
+                                  background: '#DC2626',
+                                  color: '#FFFFFF',
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(11.5),
+                                  textTransform: 'none',
+                                  '&.Mui-disabled': {
+                                    background: '#FCA5A5',
+                                    color: '#FFFFFF',
+                                  },
+                                }}
+                              >
+                                Confirm
+                              </AppButton>
+                            </RowStack>
+                          </Stack>
+                        ) : null}
+                      </Stack>
+                    ))
+                  ) : (
+                    <Typography
+                      sx={{ fontSize: pxToRem(11.5), color: '#9CA3AF' }}
+                    >
+                      No identity documents uploaded yet.
+                    </Typography>
+                  )}
+                </Stack>
+
+                {kyc?.rejection_reason ? (
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontSize: pxToRem(11.5),
+                      color: '#DC2626',
+                      background: '#FEF2F2',
+                      border: '0.67px solid #FECACA',
+                      borderRadius: '8px',
+                      padding: '8px 10px',
+                    }}
+                  >
+                    Rejected: {kyc.rejection_reason}
+                  </Typography>
+                ) : null}
+
+                {canReviewKyc && !isRejecting ? (
+                  <RowStack spacing={'8px'}>
+                    <AppButton
+                      onClick={handleApproveKyc}
+                      disabled={isReviewingKyc}
+                      sx={{
+                        flex: 1,
+                        background: '#059669',
+                        color: '#FFFFFF',
+                        fontWeight: 600,
+                        fontSize: pxToRem(12.5),
+                        textTransform: 'none',
+                        '&:hover': { background: '#047857' },
+                      }}
+                    >
+                      {isReviewingKyc ? 'Saving...' : 'Approve'}
+                    </AppButton>
+                    <AppButton
+                      onClick={() => setIsRejecting(true)}
+                      disabled={isReviewingKyc}
+                      sx={{
+                        flex: 1,
+                        background: '#FFFFFF',
+                        border: '0.67px solid #FECACA',
+                        color: '#DC2626',
+                        fontWeight: 600,
+                        fontSize: pxToRem(12.5),
+                        textTransform: 'none',
+                      }}
+                    >
+                      Reject
+                    </AppButton>
+                  </RowStack>
+                ) : null}
+
+                {canReviewKyc && isRejecting ? (
+                  <Stack spacing={'8px'}>
+                    <TextField
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Why is this being rejected? The rider will see this."
+                      size="small"
+                      multiline
+                      minRows={2}
+                      autoFocus
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          background: '#FFFFFF',
+                          borderRadius: '10px',
+                          fontSize: pxToRem(12.5),
+                        },
+                      }}
+                    />
+                    <RowStack spacing={'8px'}>
+                      <AppButton
+                        onClick={() => {
+                          setIsRejecting(false);
+                          setRejectReason('');
+                        }}
+                        disabled={isReviewingKyc}
+                        sx={{
+                          flex: 1,
+                          background: '#FFFFFF',
+                          border: '0.67px solid #E5E7EB',
+                          color: '#374151',
+                          fontWeight: 600,
+                          fontSize: pxToRem(12.5),
+                          textTransform: 'none',
+                        }}
+                      >
+                        Cancel
+                      </AppButton>
+                      <AppButton
+                        onClick={handleConfirmReject}
+                        disabled={isReviewingKyc || !rejectReason.trim()}
+                        sx={{
+                          flex: 1,
+                          background: '#DC2626',
+                          color: '#FFFFFF',
+                          fontWeight: 600,
+                          fontSize: pxToRem(12.5),
+                          textTransform: 'none',
+                          '&:hover': { background: '#B91C1C' },
+                          '&.Mui-disabled': {
+                            background: '#FCA5A5',
+                            color: '#FFFFFF',
+                          },
+                        }}
+                      >
+                        {isReviewingKyc ? 'Saving...' : 'Confirm Reject'}
+                      </AppButton>
+                    </RowStack>
+                  </Stack>
+                ) : null}
+              </Stack>
             </Stack>
 
             {/* Insurance */}

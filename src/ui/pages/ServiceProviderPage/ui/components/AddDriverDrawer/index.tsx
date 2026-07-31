@@ -34,6 +34,8 @@ import {
   useGetAllFleetCompanies,
   useGetFleetVehicles,
   useResolvedApiQuery,
+  bgCheckOptions,
+  bgCheckLabelToValue,
 } from '../../../../../../common';
 import type {
   CreateDriverPayload,
@@ -59,8 +61,8 @@ export type AddDriverDrawerProps = {
 };
 
 // ─── Static Dropdown Options ────────────────────────────────────────────────
-
-const bgCheckOptions = ['Verified', 'Pending', 'Not Verified'];
+// bgCheckOptions / bgCheckLabelToValue come from common/data/driver-status so
+// this form and the edit form cannot drift apart on the enum vocabulary.
 
 // ─── Date Helper ────────────────────────────────────────────────────────────
 
@@ -709,7 +711,8 @@ export const AddDriverDrawer = ({
               license_expiry: toIsoDate(values.licenseExpiry),
               medical_transport_certification:
                 values.medicalCertification.trim() || null,
-              background_check_status: values.bgCheckStatus || undefined,
+              background_check_status:
+                bgCheckLabelToValue(values.bgCheckStatus) ?? undefined,
               vehicle_id: selectedVehicle?.id ?? null,
               service_capabilities: capabilities.length
                 ? capabilities.join(',')

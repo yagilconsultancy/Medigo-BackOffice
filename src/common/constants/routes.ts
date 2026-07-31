@@ -379,6 +379,17 @@ export const ROUTES_SPEC = {
     `/${API_VERSION}/users/admin/riders/${riderId}/reinstate`,
   riderRides: (riderId: string) =>
     `/${API_VERSION}/users/admin/riders/${riderId}/rides`,
+  updateRider: (riderId: string) =>
+    `/${API_VERSION}/users/admin/riders/${riderId}`,
+  approveRiderKyc: (riderId: string) =>
+    `/${API_VERSION}/users/admin/riders/${riderId}/kyc/approve`,
+  rejectRiderKyc: (riderId: string) =>
+    `/${API_VERSION}/users/admin/riders/${riderId}/kyc/reject`,
+  // Document routes are generic on user id, so they serve riders and drivers alike.
+  getUserDocuments: (userId: string) =>
+    `/${API_VERSION}/users/${userId}/documents`,
+  verifyUserDocument: (userId: string, documentId: string) =>
+    `/${API_VERSION}/users/${userId}/documents/${documentId}/verify`,
 
   // Admin Broadcasts
   getSystemKpis: `/${API_VERSION}/notifications/admin/broadcasts/system/kpis`,

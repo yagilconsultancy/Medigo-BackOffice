@@ -5,13 +5,19 @@ import {
   useAddRiderIssueNote,
   useSuspendRider,
   useReinstateRider,
+  useUpdateRider,
+  useApproveRiderKyc,
+  useRejectRiderKyc,
 } from '../../mutation';
 import {
   AddRiderIssueNotePayload,
+  ApproveRiderKYCPayload,
   CreateRiderIssuePayload,
+  RejectRiderKYCPayload,
   ReinstateRiderPayload,
   SuspendRiderPayload,
   UpdateRiderIssueStatusPayload,
+  UpdateRiderPayload,
 } from '../../../../types';
 import { extractResponseErrors, tryExecute } from '../../../../utils';
 
@@ -21,6 +27,9 @@ export const useRidersApi = () => {
   const doAddIssueNote = useAddRiderIssueNote();
   const doSuspendRider = useSuspendRider();
   const doReinstateRider = useReinstateRider();
+  const doUpdateRider = useUpdateRider();
+  const doApproveRiderKyc = useApproveRiderKyc();
+  const doRejectRiderKyc = useRejectRiderKyc();
 
   const createIssue = async (
     payload: CreateRiderIssuePayload
@@ -147,11 +156,87 @@ export const useRidersApi = () => {
     return success;
   };
 
+  const updateRider = async (payload: UpdateRiderPayload): Promise<boolean> => {
+    let success = false;
+
+    await tryExecute(
+      () => doUpdateRider.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
+
+        if (responseData.success) {
+          success = true;
+          toast.success('Rider updated successfully');
+        } else {
+          toast.error(extractResponseErrors(responseData));
+        }
+      },
+      async () => {
+        toast.error('An error occurred while updating the rider');
+      }
+    );
+
+    return success;
+  };
+
+  const approveRiderKyc = async (
+    payload: ApproveRiderKYCPayload
+  ): Promise<boolean> => {
+    let success = false;
+
+    await tryExecute(
+      () => doApproveRiderKyc.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
+
+        if (responseData.success) {
+          success = true;
+          toast.success('Rider identity verified');
+        } else {
+          toast.error(extractResponseErrors(responseData));
+        }
+      },
+      async () => {
+        toast.error('An error occurred while verifying the rider');
+      }
+    );
+
+    return success;
+  };
+
+  const rejectRiderKyc = async (
+    payload: RejectRiderKYCPayload
+  ): Promise<boolean> => {
+    let success = false;
+
+    await tryExecute(
+      () => doRejectRiderKyc.mutateAsync(payload),
+      async (response) => {
+        const responseData = response.data;
+
+        if (responseData.success) {
+          success = true;
+          toast.success('Rider KYC rejected');
+        } else {
+          toast.error(extractResponseErrors(responseData));
+        }
+      },
+      async () => {
+        toast.error('An error occurred while rejecting the KYC submission');
+      }
+    );
+
+    return success;
+  };
+
   return {
     createIssue,
     updateIssueStatus,
     addIssueNote,
     suspendRider,
     reinstateRider,
+    updateRider,
+    approveRiderKyc,
+    rejectRiderKyc,
   };
 };
