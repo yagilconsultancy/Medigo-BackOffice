@@ -3,3 +3,7 @@ export * from './useUpdateRiderIssueStatus';
 export * from './useAddRiderIssueNote';
 export * from './useSuspendRider';
 export * from './useReinstateRider';
+export * from './useUpdateRider';
+export * from './useApproveRiderKyc';
+export * from './useRejectRiderKyc';
+export * from './useVerifyUserDocument';

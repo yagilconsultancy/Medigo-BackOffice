@@ -46,6 +46,7 @@ import {
 import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined';
 import LoopIcon from '@mui/icons-material/Loop';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import StickyNote2OutlinedIcon from '@mui/icons-material/StickyNote2Outlined';
 import tripstatusIcon from './ui/assets/icons/tripstatus-icon.svg';
 import dollarIcon from './ui/assets/icons/dollar-icon.svg';
 import distanceIcon from './ui/assets/icons/distance-icon.svg';
@@ -328,6 +329,7 @@ export const BookingDetailPage = () => {
     author: note.author_name || formatStatus(note.author_type),
     time: dayjs(note.created_at).format('hh:mm A'),
     text: note.content,
+    isDriverVisible: note.is_driver_visible,
   }));
 
   return (
@@ -763,6 +765,32 @@ export const BookingDetailPage = () => {
                   }
                 />
               </InfoCard>
+
+              {/* The rider's own note from the booking form. It was being
+                  stored and returned all along but never rendered here, so
+                  operators had no way to see what the rider asked for. */}
+              {booking.special_instructions ? (
+                <InfoCard
+                  icon={
+                    <StickyNote2OutlinedIcon
+                      sx={{ fontSize: 13, color: '#D97706' }}
+                    />
+                  }
+                  title="Note From Rider"
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontSize: pxToRem(12.5),
+                      lineHeight: '19px',
+                      color: '#111827',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {booking.special_instructions}
+                  </Typography>
+                </InfoCard>
+              ) : null}
             </Stack>
           </Grid>
 

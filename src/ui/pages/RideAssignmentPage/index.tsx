@@ -1,8 +1,11 @@
 'use client';
 
 import { Grid, Stack, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import { EmptyState } from '../../modules/blocks';
+import { AppGridtable, AppPillCount, RowStack } from '../../modules/components';
+import { GridColSpec } from '../../modules/components/GridTable';
 import {
   pxToRem,
   useGetUnassignedRides,
@@ -10,6 +13,8 @@ import {
   useResolvedApiQuery,
   useDispatchApi,
   useGetAllBookings,
+  RIDE_STATUS_IN_FLIGHT,
+  toStatusParam,
 } from '../../../common';
 import { useState, useMemo } from 'react';
 import {
@@ -18,7 +23,13 @@ import {
   RideDriverCard,
   RideDriver,
 } from './ui/components';
-import { BookingDetailModal } from '../BookingPage/ui/components';
+import {
+  BookingDetailModal,
+  BookingIdComponent,
+  ClientComponent,
+  StatusComponent,
+} from '../BookingPage/ui/components';
+import { BookingRow } from '../BookingPage';
 import dayjs from 'dayjs';
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -28,7 +39,19 @@ type Assignment = {
   driverName: string;
 };
 
+type AssignedRideRow = {
+  id: string;
+  bookingId: string;
+  patient: string;
+  driver: string;
+  pickupLocation: string;
+  destination: string;
+  dateTime: string;
+  status: string;
+};
+
 export const RideAssignmentPage = () => {
+  const router = useRouter();
   const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
   const [assignments, setAssignments] = useState<Record<string, Assignment>>(
     {}
@@ -37,16 +60,18 @@ export const RideAssignmentPage = () => {
   const [selectedRideForDetail, setSelectedRideForDetail] = useState<
     string | null
   >(null);
-  const { data: assignedDriver } = useResolvedApiQuery(
-    useGetAllBookings,
-    null,
-    {
-      status: 'driver_assigned',
-      search: undefined,
-      page: 1,
-      limit: 1,
-    }
+  const [activeTab, setActiveTab] = useState<'Unassigned' | 'Assigned'>(
+    'Unassigned'
   );
+  const [assignedPage, setAssignedPage] = useState(1);
+
+  // Called directly, not through useResolvedApiQuery: this endpoint returns a
+  // paginated envelope ({data, total, ...}), which that helper mis-unwraps.
+  const assignedQuery = useGetAllBookings({
+    status: toStatusParam(RIDE_STATUS_IN_FLIGHT),
+    page: assignedPage,
+    limit: 10,
+  });
 
   // Fetch unassigned rides and available drivers
   const { data: unassignedRidesData } = useResolvedApiQuery(
@@ -67,9 +92,19 @@ export const RideAssignmentPage = () => {
     return unassignedRidesData?.rides || [];
   }, [unassignedRidesData]);
 
-  const resolvedAssignedDriver = useMemo(() => {
-    return assignedDriver || [];
-  }, [assignedDriver]);
+  const assignedRows = useMemo<AssignedRideRow[]>(() => {
+    const rides = assignedQuery.data?.data ?? [];
+    return rides.map((ride) => ({
+      id: ride.id,
+      bookingId: ride.id.slice(0, 7).toUpperCase(),
+      patient: ride.rider_name || '—',
+      driver: ride.driver_name || 'Unassigned',
+      pickupLocation: ride.pickup_address,
+      destination: ride.destination_address,
+      dateTime: dayjs(ride.scheduled_at).format('MMM D, YYYY · hh:mm A'),
+      status: ride.status,
+    }));
+  }, [assignedQuery.data]);
 
   const resolvedAvailableDrivers = useMemo(() => {
     return availableDriversData || [];
@@ -190,6 +225,56 @@ export const RideAssignmentPage = () => {
     setSelectedRideId((prev) => (prev === rideId ? null : rideId));
   };
 
+  const assignedColumns: GridColSpec<AssignedRideRow>[] = [
+    {
+      field: 'bookingId',
+      headerName: 'Booking ID',
+      flex: 1,
+      minWidth: 110,
+      renderCell: (params) => <BookingIdComponent bookingId={params.value} />,
+    },
+    {
+      field: 'patient',
+      headerName: 'Client',
+      flex: 1.1,
+      minWidth: 140,
+      renderCell: (params) => <ClientComponent text={params.value} />,
+    },
+    {
+      field: 'driver',
+      headerName: 'Driver',
+      flex: 1,
+      minWidth: 130,
+    },
+    {
+      field: 'pickupLocation',
+      headerName: 'Pickup Location',
+      flex: 1.4,
+      minWidth: 170,
+    },
+    {
+      field: 'destination',
+      headerName: 'Destination',
+      flex: 1.3,
+      minWidth: 170,
+    },
+    {
+      field: 'dateTime',
+      headerName: 'Date & Time',
+      flex: 1.2,
+      minWidth: 170,
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+      flex: 0.9,
+      minWidth: 120,
+      renderCell: (params) => (
+        <StatusComponent status={params.value as BookingRow['status']} />
+      ),
+    },
+  ];
+
   const handleViewDetails = (rideId: string) => {
     setSelectedRideForDetail(rideId);
     setOpenDetail(true);
@@ -249,194 +334,192 @@ export const RideAssignmentPage = () => {
           </Typography>
         </Stack>
 
-        {/* Two-Column Layout */}
-        <Grid container spacing={'20px'} alignItems="stretch">
-          {/* Left: Unassigned Rides */}
-          <Grid size={{ xs: 12, lg: 6 }} sx={{ height: 'auto' }}>
-            <Stack
-              spacing={'12px'}
-              sx={{
-                background: '#FFFFFF',
-                borderRadius: '16px',
-                padding: '20px',
-                border: '0.67px solid #EAECF0',
-                maxHeight: '700px',
-                overflowY: 'auto',
-              }}
-            >
-              <Stack spacing={'2px'}>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(15),
-                    color: (theme) => theme.color.deepBlue,
-                  }}
-                >
-                  Approved Bookings
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(12),
-                    color: (theme) => theme.color.lightGrey,
-                  }}
-                >
-                  Select a booking to assign a driver
-                </Typography>
-              </Stack>
+        {/* Assigned rides used to be reachable only by drilling into a driver,
+            so they get their own tab here. */}
+        <RowStack spacing={1}>
+          <AppPillCount
+            text="Unassigned"
+            count={allRides.length}
+            active={activeTab === 'Unassigned'}
+            onClick={() => setActiveTab('Unassigned')}
+          />
+          <AppPillCount
+            text="Assigned"
+            count={assignedQuery.data?.total ?? 0}
+            active={activeTab === 'Assigned'}
+            onClick={() => setActiveTab('Assigned')}
+          />
+        </RowStack>
 
-              {allRides.length === 0 ? (
-                <Stack
-                  sx={{
-                    height: '400px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <EmptyState emptyState="No Approved Booking" />
-                </Stack>
-              ) : (
-                <>
-                  {allRides.map((ride) => (
-                    <UnassignedRideCard
-                      key={ride.id}
-                      ride={{
-                        ...ride,
-                        assignedDriver: assignments[ride.id]?.driverName,
-                      }}
-                      isSelected={selectedRideId === ride.id}
-                      onClick={() => handleRideClick(ride.id)}
-                      onViewDetails={() => handleViewDetails(ride.id)}
-                    />
-                  ))}
-                </>
-              )}
+        {activeTab === 'Assigned' ? (
+          <AppGridtable<AssignedRideRow>
+            columns={assignedColumns}
+            data={assignedRows}
+            disableAutoPagination
+            totalRows={assignedQuery.data?.total ?? 0}
+            isFetchingData={assignedQuery.isFetching}
+            initialPageSize={10}
+            onPaginationModelChange={(model) => {
+              setAssignedPage(model.page + 1);
+            }}
+            onRowClick={(row) => router.push(`/dispatch/rides/${row.id}`)}
+            emptyState={<EmptyState emptyState="No Assigned Rides" />}
+            sx={{ height: 'auto', width: '100%' }}
+          >
+            <Stack spacing={'2px'} sx={{ pb: 1 }}>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 600,
+                  fontSize: pxToRem(15),
+                  color: (theme) => theme.color.deepBlue,
+                }}
+              >
+                Assigned Rides
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 400,
+                  fontSize: pxToRem(12),
+                  color: (theme) => theme.color.lightGrey,
+                }}
+              >
+                Rides with a driver attached. Select one to open its full
+                record.
+              </Typography>
             </Stack>
-          </Grid>
-
-          {/* Right: Available Drivers */}
-          <Grid size={{ xs: 12, lg: 6 }} sx={{ height: 'auto' }}>
-            <Stack
-              spacing={'12px'}
-              sx={{
-                background: '#FFFFFF',
-                borderRadius: '16px',
-                padding: '20px',
-                border: '0.67px solid #EAECF0',
-              }}
-            >
-              <Stack spacing={'2px'}>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(15),
-                    color: (theme) => theme.color.deepBlue,
-                  }}
-                >
-                  Available Drivers
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(12),
-                    color: (theme) => theme.color.lightGrey,
-                  }}
-                >
-                  Select a driver to assign
-                </Typography>
-              </Stack>
-
-              {filteredDrivers.length === 0 ? (
-                <Stack
-                  sx={{
-                    height: '400px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <EmptyState emptyState="No Available Drivers" />
+          </AppGridtable>
+        ) : (
+          /* Two-Column Layout */
+          <Grid container spacing={'20px'} alignItems="stretch">
+            {/* Left: Unassigned Rides */}
+            <Grid size={{ xs: 12, lg: 6 }} sx={{ height: 'auto' }}>
+              <Stack
+                spacing={'12px'}
+                sx={{
+                  background: '#FFFFFF',
+                  borderRadius: '16px',
+                  padding: '20px',
+                  border: '0.67px solid #EAECF0',
+                  maxHeight: '700px',
+                  overflowY: 'auto',
+                }}
+              >
+                <Stack spacing={'2px'}>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 600,
+                      fontSize: pxToRem(15),
+                      color: (theme) => theme.color.deepBlue,
+                    }}
+                  >
+                    Approved Bookings
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(12),
+                      color: (theme) => theme.color.lightGrey,
+                    }}
+                  >
+                    Select a booking to assign a driver
+                  </Typography>
                 </Stack>
-              ) : (
-                <>
-                  {filteredDrivers.map((driver) => (
-                    <RideDriverCard
-                      key={driver.id}
-                      driver={driver}
-                      isActive={!!selectedRideId}
-                      onAssign={() => handleAssign(driver.id)}
-                    />
-                  ))}
-                </>
-              )}
-            </Stack>
-          </Grid>
-        </Grid>
-        {/* <Grid container spacing={'20px'}>
-          <Grid size={{ xs: 12, lg: 6 }}>
-            <Stack
-              spacing={'12px'}
-              sx={{
-                background: '#FFFFFF',
-                borderRadius: '16px',
-                padding: '20px',
-                border: '0.67px solid #EAECF0',
-              }}
-            >
-              <Stack spacing={'2px'}>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 600,
-                    fontSize: pxToRem(15),
-                    color: (theme) => theme.color.deepBlue,
-                  }}
-                >
-                  Assigned Drivers
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 400,
-                    fontSize: pxToRem(12),
-                    color: (theme) => theme.color.lightGrey,
-                  }}
-                >
-                  List of assigned driver
-                </Typography>
-              </Stack>
 
-              {resolvedAssignedDriver.length === 0 ? (
-                <Stack
-                  sx={{
-                    height: '400px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <EmptyState emptyState="No Driver Assigned yet" />
+                {allRides.length === 0 ? (
+                  <Stack
+                    sx={{
+                      height: '400px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <EmptyState emptyState="No Approved Booking" />
+                  </Stack>
+                ) : (
+                  <>
+                    {allRides.map((ride) => (
+                      <UnassignedRideCard
+                        key={ride.id}
+                        ride={{
+                          ...ride,
+                          assignedDriver: assignments[ride.id]?.driverName,
+                        }}
+                        isSelected={selectedRideId === ride.id}
+                        onClick={() => handleRideClick(ride.id)}
+                        onViewDetails={() => handleViewDetails(ride.id)}
+                      />
+                    ))}
+                  </>
+                )}
+              </Stack>
+            </Grid>
+
+            {/* Right: Available Drivers */}
+            <Grid size={{ xs: 12, lg: 6 }} sx={{ height: 'auto' }}>
+              <Stack
+                spacing={'12px'}
+                sx={{
+                  background: '#FFFFFF',
+                  borderRadius: '16px',
+                  padding: '20px',
+                  border: '0.67px solid #EAECF0',
+                }}
+              >
+                <Stack spacing={'2px'}>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 600,
+                      fontSize: pxToRem(15),
+                      color: (theme) => theme.color.deepBlue,
+                    }}
+                  >
+                    Available Drivers
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(12),
+                      color: (theme) => theme.color.lightGrey,
+                    }}
+                  >
+                    Select a driver to assign
+                  </Typography>
                 </Stack>
-              ) : (
-                <>
-                  {resolvedAssignedDriver.map((driver) => (
-                    <RideDriverCard
-                      key={driver.id}
-                      driver={driver}
-                      // isActive={!!selectedRideId}
-                      // onAssign={() => handleAssign(driver.id)}
-                    />
-                  ))}
-                </>
-              )}
-            </Stack>
+
+                {filteredDrivers.length === 0 ? (
+                  <Stack
+                    sx={{
+                      height: '400px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <EmptyState emptyState="No Available Drivers" />
+                  </Stack>
+                ) : (
+                  <>
+                    {filteredDrivers.map((driver) => (
+                      <RideDriverCard
+                        key={driver.id}
+                        driver={driver}
+                        isActive={!!selectedRideId}
+                        onAssign={() => handleAssign(driver.id)}
+                      />
+                    ))}
+                  </>
+                )}
+              </Stack>
+            </Grid>
           </Grid>
-        </Grid> */}
+        )}
       </Stack>
       {selectedRideDetail && (
         <BookingDetailModal

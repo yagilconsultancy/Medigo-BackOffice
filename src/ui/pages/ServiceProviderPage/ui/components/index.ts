@@ -1,4 +1,5 @@
 export * from './DriverViewDrawer';
+export * from './TripDetailModal';
 export * from './AddDriverDrawer';
 export * from './EditDriverDrawer';
 export * from './DriverProfileCard';

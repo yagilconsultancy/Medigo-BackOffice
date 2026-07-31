@@ -78,6 +78,8 @@ const titleCase = (value?: string | null, fallback = '—') => {
 
 export type TripCardData = {
   key: string;
+  /** Raw ride uuid, needed to look the trip up. `id` is only for display. */
+  rideId?: string;
   id: string;
   fare: string;
   status: string;
@@ -89,21 +91,55 @@ export type TripCardData = {
   sortValue: number;
 };
 
-export const TripCard = ({ trip }: { trip: TripCardData }) => {
+export const TripCard = ({
+  trip,
+  onClick,
+}: {
+  trip: TripCardData;
+  onClick?: () => void;
+}) => {
   const chip = tripStatusChipStyles(trip.status);
+  const isClickable = Boolean(onClick);
   return (
     <Stack
       spacing={'8px'}
+      onClick={onClick}
+      role={isClickable ? 'button' : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      onKeyDown={
+        isClickable
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
       sx={{
         background: '#F7F9FB',
         border: '0.67px solid #F0F2F5',
         borderLeft: `3px solid ${BUCKET_META[trip.bucket].accent}`,
         borderRadius: '14px',
         padding: '16px',
+        cursor: isClickable ? 'pointer' : 'default',
+        transition: 'box-shadow 0.15s ease, background 0.15s ease',
+        ...(isClickable && {
+          '&:hover': {
+            background: '#FFFFFF',
+            boxShadow: '0px 2px 8px rgba(16, 24, 40, 0.08)',
+          },
+          '&:hover .trip-card-id': { textDecoration: 'underline' },
+          '&:focus-visible': {
+            outline: '2px solid #2F6FED',
+            outlineOffset: '2px',
+          },
+        }),
       }}
     >
       <RowStack justifyContent={'space-between'}>
         <Typography
+          className="trip-card-id"
           sx={{
             fontFamily: (theme) => theme.typography.fontFamily,
             fontWeight: 700,
@@ -230,6 +266,11 @@ export type DriverTripScheduleProps = {
   trips: TripCardData[];
   isLoading?: boolean;
   emptyText?: string;
+  /**
+   * Makes trip cards clickable. Optional — the fleet drawer shares this
+   * component and renders a read-only list.
+   */
+  onTripClick?: (trip: TripCardData) => void;
 };
 
 /**
@@ -240,6 +281,7 @@ export const DriverTripSchedule = ({
   trips,
   isLoading = false,
   emptyText = 'No trips assigned to this driver yet.',
+  onTripClick,
 }: DriverTripScheduleProps) => {
   const [tripFilter, setTripFilter] = useState<'all' | TripBucket>('all');
 
@@ -348,7 +390,15 @@ export const DriverTripSchedule = ({
               {groupedTrips[bucket].length ? (
                 <Stack spacing={'12px'}>
                   {groupedTrips[bucket].map((trip) => (
-                    <TripCard key={trip.key} trip={trip} />
+                    <TripCard
+                      key={trip.key}
+                      trip={trip}
+                      onClick={
+                        onTripClick && trip.rideId
+                          ? () => onTripClick(trip)
+                          : undefined
+                      }
+                    />
                   ))}
                 </Stack>
               ) : (

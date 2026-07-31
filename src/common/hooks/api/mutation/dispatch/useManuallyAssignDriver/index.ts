@@ -17,6 +17,11 @@ export const useManuallyAssignDriver = () => {
       queryClient.invalidateQueries({
         queryKey: [resolveRoute(ROUTES.getAvailableDispatchDrivers)],
       });
+      // The ride has just moved into the assigned list, which is served by the
+      // bookings endpoint — without this it wouldn't show up until a reload.
+      queryClient.invalidateQueries({
+        queryKey: [resolveRoute(ROUTES.getAllBookings)],
+      });
     },
   });
 };

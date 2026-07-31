@@ -31,6 +31,7 @@ import {
   AdminBookingDetailResponse,
   UpdateBookingRequest,
 } from '../../../../../../common/types';
+import { DriverNotesSection } from '../DriverNotesSection';
 
 // Booking edit exposes a simplified 4-status model.
 const STATUS_OPTIONS: { value: string; label: string }[] = [
@@ -340,210 +341,218 @@ export const EditBookingModal = ({
   return (
     <Drawer
       anchor="right"
-        open={open}
-        onClose={handleClose}
+      open={open}
+      onClose={handleClose}
+      sx={{
+        '& .MuiDrawer-paper': {
+          width: { xs: '100%', sm: 720 },
+          maxWidth: '100%',
+          boxShadow: '-4px 0px 48px rgba(0, 0, 0, 0.14)',
+        },
+      }}
+    >
+      <Box
         sx={{
-          '& .MuiDrawer-paper': {
-            width: { xs: '100%', sm: 720 },
-            maxWidth: '100%',
-            boxShadow: '-4px 0px 48px rgba(0, 0, 0, 0.14)',
-          },
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
         }}
       >
-        <Box
+        {/* Header */}
+        <RowStack
+          justifyContent="space-between"
+          alignItems="flex-start"
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
+            px: 4,
+            py: 2.5,
+            borderBottom: '0.67px solid #EAECF0',
           }}
         >
-          {/* Header */}
-          <RowStack
-            justifyContent="space-between"
-            alignItems="flex-start"
+          <Stack spacing={0.75}>
+            <Typography
+              sx={{
+                color: (theme) => theme.color.deepBlue,
+                fontWeight: 700,
+                fontSize: pxToRem(17),
+                lineHeight: '26px',
+              }}
+            >
+              Edit Booking
+            </Typography>
+            <Typography
+              sx={{
+                color: 'text.secondary',
+                fontWeight: 400,
+                fontSize: pxToRem(13),
+                lineHeight: '19px',
+              }}
+            >
+              Booking #{bookingId} · Update trip and medical details
+            </Typography>
+          </Stack>
+          <IconButton
+            onClick={handleClose}
             sx={{
-              px: 4,
-              py: 2.5,
-              borderBottom: '0.67px solid #EAECF0',
+              width: 32,
+              height: 32,
+              background: '#F3F4F6',
+              border: '0.67px solid #E5E7EB',
+              borderRadius: '8px',
+              '&:hover': { background: '#E5E7EB' },
             }}
           >
-            <Stack spacing={0.75}>
-              <Typography
-                sx={{
-                  color: (theme) => theme.color.deepBlue,
-                  fontWeight: 700,
-                  fontSize: pxToRem(17),
-                  lineHeight: '26px',
-                }}
-              >
-                Edit Booking
-              </Typography>
-              <Typography
-                sx={{
-                  color: 'text.secondary',
-                  fontWeight: 400,
-                  fontSize: pxToRem(13),
-                  lineHeight: '19px',
-                }}
-              >
-                Booking #{bookingId} · Update trip and medical details
-              </Typography>
-            </Stack>
-            <IconButton
-              onClick={handleClose}
-              sx={{
-                width: 32,
-                height: 32,
-                background: '#F3F4F6',
-                border: '0.67px solid #E5E7EB',
-                borderRadius: '8px',
-                '&:hover': { background: '#E5E7EB' },
-              }}
-            >
-              <CloseIcon sx={{ fontSize: 14, color: '#6B7280' }} />
-            </IconButton>
-          </RowStack>
+            <CloseIcon sx={{ fontSize: 14, color: '#6B7280' }} />
+          </IconButton>
+        </RowStack>
 
-          {isFetching && !detail ? (
-            <Stack
-              alignItems="center"
-              justifyContent="center"
-              sx={{ minHeight: 320 }}
-            >
-              <CircularProgress size={28} />
-            </Stack>
-          ) : (
-            <Box
-              sx={{
-                flex: 1,
-                overflowY: 'auto',
-                px: 4,
-                py: 3.5,
-                // Hide the scrollbar while keeping the content scrollable.
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none',
-                '&::-webkit-scrollbar': { display: 'none' },
-              }}
-            >
-              <Stack spacing={4.5}>
-                {/* Status */}
-                <Stack spacing={2}>
-                  {sectionTitle('Status')}
-                  <RowStack spacing={2} sx={{ alignItems: 'stretch' }}>
-                    <TextField
-                      select
-                      label="Booking Status"
-                      value={selectedStatus}
-                      onChange={(e) => setSelectedStatus(e.target.value)}
-                      fullWidth
-                      size="small"
-                      sx={fieldSx}
-                    >
-                      {STATUS_OPTIONS.map((opt) => (
-                        <MenuItem
-                          key={opt.value}
-                          value={opt.value}
-                          sx={{ fontSize: pxToRem(13) }}
-                        >
-                          {opt.label}
-                          {opt.value === currentBucket ? ' (current)' : ''}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                    <AppButton
-                      sx={{
-                        flexShrink: 0,
-                        px: 2.5,
-                        background: (theme) => theme.palette.primary.main,
-                        color: '#FFFFFF',
-                        fontWeight: 600,
-                        fontSize: pxToRem(12.5),
-                        '&:hover': { background: alpha('#2F6FED', 0.9) },
-                        '&.Mui-disabled': {
-                          background: alpha('#2F6FED', 0.4),
-                          color: '#fff',
-                        },
-                      }}
-                      onClick={handleChangeStatus}
-                      disabled={
-                        !canChangeStatus || changeStatusMutation.isPending
-                      }
-                    >
-                      {changeStatusMutation.isPending
-                        ? 'Updating...'
-                        : 'Update'}
-                    </AppButton>
-                  </RowStack>
-                </Stack>
-
-                <Divider />
-
-                {/* Trip Details */}
-                <Stack spacing={3}>
-                  {sectionTitle('Trip Details')}
-                  {renderText('pickup_address', 'Pickup Address')}
-                  {renderText('destination_address', 'Destination Address')}
-                  <RowStack spacing={3} sx={twoColSx}>
-                    <TextField
-                      label="Scheduled Date & Time"
-                      type="datetime-local"
-                      value={form.scheduled_at}
-                      onChange={(e) => setField('scheduled_at')(e.target.value)}
-                      fullWidth
-                      size="small"
-                      InputLabelProps={{ shrink: true }}
-                      sx={fieldSx}
-                    />
-                    {renderSelect('ride_type', 'Ride Type', RIDE_TYPE_OPTIONS)}
-                  </RowStack>
-                  <RowStack spacing={3} sx={twoColSx}>
-                    {renderSelect('trip_type', 'Trip Type', TRIP_TYPE_OPTIONS)}
-                    {renderSelect(
-                      'trip_structure',
-                      'Trip Structure',
-                      TRIP_STRUCTURE_OPTIONS
-                    )}
-                  </RowStack>
-                </Stack>
-
-                <Divider />
-
-                {/* Medical & Passenger */}
-                <Stack spacing={3}>
-                  {sectionTitle('Medical & Passenger')}
-                  <RowStack spacing={3} sx={twoColSx}>
-                    {renderSelect(
-                      'visit_type',
-                      'Visit Type',
-                      VISIT_TYPE_OPTIONS
-                    )}
-                    {renderText('facility_name', 'Facility Name')}
-                  </RowStack>
-                  <RowStack spacing={3} sx={twoColSx}>
-                    {renderText('mobility_level', 'Mobility Level', {
-                      placeholder: 'e.g. wheelchair, ambulatory',
-                    })}
-                    {renderText('assistance_level', 'Assistance Level', {
-                      placeholder: 'e.g. minimal, full',
-                    })}
-                  </RowStack>
-                  <RowStack spacing={3} sx={twoColSx}>
-                    {renderText('passenger_first_name', 'Passenger First Name')}
-                    {renderText('passenger_last_name', 'Passenger Last Name')}
-                  </RowStack>
-                  {renderText('passenger_phone', 'Passenger Phone')}
-                  {renderText('special_instructions', 'Special Instructions', {
-                    multiline: true,
-                  })}
-                </Stack>
+        {isFetching && !detail ? (
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            sx={{ minHeight: 320 }}
+          >
+            <CircularProgress size={28} />
+          </Stack>
+        ) : (
+          <Box
+            sx={{
+              flex: 1,
+              overflowY: 'auto',
+              px: 4,
+              py: 3.5,
+              // Hide the scrollbar while keeping the content scrollable.
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              '&::-webkit-scrollbar': { display: 'none' },
+            }}
+          >
+            <Stack spacing={4.5}>
+              {/* Status */}
+              <Stack spacing={2}>
+                {sectionTitle('Status')}
+                <RowStack spacing={2} sx={{ alignItems: 'stretch' }}>
+                  <TextField
+                    select
+                    label="Booking Status"
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    fullWidth
+                    size="small"
+                    sx={fieldSx}
+                  >
+                    {STATUS_OPTIONS.map((opt) => (
+                      <MenuItem
+                        key={opt.value}
+                        value={opt.value}
+                        sx={{ fontSize: pxToRem(13) }}
+                      >
+                        {opt.label}
+                        {opt.value === currentBucket ? ' (current)' : ''}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <AppButton
+                    sx={{
+                      flexShrink: 0,
+                      px: 2.5,
+                      background: (theme) => theme.palette.primary.main,
+                      color: '#FFFFFF',
+                      fontWeight: 600,
+                      fontSize: pxToRem(12.5),
+                      '&:hover': { background: alpha('#2F6FED', 0.9) },
+                      '&.Mui-disabled': {
+                        background: alpha('#2F6FED', 0.4),
+                        color: '#fff',
+                      },
+                    }}
+                    onClick={handleChangeStatus}
+                    disabled={
+                      !canChangeStatus || changeStatusMutation.isPending
+                    }
+                  >
+                    {changeStatusMutation.isPending ? 'Updating...' : 'Update'}
+                  </AppButton>
+                </RowStack>
               </Stack>
-            </Box>
-          )}
 
-          {/* Footer */}
-          <Box sx={{ borderTop: '0.67px solid #EAECF0', px: 4, py: 2.5 }}>
-            {hasChanges && (
-              <Stack spacing={0.75} sx={{ pb: 2 }}>
+              <Divider />
+
+              {/* Trip Details */}
+              <Stack spacing={3}>
+                {sectionTitle('Trip Details')}
+                {renderText('pickup_address', 'Pickup Address')}
+                {renderText('destination_address', 'Destination Address')}
+                <RowStack spacing={3} sx={twoColSx}>
+                  <TextField
+                    label="Scheduled Date & Time"
+                    type="datetime-local"
+                    value={form.scheduled_at}
+                    onChange={(e) => setField('scheduled_at')(e.target.value)}
+                    fullWidth
+                    size="small"
+                    InputLabelProps={{ shrink: true }}
+                    sx={fieldSx}
+                  />
+                  {renderSelect('ride_type', 'Ride Type', RIDE_TYPE_OPTIONS)}
+                </RowStack>
+                <RowStack spacing={3} sx={twoColSx}>
+                  {renderSelect('trip_type', 'Trip Type', TRIP_TYPE_OPTIONS)}
+                  {renderSelect(
+                    'trip_structure',
+                    'Trip Structure',
+                    TRIP_STRUCTURE_OPTIONS
+                  )}
+                </RowStack>
+              </Stack>
+
+              <Divider />
+
+              {/* Medical & Passenger */}
+              <Stack spacing={3}>
+                {sectionTitle('Medical & Passenger')}
+                <RowStack spacing={3} sx={twoColSx}>
+                  {renderSelect('visit_type', 'Visit Type', VISIT_TYPE_OPTIONS)}
+                  {renderText('facility_name', 'Facility Name')}
+                </RowStack>
+                <RowStack spacing={3} sx={twoColSx}>
+                  {renderText('mobility_level', 'Mobility Level', {
+                    placeholder: 'e.g. wheelchair, ambulatory',
+                  })}
+                  {renderText('assistance_level', 'Assistance Level', {
+                    placeholder: 'e.g. minimal, full',
+                  })}
+                </RowStack>
+                <RowStack spacing={3} sx={twoColSx}>
+                  {renderText('passenger_first_name', 'Passenger First Name')}
+                  {renderText('passenger_last_name', 'Passenger Last Name')}
+                </RowStack>
+                {renderText('passenger_phone', 'Passenger Phone')}
+                {/* This is the rider's own note from the booking form. Labelled
+                      as theirs so it isn't mistaken for the place to write
+                      instructions for the driver — editing it overwrites what
+                      the rider wrote. Use "Notes for driver" below for that. */}
+                {renderText(
+                  'special_instructions',
+                  "Rider's note (from booking)",
+                  {
+                    multiline: true,
+                    placeholder: 'The rider left no note on this booking',
+                  }
+                )}
+              </Stack>
+
+              <Divider />
+
+              {/* Notes for driver */}
+              <DriverNotesSection rideId={rideId} />
+            </Stack>
+          </Box>
+        )}
+
+        {/* Footer */}
+        <Box sx={{ borderTop: '0.67px solid #EAECF0', px: 4, py: 2.5 }}>
+          {hasChanges && (
+            <Stack spacing={0.75} sx={{ pb: 2 }}>
               <Typography
                 sx={{
                   color: (theme) => theme.color.deepBlue,
@@ -570,7 +579,7 @@ export const EditBookingModal = ({
               />
             </Stack>
           )}
-            <RowStack spacing={'14px'} width={'100%'}>
+          <RowStack spacing={'14px'} width={'100%'}>
             <AppButton
               sx={{
                 background: '#F7F9FB',
@@ -610,9 +619,9 @@ export const EditBookingModal = ({
                   ? 'Saving...'
                   : 'Save Changes'}
             </AppButton>
-            </RowStack>
-          </Box>
+          </RowStack>
         </Box>
+      </Box>
     </Drawer>
   );
 };

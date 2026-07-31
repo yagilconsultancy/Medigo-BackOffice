@@ -38,10 +38,14 @@ import {
   useGetDriverDetail,
   useGetDriverRatings,
   useGetDriverTrips,
+  useGetAllFleetCompanies,
+  useGetFleetVehicles,
   useResolvedApiQuery,
   type AdminDriverDetailResponse,
   type AdminDriverRatingItem,
   type DriverDocumentSummary,
+  type FleetCompanyDetailResponse,
+  type VehicleResponse,
 } from '../../../../../../common';
 import {
   RowStack,
@@ -49,6 +53,7 @@ import {
   bucketForTrip,
   type TripCardData,
 } from '../../../../../modules/components';
+import { TripDetailModal } from '../TripDetailModal';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -322,6 +327,9 @@ export const DriverViewDrawer = ({
 }: DriverViewDrawerProps) => {
   // ─── Hooks (all at top) ──────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState(0);
+  // Ride whose detail modal is stacked over this drawer, so the admin keeps
+  // their place in the driver record while reviewing trips.
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [expandedAction, setExpandedAction] = useState<
     'fleet' | 'vehicle' | 'suspend' | null
   >(null);
@@ -450,6 +458,8 @@ export const DriverViewDrawer = ({
 
       return {
         key: `${ride.id ?? ride.ride_id ?? 'trip'}-${idx}`,
+        // Keep the raw uuid — `id` below is display-only and can't be looked up.
+        rideId: ride.id ?? ride.ride_id ?? undefined,
         id:
           ride.ride_code || (ride.id ? `#${String(ride.id).slice(0, 8)}` : '—'),
         fare: fare != null ? `$${Number(fare).toFixed(2)}` : '—',
@@ -469,6 +479,21 @@ export const DriverViewDrawer = ({
       };
     });
   }, [tripsResponse]);
+
+  // Fleets and vehicles for the admin-action pickers. Typing a raw UUID was
+  // the only way to reassign either of these before.
+  const { data: fleetCompanies } = useResolvedApiQuery(
+    useGetAllFleetCompanies,
+    [] as FleetCompanyDetailResponse[]
+  );
+  const vehiclesQuery = useGetFleetVehicles({ page: 1, limit: 100 });
+  const assignableVehicles: VehicleResponse[] = useMemo(() => {
+    const all = vehiclesQuery.data?.data ?? [];
+    // Only vehicles belonging to this driver's fleet can be assigned.
+    return detail.fleet_id
+      ? all.filter((v) => v.business_id === detail.fleet_id)
+      : all;
+  }, [vehiclesQuery.data, detail.fleet_id]);
 
   // ─── Mutation handlers ───────────────────────────────────────────────────
   const handleChangeFleet = async () => {
@@ -532,836 +557,391 @@ export const DriverViewDrawer = ({
   const isInitialLoading = isLoadingDetail && !hasDetail;
 
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
-      sx={{
-        '& .MuiDrawer-paper': {
-          width: 500,
-          boxShadow: '-4px 0px 48px rgba(0, 0, 0, 0.14)',
-        },
-      }}
-    >
-      {/* ─── Sticky Header ──────────────────────────────────────────── */}
-      <Stack
+    <>
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={onClose}
         sx={{
-          padding: '20px 24px 0',
-          borderBottom: '0.67px solid #F0F4F8',
+          '& .MuiDrawer-paper': {
+            width: 500,
+            boxShadow: '-4px 0px 48px rgba(0, 0, 0, 0.14)',
+          },
         }}
-        spacing={'16px'}
       >
-        <RowStack justifyContent={'space-between'}>
-          <RowStack spacing={'12px'}>
-            <Avatar
-              src={avatar || undefined}
-              alt={fullName}
+        {/* ─── Sticky Header ──────────────────────────────────────────── */}
+        <Stack
+          sx={{
+            padding: '20px 24px 0',
+            borderBottom: '0.67px solid #F0F4F8',
+          }}
+          spacing={'16px'}
+        >
+          <RowStack justifyContent={'space-between'}>
+            <RowStack spacing={'12px'}>
+              <Avatar
+                src={avatar || undefined}
+                alt={fullName}
+                sx={{
+                  width: 56,
+                  height: 56,
+                  fontSize: pxToRem(18),
+                  fontWeight: 700,
+                  background: '#EBF2FF',
+                  color: '#2F6FED',
+                }}
+              >
+                {initials}
+              </Avatar>
+              <Stack spacing={'2px'}>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 700,
+                    fontSize: pxToRem(17),
+                    color: '#111827',
+                    lineHeight: '1.5em',
+                  }}
+                >
+                  {fullName || '—'}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 400,
+                    fontSize: pxToRem(12),
+                    color: '#9CA3AF',
+                    lineHeight: '1.5em',
+                  }}
+                >
+                  {resolvedDriverId.slice(0, 8)} · Joined {joinedLabel}
+                </Typography>
+              </Stack>
+            </RowStack>
+            <IconButton
+              onClick={onClose}
               sx={{
-                width: 56,
-                height: 56,
-                fontSize: pxToRem(18),
-                fontWeight: 700,
-                background: '#EBF2FF',
+                width: 30,
+                height: 30,
+                background: '#F3F4F6',
+                border: '0.67px solid #E5E7EB',
+                borderRadius: '8px',
+                '&:hover': { background: '#E5E7EB' },
+              }}
+            >
+              <CloseIcon sx={{ fontSize: 14, color: '#6B7280' }} />
+            </IconButton>
+          </RowStack>
+
+          {/* Fleet / Vehicle Card */}
+          <Box
+            sx={{
+              background: '#F7F9FB',
+              border: '0.67px solid #F0F2F5',
+              borderRadius: '14px',
+              padding: '12px 16px',
+            }}
+          >
+            <RowStack spacing={'16px'}>
+              {/* minWidth: 0 lets long fleet names ellipsize instead of pushing
+                the status chip off the card. */}
+              <Stack spacing={'2px'} sx={{ flex: 1, minWidth: 0 }}>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 700,
+                    fontSize: pxToRem(10),
+                    letterSpacing: '0.04em',
+                    color: '#9CA3AF',
+                  }}
+                >
+                  FLEET
+                </Typography>
+                <Typography
+                  noWrap
+                  title={fleetLabel}
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(12.5),
+                    color: '#374151',
+                  }}
+                >
+                  {fleetLabel}
+                </Typography>
+              </Stack>
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{ borderColor: '#E5E7EB' }}
+              />
+              <Stack spacing={'2px'} sx={{ flex: 1, minWidth: 0 }}>
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 700,
+                    fontSize: pxToRem(10),
+                    letterSpacing: '0.04em',
+                    color: '#9CA3AF',
+                  }}
+                >
+                  VEHICLE
+                </Typography>
+                <Typography
+                  noWrap
+                  title={vehicleLabel}
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 600,
+                    fontSize: pxToRem(12.5),
+                    color: '#374151',
+                  }}
+                >
+                  {vehicleLabel}
+                </Typography>
+              </Stack>
+              <Chip
+                label={statusLabel}
+                size="small"
+                sx={{
+                  flexShrink: 0,
+                  background: badge.bg,
+                  color: badge.color,
+                  border: `0.67px solid ${badge.border}`,
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: 700,
+                  fontSize: pxToRem(11.5),
+                  height: '24px',
+                  borderRadius: '100px',
+                }}
+              />
+            </RowStack>
+          </Box>
+
+          {/* Trip Schedule shortcut — jumps straight to the grouped
+            previous / current / upcoming assignment view. */}
+          <RowStack
+            justifyContent={'center'}
+            spacing={'8px'}
+            onClick={() => setActiveTab(2)}
+            sx={{
+              height: '40px',
+              borderRadius: '10px',
+              background: '#EEF3FF',
+              border: '0.67px solid #C7D7F9',
+              cursor: 'pointer',
+              transition: 'background 0.15s ease',
+              '&:hover': { background: '#E3ECFF' },
+            }}
+          >
+            <CalendarMonthOutlinedIcon
+              sx={{ fontSize: 15, color: '#2F6FED' }}
+            />
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 600,
+                fontSize: pxToRem(13),
                 color: '#2F6FED',
               }}
             >
-              {initials}
-            </Avatar>
-            <Stack spacing={'2px'}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 700,
-                  fontSize: pxToRem(17),
-                  color: '#111827',
-                  lineHeight: '1.5em',
-                }}
-              >
-                {fullName || '—'}
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 400,
-                  fontSize: pxToRem(12),
-                  color: '#9CA3AF',
-                  lineHeight: '1.5em',
-                }}
-              >
-                {resolvedDriverId.slice(0, 8)} · Joined {joinedLabel}
-              </Typography>
-            </Stack>
+              View Trip Schedule
+            </Typography>
           </RowStack>
-          <IconButton
-            onClick={onClose}
+
+          {/* Tabs */}
+          <Tabs
+            value={activeTab}
+            onChange={(_, v) => setActiveTab(v)}
+            variant="fullWidth"
             sx={{
-              width: 30,
-              height: 30,
-              background: '#F3F4F6',
-              border: '0.67px solid #E5E7EB',
-              borderRadius: '8px',
-              '&:hover': { background: '#E5E7EB' },
+              minHeight: 'unset',
+              '& .MuiTabs-indicator': {
+                height: 2,
+                backgroundColor: '#2F6FED',
+              },
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontSize: pxToRem(12.5),
+                fontWeight: 600,
+                color: '#9CA3AF',
+                minHeight: '41px',
+                padding: '10px 0',
+                '&.Mui-selected': { color: '#2F6FED' },
+              },
             }}
           >
-            <CloseIcon sx={{ fontSize: 14, color: '#6B7280' }} />
-          </IconButton>
-        </RowStack>
+            <Tab label="Driver Info" />
+            <Tab label="Documents" />
+            <Tab label="Trips" />
+            <Tab label="Ratings" />
+          </Tabs>
+        </Stack>
 
-        {/* Fleet / Vehicle Card */}
+        {/* ─── Scrollable Content ─────────────────────────────────────── */}
         <Box
           sx={{
-            background: '#F7F9FB',
-            border: '0.67px solid #F0F2F5',
-            borderRadius: '14px',
-            padding: '12px 16px',
+            flex: 1,
+            overflowY: 'auto',
+            padding: '24px',
+            '::-webkit-scrollbar': { display: 'none' },
+            scrollbarWidth: 'none',
           }}
         >
-          <RowStack spacing={'16px'}>
-            {/* minWidth: 0 lets long fleet names ellipsize instead of pushing
-                the status chip off the card. */}
-            <Stack spacing={'2px'} sx={{ flex: 1, minWidth: 0 }}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 700,
-                  fontSize: pxToRem(10),
-                  letterSpacing: '0.04em',
-                  color: '#9CA3AF',
-                }}
-              >
-                FLEET
-              </Typography>
-              <Typography
-                noWrap
-                title={fleetLabel}
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(12.5),
-                  color: '#374151',
-                }}
-              >
-                {fleetLabel}
-              </Typography>
+          {isInitialLoading ? (
+            <Stack
+              alignItems="center"
+              justifyContent="center"
+              sx={{ py: '48px' }}
+            >
+              <CircularProgress size={24} sx={{ color: '#2F6FED' }} />
             </Stack>
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ borderColor: '#E5E7EB' }}
-            />
-            <Stack spacing={'2px'} sx={{ flex: 1, minWidth: 0 }}>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 700,
-                  fontSize: pxToRem(10),
-                  letterSpacing: '0.04em',
-                  color: '#9CA3AF',
-                }}
-              >
-                VEHICLE
-              </Typography>
-              <Typography
-                noWrap
-                title={vehicleLabel}
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(12.5),
-                  color: '#374151',
-                }}
-              >
-                {vehicleLabel}
-              </Typography>
-            </Stack>
-            <Chip
-              label={statusLabel}
-              size="small"
-              sx={{
-                flexShrink: 0,
-                background: badge.bg,
-                color: badge.color,
-                border: `0.67px solid ${badge.border}`,
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 700,
-                fontSize: pxToRem(11.5),
-                height: '24px',
-                borderRadius: '100px',
-              }}
-            />
-          </RowStack>
-        </Box>
-
-        {/* Trip Schedule shortcut — jumps straight to the grouped
-            previous / current / upcoming assignment view. */}
-        <RowStack
-          justifyContent={'center'}
-          spacing={'8px'}
-          onClick={() => setActiveTab(2)}
-          sx={{
-            height: '40px',
-            borderRadius: '10px',
-            background: '#EEF3FF',
-            border: '0.67px solid #C7D7F9',
-            cursor: 'pointer',
-            transition: 'background 0.15s ease',
-            '&:hover': { background: '#E3ECFF' },
-          }}
-        >
-          <CalendarMonthOutlinedIcon sx={{ fontSize: 15, color: '#2F6FED' }} />
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 600,
-              fontSize: pxToRem(13),
-              color: '#2F6FED',
-            }}
-          >
-            View Trip Schedule
-          </Typography>
-        </RowStack>
-
-        {/* Tabs */}
-        <Tabs
-          value={activeTab}
-          onChange={(_, v) => setActiveTab(v)}
-          variant="fullWidth"
-          sx={{
-            minHeight: 'unset',
-            '& .MuiTabs-indicator': {
-              height: 2,
-              backgroundColor: '#2F6FED',
-            },
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontSize: pxToRem(12.5),
-              fontWeight: 600,
-              color: '#9CA3AF',
-              minHeight: '41px',
-              padding: '10px 0',
-              '&.Mui-selected': { color: '#2F6FED' },
-            },
-          }}
-        >
-          <Tab label="Driver Info" />
-          <Tab label="Documents" />
-          <Tab label="Trips" />
-          <Tab label="Ratings" />
-        </Tabs>
-      </Stack>
-
-      {/* ─── Scrollable Content ─────────────────────────────────────── */}
-      <Box
-        sx={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '24px',
-          '::-webkit-scrollbar': { display: 'none' },
-          scrollbarWidth: 'none',
-        }}
-      >
-        {isInitialLoading ? (
-          <Stack
-            alignItems="center"
-            justifyContent="center"
-            sx={{ py: '48px' }}
-          >
-            <CircularProgress size={24} sx={{ color: '#2F6FED' }} />
-          </Stack>
-        ) : (
-          <>
-            {/* ═══ Tab 0: Driver Info ════════════════════════════════════ */}
-            {activeTab === 0 && (
-              <Stack spacing={'20px'}>
-                {/* Personal Information */}
-                <Stack spacing={'10px'}>
-                  <SectionLabel text="Personal Information" />
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '12px',
-                    }}
-                  >
-                    <ReadOnlyField label="Phone" value={detail.phone || '—'} />
-                    <ReadOnlyField label="Email" value={detail.email || '—'} />
-                    <ReadOnlyField
-                      label="Date of Birth"
-                      value={formatDate(detail.date_of_birth)}
-                    />
-                    <ReadOnlyField
-                      label="Member Since"
-                      value={formatMonthYear(detail.created_at)}
-                    />
-                  </Box>
-                </Stack>
-
-                {/* Driver Credentials */}
-                <Stack spacing={'10px'}>
-                  <SectionLabel text="Driver Credentials" />
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '12px',
-                    }}
-                  >
-                    <ReadOnlyField
-                      label="License"
-                      value={detail.license_number || '—'}
-                    />
-                    <ReadOnlyField
-                      label="BG Check"
-                      value={titleCase(detail.background_check_status)}
-                    />
-                    <ReadOnlyField
-                      label="License Expiry"
-                      value={formatDate(detail.license_expiry)}
-                    />
-                    <ReadOnlyField
-                      label="Docs Status"
-                      value={deriveDocsStatus(documents)}
-                    />
-                  </Box>
-                </Stack>
-
-                {/* Service Capabilities */}
-                <Stack spacing={'10px'}>
-                  <SectionLabel text="Service Capabilities" />
-                  {capabilities.length ? (
-                    <RowStack spacing={'8px'} flexWrap="wrap">
-                      {capabilities.map((cap) => (
-                        <Chip
-                          key={cap}
-                          icon={
-                            <CheckCircleOutlinedIcon
-                              sx={{
-                                fontSize: 11,
-                                color: '#2F6FED !important',
-                              }}
-                            />
-                          }
-                          label={titleCase(cap)}
-                          size="small"
-                          sx={{
-                            background: '#EEF3FF',
-                            color: '#2F6FED',
-                            border: '0.67px solid #C7D7F9',
-                            fontFamily: 'Inter, sans-serif',
-                            fontWeight: 600,
-                            fontSize: pxToRem(12),
-                            height: '28px',
-                            borderRadius: '100px',
-                            '& .MuiChip-icon': { marginLeft: '8px' },
-                          }}
-                        />
-                      ))}
-                    </RowStack>
-                  ) : (
-                    <Typography
+          ) : (
+            <>
+              {/* ═══ Tab 0: Driver Info ════════════════════════════════════ */}
+              {activeTab === 0 && (
+                <Stack spacing={'20px'}>
+                  {/* Personal Information */}
+                  <Stack spacing={'10px'}>
+                    <SectionLabel text="Personal Information" />
+                    <Box
                       sx={{
-                        fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 400,
-                        fontSize: pxToRem(12),
-                        color: '#9CA3AF',
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '12px',
                       }}
                     >
-                      No capabilities recorded
-                    </Typography>
-                  )}
-                </Stack>
-
-                {/* Admin Actions */}
-                <Stack spacing={'10px'}>
-                  <SectionLabel text="Admin Actions" />
-                  <Stack spacing={'8px'}>
-                    {/* Change Fleet Assignment */}
-                    {expandedAction === 'fleet' ? (
-                      <Stack
-                        spacing={'16px'}
-                        sx={{
-                          background: '#F7F9FB',
-                          border: '0.67px solid #E8ECF0',
-                          borderRadius: '14px',
-                          padding: '16px',
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 600,
-                            fontSize: pxToRem(12),
-                            color: '#374151',
-                          }}
-                        >
-                          Change Fleet Assignment
-                        </Typography>
-                        <TextField
-                          value={selectedFleetId}
-                          onChange={(e) => setSelectedFleetId(e.target.value)}
-                          placeholder="Enter new fleet ID"
-                          size="small"
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              background: '#F9FAFB',
-                              borderRadius: '10px',
-                              fontFamily: 'Inter, sans-serif',
-                              fontSize: pxToRem(13),
-                            },
-                          }}
-                        />
-                        <RowStack spacing={'8px'}>
-                          <Box
-                            onClick={() => {
-                              setExpandedAction(null);
-                              setSelectedFleetId('');
-                            }}
-                            sx={{
-                              flex: 1,
-                              height: '35px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '8px',
-                              background: '#FFFFFF',
-                              border: '0.67px solid #E5E7EB',
-                              cursor: 'pointer',
-                              '&:hover': { background: '#F9FAFB' },
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontFamily: (theme) =>
-                                  theme.typography.fontFamily,
-                                fontWeight: 600,
-                                fontSize: pxToRem(12),
-                                color: '#374151',
-                              }}
-                            >
-                              Cancel
-                            </Typography>
-                          </Box>
-                          <Box
-                            onClick={
-                              isSubmittingAction ? undefined : handleChangeFleet
-                            }
-                            sx={{
-                              flex: 1,
-                              height: '35px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '8px',
-                              background: '#2F6FED',
-                              cursor: isSubmittingAction ? 'wait' : 'pointer',
-                              opacity: isSubmittingAction ? 0.7 : 1,
-                              '&:hover': { background: '#2760D4' },
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontFamily: (theme) =>
-                                  theme.typography.fontFamily,
-                                fontWeight: 600,
-                                fontSize: pxToRem(12),
-                                color: '#FFFFFF',
-                              }}
-                            >
-                              {isSubmittingAction ? 'Saving...' : 'Save Fleet'}
-                            </Typography>
-                          </Box>
-                        </RowStack>
-                      </Stack>
-                    ) : (
-                      <ActionButton
-                        icon={
-                          <SwapHorizOutlinedIcon
-                            sx={{ fontSize: 13, color: '#374151' }}
-                          />
-                        }
-                        label="Change Fleet Assignment"
-                        variant="default"
-                        onClick={() => {
-                          setExpandedAction('fleet');
-                          setSelectedFleetId('');
-                        }}
+                      <ReadOnlyField
+                        label="Phone"
+                        value={detail.phone || '—'}
                       />
-                    )}
-
-                    {/* Reassign Vehicle */}
-                    {expandedAction === 'vehicle' ? (
-                      <Stack
-                        spacing={'16px'}
-                        sx={{
-                          background: '#F7F9FB',
-                          border: '0.67px solid #E8ECF0',
-                          borderRadius: '14px',
-                          padding: '16px',
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 600,
-                            fontSize: pxToRem(12),
-                            color: '#374151',
-                          }}
-                        >
-                          Reassign Vehicle
-                        </Typography>
-                        <TextField
-                          value={selectedVehicleId}
-                          onChange={(e) => setSelectedVehicleId(e.target.value)}
-                          placeholder="Enter new vehicle ID"
-                          size="small"
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              background: '#F9FAFB',
-                              borderRadius: '10px',
-                              fontFamily: 'Inter, sans-serif',
-                              fontSize: pxToRem(13),
-                            },
-                          }}
-                        />
-                        <RowStack spacing={'8px'}>
-                          <Box
-                            onClick={() => {
-                              setExpandedAction(null);
-                              setSelectedVehicleId('');
-                            }}
-                            sx={{
-                              flex: 1,
-                              height: '35px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '8px',
-                              background: '#FFFFFF',
-                              border: '0.67px solid #E5E7EB',
-                              cursor: 'pointer',
-                              '&:hover': { background: '#F9FAFB' },
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontFamily: (theme) =>
-                                  theme.typography.fontFamily,
-                                fontWeight: 600,
-                                fontSize: pxToRem(12),
-                                color: '#374151',
-                              }}
-                            >
-                              Cancel
-                            </Typography>
-                          </Box>
-                          <Box
-                            onClick={
-                              isSubmittingAction
-                                ? undefined
-                                : handleReassignVehicle
-                            }
-                            sx={{
-                              flex: 1,
-                              height: '35px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '8px',
-                              background: '#2F6FED',
-                              cursor: isSubmittingAction ? 'wait' : 'pointer',
-                              opacity: isSubmittingAction ? 0.7 : 1,
-                              '&:hover': { background: '#2760D4' },
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontFamily: (theme) =>
-                                  theme.typography.fontFamily,
-                                fontWeight: 600,
-                                fontSize: pxToRem(12),
-                                color: '#FFFFFF',
-                              }}
-                            >
-                              {isSubmittingAction ? 'Saving...' : 'Reassign'}
-                            </Typography>
-                          </Box>
-                        </RowStack>
-                      </Stack>
-                    ) : (
-                      <ActionButton
-                        icon={
-                          <DirectionsCarOutlinedIcon
-                            sx={{ fontSize: 13, color: '#374151' }}
-                          />
-                        }
-                        label="Reassign Vehicle"
-                        variant="default"
-                        onClick={() => {
-                          setExpandedAction('vehicle');
-                          setSelectedVehicleId('');
-                        }}
+                      <ReadOnlyField
+                        label="Email"
+                        value={detail.email || '—'}
                       />
-                    )}
-
-                    {/* Suspend / Reactivate */}
-                    {isCurrentlySuspended ? (
-                      <ActionButton
-                        icon={
-                          <CheckCircleOutlineIcon
-                            sx={{ fontSize: 13, color: '#059669' }}
-                          />
-                        }
-                        label={
-                          isSubmittingAction
-                            ? 'Reactivating...'
-                            : 'Reactivate Driver'
-                        }
-                        variant="success"
-                        onClick={
-                          isSubmittingAction ? undefined : handleReactivate
-                        }
+                      <ReadOnlyField
+                        label="Date of Birth"
+                        value={formatDate(detail.date_of_birth)}
                       />
-                    ) : expandedAction === 'suspend' ? (
-                      <Stack
-                        spacing={'16px'}
-                        sx={{
-                          background: '#FEF2F2',
-                          border: '0.67px solid #FECACA',
-                          borderRadius: '14px',
-                          padding: '16px',
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: (theme) => theme.typography.fontFamily,
-                            fontWeight: 600,
-                            fontSize: pxToRem(12),
-                            color: '#991B1B',
-                          }}
-                        >
-                          Suspend Driver
-                        </Typography>
-                        <TextField
-                          value={suspendReason}
-                          onChange={(e) => setSuspendReason(e.target.value)}
-                          placeholder="Reason for suspension"
-                          size="small"
-                          multiline
-                          minRows={2}
-                          sx={{
-                            '& .MuiOutlinedInput-root': {
-                              background: '#FFFFFF',
-                              borderRadius: '10px',
-                              fontFamily: 'Inter, sans-serif',
-                              fontSize: pxToRem(13),
-                            },
-                          }}
-                        />
-                        <RowStack spacing={'8px'}>
-                          <Box
-                            onClick={() => {
-                              setExpandedAction(null);
-                              setSuspendReason('');
-                            }}
-                            sx={{
-                              flex: 1,
-                              height: '35px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '8px',
-                              background: '#FFFFFF',
-                              border: '0.67px solid #E5E7EB',
-                              cursor: 'pointer',
-                              '&:hover': { background: '#F9FAFB' },
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontFamily: (theme) =>
-                                  theme.typography.fontFamily,
-                                fontWeight: 600,
-                                fontSize: pxToRem(12),
-                                color: '#374151',
-                              }}
-                            >
-                              Cancel
-                            </Typography>
-                          </Box>
-                          <Box
-                            onClick={
-                              isSubmittingAction ? undefined : handleSuspend
-                            }
-                            sx={{
-                              flex: 1,
-                              height: '35px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '8px',
-                              background: '#DC2626',
-                              cursor: isSubmittingAction ? 'wait' : 'pointer',
-                              opacity: isSubmittingAction ? 0.7 : 1,
-                              '&:hover': { background: '#B91C1C' },
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontFamily: (theme) =>
-                                  theme.typography.fontFamily,
-                                fontWeight: 600,
-                                fontSize: pxToRem(12),
-                                color: '#FFFFFF',
-                              }}
-                            >
-                              {isSubmittingAction ? 'Suspending...' : 'Confirm'}
-                            </Typography>
-                          </Box>
-                        </RowStack>
-                      </Stack>
-                    ) : (
-                      <ActionButton
-                        icon={
-                          <BlockOutlinedIcon
-                            sx={{ fontSize: 13, color: '#DC2626' }}
-                          />
-                        }
-                        label="Suspend Driver"
-                        variant="danger"
-                        onClick={() => {
-                          setExpandedAction('suspend');
-                          setSuspendReason('');
-                        }}
+                      <ReadOnlyField
+                        label="Member Since"
+                        value={formatMonthYear(detail.created_at)}
                       />
-                    )}
-
-                    {/* Resend Invitation — re-send the sign-up link/token to a
-                        driver who hasn't completed registration, instead of
-                        deleting and re-adding them. */}
-                    <ActionButton
-                      icon={
-                        <ForwardToInboxOutlinedIcon
-                          sx={{ fontSize: 13, color: '#2F6FED' }}
-                        />
-                      }
-                      label={
-                        isSubmittingAction
-                          ? 'Resending...'
-                          : 'Resend Invitation'
-                      }
-                      variant="default"
-                      onClick={
-                        isSubmittingAction ? undefined : handleResendInvite
-                      }
-                    />
+                      <ReadOnlyField
+                        label="Gender"
+                        value={titleCase(detail.gender)}
+                      />
+                      <ReadOnlyField
+                        label="Account Status"
+                        value={titleCase(detail.account_status)}
+                      />
+                    </Box>
                   </Stack>
-                </Stack>
-              </Stack>
-            )}
 
-            {/* ═══ Tab 1: Documents ══════════════════════════════════════ */}
-            {activeTab === 1 && (
-              <Stack spacing={'10px'}>
-                <SectionLabel text="Document Status" />
-                {documents.length ? (
+                  {/* Contact & Address — returned by the API all along but
+                      never shown, so an admin had no way to check them. */}
                   <Stack spacing={'10px'}>
-                    {documents.map((doc) => (
-                      <DocumentRow
-                        key={doc.id}
-                        name={titleCase(doc.document_type)}
-                        status={doc.verification_status}
+                    <SectionLabel text="Contact & Address" />
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '12px',
+                      }}
+                    >
+                      <ReadOnlyField
+                        label="Emergency Contact"
+                        value={detail.emergency_contact_name || '—'}
                       />
-                    ))}
+                      <ReadOnlyField
+                        label="Emergency Phone"
+                        value={detail.emergency_contact_phone || '—'}
+                      />
+                      <ReadOnlyField
+                        label="Address"
+                        value={detail.address || '—'}
+                      />
+                      <ReadOnlyField label="City" value={detail.city || '—'} />
+                      <ReadOnlyField
+                        label="Province"
+                        value={detail.province || '—'}
+                      />
+                      <ReadOnlyField
+                        label="Postal Code"
+                        value={detail.postal_code || '—'}
+                      />
+                    </Box>
+                    {detail.notes ? (
+                      <ReadOnlyField
+                        label="Internal Notes"
+                        value={detail.notes}
+                      />
+                    ) : null}
                   </Stack>
-                ) : (
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 400,
-                      fontSize: pxToRem(12),
-                      color: '#9CA3AF',
-                      textAlign: 'center',
-                      py: '24px',
-                    }}
-                  >
-                    No documents uploaded yet.
-                  </Typography>
-                )}
-              </Stack>
-            )}
 
-            {/* ═══ Tab 2: Trips ══════════════════════════════════════════ */}
-            {activeTab === 2 && (
-              <Stack spacing={'16px'}>
-                <RowStack justifyContent={'space-between'}>
-                  <SectionLabel text="Trip Schedule" />
-                  <Chip
-                    label={`${tripStats.total_trips ?? 0} total`}
-                    size="small"
-                    sx={{
-                      background: '#EEF3FF',
-                      color: '#2F6FED',
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 600,
-                      fontSize: pxToRem(11.5),
-                      height: '22px',
-                      borderRadius: '100px',
-                    }}
-                  />
-                </RowStack>
-
-                <DriverTripSchedule
-                  trips={tripCards}
-                  isLoading={isFetchingTrips}
-                />
-              </Stack>
-            )}
-
-            {/* ═══ Tab 3: Ratings ════════════════════════════════════════ */}
-            {activeTab === 3 && (
-              <Stack spacing={'16px'}>
-                <RowStack justifyContent="space-between">
-                  <SectionLabel text="Rating Breakdown" />
-                  {isFetchingRatings && (
-                    <CircularProgress size={14} sx={{ color: '#9CA3AF' }} />
-                  )}
-                </RowStack>
-
-                <Stack
-                  sx={{
-                    background: '#F7F9FB',
-                    border: '0.67px solid #EAECF0',
-                    borderRadius: '16px',
-                    padding: '20px',
-                  }}
-                  spacing={'20px'}
-                >
-                  <RowStack spacing={'20px'} alignItems="flex-start">
-                    <Stack spacing={'4px'} alignItems={'center'}>
-                      <Typography
-                        sx={{
-                          fontFamily: (theme) => theme.typography.fontFamily,
-                          fontWeight: 800,
-                          fontSize: pxToRem(44),
-                          lineHeight: '1em',
-                          color: '#111827',
-                        }}
-                      >
-                        {(overallRating || 0).toFixed(1)}
-                      </Typography>
-                      <Rating
-                        value={overallRating || 0}
-                        readOnly
-                        precision={0.1}
-                        size="small"
-                        icon={
-                          <StarIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
-                        }
-                        emptyIcon={
-                          <StarIcon sx={{ fontSize: 14, color: '#E5E7EB' }} />
-                        }
+                  {/* Driver Credentials */}
+                  <Stack spacing={'10px'}>
+                    <SectionLabel text="Driver Credentials" />
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '12px',
+                      }}
+                    >
+                      <ReadOnlyField
+                        label="License"
+                        value={detail.license_number || '—'}
                       />
+                      <ReadOnlyField
+                        label="BG Check"
+                        value={titleCase(detail.background_check_status)}
+                      />
+                      <ReadOnlyField
+                        label="License Expiry"
+                        value={formatDate(detail.license_expiry)}
+                      />
+                      <ReadOnlyField
+                        label="Docs Status"
+                        value={deriveDocsStatus(documents)}
+                      />
+                    </Box>
+                  </Stack>
+
+                  {/* Service Capabilities */}
+                  <Stack spacing={'10px'}>
+                    <SectionLabel text="Service Capabilities" />
+                    {capabilities.length ? (
+                      <RowStack spacing={'8px'} flexWrap="wrap">
+                        {capabilities.map((cap) => (
+                          <Chip
+                            key={cap}
+                            icon={
+                              <CheckCircleOutlinedIcon
+                                sx={{
+                                  fontSize: 11,
+                                  color: '#2F6FED !important',
+                                }}
+                              />
+                            }
+                            label={titleCase(cap)}
+                            size="small"
+                            sx={{
+                              background: '#EEF3FF',
+                              color: '#2F6FED',
+                              border: '0.67px solid #C7D7F9',
+                              fontFamily: 'Inter, sans-serif',
+                              fontWeight: 600,
+                              fontSize: pxToRem(12),
+                              height: '28px',
+                              borderRadius: '100px',
+                              '& .MuiChip-icon': { marginLeft: '8px' },
+                            }}
+                          />
+                        ))}
+                      </RowStack>
+                    ) : (
                       <Typography
                         sx={{
                           fontFamily: (theme) => theme.typography.fontFamily,
@@ -1370,147 +950,702 @@ export const DriverViewDrawer = ({
                           color: '#9CA3AF',
                         }}
                       >
-                        {ratingsList.length} ratings
+                        No capabilities recorded
                       </Typography>
-                    </Stack>
+                    )}
+                  </Stack>
 
-                    <Stack spacing={'6px'} sx={{ flex: 1 }}>
-                      {ratingBreakdown.map((item) => (
-                        <RowStack
-                          key={item.stars}
-                          spacing={'8px'}
-                          sx={{ width: '100%' }}
+                  {/* Admin Actions */}
+                  <Stack spacing={'10px'}>
+                    <SectionLabel text="Admin Actions" />
+                    <Stack spacing={'8px'}>
+                      {/* Change Fleet Assignment */}
+                      {expandedAction === 'fleet' ? (
+                        <Stack
+                          spacing={'16px'}
+                          sx={{
+                            background: '#F7F9FB',
+                            border: '0.67px solid #E8ECF0',
+                            borderRadius: '14px',
+                            padding: '16px',
+                          }}
                         >
                           <Typography
                             sx={{
                               fontFamily: (theme) =>
                                 theme.typography.fontFamily,
-                              fontWeight: 400,
-                              fontSize: pxToRem(11.5),
-                              color: '#6B7280',
-                              width: '8px',
-                              flexShrink: 0,
-                            }}
-                          >
-                            {item.stars}
-                          </Typography>
-                          <StarIcon sx={{ fontSize: 10, color: '#F59E0B' }} />
-                          <LinearProgress
-                            variant="determinate"
-                            value={item.percent}
-                            sx={{
-                              flex: 1,
-                              height: 6,
-                              borderRadius: '3px',
-                              [`& .${linearProgressClasses.bar}`]: {
-                                borderRadius: '3px',
-                                backgroundColor: '#F59E0B',
-                              },
-                              [`&.${linearProgressClasses.root}`]: {
-                                backgroundColor: '#E5E7EB',
-                              },
-                            }}
-                          />
-                          <Typography
-                            sx={{
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              fontWeight: 400,
-                              fontSize: pxToRem(11),
-                              color: '#9CA3AF',
-                              width: '28px',
-                              textAlign: 'right',
-                              flexShrink: 0,
-                            }}
-                          >
-                            {item.percent}%
-                          </Typography>
-                        </RowStack>
-                      ))}
-                    </Stack>
-                  </RowStack>
-                </Stack>
-
-                {/* Recent Rating Comments */}
-                {ratingsList.length ? (
-                  <Stack spacing={'10px'}>
-                    <SectionLabel text="Recent Comments" />
-                    {ratingsList.slice(0, 5).map((rating) => (
-                      <Stack
-                        key={rating.ride_id}
-                        spacing={'6px'}
-                        sx={{
-                          background: '#F7F9FB',
-                          border: '0.67px solid #F0F2F5',
-                          borderRadius: '14px',
-                          padding: '12px 16px',
-                        }}
-                      >
-                        <RowStack justifyContent="space-between">
-                          <Rating
-                            value={rating.rating}
-                            readOnly
-                            precision={0.5}
-                            size="small"
-                            icon={
-                              <StarIcon
-                                sx={{ fontSize: 12, color: '#F59E0B' }}
-                              />
-                            }
-                            emptyIcon={
-                              <StarIcon
-                                sx={{ fontSize: 12, color: '#E5E7EB' }}
-                              />
-                            }
-                          />
-                          <Typography
-                            sx={{
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              fontWeight: 400,
-                              fontSize: pxToRem(10.5),
-                              color: '#9CA3AF',
-                            }}
-                          >
-                            {formatDate(rating.created_at)}
-                          </Typography>
-                        </RowStack>
-                        {rating.comment && (
-                          <Typography
-                            sx={{
-                              fontFamily: (theme) =>
-                                theme.typography.fontFamily,
-                              fontWeight: 400,
+                              fontWeight: 600,
                               fontSize: pxToRem(12),
                               color: '#374151',
                             }}
                           >
-                            {rating.comment}
+                            Change Fleet Assignment
                           </Typography>
-                        )}
-                      </Stack>
-                    ))}
+                          <Select
+                            value={selectedFleetId}
+                            onChange={(e) => setSelectedFleetId(e.target.value)}
+                            displayEmpty
+                            size="small"
+                            sx={{
+                              background: '#F9FAFB',
+                              borderRadius: '10px',
+                              fontFamily: 'Inter, sans-serif',
+                              fontSize: pxToRem(13),
+                            }}
+                          >
+                            <MenuItem value="" disabled>
+                              Select a fleet
+                            </MenuItem>
+                            {fleetCompanies.map((company) => (
+                              <MenuItem
+                                key={company.id}
+                                value={company.id}
+                                sx={{ fontSize: pxToRem(13) }}
+                              >
+                                {company.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                          <RowStack spacing={'8px'}>
+                            <Box
+                              onClick={() => {
+                                setExpandedAction(null);
+                                setSelectedFleetId('');
+                              }}
+                              sx={{
+                                flex: 1,
+                                height: '35px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '8px',
+                                background: '#FFFFFF',
+                                border: '0.67px solid #E5E7EB',
+                                cursor: 'pointer',
+                                '&:hover': { background: '#F9FAFB' },
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(12),
+                                  color: '#374151',
+                                }}
+                              >
+                                Cancel
+                              </Typography>
+                            </Box>
+                            <Box
+                              onClick={
+                                isSubmittingAction
+                                  ? undefined
+                                  : handleChangeFleet
+                              }
+                              sx={{
+                                flex: 1,
+                                height: '35px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '8px',
+                                background: '#2F6FED',
+                                cursor: isSubmittingAction ? 'wait' : 'pointer',
+                                opacity: isSubmittingAction ? 0.7 : 1,
+                                '&:hover': { background: '#2760D4' },
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(12),
+                                  color: '#FFFFFF',
+                                }}
+                              >
+                                {isSubmittingAction
+                                  ? 'Saving...'
+                                  : 'Save Fleet'}
+                              </Typography>
+                            </Box>
+                          </RowStack>
+                        </Stack>
+                      ) : (
+                        <ActionButton
+                          icon={
+                            <SwapHorizOutlinedIcon
+                              sx={{ fontSize: 13, color: '#374151' }}
+                            />
+                          }
+                          label="Change Fleet Assignment"
+                          variant="default"
+                          onClick={() => {
+                            setExpandedAction('fleet');
+                            setSelectedFleetId('');
+                          }}
+                        />
+                      )}
+
+                      {/* Reassign Vehicle */}
+                      {expandedAction === 'vehicle' ? (
+                        <Stack
+                          spacing={'16px'}
+                          sx={{
+                            background: '#F7F9FB',
+                            border: '0.67px solid #E8ECF0',
+                            borderRadius: '14px',
+                            padding: '16px',
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(12),
+                              color: '#374151',
+                            }}
+                          >
+                            Reassign Vehicle
+                          </Typography>
+                          <Select
+                            value={selectedVehicleId}
+                            onChange={(e) =>
+                              setSelectedVehicleId(e.target.value)
+                            }
+                            displayEmpty
+                            size="small"
+                            sx={{
+                              background: '#F9FAFB',
+                              borderRadius: '10px',
+                              fontFamily: 'Inter, sans-serif',
+                              fontSize: pxToRem(13),
+                            }}
+                          >
+                            <MenuItem value="" disabled>
+                              {assignableVehicles.length
+                                ? 'Select a vehicle'
+                                : 'No vehicles in this fleet'}
+                            </MenuItem>
+                            {assignableVehicles.map((vehicle) => (
+                              <MenuItem
+                                key={vehicle.id}
+                                value={vehicle.id}
+                                sx={{ fontSize: pxToRem(13) }}
+                              >
+                                {[vehicle.make, vehicle.model]
+                                  .filter(Boolean)
+                                  .join(' ')}
+                                {vehicle.plate_number
+                                  ? ` (${vehicle.plate_number})`
+                                  : ''}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                          <RowStack spacing={'8px'}>
+                            <Box
+                              onClick={() => {
+                                setExpandedAction(null);
+                                setSelectedVehicleId('');
+                              }}
+                              sx={{
+                                flex: 1,
+                                height: '35px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '8px',
+                                background: '#FFFFFF',
+                                border: '0.67px solid #E5E7EB',
+                                cursor: 'pointer',
+                                '&:hover': { background: '#F9FAFB' },
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(12),
+                                  color: '#374151',
+                                }}
+                              >
+                                Cancel
+                              </Typography>
+                            </Box>
+                            <Box
+                              onClick={
+                                isSubmittingAction
+                                  ? undefined
+                                  : handleReassignVehicle
+                              }
+                              sx={{
+                                flex: 1,
+                                height: '35px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '8px',
+                                background: '#2F6FED',
+                                cursor: isSubmittingAction ? 'wait' : 'pointer',
+                                opacity: isSubmittingAction ? 0.7 : 1,
+                                '&:hover': { background: '#2760D4' },
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(12),
+                                  color: '#FFFFFF',
+                                }}
+                              >
+                                {isSubmittingAction ? 'Saving...' : 'Reassign'}
+                              </Typography>
+                            </Box>
+                          </RowStack>
+                        </Stack>
+                      ) : (
+                        <ActionButton
+                          icon={
+                            <DirectionsCarOutlinedIcon
+                              sx={{ fontSize: 13, color: '#374151' }}
+                            />
+                          }
+                          label="Reassign Vehicle"
+                          variant="default"
+                          onClick={() => {
+                            setExpandedAction('vehicle');
+                            setSelectedVehicleId('');
+                          }}
+                        />
+                      )}
+
+                      {/* Suspend / Reactivate */}
+                      {isCurrentlySuspended ? (
+                        <ActionButton
+                          icon={
+                            <CheckCircleOutlineIcon
+                              sx={{ fontSize: 13, color: '#059669' }}
+                            />
+                          }
+                          label={
+                            isSubmittingAction
+                              ? 'Reactivating...'
+                              : 'Reactivate Driver'
+                          }
+                          variant="success"
+                          onClick={
+                            isSubmittingAction ? undefined : handleReactivate
+                          }
+                        />
+                      ) : expandedAction === 'suspend' ? (
+                        <Stack
+                          spacing={'16px'}
+                          sx={{
+                            background: '#FEF2F2',
+                            border: '0.67px solid #FECACA',
+                            borderRadius: '14px',
+                            padding: '16px',
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontFamily: (theme) =>
+                                theme.typography.fontFamily,
+                              fontWeight: 600,
+                              fontSize: pxToRem(12),
+                              color: '#991B1B',
+                            }}
+                          >
+                            Suspend Driver
+                          </Typography>
+                          <TextField
+                            value={suspendReason}
+                            onChange={(e) => setSuspendReason(e.target.value)}
+                            placeholder="Reason for suspension"
+                            size="small"
+                            multiline
+                            minRows={2}
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                background: '#FFFFFF',
+                                borderRadius: '10px',
+                                fontFamily: 'Inter, sans-serif',
+                                fontSize: pxToRem(13),
+                              },
+                            }}
+                          />
+                          <RowStack spacing={'8px'}>
+                            <Box
+                              onClick={() => {
+                                setExpandedAction(null);
+                                setSuspendReason('');
+                              }}
+                              sx={{
+                                flex: 1,
+                                height: '35px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '8px',
+                                background: '#FFFFFF',
+                                border: '0.67px solid #E5E7EB',
+                                cursor: 'pointer',
+                                '&:hover': { background: '#F9FAFB' },
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(12),
+                                  color: '#374151',
+                                }}
+                              >
+                                Cancel
+                              </Typography>
+                            </Box>
+                            <Box
+                              onClick={
+                                isSubmittingAction ? undefined : handleSuspend
+                              }
+                              sx={{
+                                flex: 1,
+                                height: '35px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '8px',
+                                background: '#DC2626',
+                                cursor: isSubmittingAction ? 'wait' : 'pointer',
+                                opacity: isSubmittingAction ? 0.7 : 1,
+                                '&:hover': { background: '#B91C1C' },
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontFamily: (theme) =>
+                                    theme.typography.fontFamily,
+                                  fontWeight: 600,
+                                  fontSize: pxToRem(12),
+                                  color: '#FFFFFF',
+                                }}
+                              >
+                                {isSubmittingAction
+                                  ? 'Suspending...'
+                                  : 'Confirm'}
+                              </Typography>
+                            </Box>
+                          </RowStack>
+                        </Stack>
+                      ) : (
+                        <ActionButton
+                          icon={
+                            <BlockOutlinedIcon
+                              sx={{ fontSize: 13, color: '#DC2626' }}
+                            />
+                          }
+                          label="Suspend Driver"
+                          variant="danger"
+                          onClick={() => {
+                            setExpandedAction('suspend');
+                            setSuspendReason('');
+                          }}
+                        />
+                      )}
+
+                      {/* Resend Invitation — re-send the sign-up link/token to a
+                        driver who hasn't completed registration, instead of
+                        deleting and re-adding them. */}
+                      <ActionButton
+                        icon={
+                          <ForwardToInboxOutlinedIcon
+                            sx={{ fontSize: 13, color: '#2F6FED' }}
+                          />
+                        }
+                        label={
+                          isSubmittingAction
+                            ? 'Resending...'
+                            : 'Resend Invitation'
+                        }
+                        variant="default"
+                        onClick={
+                          isSubmittingAction ? undefined : handleResendInvite
+                        }
+                      />
+                    </Stack>
                   </Stack>
-                ) : null}
-              </Stack>
-            )}
-          </>
-        )}
-        {isFetchingDetail && hasDetail && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <CircularProgress size={14} sx={{ color: '#9CA3AF' }} />
-          </Box>
-        )}
-      </Box>
-    </Drawer>
+                </Stack>
+              )}
+
+              {/* ═══ Tab 1: Documents ══════════════════════════════════════ */}
+              {activeTab === 1 && (
+                <Stack spacing={'10px'}>
+                  <SectionLabel text="Document Status" />
+                  {documents.length ? (
+                    <Stack spacing={'10px'}>
+                      {documents.map((doc) => (
+                        <DocumentRow
+                          key={doc.id}
+                          name={titleCase(doc.document_type)}
+                          status={doc.verification_status}
+                        />
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 400,
+                        fontSize: pxToRem(12),
+                        color: '#9CA3AF',
+                        textAlign: 'center',
+                        py: '24px',
+                      }}
+                    >
+                      No documents uploaded yet.
+                    </Typography>
+                  )}
+                </Stack>
+              )}
+
+              {/* ═══ Tab 2: Trips ══════════════════════════════════════════ */}
+              {activeTab === 2 && (
+                <Stack spacing={'16px'}>
+                  <RowStack justifyContent={'space-between'}>
+                    <SectionLabel text="Trip Schedule" />
+                    <Chip
+                      label={`${tripStats.total_trips ?? 0} total`}
+                      size="small"
+                      sx={{
+                        background: '#EEF3FF',
+                        color: '#2F6FED',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: pxToRem(11.5),
+                        height: '22px',
+                        borderRadius: '100px',
+                      }}
+                    />
+                  </RowStack>
+
+                  <DriverTripSchedule
+                    trips={tripCards}
+                    isLoading={isFetchingTrips}
+                    onTripClick={(trip) =>
+                      setSelectedTripId(trip.rideId ?? null)
+                    }
+                  />
+                </Stack>
+              )}
+
+              {/* ═══ Tab 3: Ratings ════════════════════════════════════════ */}
+              {activeTab === 3 && (
+                <Stack spacing={'16px'}>
+                  <RowStack justifyContent="space-between">
+                    <SectionLabel text="Rating Breakdown" />
+                    {isFetchingRatings && (
+                      <CircularProgress size={14} sx={{ color: '#9CA3AF' }} />
+                    )}
+                  </RowStack>
+
+                  <Stack
+                    sx={{
+                      background: '#F7F9FB',
+                      border: '0.67px solid #EAECF0',
+                      borderRadius: '16px',
+                      padding: '20px',
+                    }}
+                    spacing={'20px'}
+                  >
+                    <RowStack spacing={'20px'} alignItems="flex-start">
+                      <Stack spacing={'4px'} alignItems={'center'}>
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 800,
+                            fontSize: pxToRem(44),
+                            lineHeight: '1em',
+                            color: '#111827',
+                          }}
+                        >
+                          {(overallRating || 0).toFixed(1)}
+                        </Typography>
+                        <Rating
+                          value={overallRating || 0}
+                          readOnly
+                          precision={0.1}
+                          size="small"
+                          icon={
+                            <StarIcon sx={{ fontSize: 14, color: '#F59E0B' }} />
+                          }
+                          emptyIcon={
+                            <StarIcon sx={{ fontSize: 14, color: '#E5E7EB' }} />
+                          }
+                        />
+                        <Typography
+                          sx={{
+                            fontFamily: (theme) => theme.typography.fontFamily,
+                            fontWeight: 400,
+                            fontSize: pxToRem(12),
+                            color: '#9CA3AF',
+                          }}
+                        >
+                          {ratingsList.length} ratings
+                        </Typography>
+                      </Stack>
+
+                      <Stack spacing={'6px'} sx={{ flex: 1 }}>
+                        {ratingBreakdown.map((item) => (
+                          <RowStack
+                            key={item.stars}
+                            spacing={'8px'}
+                            sx={{ width: '100%' }}
+                          >
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(11.5),
+                                color: '#6B7280',
+                                width: '8px',
+                                flexShrink: 0,
+                              }}
+                            >
+                              {item.stars}
+                            </Typography>
+                            <StarIcon sx={{ fontSize: 10, color: '#F59E0B' }} />
+                            <LinearProgress
+                              variant="determinate"
+                              value={item.percent}
+                              sx={{
+                                flex: 1,
+                                height: 6,
+                                borderRadius: '3px',
+                                [`& .${linearProgressClasses.bar}`]: {
+                                  borderRadius: '3px',
+                                  backgroundColor: '#F59E0B',
+                                },
+                                [`&.${linearProgressClasses.root}`]: {
+                                  backgroundColor: '#E5E7EB',
+                                },
+                              }}
+                            />
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(11),
+                                color: '#9CA3AF',
+                                width: '28px',
+                                textAlign: 'right',
+                                flexShrink: 0,
+                              }}
+                            >
+                              {item.percent}%
+                            </Typography>
+                          </RowStack>
+                        ))}
+                      </Stack>
+                    </RowStack>
+                  </Stack>
+
+                  {/* Recent Rating Comments */}
+                  {ratingsList.length ? (
+                    <Stack spacing={'10px'}>
+                      <SectionLabel text="Recent Comments" />
+                      {ratingsList.slice(0, 5).map((rating) => (
+                        <Stack
+                          key={rating.ride_id}
+                          spacing={'6px'}
+                          sx={{
+                            background: '#F7F9FB',
+                            border: '0.67px solid #F0F2F5',
+                            borderRadius: '14px',
+                            padding: '12px 16px',
+                          }}
+                        >
+                          <RowStack justifyContent="space-between">
+                            <Rating
+                              value={rating.rating}
+                              readOnly
+                              precision={0.5}
+                              size="small"
+                              icon={
+                                <StarIcon
+                                  sx={{ fontSize: 12, color: '#F59E0B' }}
+                                />
+                              }
+                              emptyIcon={
+                                <StarIcon
+                                  sx={{ fontSize: 12, color: '#E5E7EB' }}
+                                />
+                              }
+                            />
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(10.5),
+                                color: '#9CA3AF',
+                              }}
+                            >
+                              {formatDate(rating.created_at)}
+                            </Typography>
+                          </RowStack>
+                          {rating.comment && (
+                            <Typography
+                              sx={{
+                                fontFamily: (theme) =>
+                                  theme.typography.fontFamily,
+                                fontWeight: 400,
+                                fontSize: pxToRem(12),
+                                color: '#374151',
+                              }}
+                            >
+                              {rating.comment}
+                            </Typography>
+                          )}
+                        </Stack>
+                      ))}
+                    </Stack>
+                  ) : null}
+                </Stack>
+              )}
+            </>
+          )}
+          {isFetchingDetail && hasDetail && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <CircularProgress size={14} sx={{ color: '#9CA3AF' }} />
+            </Box>
+          )}
+        </Box>
+      </Drawer>
+
+      {/* Stacked over the drawer so the admin keeps their place in the
+        driver record while reviewing individual trips. */}
+      <TripDetailModal
+        open={Boolean(selectedTripId)}
+        onClose={() => setSelectedTripId(null)}
+        rideId={selectedTripId ?? ''}
+      />
+    </>
   );
 };
 

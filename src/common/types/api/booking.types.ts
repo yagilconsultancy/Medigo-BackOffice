@@ -14,20 +14,39 @@ export interface RideResponse {
   destination_address: string;
   scheduled_at: string;
   status: string;
+  passenger_id?: string | null;
+  passenger_first_name?: string | null;
+  passenger_last_name?: string | null;
+  passenger_phone?: string | null;
   estimated_distance_miles?: number | null;
   estimated_duration_minutes?: number | null;
   estimated_fare?: number | null;
   final_fare?: number | null;
+  fare_estimate_details?: Record<string, unknown> | null;
   special_instructions?: string | null;
+  mobility_level?: string | null;
+  assistance_level?: string | null;
   visit_type?: string | null;
   facility_name?: string | null;
   rider_name?: string;
   booking_channel?: string;
   facility_id?: string | null;
+  guest_session_id?: string | null;
+  recurring_ride_id?: string | null;
   use_highway_407?: boolean;
   highway_407_route?: string | null;
   is_dialysis_trip?: boolean;
   created_at: string;
+  // Enriched by the backend for rider-facing and admin endpoints.
+  driver_name?: string | null;
+  driver_phone?: string | null;
+  driver_avatar_url?: string | null;
+  driver_rating?: number | null;
+  driver_vehicle_type?: string | null;
+  driver_vehicle_make?: string | null;
+  driver_vehicle_model?: string | null;
+  driver_vehicle_color?: string | null;
+  driver_vehicle_plate?: string | null;
 }
 
 export interface AdminAssignDriverRequest {
@@ -238,12 +257,15 @@ export interface AdminNoteResponse {
   author_type: string;
   author_name?: string | null;
   content: string;
+  /** Whether the assigned driver can see this note. Internal by default. */
+  is_driver_visible?: boolean;
   created_at: string;
 }
 
 export interface CreateAdminNoteRequest {
   content: string;
   author_type?: string; // default: "admin"
+  is_driver_visible?: boolean; // default: false
 }
 
 export interface ApproveBookingRequest {

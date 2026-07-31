@@ -7,9 +7,17 @@ export const useAddBookingNote = () => {
 
   return useMutation({
     mutationFn: addBookingNote,
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: [resolveRoute(ROUTES.getAllBookings)],
+      });
+      // The notes list and the booking detail (which renders admin_notes) both
+      // go stale the moment a note is added.
+      queryClient.invalidateQueries({
+        queryKey: [resolveRoute(ROUTES.getBookingNotes, variables.rideId)],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [resolveRoute(ROUTES.getBookingDetail, variables.rideId)],
       });
     },
   });

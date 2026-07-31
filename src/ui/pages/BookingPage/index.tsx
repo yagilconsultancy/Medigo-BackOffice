@@ -18,6 +18,14 @@ import {
   useReassignDriver,
   useAssignCareAssistantToBooking,
   extractValidationErrorMessage,
+  useDebouncedValue,
+  RIDE_STATUS_ALL,
+  RIDE_STATUS_APPROVED,
+  RIDE_STATUS_COMPLETED,
+  RIDE_STATUS_DECLINED,
+  RIDE_STATUS_IN_FLIGHT,
+  RIDE_STATUS_PENDING,
+  toStatusParam,
 } from '../../../common';
 import {
   AssignDriverModal,
@@ -30,6 +38,8 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import StickyNote2OutlinedIcon from '@mui/icons-material/StickyNote2Outlined';
 import LocalTaxiOutlinedIcon from '@mui/icons-material/LocalTaxiOutlined';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
 import { DeleteBookingModal } from '../CancelledTripsPage/ui/components';
@@ -73,6 +83,9 @@ export type BookingRow = {
   tripType: string;
   driverId?: string | null;
   caregiverId?: string | null;
+  /** The rider's own note from the booking form ("Additional Notes"). */
+  specialInstructions?: string | null;
+  phoneNum?: string | null;
 };
 
 // A driver can be assigned before one exists (requested/confirmed)...
@@ -116,42 +129,53 @@ export const BookingPage = () => {
   const reassignDriverMutation = useReassignDriver();
   const assignCareAssistantMutation = useAssignCareAssistantToBooking();
 
-  const filterToApiStatus: Record<string, string | undefined> = {
-    All: 'requested,confirmed,cancelled,completed',
-    Pending: 'requested',
-    Approved: 'confirmed',
-    Declined: 'cancelled',
-    Completed: 'completed',
+  // "All" has to cover every status — leaving the in-flight ones out made any
+  // booking with a driver attached invisible on every tab.
+  const filterToApiStatus: Record<string, string> = {
+    All: toStatusParam(RIDE_STATUS_ALL),
+    Pending: toStatusParam(RIDE_STATUS_PENDING),
+    Approved: toStatusParam(RIDE_STATUS_APPROVED),
+    'In Progress': toStatusParam(RIDE_STATUS_IN_FLIGHT),
+    Completed: toStatusParam(RIDE_STATUS_COMPLETED),
+    Declined: toStatusParam(RIDE_STATUS_DECLINED),
   };
+
+  // Trails the input so each keystroke doesn't mint a new query key.
+  const debouncedSearch = useDebouncedValue(searchQuery);
 
   const bookingsQuery = useGetAllBookings({
     status: filterToApiStatus[activeFilter],
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     page,
     limit: pageSize,
   });
   const allCountQuery = useGetAllBookings({
-    status: 'requested,confirmed,cancelled,completed',
+    status: filterToApiStatus['All'],
     page: 1,
     limit: 1,
   });
   const requestedCountQuery = useGetAllBookings({
-    status: 'requested',
+    status: filterToApiStatus['Pending'],
     page: 1,
     limit: 1,
   });
   const confirmedCountQuery = useGetAllBookings({
-    status: 'confirmed',
+    status: filterToApiStatus['Approved'],
+    page: 1,
+    limit: 1,
+  });
+  const inFlightCountQuery = useGetAllBookings({
+    status: filterToApiStatus['In Progress'],
     page: 1,
     limit: 1,
   });
   const cancelledCountQuery = useGetAllBookings({
-    status: 'cancelled',
+    status: filterToApiStatus['Declined'],
     page: 1,
     limit: 1,
   });
   const completedCountQuery = useGetAllBookings({
-    status: 'completed',
+    status: filterToApiStatus['Completed'],
     page: 1,
     limit: 1,
   });
@@ -184,6 +208,8 @@ export const BookingPage = () => {
       tripType: ride.trip_type,
       driverId: ride.driver_id,
       caregiverId: ride.caregiver_id,
+      specialInstructions: ride.special_instructions,
+      phoneNum: ride.passenger_phone,
     }));
   }, [bookingsData]);
 
@@ -202,6 +228,11 @@ export const BookingPage = () => {
       text: 'Approved',
       count: confirmedCountQuery.data?.total ?? 0,
       active: activeFilter === 'Approved',
+    },
+    {
+      text: 'In Progress',
+      count: inFlightCountQuery.data?.total ?? 0,
+      active: activeFilter === 'In Progress',
     },
     {
       text: 'Completed',
@@ -225,10 +256,10 @@ export const BookingPage = () => {
     setOpenDecline(true);
   };
 
-  // const handleOpenDetail = (booking: BookingRow) => {
-  //   setSelectedBooking(booking);
-  //   setOpenDetail(true);
-  // };
+  const handleOpenDetail = (booking: BookingRow) => {
+    setSelectedBooking(booking);
+    setOpenDetail(true);
+  };
 
   const handleOpenEdit = (booking: BookingRow) => {
     setSelectedBooking(booking);
@@ -364,7 +395,22 @@ export const BookingPage = () => {
       headerName: 'Client',
       flex: 1.2,
       minWidth: 150,
-      renderCell: (params) => <ClientComponent text={params.value} />,
+      renderCell: (params) => (
+        <RowStack spacing={0.5}>
+          <ClientComponent text={params.value} />
+          {/* Flags that the rider left a note on the booking, which is otherwise
+              only visible once you open the record. */}
+          {params.row.specialInstructions ? (
+            <Tooltip
+              title={`Note from rider: ${params.row.specialInstructions}`}
+            >
+              <StickyNote2OutlinedIcon
+                sx={{ fontSize: 15, color: '#D97706', flexShrink: 0 }}
+              />
+            </Tooltip>
+          ) : null}
+        </RowStack>
+      ),
     },
     {
       field: 'pickupLocation',
@@ -404,6 +450,16 @@ export const BookingPage = () => {
         const isEditable = !NON_EDITABLE_STATUSES.includes(row.status);
         return (
           <RowStack spacing={0.5}>
+            {/* Completed and cancelled rows have no edit pen, so this is their
+                only way in. */}
+            <IconButton
+              size="small"
+              sx={{ color: '#9CA3AF' }}
+              onClick={() => handleOpenDetail(row)}
+              aria-label="View booking"
+            >
+              <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />
+            </IconButton>
             {isEditable && (
               <IconButton
                 size="small"
@@ -492,7 +548,7 @@ export const BookingPage = () => {
             </RowStack>
             <AppSearchField
               name="search"
-              placeholder="Search bookings..."
+              placeholder="Search by client, booking ID, or location"
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -538,9 +594,11 @@ export const BookingPage = () => {
         rideId={selectedBooking?.id ?? ''}
         status={selectedBooking?.status ?? 'requested'}
         patientName={selectedBooking?.patient ?? ''}
+        phoneNum={selectedBooking?.phoneNum ?? undefined}
         dateTime={selectedBooking?.dateTime ?? ''}
         pickup={selectedBooking?.pickupLocation ?? ''}
         destination={selectedBooking?.destination ?? ''}
+        specialRequirements={selectedBooking?.specialInstructions ?? undefined}
         onApprove={() => setOpenApprove(true)}
         onDecline={() => setOpenDecline(true)}
       />
