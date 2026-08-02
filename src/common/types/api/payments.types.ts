@@ -19,30 +19,25 @@ export interface PaymentMethodBreakdownItem {
 
 export interface AdminTransactionResponse {
   id: string;
-  transaction_id: string;
-  booking_id?: string | null;
-  user_name: string;
-  user_type: string;
+  ride_id?: string | null;
+  rider_name: string;
+  driver_name?: string | null;
+  ride_type?: string | null;
   amount: number;
-  payment_method: string;
+  payment_method?: string | null;
   status: string;
+  transaction_type: string;
   created_at: string;
 }
 
-export interface AdminTransactionDetailResponse {
-  id: string;
-  transaction_id: string;
-  booking_id?: string | null;
-  user_id: string;
-  user_name: string;
-  user_type: string;
-  amount: number;
-  payment_method: string;
-  status: string;
-  description?: string | null;
-  metadata?: Record<string, any> | null;
-  created_at: string;
-  updated_at: string;
+export interface AdminTransactionDetailResponse
+  extends AdminTransactionResponse {
+  /** e.g. "Wheelchair Accessible - 12.4 km" */
+  ride_description?: string | null;
+  pickup_address?: string | null;
+  destination_address?: string | null;
+  /** Display reference derived from the ride id, e.g. "BK-3F2A9C41" */
+  booking_ref?: string | null;
 }
 
 export interface TransactionListPayload {

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import {
   Box,
   Chip,
-  Dialog,
+  Drawer,
   Grid,
   IconButton,
   LinearProgress,
@@ -25,10 +25,10 @@ import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import CreditCardOutlinedIcon from '@mui/icons-material/CreditCardOutlined';
 import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlined';
 import SwapVertOutlinedIcon from '@mui/icons-material/SwapVertOutlined';
+import DirectionsCarOutlinedIcon from '@mui/icons-material/DirectionsCarOutlined';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppGridtable,
-  AppModal,
   AppSearchField,
   DashboardTitleAndDesc,
   RowStack,
@@ -39,7 +39,9 @@ import {
   useGetTransactionKpis,
   useGetPaymentMethodBreakdown,
   useGetAllTransactions,
+  useGetTransactionDetail,
   useResolvedApiQuery,
+  type AdminTransactionResponse,
 } from '../../../common';
 import { EmptyState } from '../../modules/blocks';
 
@@ -51,45 +53,19 @@ type TabValue = 'All' | TransactionStatus;
 type Transaction = {
   id: string;
   txnId: string;
-  bookingRef: string;
+  rideId: string;
   rider: string;
   driver: string;
   rideType: string;
   amount: string;
   paymentMethod: string;
+  transactionType: string;
   date: string;
   time: string;
   status: TransactionStatus;
-  distance: string;
-  duration: string;
-  pickup: string;
-  dropoff: string;
 };
 
-type RawTransaction = {
-  id?: string;
-  transaction_id?: string | null;
-  booking_id?: string | null;
-  ride_id?: string | null;
-  rider_name?: string | null;
-  driver_name?: string | null;
-  ride_type?: string | null;
-  user_name?: string | null;
-  user_type?: string | null;
-  amount?: number | string | null;
-  payment_method?: string | null;
-  status?: string | null;
-  created_at?: string | null;
-  metadata?: {
-    rider_name?: string | null;
-    driver_name?: string | null;
-    ride_type?: string | null;
-    distance?: string | null;
-    duration?: string | null;
-    pickup_address?: string | null;
-    dropoff_address?: string | null;
-  } | null;
-};
+type RawTransaction = AdminTransactionResponse;
 
 // ─── Status Config ──────────────────────────────────────────────────────────
 
@@ -139,7 +115,8 @@ const getTransactionItems = (data: unknown): RawTransaction[] => {
   return [];
 };
 
-const formatCadFromCents = (value?: number | string | null) => {
+/** The API reports amounts in dollars, not cents. */
+const formatCad = (value?: number | string | null) => {
   const cad = Number(value || 0);
 
   return new Intl.NumberFormat('en-CA', {
@@ -152,6 +129,16 @@ const formatCadFromCents = (value?: number | string | null) => {
 const shortenId = (value?: string | null) => {
   if (!value) return 'N/A';
   return value.slice(0, 8);
+};
+
+/** "wheelchair_accessible" → "Wheelchair Accessible" */
+const titleCase = (value?: string | null, fallback = 'N/A') => {
+  if (!value) return fallback;
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 };
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -249,20 +236,16 @@ export const PaymentTransactionsPage = () => {
 
   const transactionRows = useMemo<Transaction[]>(() => {
     const items = getTransactionItems(transactionsData);
-    return items.map((txn: any) => ({
-      id: txn.id || txn.transaction_id || txn.ride_id || '',
-      txnId: shortenId(txn.transaction_id || txn.id),
-      bookingRef: txn.booking_id || txn.ride_id || 'N/A',
-      rider:
-        txn.metadata?.rider_name ||
-        txn.rider_name ||
-        txn.user_name ||
-        'Unknown',
-      driver: txn.metadata?.driver_name || txn.driver_name || 'Unknown',
-      rideType:
-        txn.metadata?.ride_type || txn.ride_type || txn.user_type || 'N/A',
-      amount: formatCadFromCents(txn.amount),
-      paymentMethod: txn.payment_method || 'N/A',
+    return items.map((txn) => ({
+      id: txn.id || '',
+      txnId: shortenId(txn.id),
+      rideId: txn.ride_id || '',
+      rider: txn.rider_name || 'Unknown',
+      driver: txn.driver_name || 'Unassigned',
+      rideType: titleCase(txn.ride_type),
+      amount: formatCad(txn.amount),
+      paymentMethod: titleCase(txn.payment_method),
+      transactionType: titleCase(txn.transaction_type),
       date: new Date(txn.created_at || Date.now()).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -273,10 +256,6 @@ export const PaymentTransactionsPage = () => {
         minute: '2-digit',
       }),
       status: normalizeTransactionStatus(txn.status),
-      distance: txn.metadata?.distance || 'N/A',
-      duration: txn.metadata?.duration || 'N/A',
-      pickup: txn.metadata?.pickup_address || 'N/A',
-      dropoff: txn.metadata?.dropoff_address || 'N/A',
     }));
   }, [transactionsData]);
 
@@ -784,8 +763,8 @@ export const PaymentTransactionsPage = () => {
         </AppGridtable>
       </Stack>
 
-      {/* Transaction Detail Modal */}
-      <TransactionDetailModal
+      {/* Transaction Detail Sheet */}
+      <TransactionDetailSheet
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         transaction={selectedTxn}
@@ -793,10 +772,9 @@ export const PaymentTransactionsPage = () => {
     </AppDashboardLayout>
   );
 };
+// ─── Transaction Detail Sheet ───────────────────────────────────────────────
 
-// ─── Transaction Detail Modal ───────────────────────────────────────────────
-
-const TransactionDetailModal = ({
+const TransactionDetailSheet = ({
   open,
   onClose,
   transaction: txn,
@@ -805,28 +783,65 @@ const TransactionDetailModal = ({
   onClose: () => void;
   transaction: Transaction | null;
 }) => {
+  // The roster row seeds the sheet so it paints instantly; the per-transaction
+  // call then fills in what the list endpoint doesn't carry (route addresses,
+  // booking ref, ride description). Fetch only while the sheet is open.
+  const { data: detail, isFetching } = useResolvedApiQuery(
+    useGetTransactionDetail,
+    null,
+    open && txn ? txn.id : ''
+  );
+
   if (!txn) return null;
 
-  const config = statusConfig[txn.status];
+  const isLoading = isFetching && !detail;
+
+  const status = detail ? normalizeTransactionStatus(detail.status) : txn.status;
+  const config = statusConfig[status];
+
+  const created = detail?.created_at ? new Date(detail.created_at) : null;
+  const date = created
+    ? created.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : txn.date;
+  const time = created
+    ? created.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+    : txn.time;
+
+  const amount = detail ? formatCad(detail.amount) : txn.amount;
+  const rider = detail?.rider_name || txn.rider;
+  const driver = detail?.driver_name || txn.driver;
+  const rideType = detail ? titleCase(detail.ride_type) : txn.rideType;
+  const paymentMethod = detail
+    ? titleCase(detail.payment_method)
+    : txn.paymentMethod;
+  const transactionType = detail
+    ? titleCase(detail.transaction_type)
+    : txn.transactionType;
+  const bookingRef = detail?.booking_ref || '—';
+  const rideId = detail?.ride_id || txn.rideId || '';
+  const pickup = detail?.pickup_address || '—';
+  const dropoff = detail?.destination_address || '—';
 
   return (
-    <AppModal
+    <Drawer
+      anchor="right"
       open={open}
-      setOpen={onClose}
-      label="Transaction Detail"
-      padding="16px"
+      onClose={onClose}
       sx={{
-        sx: {
-          width: 540,
-          borderRadius: '16px',
-          boxShadow: '0px 32px 80px 0px rgba(0, 0, 0, 0.18)',
-          overflow: 'hidden',
-          margin: 0,
+        '& .MuiDrawer-paper': {
+          width: 520,
+          maxWidth: '100vw',
+          boxShadow: '-4px 0px 48px rgba(0, 0, 0, 0.14)',
+          border: 'none',
         },
       }}
     >
-      <Box>
-        {/* Header */}
+      <Stack sx={{ height: '100%' }}>
+        {/* ─── Header ──────────────────────────────────────────────── */}
         <RowStack
           justifyContent={'space-between'}
           sx={{ padding: '20px 24px', borderBottom: '0.67px solid #F0F4F8' }}
@@ -868,8 +883,8 @@ const TransactionDetailModal = ({
                   lineHeight: '1.5em',
                 }}
               >
-                {txn.txnId} · Booking {txn.bookingRef.slice(0, 10)}...
-                {txn.bookingRef.slice(-6)}
+                {txn.txnId}
+                {bookingRef !== '—' ? ` · Booking ${bookingRef}` : ''}
               </Typography>
             </Stack>
           </RowStack>
@@ -893,439 +908,465 @@ const TransactionDetailModal = ({
           </Box>
         </RowStack>
 
-        {/* Amount Section */}
-        <RowStack
-          justifyContent={'space-between'}
-          sx={{
-            padding: '20px 24px',
-            background: '#FAFBFC',
-            borderBottom: '0.67px solid #F0F4F8',
-          }}
-        >
-          <Stack spacing={'4px'}>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 700,
-                fontSize: pxToRem(11),
-                letterSpacing: '0.055em',
-                color: '#9CA3AF',
-              }}
-            >
-              AMOUNT CHARGED
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 800,
-                fontSize: pxToRem(28),
-                lineHeight: '1rem',
-                letterSpacing: '-0.028em',
-                color: '#111827',
-              }}
-            >
-              {txn.amount}
-            </Typography>
-            {/* <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
-                fontSize: pxToRem(12.5),
-                color: '#6B7280',
-              }}
-            >
-              {txn.rideType} · {txn.distance} · {txn.duration}
-            </Typography> */}
-          </Stack>
-
-          <Stack spacing={'8px'} alignItems={'flex-end'}>
-            <RowStack
-              spacing={'6px'}
-              sx={{
-                padding: '5px 12px',
-                borderRadius: '100px',
-                background: config.bg,
-              }}
-            >
-              <Box
-                sx={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '3px',
-                  background: config.dot,
-                }}
-              />
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 700,
-                  fontSize: pxToRem(12.5),
-                  color: config.color,
-                }}
-              >
-                {txn.status}
-              </Typography>
-            </RowStack>
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 400,
-                fontSize: pxToRem(12),
-                color: '#9CA3AF',
-              }}
-            >
-              {txn.paymentMethod}
-            </Typography>
-          </Stack>
-        </RowStack>
-
-        {/* Details Section */}
-        <Stack spacing={'16px'} sx={{ padding: '24px' }}>
-          {/* Rider & Driver */}
-          <RowStack spacing={0} sx={{ gap: 0 }}>
-            <DetailCard
-              icon={
-                <PersonOutlineOutlinedIcon
-                  sx={{ fontSize: 13, color: '#2F6FED' }}
-                />
-              }
-              iconBg="#EFF5FF"
-              label="RIDER"
-              value={txn.rider}
-              sx={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
-            />
-            <DetailCard
-              icon={
-                <PersonOutlineOutlinedIcon
-                  sx={{ fontSize: 13, color: '#059669' }}
-                />
-              }
-              iconBg="#F0FDF7"
-              label="DRIVER"
-              value={txn.driver}
-              sx={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
-            />
-          </RowStack>
-
-          {/* Route */}
-          {/* <Stack
+        {/* ─── Scrollable Body ─────────────────────────────────────── */}
+        <Stack sx={{ flex: 1, overflowY: 'auto' }}>
+          {/* Amount */}
+          <RowStack
+            justifyContent={'space-between'}
+            alignItems={'flex-start'}
             sx={{
-              background: '#F7F9FB',
-              border: '0.67px solid #F0F4F8',
-              borderRadius: '14px',
-              padding: '16px',
-              gap: '12px',
+              padding: '20px 24px',
+              background: '#FAFBFC',
+              borderBottom: '0.67px solid #F0F4F8',
             }}
           >
-            <RowStack spacing={'8px'}>
-              <Box
-                sx={{
-                  width: 13,
-                  height: 13,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    border: '2px solid #2F6FED',
-                  }}
-                />
-              </Box>
+            <Stack spacing={'6px'}>
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
                   fontWeight: 700,
                   fontSize: pxToRem(11),
-                  letterSpacing: '0.045em',
+                  letterSpacing: '0.055em',
                   color: '#9CA3AF',
                 }}
               >
-                ROUTE
+                AMOUNT CHARGED
               </Typography>
-            </RowStack>
+              <Typography
+                sx={{
+                  fontFamily: (theme) => theme.typography.fontFamily,
+                  fontWeight: 800,
+                  fontSize: pxToRem(28),
+                  lineHeight: '1.2em',
+                  letterSpacing: '-0.028em',
+                  color: '#111827',
+                }}
+              >
+                {amount}
+              </Typography>
+              {isLoading ? (
+                <Skeleton variant="text" width={180} height={18} />
+              ) : (
+                (detail?.ride_description || rideType !== 'N/A') && (
+                  <Typography
+                    sx={{
+                      fontFamily: (theme) => theme.typography.fontFamily,
+                      fontWeight: 400,
+                      fontSize: pxToRem(12.5),
+                      color: '#6B7280',
+                    }}
+                  >
+                    {detail?.ride_description || rideType}
+                  </Typography>
+                )
+              )}
+            </Stack>
 
-            <RowStack spacing={'12px'}>
-              <Stack alignItems={'center'} spacing={'4px'} sx={{ pt: '3px' }}>
+            <Stack spacing={'8px'} alignItems={'flex-end'}>
+              <RowStack
+                spacing={'6px'}
+                sx={{
+                  padding: '5px 12px',
+                  borderRadius: '100px',
+                  background: config.bg,
+                }}
+              >
                 <Box
                   sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '5px',
-                    background: '#2F6FED',
-                    border: '2px solid #FFFFFF',
-                    boxShadow: '0px 0px 0px 2px #2F6FED',
+                    width: 6,
+                    height: 6,
+                    borderRadius: '3px',
+                    background: config.dot,
                   }}
                 />
-                <Box
-                  sx={{
-                    width: 1.5,
-                    height: 28,
-                    background: '#E0E7FF',
-                  }}
-                />
-                <Box
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '5px',
-                    background: '#10B981',
-                    border: '2px solid #FFFFFF',
-                    boxShadow: '0px 0px 0px 2px #10B981',
-                  }}
-                />
-              </Stack>
-
-              <Stack justifyContent={'space-between'} sx={{ gap: '18px' }}>
-                <Stack spacing={'2px'}>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 700,
-                      fontSize: pxToRem(10.5),
-                      letterSpacing: '0.038em',
-                      color: '#9CA3AF',
-                    }}
-                  >
-                    PICKUP
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 500,
-                      fontSize: pxToRem(13.5),
-                      color: '#111827',
-                    }}
-                  >
-                    {txn.pickup}
-                  </Typography>
-                </Stack>
-                <Stack spacing={'2px'}>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 700,
-                      fontSize: pxToRem(10.5),
-                      letterSpacing: '0.038em',
-                      color: '#9CA3AF',
-                    }}
-                  >
-                    DROPOFF
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: (theme) => theme.typography.fontFamily,
-                      fontWeight: 500,
-                      fontSize: pxToRem(13.5),
-                      color: '#111827',
-                    }}
-                  >
-                    {txn.dropoff}
-                  </Typography>
-                </Stack>
-              </Stack>
-            </RowStack>
-          </Stack> */}
-
-          {/* Date & Time / Payment / Booking Ref */}
-          <RowStack spacing={0} sx={{ gap: 0 }}>
-            <Stack
-              sx={{
-                flex: 1,
-                background: '#F7F9FB',
-                border: '0.67px solid #F0F4F8',
-                borderRadius: '14px 0 0 14px',
-                padding: '14px',
-                gap: '8px',
-              }}
-            >
-              <RowStack spacing={'6px'}>
-                <Box
-                  sx={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: '8px',
-                    background: '#F3F4F6',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <AccessTimeOutlinedIcon
-                    sx={{ fontSize: 11, color: '#6B7280' }}
-                  />
-                </Box>
                 <Typography
                   sx={{
                     fontFamily: (theme) => theme.typography.fontFamily,
                     fontWeight: 700,
-                    fontSize: pxToRem(10.5),
-                    letterSpacing: '0.038em',
-                    color: '#9CA3AF',
+                    fontSize: pxToRem(12.5),
+                    color: config.color,
                   }}
                 >
-                  DATE & TIME
+                  {status}
                 </Typography>
               </RowStack>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(13),
-                  color: '#111827',
-                }}
-              >
-                {txn.date}
-              </Typography>
               <Typography
                 sx={{
                   fontFamily: (theme) => theme.typography.fontFamily,
                   fontWeight: 400,
-                  fontSize: pxToRem(11.5),
+                  fontSize: pxToRem(12),
                   color: '#9CA3AF',
                 }}
               >
-                {txn.time}
-              </Typography>
-            </Stack>
-
-            <Stack
-              sx={{
-                flex: 1,
-                background: '#F7F9FB',
-                border: '0.67px solid #F0F4F8',
-                borderLeft: 'none',
-                padding: '14px',
-                gap: '8px',
-              }}
-            >
-              <RowStack spacing={'6px'}>
-                <Box
-                  sx={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: '8px',
-                    background: '#EEF2FF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <CreditCardOutlinedIcon
-                    sx={{ fontSize: 11, color: '#6366F1' }}
-                  />
-                </Box>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 700,
-                    fontSize: pxToRem(10.5),
-                    letterSpacing: '0.038em',
-                    color: '#9CA3AF',
-                  }}
-                >
-                  PAYMENT
-                </Typography>
-              </RowStack>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(13),
-                  color: '#111827',
-                }}
-              >
-                {txn.paymentMethod}
-              </Typography>
-            </Stack>
-
-            <Stack
-              sx={{
-                flex: 1,
-                background: '#F7F9FB',
-                border: '0.67px solid #F0F4F8',
-                borderLeft: 'none',
-                borderRadius: '0 14px 14px 0',
-                padding: '14px',
-                gap: '8px',
-              }}
-            >
-              <RowStack spacing={'6px'}>
-                <Box
-                  sx={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: '8px',
-                    background: '#FFFBEB',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <BookmarkBorderOutlinedIcon
-                    sx={{ fontSize: 11, color: '#D97706' }}
-                  />
-                </Box>
-                <Typography
-                  sx={{
-                    fontFamily: (theme) => theme.typography.fontFamily,
-                    fontWeight: 700,
-                    fontSize: pxToRem(10.5),
-                    letterSpacing: '0.038em',
-                    color: '#9CA3AF',
-                  }}
-                >
-                  BOOKING REF
-                </Typography>
-              </RowStack>
-              <Typography
-                sx={{
-                  fontFamily: (theme) => theme.typography.fontFamily,
-                  fontWeight: 600,
-                  fontSize: pxToRem(13),
-                  color: '#111827',
-                }}
-              >
-                {txn.bookingRef.slice(0, 10)}...{txn.bookingRef.slice(-6)}
+                {paymentMethod}
               </Typography>
             </Stack>
           </RowStack>
+
+          {/* Details */}
+          <Stack spacing={'16px'} sx={{ padding: '24px' }}>
+            {/* Rider & Driver */}
+            <RowStack spacing={0} sx={{ gap: 0 }}>
+              <DetailCard
+                icon={
+                  <PersonOutlineOutlinedIcon
+                    sx={{ fontSize: 13, color: '#2F6FED' }}
+                  />
+                }
+                iconBg="#EFF5FF"
+                label="RIDER"
+                value={rider}
+                sx={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+              />
+              <DetailCard
+                icon={
+                  <PersonOutlineOutlinedIcon
+                    sx={{ fontSize: 13, color: '#059669' }}
+                  />
+                }
+                iconBg="#F0FDF7"
+                label="DRIVER"
+                value={driver}
+                sx={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
+              />
+            </RowStack>
+
+            {/* Route */}
+            <Stack
+              sx={{
+                background: '#F7F9FB',
+                border: '0.67px solid #F0F4F8',
+                borderRadius: '14px',
+                padding: '16px',
+                gap: '12px',
+              }}
+            >
+              <RowStack spacing={'8px'}>
+                <SwapVertOutlinedIcon
+                  sx={{ fontSize: 13, color: '#9CA3AF' }}
+                />
+                <Typography
+                  sx={{
+                    fontFamily: (theme) => theme.typography.fontFamily,
+                    fontWeight: 700,
+                    fontSize: pxToRem(11),
+                    letterSpacing: '0.045em',
+                    color: '#9CA3AF',
+                  }}
+                >
+                  ROUTE
+                </Typography>
+              </RowStack>
+
+              <RowStack spacing={'12px'} alignItems={'stretch'}>
+                <Stack alignItems={'center'} spacing={'4px'} sx={{ pt: '5px' }}>
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '5px',
+                      background: '#2F6FED',
+                      border: '2px solid #FFFFFF',
+                      boxShadow: '0px 0px 0px 2px #2F6FED',
+                    }}
+                  />
+                  <Box sx={{ width: 1.5, flex: 1, background: '#E0E7FF' }} />
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '5px',
+                      background: '#10B981',
+                      border: '2px solid #FFFFFF',
+                      boxShadow: '0px 0px 0px 2px #10B981',
+                    }}
+                  />
+                </Stack>
+
+                <Stack justifyContent={'space-between'} sx={{ gap: '18px' }}>
+                  <Stack spacing={'2px'}>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 700,
+                        fontSize: pxToRem(10.5),
+                        letterSpacing: '0.038em',
+                        color: '#9CA3AF',
+                      }}
+                    >
+                      PICKUP
+                    </Typography>
+                    {isLoading ? (
+                      <Skeleton variant="text" width={240} height={20} />
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 500,
+                          fontSize: pxToRem(13.5),
+                          color: '#111827',
+                        }}
+                      >
+                        {pickup}
+                      </Typography>
+                    )}
+                  </Stack>
+                  <Stack spacing={'2px'}>
+                    <Typography
+                      sx={{
+                        fontFamily: (theme) => theme.typography.fontFamily,
+                        fontWeight: 700,
+                        fontSize: pxToRem(10.5),
+                        letterSpacing: '0.038em',
+                        color: '#9CA3AF',
+                      }}
+                    >
+                      DROPOFF
+                    </Typography>
+                    {isLoading ? (
+                      <Skeleton variant="text" width={240} height={20} />
+                    ) : (
+                      <Typography
+                        sx={{
+                          fontFamily: (theme) => theme.typography.fontFamily,
+                          fontWeight: 500,
+                          fontSize: pxToRem(13.5),
+                          color: '#111827',
+                        }}
+                      >
+                        {dropoff}
+                      </Typography>
+                    )}
+                  </Stack>
+                </Stack>
+              </RowStack>
+            </Stack>
+
+            {/* Date & Time / Payment / Booking Ref */}
+            <RowStack spacing={0} sx={{ gap: 0 }}>
+              <InfoTile
+                icon={
+                  <AccessTimeOutlinedIcon
+                    sx={{ fontSize: 11, color: '#6B7280' }}
+                  />
+                }
+                iconBg="#F3F4F6"
+                label="DATE & TIME"
+                value={date}
+                caption={time}
+                sx={{ borderRadius: '14px 0 0 14px' }}
+              />
+              <InfoTile
+                icon={
+                  <CreditCardOutlinedIcon
+                    sx={{ fontSize: 11, color: '#6366F1' }}
+                  />
+                }
+                iconBg="#EEF2FF"
+                label="PAYMENT"
+                value={paymentMethod}
+                sx={{ borderRadius: 0, borderLeft: 'none' }}
+              />
+              <InfoTile
+                icon={
+                  <BookmarkBorderOutlinedIcon
+                    sx={{ fontSize: 11, color: '#D97706' }}
+                  />
+                }
+                iconBg="#FFFBEB"
+                label="BOOKING REF"
+                value={bookingRef}
+                loading={isLoading}
+                sx={{ borderRadius: '0 14px 14px 0', borderLeft: 'none' }}
+              />
+            </RowStack>
+
+            {/* Ride Type / Transaction Type */}
+            <RowStack spacing={0} sx={{ gap: 0 }}>
+              <InfoTile
+                icon={
+                  <DirectionsCarOutlinedIcon
+                    sx={{ fontSize: 11, color: '#0EA5E9' }}
+                  />
+                }
+                iconBg="#EFF6FF"
+                label="RIDE TYPE"
+                value={rideType}
+                sx={{ borderRadius: '14px 0 0 14px' }}
+              />
+              <InfoTile
+                icon={
+                  <SwapHorizOutlinedIcon
+                    sx={{ fontSize: 11, color: '#7C3AED' }}
+                  />
+                }
+                iconBg="#F5F3FF"
+                label="TRANSACTION TYPE"
+                value={transactionType}
+                sx={{ borderRadius: '0 14px 14px 0', borderLeft: 'none' }}
+              />
+            </RowStack>
+
+            {/* Identifiers */}
+            <Stack
+              sx={{
+                background: '#F7F9FB',
+                border: '0.67px solid #F0F4F8',
+                borderRadius: '14px',
+                padding: '16px',
+                gap: '12px',
+              }}
+            >
+              <IdentifierRow label="TRANSACTION ID" value={txn.id} />
+              <IdentifierRow label="RIDE ID" value={rideId || '—'} />
+            </Stack>
+          </Stack>
         </Stack>
 
-        {/* Close Button */}
-        <Box
-          onClick={onClose}
-          sx={{
-            margin: '0 24px 24px',
-            padding: '12px',
-            borderRadius: '10px',
-            background: '#F7F9FB',
-            border: '0.67px solid #E8ECF0',
-            cursor: 'pointer',
-            textAlign: 'center',
-            '&:hover': { background: '#EFF2F5' },
-          }}
-        >
-          <Typography
+        {/* ─── Footer ──────────────────────────────────────────────── */}
+        <Box sx={{ padding: '16px 24px', borderTop: '0.67px solid #F0F4F8' }}>
+          <Box
+            onClick={onClose}
             sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 600,
-              fontSize: pxToRem(13),
-              color: '#374151',
+              padding: '12px',
+              borderRadius: '10px',
+              background: '#F7F9FB',
+              border: '0.67px solid #E8ECF0',
+              cursor: 'pointer',
+              textAlign: 'center',
+              '&:hover': { background: '#EFF2F5' },
             }}
           >
-            Close
-          </Typography>
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 600,
+                fontSize: pxToRem(13),
+                color: '#374151',
+              }}
+            >
+              Close
+            </Typography>
+          </Box>
         </Box>
-      </Box>
-    </AppModal>
+      </Stack>
+    </Drawer>
   );
 };
 
+const InfoTile = ({
+  icon,
+  iconBg,
+  label,
+  value,
+  caption,
+  loading,
+  sx: sxProp,
+}: {
+  icon: React.ReactNode;
+  iconBg: string;
+  label: string;
+  value: string;
+  caption?: string;
+  loading?: boolean;
+  sx?: Record<string, unknown>;
+}) => (
+  <Stack
+    sx={{
+      flex: 1,
+      minWidth: 0,
+      background: '#F7F9FB',
+      border: '0.67px solid #F0F4F8',
+      padding: '14px',
+      gap: '8px',
+      ...sxProp,
+    }}
+  >
+    <RowStack spacing={'6px'}>
+      <Box
+        sx={{
+          width: 22,
+          height: 22,
+          borderRadius: '8px',
+          background: iconBg,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {icon}
+      </Box>
+      <Typography
+        sx={{
+          fontFamily: (theme) => theme.typography.fontFamily,
+          fontWeight: 700,
+          fontSize: pxToRem(10.5),
+          letterSpacing: '0.038em',
+          color: '#9CA3AF',
+        }}
+      >
+        {label}
+      </Typography>
+    </RowStack>
+    {loading ? (
+      <Skeleton variant="text" width={80} height={20} />
+    ) : (
+      <Typography
+        sx={{
+          fontFamily: (theme) => theme.typography.fontFamily,
+          fontWeight: 600,
+          fontSize: pxToRem(13),
+          color: '#111827',
+          wordBreak: 'break-word',
+        }}
+      >
+        {value}
+      </Typography>
+    )}
+    {caption && (
+      <Typography
+        sx={{
+          fontFamily: (theme) => theme.typography.fontFamily,
+          fontWeight: 400,
+          fontSize: pxToRem(11.5),
+          color: '#9CA3AF',
+        }}
+      >
+        {caption}
+      </Typography>
+    )}
+  </Stack>
+);
+
+const IdentifierRow = ({ label, value }: { label: string; value: string }) => (
+  <RowStack justifyContent={'space-between'} spacing={'12px'}>
+    <Typography
+      sx={{
+        fontFamily: (theme) => theme.typography.fontFamily,
+        fontWeight: 700,
+        fontSize: pxToRem(10.5),
+        letterSpacing: '0.038em',
+        color: '#9CA3AF',
+        flexShrink: 0,
+      }}
+    >
+      {label}
+    </Typography>
+    <Typography
+      sx={{
+        fontFamily: 'monospace',
+        fontWeight: 500,
+        fontSize: pxToRem(12),
+        color: '#374151',
+        wordBreak: 'break-all',
+        textAlign: 'right',
+      }}
+    >
+      {value}
+    </Typography>
+  </RowStack>
+);
 const DetailCard = ({
   icon,
   iconBg,
