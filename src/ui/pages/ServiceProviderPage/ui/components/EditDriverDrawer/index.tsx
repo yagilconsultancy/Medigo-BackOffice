@@ -851,7 +851,6 @@ export const EditDriverDrawer = ({
                           <FormikAppTextField
                             name="email"
                             placeholder="driver@example.com"
-                            disabled={true}
                           />
                         </Stack>
                       </Box>
