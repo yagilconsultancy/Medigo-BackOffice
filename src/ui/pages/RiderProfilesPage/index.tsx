@@ -2,19 +2,35 @@
 
 import { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import { Avatar, Box, Grid, Skeleton, Stack, Typography } from '@mui/material';
+import { toast } from 'sonner';
+import {
+  Avatar,
+  Box,
+  Grid,
+  Skeleton,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import LocalHospitalOutlinedIcon from '@mui/icons-material/LocalHospitalOutlined';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import PaymentOutlinedIcon from '@mui/icons-material/PaymentOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
-import { DashboardTitleAndDesc, RowStack } from '../../modules/components';
+import {
+  AppButton,
+  AppModal,
+  DashboardTitleAndDesc,
+  RowStack,
+} from '../../modules/components';
 import { CustomPagination } from '../../modules/components/GridTable/ui/components/DataGridPagination/ui/components/CustomPagination';
 import { EmptyState } from '../../modules/blocks';
 import {
   pxToRem,
+  useDeleteRider,
   useGetRidersProfiles,
   type AdminRiderProfileCard,
 } from '../../../common';
@@ -137,7 +153,13 @@ const InfoRow = ({
 
 // ─── Rider Card ─────────────────────────────────────────────────────────────
 
-const RiderCard = ({ rider }: { rider: RiderProfile }) => {
+const RiderCard = ({
+  rider,
+  onDelete,
+}: {
+  rider: RiderProfile;
+  onDelete: () => void;
+}) => {
   const nameParts = rider.name.split(' ');
   const initials =
     nameParts.length > 1
@@ -206,30 +228,53 @@ const RiderCard = ({ rider }: { rider: RiderProfile }) => {
           </Stack>
         </RowStack>
 
-        {/* Ride count */}
-        <Stack alignItems={'flex-end'}>
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 800,
-              fontSize: pxToRem(26),
-              color: rider.ridesColor,
-              lineHeight: '1.1em',
-            }}
-          >
-            {rider.totalRides}
-          </Typography>
-          <Typography
-            sx={{
-              fontFamily: (theme) => theme.typography.fontFamily,
-              fontWeight: 400,
-              fontSize: pxToRem(11),
-              color: '#9CA3AF',
-            }}
-          >
-            total rides
-          </Typography>
-        </Stack>
+        <RowStack spacing={'4px'}>
+          {/* Ride count */}
+          <Stack alignItems={'flex-end'}>
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 800,
+                fontSize: pxToRem(26),
+                color: rider.ridesColor,
+                lineHeight: '1.1em',
+              }}
+            >
+              {rider.totalRides}
+            </Typography>
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 400,
+                fontSize: pxToRem(11),
+                color: '#9CA3AF',
+              }}
+            >
+              total rides
+            </Typography>
+          </Stack>
+
+          {/* Delete */}
+          <Tooltip title="Delete rider">
+            <Box
+              role="button"
+              aria-label={`Delete ${rider.name}`}
+              onClick={onDelete}
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                '&:hover': { background: '#FEF2F2' },
+              }}
+            >
+              <DeleteOutlineIcon sx={{ fontSize: 18, color: '#EF4444' }} />
+            </Box>
+          </Tooltip>
+        </RowStack>
       </RowStack>
 
       {/* Info Rows */}
@@ -297,6 +342,9 @@ export const RiderProfilesPage = () => {
     page: 0,
     pageSize: 10,
   });
+  const [riderToDelete, setRiderToDelete] = useState<RiderProfile | null>(null);
+
+  const { mutateAsync: deleteRider, isPending: isDeleting } = useDeleteRider();
 
   // Note: useGetRidersProfiles returns a flat paginated response
   // (RiderProfileCardsPaginatedResponse) with `data` + `total` + `page` + ...
@@ -321,6 +369,18 @@ export const RiderProfilesPage = () => {
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPaginationModel({ page: 0, pageSize: newPageSize });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!riderToDelete) return;
+
+    try {
+      await deleteRider({ riderId: riderToDelete.id });
+      toast.success(`${riderToDelete.name} removed from riders`);
+      setRiderToDelete(null);
+    } catch {
+      toast.error('Could not delete rider. Please try again.');
+    }
   };
 
   if (isFetching) {
@@ -375,7 +435,10 @@ export const RiderProfilesPage = () => {
           <Grid container spacing={'20px'}>
             {riders.map((rider) => (
               <Grid key={rider.id} size={{ xs: 12, md: 6 }}>
-                <RiderCard rider={rider} />
+                <RiderCard
+                  rider={rider}
+                  onDelete={() => setRiderToDelete(rider)}
+                />
               </Grid>
             ))}
           </Grid>
@@ -401,6 +464,80 @@ export const RiderProfilesPage = () => {
           </Box>
         )}
       </Stack>
+
+      {/* Delete Confirmation Modal */}
+      <AppModal
+        open={Boolean(riderToDelete)}
+        setOpen={(open) => {
+          if (!open && !isDeleting) setRiderToDelete(null);
+        }}
+        label="delete-rider-modal"
+        sx={{
+          '& .MuiDialog-paper': {
+            width: '440px',
+          },
+        }}
+      >
+        <Stack spacing={'24px'}>
+          <Box>
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 700,
+                fontSize: pxToRem(20),
+                color: '#111827',
+                marginBottom: '8px',
+              }}
+            >
+              Delete Rider
+            </Typography>
+            <Typography
+              sx={{
+                fontFamily: (theme) => theme.typography.fontFamily,
+                fontWeight: 400,
+                fontSize: pxToRem(14),
+                color: '#6B7280',
+              }}
+            >
+              Are you sure you want to delete{' '}
+              <Typography
+                component="span"
+                sx={{ fontWeight: 600, color: '#111827' }}
+              >
+                {riderToDelete?.name}
+              </Typography>
+              ? They will be removed from every rider list and will no longer be
+              able to sign in. This action cannot be undone.
+            </Typography>
+          </Box>
+
+          <RowStack spacing={'12px'} justifyContent="flex-end">
+            <AppButton
+              variant="contained"
+              color="secondary"
+              onClick={() => setRiderToDelete(null)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </AppButton>
+            <AppButton
+              variant="contained"
+              color="primary"
+              onClick={handleDeleteConfirm}
+              isLoading={isDeleting}
+              disabled={isDeleting}
+              sx={{
+                backgroundColor: '#EF4444',
+                '&:hover': {
+                  backgroundColor: '#DC2626',
+                },
+              }}
+            >
+              Delete
+            </AppButton>
+          </RowStack>
+        </Stack>
+      </AppModal>
     </AppDashboardLayout>
   );
 };

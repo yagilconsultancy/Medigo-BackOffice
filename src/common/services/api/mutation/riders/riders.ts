@@ -8,6 +8,7 @@ import {
   ApproveRiderKYCPayload,
   ApiRiderIssueDetailResponse,
   CreateRiderIssuePayload,
+  DeleteRiderPayload,
   RejectRiderKYCPayload,
   ReinstateRiderPayload,
   RiderDocumentInfo,
@@ -69,6 +70,15 @@ export const updateRider = async (payload: UpdateRiderPayload) => {
     ApiAdminRiderDetailResponse,
     AxiosResponse<ApiAdminRiderDetailResponse>
   >(resolveRoute(ROUTES.updateRider, riderId), rest);
+};
+
+export const deleteRider = async (payload: DeleteRiderPayload) => {
+  const { riderId } = payload;
+
+  return await getApiClient().delete<
+    ApiResponse<{ deleted: boolean; rider_id: string }>,
+    AxiosResponse<ApiResponse<{ deleted: boolean; rider_id: string }>>
+  >(resolveRoute(ROUTES.deleteRider, riderId));
 };
 
 export const approveRiderKyc = async (payload: ApproveRiderKYCPayload) => {

@@ -381,6 +381,8 @@ export const ROUTES_SPEC = {
     `/${API_VERSION}/users/admin/riders/${riderId}/rides`,
   updateRider: (riderId: string) =>
     `/${API_VERSION}/users/admin/riders/${riderId}`,
+  deleteRider: (riderId: string) =>
+    `/${API_VERSION}/users/admin/riders/${riderId}`,
   approveRiderKyc: (riderId: string) =>
     `/${API_VERSION}/users/admin/riders/${riderId}/kyc/approve`,
   rejectRiderKyc: (riderId: string) =>
