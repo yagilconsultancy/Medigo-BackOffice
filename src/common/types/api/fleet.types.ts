@@ -1118,6 +1118,10 @@ export interface ReinstateRiderPayload {
   riderId: string;
 }
 
+export interface DeleteRiderPayload {
+  riderId: string;
+}
+
 export type ApiAdminRiderListResponse = ApiResponse<AdminRiderListResponse>;
 export type ApiAdminRiderDetailResponse = ApiResponse<AdminRiderDetailResponse>;
 export type ApiAdminRiderActivityResponse =
