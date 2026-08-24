@@ -17,12 +17,14 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import { toast } from 'sonner';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   AppButton,
   AppGridtable,
   AppSearchField,
   DashboardTitleAndDesc,
+  QueryErrorState,
   RowStack,
 } from '../../modules/components';
 import { GridColSpec } from '../../modules/components/GridTable';
@@ -155,12 +157,10 @@ export const LoginHistoryPage = () => {
     page: 0,
     pageSize: 10,
   });
-  const kpiQuery = useGetLoginHistoryKpi();
-  const { data: loginHistoryKpi } = useResolvedApiQuery(
-    useGetLoginHistoryKpi,
-    null
-  );
-  const isFetchingKpi = kpiQuery.isFetching;
+  const {
+    data: loginHistoryKpi,
+    isFetching: isFetchingKpi,
+  } = useResolvedApiQuery(useGetLoginHistoryKpi, null);
 
   const { mutate: exportHistory, isPending: isExporting } =
     useExportLoginHistory();
@@ -175,13 +175,12 @@ export const LoginHistoryPage = () => {
     [activeTab, searchQuery, paginationModel]
   );
 
-  const historyQuery = useGetLoginHistory(payload);
-  const { data: loginHistoryList } = useResolvedApiQuery(
-    useGetLoginHistory,
-    null,
-    payload
-  );
-  const isFetchingHistory = historyQuery.isFetching;
+  const {
+    data: loginHistoryList,
+    isFetching: isFetchingHistory,
+    errorKind: historyErrorKind,
+    refetch: refetchHistory,
+  } = useResolvedApiQuery(useGetLoginHistory, null, payload);
 
   const kpiData = useMemo<LoginHistoryKPIs | undefined>(() => {
     return loginHistoryKpi ? loginHistoryKpi : undefined;
@@ -193,9 +192,9 @@ export const LoginHistoryPage = () => {
 
   const totalCount = loginHistoryList?.total ?? 0;
 
-  const suspiciousCount = useMemo(() => {
-    return loginRows.filter((r) => r.isSuspicious).length;
-  }, [loginRows]);
+  // Must come from the KPI endpoint: counting only the current page's rows
+  // under-reports the total and shifts as you page or filter.
+  const suspiciousCount = kpiData?.suspicious_count ?? 0;
 
   const statCards = statCardConfig.map((card) => ({
     ...card,
@@ -211,6 +210,9 @@ export const LoginHistoryPage = () => {
         a.download = `login-history-${dayjs().format('YYYY-MM-DD')}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
+      },
+      onError: () => {
+        toast.error('Export failed. Please try again.');
       },
     });
   };
@@ -522,8 +524,24 @@ export const LoginHistoryPage = () => {
           data={loginRows}
           disableAutoPagination
           initialPageSize={paginationModel.pageSize}
+          totalRows={totalCount}
+          isFetchingData={isFetchingHistory}
+          onPaginationModelChange={(model) =>
+            setPaginationModel({
+              page: model.page,
+              pageSize: model.pageSize,
+            })
+          }
           disableRowClick
           sx={{ height: 'auto', width: '100%' }}
+          permissionErrorState={
+            historyErrorKind !== 'none' ? (
+              <QueryErrorState
+                kind={historyErrorKind}
+                onRetry={() => refetchHistory()}
+              />
+            ) : undefined
+          }
           emptyState={
             <Stack alignItems="center" spacing="8px" sx={{ py: 4 }}>
               <Box

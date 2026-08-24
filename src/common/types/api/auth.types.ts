@@ -188,6 +188,7 @@ export interface SecuritySettingsResponse {
   ip_whitelist_enabled?: boolean;
   audit_logging_enabled?: boolean;
   session_timeout_hours?: number;
+  max_failed_login_attempts?: number;
   min_password_length?: number;
   require_uppercase?: boolean;
   require_lowercase?: boolean;
@@ -205,6 +206,7 @@ export interface UpdateSecuritySettingsRequest {
   ip_whitelist_enabled?: boolean | null;
   audit_logging_enabled?: boolean | null;
   session_timeout_hours?: number | null;
+  max_failed_login_attempts?: number | null;
   min_password_length?: number | null;
   require_uppercase?: boolean | null;
   require_lowercase?: boolean | null;
@@ -232,6 +234,7 @@ export interface LoginHistoryKPIs {
   successful?: number;
   failed_attempts?: number;
   unique_locations?: number;
+  suspicious_count?: number;
 }
 
 export interface LoginHistoryListPayload {

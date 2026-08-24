@@ -10,6 +10,9 @@ type LogStatCardProps = {
   iconBg: string;
   value: string;
   label: string;
+  /** When provided the card acts as a severity filter toggle. */
+  onClick?: () => void;
+  selected?: boolean;
 };
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -19,16 +22,38 @@ export const LogStatCard = ({
   iconBg,
   value,
   label,
+  onClick,
+  selected = false,
 }: LogStatCardProps) => {
+  const interactive = Boolean(onClick);
   return (
     <Stack
       spacing={'12px'}
+      onClick={onClick}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-pressed={interactive ? selected : undefined}
+      onKeyDown={
+        interactive
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
       sx={{
         background: '#FFFFFF',
-        border: '0.67px solid #F0F4F8',
+        border: selected ? '1px solid #2F6FED' : '0.67px solid #F0F4F8',
         borderRadius: '14px',
-        boxShadow: '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
+        boxShadow: selected
+          ? '0px 0px 0px 3px rgba(47, 111, 237, 0.12)'
+          : '0px 1px 4px 0px rgba(0, 0, 0, 0.06)',
         padding: '20px',
+        cursor: interactive ? 'pointer' : 'default',
+        transition: 'border-color 120ms ease, box-shadow 120ms ease',
+        '&:hover': interactive ? { borderColor: '#2F6FED' } : undefined,
       }}
     >
       <Box
