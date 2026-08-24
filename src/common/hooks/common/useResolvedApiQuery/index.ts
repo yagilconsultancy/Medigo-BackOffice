@@ -1,5 +1,8 @@
 import { UseQueryResult } from '@tanstack/react-query';
 import { ApiResponse } from '../../../types';
+import { getQueryErrorKind, QueryErrorKind } from './errors';
+
+export * from './errors';
 
 /**
  * Represents the result of a resolved API query, adapting the structure of
@@ -13,6 +16,12 @@ export type UseResolvedApiQueryResult<Data, Error = unknown> = Omit<
   'data'
 > & {
   data: Data;
+  /**
+   * Why `data` fell back to `defaultValue`, so callers can distinguish a
+   * hard failure from a genuinely empty result. `'none'` means the data
+   * is real.
+   */
+  errorKind: QueryErrorKind;
 };
 
 /**
@@ -56,5 +65,6 @@ export const useResolvedApiQuery = <
     ...rest,
     data: resolvedData,
     error: error as Error,
+    errorKind: getQueryErrorKind(error, apiResponse),
   };
 };

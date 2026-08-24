@@ -20,6 +20,7 @@ import {
   AppButton,
   DashboardTitleAndDesc,
   FormikAppTextField,
+  QueryErrorState,
   RowStack,
 } from '../../modules/components';
 import {
@@ -167,8 +168,21 @@ const statCardConfig = [
 
 export const SecuritySettingsPage = () => {
   const { updateSecuritySettings } = useSecurityApi();
-  const { data: securityKpi } = useResolvedApiQuery(useGetSecurityKpi, null);
-  const { data: securityData } = useResolvedApiQuery(useGetSecurityData, null);
+  const { data: securityKpi, errorKind: kpiErrorKind } = useResolvedApiQuery(
+    useGetSecurityKpi,
+    null
+  );
+  const {
+    data: securityData,
+    errorKind: settingsErrorKind,
+    refetch: refetchSettings,
+  } = useResolvedApiQuery(useGetSecurityData, null);
+
+  // Never render the form on a failed load. Every field falls back to
+  // false/'' when `securityData` is null, so a 403 would otherwise show a
+  // form full of made-up defaults that Save would write straight back.
+  const loadErrorKind =
+    settingsErrorKind !== 'none' ? settingsErrorKind : kpiErrorKind;
 
   const kpiData = useMemo<SecurityKPIs | undefined>(() => {
     return securityKpi ? securityKpi : undefined;
@@ -187,7 +201,8 @@ export const SecuritySettingsPage = () => {
       audit_logging_enabled: securityData?.audit_logging_enabled ?? true,
       session_timeout_hours:
         securityData?.session_timeout_hours?.toString() ?? '',
-      max_failed_login_attempts: '5',
+      max_failed_login_attempts:
+        securityData?.max_failed_login_attempts?.toString() ?? '',
       min_password_length: securityData?.min_password_length?.toString() ?? '',
       require_uppercase: securityData?.require_uppercase ?? false,
       require_lowercase: securityData?.require_lowercase ?? false,
@@ -221,6 +236,7 @@ export const SecuritySettingsPage = () => {
       ip_whitelist_enabled: values.ip_whitelist_enabled,
       audit_logging_enabled: values.audit_logging_enabled,
       session_timeout_hours: Number(values.session_timeout_hours),
+      max_failed_login_attempts: Number(values.max_failed_login_attempts),
       min_password_length: Number(values.min_password_length),
       require_uppercase: values.require_uppercase,
       require_lowercase: values.require_lowercase,
@@ -232,6 +248,23 @@ export const SecuritySettingsPage = () => {
     await updateSecuritySettings(payload);
     setSubmitting(false);
   };
+
+  if (loadErrorKind !== 'none') {
+    return (
+      <AppDashboardLayout>
+        <Stack spacing={'24px'}>
+          <DashboardTitleAndDesc
+            title="Security Settings"
+            desc="Configure authentication policies, session controls, and platform security rules"
+          />
+          <QueryErrorState
+            kind={loadErrorKind}
+            onRetry={() => refetchSettings()}
+          />
+        </Stack>
+      </AppDashboardLayout>
+    );
+  }
 
   return (
     <AppDashboardLayout>
@@ -537,7 +570,6 @@ export const SecuritySettingsPage = () => {
                             <FormikAppTextField
                               name="max_failed_login_attempts"
                               type="number"
-                              InputProps={{ readOnly: true }}
                               sx={textFieldSx}
                             />
                             <Typography

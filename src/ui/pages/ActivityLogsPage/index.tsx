@@ -19,9 +19,11 @@ import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNone
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
 import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import { toast } from 'sonner';
 import { AppDashboardLayout } from '../../modules/partials/AppDashboardLayout';
 import {
   DashboardTitleAndDesc,
+  QueryErrorState,
   RowStack,
   AppButton,
   AppSearchField,
@@ -123,9 +125,17 @@ export const ActivityLogsPage = () => {
     page: 0,
     pageSize: 7,
   });
-  const [severityChange] = useState<'all' | 'info' | 'warning' | 'critical'>(
-    'all'
-  );
+  const [severityChange, setSeverityChange] = useState<
+    'all' | 'info' | 'warning' | 'critical'
+  >('all');
+
+  // The KPI cards double as filters. Re-clicking the active one clears it.
+  const handleSeverityFilter = (
+    severity: 'all' | 'info' | 'warning' | 'critical'
+  ) => {
+    setSeverityChange((current) => (current === severity ? 'all' : severity));
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  };
 
   const currentPage = useMemo<number>(() => {
     return paginationModel.page + 1;
@@ -148,11 +158,12 @@ export const ActivityLogsPage = () => {
     useGetActivityAnalytics,
     null
   );
-  const { data: activityLists, isLoading } = useResolvedApiQuery(
-    useGetActivityList,
-    null,
-    payload
-  );
+  const {
+    data: activityLists,
+    isLoading,
+    errorKind: listErrorKind,
+    refetch: refetchLogs,
+  } = useResolvedApiQuery(useGetActivityList, null, payload);
 
   const activityKpiData = useMemo<ActivityLogKPIs | undefined>(() => {
     return activityKpi ? activityKpi : undefined;
@@ -174,12 +185,14 @@ export const ActivityLogsPage = () => {
       iconBg: '#EBF2FF',
       value: `${formatTotalNumber(activityKpiData?.total_logs)}`,
       label: 'Total Logs',
+      severity: 'all' as const,
     },
     {
       icon: <InfoOutlinedIcon sx={{ fontSize: 20, color: '#2F6FED' }} />,
       iconBg: '#EBF2FF',
       value: `${formatTotalNumber(activityKpiData?.info)}`,
       label: 'Info',
+      severity: 'info' as const,
     },
     {
       icon: (
@@ -188,6 +201,7 @@ export const ActivityLogsPage = () => {
       iconBg: '#FFFBEB',
       value: `${formatTotalNumber(activityKpiData?.warnings)}`,
       label: 'Warnings',
+      severity: 'warning' as const,
     },
     {
       icon: (
@@ -196,6 +210,7 @@ export const ActivityLogsPage = () => {
       iconBg: '#FEF2F2',
       value: `${formatTotalNumber(activityKpiData?.critical)}`,
       label: 'Critical',
+      severity: 'critical' as const,
     },
   ];
 
@@ -208,6 +223,9 @@ export const ActivityLogsPage = () => {
         a.download = `activity-logs-${dayjs().format('YYYY-MM-DD')}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
+      },
+      onError: () => {
+        toast.error('Export failed. Please try again.');
       },
     });
   };
@@ -264,6 +282,8 @@ export const ActivityLogsPage = () => {
                 iconBg={card.iconBg}
                 value={card.value}
                 label={card.label}
+                selected={severityChange === card.severity}
+                onClick={() => handleSeverityFilter(card.severity)}
               />
             </Grid>
           ))}
@@ -328,7 +348,12 @@ export const ActivityLogsPage = () => {
 
           {/* Log Entries */}
           <Stack>
-            {!isLoading && logItems.length === 0 ? (
+            {listErrorKind !== 'none' ? (
+              <QueryErrorState
+                kind={listErrorKind}
+                onRetry={() => refetchLogs()}
+              />
+            ) : !isLoading && logItems.length === 0 ? (
               <Stack
                 alignItems="center"
                 justifyContent="center"

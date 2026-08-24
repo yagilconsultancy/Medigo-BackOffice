@@ -8,6 +8,11 @@ export const useGetActivityList = (payload: ActivityLogListPayload) => {
     queryKey: [resolveRoute(ROUTES.getActivityList), JSON.stringify(payload)],
     queryFn: () => getActivityList(payload).then((res) => res.data),
     placeholderData: (previousData) => previousData,
+    // Audit views must reflect reality on open; the 1h global staleTime
+    // (react-query-client.ts) would otherwise serve stale logs for an hour.
+    staleTime: 0,
+    refetchOnMount: 'always' as const,
+    refetchOnWindowFocus: true,
     retry: (failureCount, error) => {
       // Don't retry on 403 errors
       if (error && typeof error === 'object' && 'response' in error) {
