@@ -3,6 +3,7 @@ import axios, {
   AxiosError,
   InternalAxiosRequestConfig,
 } from 'axios';
+import { ROUTES_SPEC } from '../constants/routes';
 import {
   getAuthToken,
   getRefreshToken,
@@ -30,8 +31,27 @@ const processQueue = (error: AxiosError | null = null) => {
   failedQueue = [];
 };
 
-const isLoginRoute = (route?: string) => route && route.includes('/login');
-const isRefreshRoute = (route?: string) => route && route.includes('/refresh');
+// Endpoints that must not carry an Authorization header, and whose 401s must
+// not be retried through the refresh flow: the caller either has no session yet
+// or is in the middle of minting one.
+//
+// Matched EXACTLY. This used to be `route.includes('/login')`, which also
+// caught /v1/auth/admin/login-history -- so the token was stripped from every
+// Login History request and the gateway answered "Authorization header
+// required", while a 401 there could never refresh. It is the same substring
+// bug the API gateway had on the same path, fixed there by PUBLIC_EXACT_PATHS.
+const LOGIN_ROUTES = new Set<string>([
+  ROUTES_SPEC.login,
+  ROUTES_SPEC.adminLogin,
+]);
+const REFRESH_ROUTES = new Set<string>([ROUTES_SPEC.adminRefresh]);
+
+/** Compare on the path alone -- no query string, no trailing slash. */
+const routePath = (route?: string) =>
+  (route ?? '').split('?')[0].replace(/\/+$/, '');
+
+const isLoginRoute = (route?: string) => LOGIN_ROUTES.has(routePath(route));
+const isRefreshRoute = (route?: string) => REFRESH_ROUTES.has(routePath(route));
 
 export const getApiClient = () => {
   if (apiClient) {
