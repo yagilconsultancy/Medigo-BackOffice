@@ -23,3 +23,4 @@ export * from './roles-permissions';
 export * from './caregivers';
 export * from './admin-invitations';
 export * from './trip-resolution';
+export * from './account-deletion';

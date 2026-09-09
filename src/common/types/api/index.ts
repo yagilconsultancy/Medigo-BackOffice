@@ -15,3 +15,4 @@ export * from './caregivers.types';
 export * from './tracking.types';
 export * from './admin-invitations.types';
 export * from './trip-resolution';
+export * from './account-deletion.types';
