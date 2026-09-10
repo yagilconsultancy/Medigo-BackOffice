@@ -101,6 +101,7 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
           { text: 'Rider Profiles', link: '/riders/profiles' },
           { text: 'Rider Activity', link: '/riders/activity' },
           { text: 'Rider Issues', link: '/riders/issues' },
+          { text: 'Account Deletion Requests', link: '/riders/deletion-requests' },
         ],
       },
       {

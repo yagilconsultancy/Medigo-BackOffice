@@ -28,3 +28,4 @@ export * from './caregivers';
 export * from './tracking-admin';
 export * from './admin-invitations';
 export * from './trip-resolution';
+export * from './account-deletion';

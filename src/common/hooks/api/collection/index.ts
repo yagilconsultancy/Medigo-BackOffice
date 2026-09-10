@@ -26,3 +26,4 @@ export * from './useRolesPermissionsApi';
 export * from './useCaregiversApi';
 export * from './useAdminInvitationsApi';
 export * from './useTripResolutionApi';
+export * from './useAccountDeletionRequestsApi';

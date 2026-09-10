@@ -277,6 +277,16 @@ export const ROUTES_SPEC = {
   updateDispatchSettings: `/${API_VERSION}/rides/admin/admin/dispatch/settings`,
   triggerAutoDispatch: `/${API_VERSION}/rides/admin/admin/dispatch/auto-assign`,
 
+  // Account deletion requests filed from the public getmedigo.com form.
+  getAccountDeletionKpis: `/${API_VERSION}/users/admin/account-deletion/requests/kpis`,
+  accountDeletionRequests: `/${API_VERSION}/users/admin/account-deletion/requests`,
+  accountDeletionRequestDetail: (requestId: string) =>
+    `/${API_VERSION}/users/admin/account-deletion/requests/${requestId}`,
+  approveAccountDeletionRequest: (requestId: string) =>
+    `/${API_VERSION}/users/admin/account-deletion/requests/${requestId}/approve`,
+  rejectAccountDeletionRequest: (requestId: string) =>
+    `/${API_VERSION}/users/admin/account-deletion/requests/${requestId}/reject`,
+
   // Fleet Application
   getFleetApplicationsKpi: `/${API_VERSION}/users/admin/fleet/applications/kpis`,
   fleetApplications: `/${API_VERSION}/users/admin/fleet/applications`,
