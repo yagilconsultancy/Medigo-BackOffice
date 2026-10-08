@@ -25,8 +25,6 @@ import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined';
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
-import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -34,7 +32,6 @@ import ElderlyIcon from '@mui/icons-material/Elderly';
 import LocalHospitalOutlinedIcon from '@mui/icons-material/LocalHospitalOutlined';
 import AirlineSeatFlatAngledIcon from '@mui/icons-material/AirlineSeatFlatAngled';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import {
   RowStack,
   AppNotificationSnackbar,
@@ -142,8 +139,6 @@ export const AddDriverDrawer = ({
   const [driverStatus, setDriverStatus] =
     useState<DriverStatusOption>('Active');
   const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -998,51 +993,6 @@ export const AddDriverDrawer = ({
                       }
                       sx={inputWithIconSx}
                     />
-                  </Box>
-                </FormField>
-                <FormField label="App Password" sx={{ flex: 1 }}>
-                  <Box sx={{ position: 'relative' }}>
-                    <LockOutlinedIcon
-                      sx={{
-                        position: 'absolute',
-                        left: 12,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        fontSize: 13,
-                        color: '#9CA3AF',
-                        zIndex: 1,
-                      }}
-                    />
-                    <Box
-                      component="input"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Set initial password"
-                      value={password}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setPassword(e.target.value)
-                      }
-                      sx={{ ...inputWithIconSx, paddingRight: '36px' }}
-                    />
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      sx={{
-                        position: 'absolute',
-                        right: 4,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        padding: '4px',
-                      }}
-                    >
-                      {showPassword ? (
-                        <VisibilityOffOutlinedIcon
-                          sx={{ fontSize: 14, color: '#9CA3AF' }}
-                        />
-                      ) : (
-                        <VisibilityOutlinedIcon
-                          sx={{ fontSize: 14, color: '#9CA3AF' }}
-                        />
-                      )}
-                    </IconButton>
                   </Box>
                 </FormField>
               </RowStack>

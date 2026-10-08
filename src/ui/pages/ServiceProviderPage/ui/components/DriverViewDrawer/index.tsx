@@ -1359,9 +1359,8 @@ export const DriverViewDrawer = ({
                         />
                       )}
 
-                      {/* Resend Invitation — re-send the sign-up link/token to a
-                        driver who hasn't completed registration, instead of
-                        deleting and re-adding them. */}
+                      {/* Resend Activation Code — emails a fresh code to an
+                        approved driver who hasn't set a password yet. */}
                       <ActionButton
                         icon={
                           <ForwardToInboxOutlinedIcon
@@ -1371,7 +1370,7 @@ export const DriverViewDrawer = ({
                         label={
                           isSubmittingAction
                             ? 'Resending...'
-                            : 'Resend Invitation'
+                            : 'Resend Activation Code'
                         }
                         variant="default"
                         onClick={
