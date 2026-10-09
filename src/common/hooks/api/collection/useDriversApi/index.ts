@@ -121,13 +121,15 @@ export const useDriversApi = () => {
 
         if (responseData.success) {
           success = true;
-          toast.success('Invitation resent successfully');
+          toast.success('Activation code resent successfully');
         } else {
           toast.error(extractResponseErrors(responseData));
         }
       },
       async () => {
-        toast.error('An error occurred while resending the invitation');
+        toast.error(
+          'Could not resend the code. The driver must be approved and must not have set a password yet.'
+        );
       }
     );
 

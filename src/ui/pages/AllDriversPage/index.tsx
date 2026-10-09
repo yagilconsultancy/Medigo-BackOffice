@@ -18,7 +18,6 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import NearMeOutlinedIcon from '@mui/icons-material/NearMeOutlined';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SpeedOutlinedIcon from '@mui/icons-material/SpeedOutlined';
-import AddIcon from '@mui/icons-material/Add';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import dayjs from 'dayjs';
@@ -34,7 +33,6 @@ import { GridColSpec } from '../../modules/components/GridTable';
 import {
   DriverDetailDrawer,
   EditDriverDrawer,
-  AddDriverDrawer,
 } from './ui/components';
 import {
   pxToRem,
@@ -213,7 +211,6 @@ export const AllDriversPage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [editDriver, setEditDriver] = useState<AllDriverRow | null>(null);
-  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
@@ -506,34 +503,6 @@ export const AllDriversPage = () => {
             title="Driver Management"
             desc="Manage your driver roster, documents, fleet assignments, and status"
           />
-          <Box
-            onClick={() => setAddDrawerOpen(true)}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              height: '40px',
-              padding: '0 20px',
-              background: '#2F6FED',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              transition: 'opacity 0.15s ease',
-              '&:hover': { opacity: 0.9 },
-            }}
-          >
-            <AddIcon sx={{ fontSize: 16, color: '#FFFFFF' }} />
-            <Typography
-              sx={{
-                fontFamily: (theme) => theme.typography.fontFamily,
-                fontWeight: 600,
-                fontSize: pxToRem(13),
-                color: '#FFFFFF',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Add New Driver
-            </Typography>
-          </Box>
         </RowStack>
 
         {/* Stat Cards */}
@@ -674,13 +643,6 @@ export const AllDriversPage = () => {
         onClose={() => setEditDrawerOpen(false)}
         driver={editDriver}
         onSaved={() => void refetchDrivers()}
-      />
-
-      {/* Add Driver Drawer */}
-      <AddDriverDrawer
-        open={addDrawerOpen}
-        onClose={() => setAddDrawerOpen(false)}
-        onCreated={() => void refetchDrivers()}
       />
     </AppDashboardLayout>
   );

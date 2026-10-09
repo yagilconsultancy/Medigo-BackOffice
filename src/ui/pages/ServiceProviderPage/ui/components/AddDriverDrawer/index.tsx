@@ -45,7 +45,6 @@ import type {
 import {
   AppButton,
   AppDatePickerPopover,
-  FormikAppPasswordField,
   FormikAppTextField,
   RowStack,
   VisuallyHiddenInput,
@@ -102,7 +101,6 @@ const validationSchema = Yup.object().shape({
   seniorAssistance: Yup.boolean(),
   stretcherTransport: Yup.boolean(),
   isApproved: Yup.boolean(),
-  appPassword: Yup.string(),
 });
 
 const initialValues = {
@@ -122,7 +120,6 @@ const initialValues = {
   seniorAssistance: false,
   stretcherTransport: false,
   isApproved: false,
-  appPassword: '',
 };
 
 // ─── Section Card Wrapper ──────────────────────────────────────────────────
@@ -1188,26 +1185,21 @@ export const AddDriverDrawer = ({
                     <Typography
                       sx={{
                         fontFamily: (theme) => theme.typography.fontFamily,
-                        fontWeight: 700,
-                        fontSize: pxToRem(11),
-                        letterSpacing: '0.6px',
+                        fontSize: pxToRem(12),
+                        lineHeight: '18px',
                         color: '#6B7280',
-                        textTransform: 'uppercase',
                       }}
                     >
-                      Create Driver App Login
+                      The driver chooses their own password. Once you approve
+                      the driver, they receive a welcome email with an
+                      activation code, then open the MediGo app, choose
+                      Driver, enter their email and the code, and set a
+                      password.
                     </Typography>
-                    <Stack spacing={'6px'}>
-                      <FieldLabel text="App Password" />
-                      <FormikAppPasswordField
-                        name="appPassword"
-                        placeholder="Set initial password"
-                      />
-                    </Stack>
                     <FormikIOSSwitch
                       name="isApproved"
                       label="Approve Driver"
-                      description="Enable this to approve the driver immediately upon creation"
+                      description="Approve the driver now and email them an activation code"
                     />
                   </SectionCard>
                 </Stack>
