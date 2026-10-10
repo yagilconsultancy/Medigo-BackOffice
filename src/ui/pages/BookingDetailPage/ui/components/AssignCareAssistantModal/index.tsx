@@ -53,7 +53,6 @@ export const AssignCareAssistantModal = ({
     if (!caregiversResponse?.success) return [];
     return caregiversResponse.data ?? [];
   }, [caregiversResponse]);
-  console.log('Caregivers:', caregivers, caregiversResponse);
 
   const handleConfirm = () => {
     if (selectedCaregiverId) {

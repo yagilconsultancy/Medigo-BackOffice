@@ -80,6 +80,11 @@ const yearlyChartData = [
   { name: '2026', revenue: 1200000 },
 ];
 
+const formatGrowth = (value?: number | null) => {
+  const growth = Number(value) || 0;
+  return `${growth >= 0 ? '+' : ''}${growth}%`;
+};
+
 // ─── Tab-Specific Configs ───────────────────────────────────────────────────
 
 const tabConfigs: Record<
@@ -537,7 +542,7 @@ export const RevenueDashboardPage = () => {
           <TrendingUpOutlinedIcon sx={{ fontSize: 20, color: '#F59E0B' }} />
         ),
         iconBg: '#FFFBEB',
-        value: kpis.growth_percentage ? `+${kpis.growth_percentage}%` : '+0%',
+        value: formatGrowth(kpis.growth_percentage),
         label: 'Growth Rate',
         subtext: 'vs prior period',
       },
@@ -741,7 +746,7 @@ export const RevenueDashboardPage = () => {
                       color: '#059669',
                     }}
                   >
-                    {config.growthRate}
+                    {formatGrowth(kpisData?.growth_percentage)}
                   </Typography>
                 </RowStack>
               </RowStack>
@@ -781,7 +786,6 @@ export const RevenueDashboardPage = () => {
                           fontFamily: 'Inter, sans-serif',
                         }}
                         dx={-5}
-                        ticks={config.yAxisTicks}
                         tickFormatter={config.yAxisFormatter}
                       />
                       <Tooltip
@@ -848,7 +852,6 @@ export const RevenueDashboardPage = () => {
                           fontFamily: 'Inter, sans-serif',
                         }}
                         dx={-5}
-                        ticks={config.yAxisTicks}
                         tickFormatter={config.yAxisFormatter}
                       />
                       <Tooltip content={<CustomTooltip />} />

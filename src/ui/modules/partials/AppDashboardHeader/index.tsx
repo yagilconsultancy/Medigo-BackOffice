@@ -94,9 +94,7 @@ export const AppDashBoardHeader = ({
   const handleConfirmLogout = async () => {
     setIsLoggingOut(true);
     const refreshToken = getRefreshToken();
-    if (refreshToken) {
-      await logout({ refresh_token: refreshToken });
-    }
+    await logout({ refresh_token: refreshToken ?? '' });
     setIsLoggingOut(false);
     setOpenLogoutModal(false);
   };
