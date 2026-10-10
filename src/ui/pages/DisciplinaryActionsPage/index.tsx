@@ -20,6 +20,7 @@ import { CustomPagination } from '../../modules/components/GridTable/ui/componen
 import { EmptyState } from '../../modules/blocks';
 import {
   pxToRem,
+  useDisciplinaryApi,
   useGetDisciplinaryKpis,
   useListDisciplinaryActions,
   useReinstateDisciplinaryAction,
@@ -27,6 +28,54 @@ import {
 } from '../../../common';
 import { IssueDisciplinaryActionModal } from './ui/components';
 import dayjs from 'dayjs';
+
+// ─── Issue action payload ───────────────────────────────────────────────────
+
+const actionTypeToApi: Record<string, string> = {
+  'Account Suspension': 'account_suspension',
+  'Driving Suspension': 'driving_suspension',
+  'Written Warning': 'written_warning',
+  'Account Warning': 'account_warning',
+  'Driving Ban': 'driving_ban',
+};
+
+const severityByAction: Record<string, string> = {
+  account_suspension: 'high',
+  driving_suspension: 'high',
+  driving_ban: 'high',
+  written_warning: 'medium',
+  account_warning: 'low',
+};
+
+type IssueActionFormValues = {
+  subjectType: string;
+  subjectId: string;
+  subjectName: string;
+  incidentReference: string;
+  actionType: string;
+  duration: string;
+  reason: string;
+};
+
+const buildIssueActionPayload = (values: IssueActionFormValues) => {
+  const actionType =
+    actionTypeToApi[values.actionType] ??
+    values.actionType.toLowerCase().replace(/\s+/g, '_');
+  const incidentDigits = values.incidentReference.match(/\d+/)?.[0];
+  const days = values.duration.match(/(\d+)\s*day/i)?.[1];
+
+  return {
+    action_type: actionType,
+    severity: severityByAction[actionType] ?? 'medium',
+    subject_id: values.subjectId,
+    subject_name: values.subjectName,
+    subject_type: values.subjectType.toLowerCase(),
+    incident_number: incidentDigits ? Number(incidentDigits) : null,
+    duration_text: values.duration,
+    duration_days: days ? Number(days) : null,
+    reason: values.reason || null,
+  };
+};
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -120,6 +169,8 @@ export const DisciplinaryActionsPage = () => {
   // Hooks
   const { mutateAsync: reinstateDisciplinaryAction } =
     useReinstateDisciplinaryAction();
+
+  const { createAction } = useDisciplinaryApi();
 
   // Fetch KPIs
   const { data: kpisData } = useResolvedApiQuery(useGetDisciplinaryKpis, null);
@@ -715,9 +766,12 @@ export const DisciplinaryActionsPage = () => {
       <IssueDisciplinaryActionModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={(values) => {
-          console.log('Issue action:', values);
-          setIsModalOpen(false);
+        onSubmit={async (values) => {
+          const created = await createAction(buildIssueActionPayload(values));
+          if (created) {
+            setIsModalOpen(false);
+            refetch();
+          }
         }}
       />
     </AppDashboardLayout>

@@ -223,6 +223,9 @@ export const ImagePdfViewer = ({
             <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
               <Viewer
                 fileUrl={uri}
+                transformGetDocumentParams={(options) =>
+                  Object.assign({}, options, { isEvalSupported: false })
+                }
                 defaultScale={SpecialZoomLevel.PageWidth}
                 plugins={[defaultLayoutPluginInstance]}
                 renderLoader={() => (

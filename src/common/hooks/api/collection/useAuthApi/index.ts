@@ -74,15 +74,15 @@ export const useAuthApi = () => {
     await tryExecute(
       () => doLogout.mutateAsync(payload),
       async () => {
-        Cookies.remove('medi_refresh');
-
         toast.success('Logged out successfully');
-        router.push('/login');
       },
-      async (error) => {
-        toast.error(extractApiErrorMessage(error));
-      }
+      async () => {}
     );
+
+    // Sign out locally even if the server call fails.
+    Cookies.remove('medi_auth');
+    Cookies.remove('medi_refresh');
+    router.push('/login');
   };
 
   const refresh = async (payload: ApiLoginRefreshRequest): Promise<boolean> => {

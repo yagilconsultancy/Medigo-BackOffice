@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
-import { pxToRem } from '../../../../../../common';
+import { pxToRem, useDriversApi } from '../../../../../../common';
 import {
   AppButton,
   AppModal,
@@ -77,6 +77,8 @@ export const SuspendDriverModal = ({
   setOpen,
   driver,
 }: SuspendDriverModalProps) => {
+  const { suspendDriver } = useDriversApi();
+
   if (!driver) return null;
 
   const nameParts = driver.name.split(' ');
@@ -106,9 +108,17 @@ export const SuspendDriverModal = ({
         }}
         validationSchema={validationSchema}
         enableReinitialize
-        onSubmit={(values) => {
-          console.log('Suspend driver:', driver.id, values);
-          setOpen(false);
+        onSubmit={async (values) => {
+          const reason = values.notes.trim()
+            ? `${values.reason}: ${values.notes.trim()}`
+            : values.reason;
+          const suspended = await suspendDriver({
+            driverId: driver.id,
+            reason,
+          });
+          if (suspended) {
+            setOpen(false);
+          }
         }}
       >
         {({ values, setFieldValue, isValid, dirty }) => (

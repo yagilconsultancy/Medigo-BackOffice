@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
 import {
   alpha,
   Avatar,
@@ -339,7 +338,6 @@ const formatCaregiverStatus = (status?: string | null): CaregiverStatus => {
 };
 
 export const ServiceProviderPage = () => {
-  const router = useRouter();
   const { deactivateDriver } = useDriversApi();
 
   // Dropdown state
@@ -1300,7 +1298,11 @@ export const ServiceProviderPage = () => {
                         setEditDriverOpen(true);
                       }}
                       onDocuments={() => {
-                        router.push('/drivers/documents');
+                        const row = apiDrivers.find((d) => d.id === driver.id);
+                        if (row) {
+                          setSelectedDriver(row);
+                          setDrawerOpen(true);
+                        }
                       }}
                       onSuspend={() => {
                         setSuspendDriver(driver);
@@ -1416,7 +1418,8 @@ export const ServiceProviderPage = () => {
                       setEditCaregiverOpen(true);
                     }}
                     onDocuments={() => {
-                      router.push('/drivers/documents');
+                      setSelectedCaregiver(caregiver);
+                      setCaregiverDrawerOpen(true);
                     }}
                     onViewDetails={() => {
                       setSelectedCaregiver(caregiver);

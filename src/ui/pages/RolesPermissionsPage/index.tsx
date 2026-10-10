@@ -31,13 +31,13 @@ import {
 import type { AdminRoleCardResponse } from '../../../common';
 import {
   RoleCard,
-  InviteAdminModal,
   CreateRoleModal,
   EditRoleModal,
   DeleteRoleModal,
   PermissionControls,
 } from './ui/component';
 import { EmptyState } from '../../modules/blocks';
+import { InviteAdminModal } from '../AdminInvitationsPage/ui/components';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -992,10 +992,6 @@ export const RolesPermissionsPage = () => {
       <InviteAdminModal
         open={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
-        onSubmit={(values) => {
-          console.log('Invite admin:', values);
-          setIsInviteModalOpen(false);
-        }}
       />
     </AppDashboardLayout>
   );

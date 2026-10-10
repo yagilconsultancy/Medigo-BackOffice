@@ -205,7 +205,6 @@ export function deepEqual(a: any, b: any) {
 
 export function checkForChanges(obj1: any, obj2: any) {
   if (!deepEqual(obj1, obj2)) {
-    console.log('Change detected!');
     return true;
   }
   return false;
