@@ -69,4 +69,5 @@ export * from './ServiceProviderPage';
 export * from './LoginPage';
 export * from './ForgotPasswordPage';
 export * from './ResetPasswordPage';
+export * from './ChangePasswordRequiredPage';
 export * from './AccountDeletionRequestsPage';

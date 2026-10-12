@@ -82,6 +82,7 @@ export interface LoginResponse {
   refresh_token: string;
   token_type?: string; // default: "bearer"
   expires_in: number;
+  must_change_password?: boolean; // true for a new admin on a one-time password
 }
 
 export type ApiLoginResponse = ApiResponse<LoginResponse>;

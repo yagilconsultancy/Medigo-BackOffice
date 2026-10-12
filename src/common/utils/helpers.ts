@@ -320,6 +320,24 @@ export const removeAuthToken = () => {
   Cookies.remove('medi_auth');
 };
 
+const MUST_CHANGE_PASSWORD_COOKIE = 'medi_must_change_password';
+
+export const setMustChangePassword = () => {
+  Cookies.set(MUST_CHANGE_PASSWORD_COOKIE, '1', {
+    expires: 7,
+    secure: true,
+    sameSite: 'strict',
+  });
+};
+
+export const getMustChangePassword = () => {
+  return Cookies.get(MUST_CHANGE_PASSWORD_COOKIE) === '1';
+};
+
+export const removeMustChangePassword = () => {
+  Cookies.remove(MUST_CHANGE_PASSWORD_COOKIE);
+};
+
 export const removeRefreshToken = () => {
   Cookies.remove('medi_refresh');
 };
