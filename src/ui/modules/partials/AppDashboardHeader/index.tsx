@@ -19,13 +19,15 @@ import { RowStack } from '../../components';
 import { ChangePasswordModal } from '../AppDashboardSidebar/ui/components/ChangePasswordModal';
 import { LogoutModal } from '../AppDashboardSidebar/ui/components/LogoutModal';
 import {
+  getMustChangePassword,
   getRefreshToken,
   pxToRem,
   useAuthApi,
   useGetUserProfile,
   useResolvedApiQuery,
 } from '@/common';
-import { KeyboardEvent, MouseEvent, useState } from 'react';
+import { KeyboardEvent, MouseEvent, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type AppHeaderProps = {
   sidebarOpen: boolean;
@@ -40,6 +42,14 @@ export const AppDashBoardHeader = ({
 }: AppHeaderProps) => {
   const { data: userProfile } = useResolvedApiQuery(useGetUserProfile, null);
   const { changePassword, logout } = useAuthApi();
+  const router = useRouter();
+
+  // A new admin on a one-time password must choose their own before using the app
+  useEffect(() => {
+    if (getMustChangePassword()) {
+      router.replace('/change-password-required');
+    }
+  }, [router]);
   const [profileMenuAnchorEl, setProfileMenuAnchorEl] =
     useState<HTMLElement | null>(null);
   const [openLogoutModal, setOpenLogoutModal] = useState(false);

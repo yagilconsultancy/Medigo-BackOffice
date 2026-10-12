@@ -21,6 +21,8 @@ import {
   extractApiErrorMessage,
   extractResponseErrors,
   removeForgotPasswordUserId,
+  removeMustChangePassword,
+  setMustChangePassword,
   setAuthToken,
   setForgotPasswordUserId,
   setRefreshToken,
@@ -54,8 +56,16 @@ export const useAuthApi = () => {
           setRefreshToken(refreshToken);
 
           success = true;
-          toast.success(`${responseData.message}`);
-          router.push('/');
+          if (responseData.data.must_change_password) {
+            // New admin on a one-time password: must choose their own first
+            setMustChangePassword();
+            toast.info('Please choose a new password to continue');
+            router.push('/change-password-required');
+          } else {
+            removeMustChangePassword();
+            toast.success(`${responseData.message}`);
+            router.push('/');
+          }
         } else if (response.status === 401) {
           toast.error(extractResponseErrors(responseData));
         } else {
@@ -75,6 +85,7 @@ export const useAuthApi = () => {
       () => doLogout.mutateAsync(payload),
       async () => {
         Cookies.remove('medi_refresh');
+        removeMustChangePassword();
 
         toast.success('Logged out successfully');
         router.push('/login');
