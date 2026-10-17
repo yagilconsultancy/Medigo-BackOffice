@@ -32,11 +32,37 @@ export type SidebarLinksProps = {
     items: SidebarItem[];
   }[];
   isSidebarOpen: boolean;
+  // Counts to show next to a menu entry, keyed by the entry's link.
+  badges?: Record<string, number>;
 };
+
+const CountBadge = ({ count }: { count: number }) => (
+  <Box
+    component="span"
+    aria-label={`${count} waiting`}
+    sx={{
+      minWidth: '20px',
+      height: '20px',
+      px: '6px',
+      ml: '8px',
+      borderRadius: '10px',
+      backgroundColor: '#E5484D',
+      color: '#FFFFFF',
+      fontSize: pxToRem(11),
+      fontWeight: 600,
+      lineHeight: '20px',
+      textAlign: 'center',
+      flexShrink: 0,
+    }}
+  >
+    {count > 99 ? '99+' : count}
+  </Box>
+);
 
 export const SidebarLinks = ({
   isSidebarOpen,
   sidebarList,
+  badges = {},
 }: SidebarLinksProps) => {
   const theme = useTheme();
   const pathname = usePathname();
@@ -174,6 +200,17 @@ export const SidebarLinks = ({
                           >
                             {item.text}
                           </Typography>
+                          {expanded !== item.text &&
+                            (() => {
+                              const total = (item.dropdown ?? []).reduce(
+                                (sum, subItem) =>
+                                  sum + (badges[subItem.link] ?? 0),
+                                0
+                              );
+                              return total > 0 ? (
+                                <CountBadge count={total} />
+                              ) : null;
+                            })()}
                         </RowStack>
                       </AccordionSummary>
 
@@ -244,6 +281,9 @@ export const SidebarLinks = ({
                                   >
                                     {subItem.text}
                                   </Typography>
+                                  {(badges[subItem.link] ?? 0) > 0 && (
+                                    <CountBadge count={badges[subItem.link]} />
+                                  )}
                                   <ChevronRightIcon
                                     className="sub-item-chevron"
                                     sx={{

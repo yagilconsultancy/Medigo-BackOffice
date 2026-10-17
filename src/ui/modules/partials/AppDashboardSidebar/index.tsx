@@ -10,7 +10,11 @@ import {
 } from '@mui/material';
 import { AdminInfo, Header } from './ui/components';
 import { SidebarLinks, SidebarLinksProps } from './ui/blocks';
-import { useGetMyPermissions, useResolvedApiQuery } from '../../../../common';
+import {
+  useGetFleetApplicationsKpi,
+  useGetMyPermissions,
+  useResolvedApiQuery,
+} from '../../../../common';
 import type { UserPermissionsResponse } from '../../../../common';
 
 // Sidebar icons
@@ -101,7 +105,10 @@ const sidebarList: SidebarLinksProps['sidebarList'] = [
           { text: 'Rider Profiles', link: '/riders/profiles' },
           { text: 'Rider Activity', link: '/riders/activity' },
           { text: 'Rider Issues', link: '/riders/issues' },
-          { text: 'Account Deletion Requests', link: '/riders/deletion-requests' },
+          {
+            text: 'Account Deletion Requests',
+            link: '/riders/deletion-requests',
+          },
         ],
       },
       {
@@ -216,6 +223,17 @@ export function AppDashboardSideBar({
   // Fetch user permissions
   const { data: permissionsData } =
     useResolvedApiQuery<UserPermissionsResponse>(useGetMyPermissions, null);
+
+  // Applications waiting for review, shown as a badge on the Fleet menu.
+  const { data: fleetKpis } = useResolvedApiQuery(
+    useGetFleetApplicationsKpi,
+    null,
+    { refetchInterval: 60_000 }
+  );
+  const badges = useMemo(
+    () => ({ '/fleet': Number(fleetKpis?.pending_review ?? 0) }),
+    [fleetKpis]
+  );
 
   // Filter sidebar items based on accessible modules
   const filteredSidebarList = useMemo(() => {
@@ -340,6 +358,7 @@ export function AppDashboardSideBar({
           >
             <SidebarLinks
               sidebarList={filteredSidebarList}
+              badges={badges}
               isSidebarOpen={open}
             />
           </Box>

@@ -2,11 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { resolveRoute, ROUTES } from '../../../../../constants';
 import { getFleetApplicationsKpi } from '../../../../../services';
 
-export const useGetFleetApplicationsKpi = () => {
+export const useGetFleetApplicationsKpi = (options?: {
+  refetchInterval?: number;
+}) => {
   return useQuery({
     queryKey: [resolveRoute(ROUTES.getFleetApplicationsKpi)],
     queryFn: () => getFleetApplicationsKpi().then((res) => res.data),
     placeholderData: (previousData) => previousData,
+    refetchInterval: options?.refetchInterval,
     retry: (failureCount, error) => {
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as any;
