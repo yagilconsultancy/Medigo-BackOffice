@@ -47,14 +47,14 @@ const apiStatusToUiStatus: Record<string, ApplicationStatus> = {
   pending: 'Pending',
   approved: 'Approved',
   rejected: 'Rejected',
-  info_requested: 'More Info Required',
+  more_info_requested: 'More Info Required',
 };
 
 const uiStatusToApiStatus: Record<string, string> = {
   Pending: 'pending',
   Approved: 'approved',
   Rejected: 'rejected',
-  'More Info Required': 'info_requested',
+  'More Info Required': 'more_info_requested',
 };
 
 // ─── Component ──────────────────────────────────────────────────────────────
