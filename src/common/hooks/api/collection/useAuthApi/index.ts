@@ -80,20 +80,35 @@ export const useAuthApi = () => {
     return success;
   };
 
-  const logout = async (payload: ApiLoginRefreshRequest): Promise<void> => {
-    await tryExecute(
-      () => doLogout.mutateAsync(payload),
-      async () => {
-        Cookies.remove('medi_refresh');
-        removeMustChangePassword();
+  const logout = async (payload: ApiLoginRefreshRequest | null): Promise<void> => {
+    let serverOk = false;
 
-        toast.success('Logged out successfully');
-        router.push('/login');
-      },
-      async (error) => {
-        toast.error(extractApiErrorMessage(error));
-      }
-    );
+    // Tell the server to revoke the refresh token when we have one. If that
+    // call fails we still sign out on this device below.
+    if (payload?.refresh_token) {
+      await tryExecute(
+        () => doLogout.mutateAsync(payload),
+        async () => {
+          serverOk = true;
+        },
+        async () => {
+          serverOk = false;
+        }
+      );
+    }
+
+    // Always clear every sign-in cookie on this device, even if the server
+    // call failed, so the session cannot be reused from this browser.
+    Cookies.remove('medi_auth');
+    Cookies.remove('medi_refresh');
+    removeMustChangePassword();
+
+    if (serverOk || !payload?.refresh_token) {
+      toast.success('Logged out successfully');
+    } else {
+      toast.info('Logged out on this device');
+    }
+    router.push('/login');
   };
 
   const refresh = async (payload: ApiLoginRefreshRequest): Promise<boolean> => {

@@ -19,6 +19,7 @@ import {
 } from '../../../common';
 import { Form, Formik, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
+import { newPasswordRule } from '@/common/utils/passwordRule';
 import { useAuthApi } from '../../../common/hooks/api';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -32,9 +33,7 @@ type FormValues = {
 
 const Schema = Yup.object().shape({
   currentPassword: Yup.string().required('one-time password is required'),
-  newPassword: Yup.string()
-    .min(8, 'new password must be at least 8 characters')
-    .required('new password is required'),
+  newPassword: newPasswordRule('new password is required'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('newPassword')], 'confirm password must match new password')
     .required('confirm password is required'),

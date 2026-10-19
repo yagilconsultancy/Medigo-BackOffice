@@ -22,10 +22,10 @@ import { pxToRem } from '../../../../../../common';
 type IssueDisciplinaryActionModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: DisciplinaryFormValues) => void;
+  onSubmit: (values: DisciplinaryFormValues) => void | Promise<void>;
 };
 
-type DisciplinaryFormValues = {
+export type DisciplinaryFormValues = {
   subjectType: string;
   subjectId: string;
   subjectName: string;
@@ -110,7 +110,7 @@ export const IssueDisciplinaryActionModal = ({
         validationSchema={validationSchema}
         onSubmit={async (values, { setSubmitting }) => {
           try {
-            onSubmit(values);
+            await onSubmit(values);
           } finally {
             setSubmitting(false);
           }

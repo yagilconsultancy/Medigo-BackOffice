@@ -94,18 +94,22 @@ const authSettingsConfig = [
     name: 'Two-Factor Authentication (2FA)',
     description: 'Require all admins to use 2FA on every login',
     enabledLabel: 'Enabled',
+    // Not enforced by the server yet: shown off and locked until it is built.
+    comingSoon: true,
   },
   {
     field: 'ip_geo_blocking_enabled' as const,
     name: 'IP Geo-Blocking',
     description: 'Block login attempts from non-Canadian IP addresses',
     enabledLabel: 'Active',
+    comingSoon: true,
   },
   {
     field: 'ip_whitelist_enabled' as const,
     name: 'IP Whitelist (Allowlist)',
     description: 'Only allow logins from pre-approved IP addresses',
     enabledLabel: 'Enabled',
+    comingSoon: true,
   },
   {
     field: 'audit_logging_enabled' as const,
@@ -135,10 +139,8 @@ const statCardConfig = [
     label: '2FA Enabled',
     icon: <VerifiedUserOutlinedIcon sx={{ fontSize: 18, color: '#059669' }} />,
     iconBg: '#ECFDF5',
-    getValue: (kpi?: SecurityKPIs) =>
-      kpi?.two_fa_enabled_count != null && kpi?.total_admin_count != null
-        ? `${kpi.two_fa_enabled_count}/${kpi.total_admin_count}`
-        : '0/0',
+    // 2FA is not enforced by the server yet, so no count is shown.
+    getValue: (_kpi?: SecurityKPIs) => 'Coming later',
   },
   {
     label: 'Password Policy',
@@ -231,9 +233,10 @@ export const SecuritySettingsPage = () => {
     { setSubmitting }: FormikHelpers<SecurityFormValues>
   ) => {
     const payload: UpdateSecuritySettingsRequest = {
-      two_factor_enabled: values.two_factor_enabled,
-      ip_geo_blocking_enabled: values.ip_geo_blocking_enabled,
-      ip_whitelist_enabled: values.ip_whitelist_enabled,
+      // Not enforced by the server yet: always saved as off.
+      two_factor_enabled: false,
+      ip_geo_blocking_enabled: false,
+      ip_whitelist_enabled: false,
       audit_logging_enabled: values.audit_logging_enabled,
       session_timeout_hours: Number(values.session_timeout_hours),
       max_failed_login_attempts: Number(values.max_failed_login_attempts),
@@ -413,12 +416,16 @@ export const SecuritySettingsPage = () => {
 
                     <Stack sx={{ padding: '20px 24px 24px' }} spacing={'0px'}>
                       {authSettingsConfig.map((setting, index) => {
-                        const isOn = values[setting.field];
-                        const status = setting.locked
-                          ? setting.enabledLabel
-                          : isOn
+                        const comingSoon =
+                          'comingSoon' in setting && setting.comingSoon === true;
+                        const isOn = comingSoon ? false : values[setting.field];
+                        const status = comingSoon
+                          ? 'Coming later'
+                          : setting.locked
                             ? setting.enabledLabel
-                            : 'Off';
+                            : isOn
+                              ? setting.enabledLabel
+                              : 'Off';
 
                         return (
                           <Box key={setting.field}>
@@ -477,7 +484,12 @@ export const SecuritySettingsPage = () => {
                                 </Box>
                                 <IOSSwitch
                                   checked={isOn}
-                                  disabled={setting.locked}
+                                  disabled={setting.locked || comingSoon}
+                                  inputProps={{
+                                    'aria-label': comingSoon
+                                      ? `${setting.name} (coming later)`
+                                      : setting.name,
+                                  }}
                                   onChange={() =>
                                     setFieldValue(setting.field, !isOn)
                                   }

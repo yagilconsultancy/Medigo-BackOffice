@@ -34,8 +34,10 @@ import {
   useListInvestigations,
   useAssignInvestigator,
   useCloseInvestigation,
+  useGetUserProfile,
   useResolvedApiQuery,
 } from '../../../common';
+import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -145,6 +147,8 @@ export const IncidentInvestigationsPage = () => {
   // Hooks
   const { mutateAsync: assignInvestigator } = useAssignInvestigator();
   const { mutateAsync: closeInvestigation } = useCloseInvestigation();
+  const { data: currentAdmin } = useResolvedApiQuery(useGetUserProfile, null);
+  const [assigningId, setAssigningId] = useState<string | null>(null);
 
   // Fetch KPIs
   const { data: kpisData } = useResolvedApiQuery(useGetInvestigationKpis, null);
@@ -232,10 +236,31 @@ export const IncidentInvestigationsPage = () => {
   ];
 
   // Handlers
+  // Assigns the case to the signed-in admin. A picker for other admins needs
+  // an admin list endpoint on the server, which does not exist yet.
   const handleAssign = async (investigationId: string) => {
-    // TODO: Open modal to select investigator
-    // For now, just log
-    console.log('Assign investigation:', investigationId);
+    const adminId = currentAdmin?.id;
+    const adminName = `${currentAdmin?.first_name || ''} ${
+      currentAdmin?.last_name || ''
+    }`.trim();
+    if (!adminId) {
+      toast.error('Could not load your admin profile. Please refresh and try again.');
+      return;
+    }
+    setAssigningId(investigationId);
+    try {
+      await assignInvestigator({
+        invId: investigationId,
+        assigned_to_id: adminId,
+        assigned_to_name: adminName || 'Admin',
+      });
+      toast.success('Case assigned to you');
+      refetch();
+    } catch {
+      toast.error('Could not assign this case. Please try again.');
+    } finally {
+      setAssigningId(null);
+    }
   };
 
   const handleCloseCase = async (investigationId: string) => {
@@ -554,6 +579,7 @@ export const IncidentInvestigationsPage = () => {
                               <AppButton
                                 variant="contained"
                                 onClick={() => handleAssign(caseRow.id)}
+                                disabled={assigningId === caseRow.id}
                                 sx={{
                                   background: '#2F6FED',
                                   color: '#FFFFFF',
@@ -573,7 +599,7 @@ export const IncidentInvestigationsPage = () => {
                                   },
                                 }}
                               >
-                                Assign
+                                {assigningId === caseRow.id ? 'Assigning…' : 'Assign to me'}
                               </AppButton>
                             )}
                             {!isUnassigned && isNearComplete && (

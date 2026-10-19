@@ -93,7 +93,7 @@ export interface RefreshTokenRequest {
 
 export interface ChangePasswordRequest {
   current_password: string;
-  new_password: string; // minLength: 8, maxLength: 128
+  new_password: string; // minLength: 12, maxLength: 128
 }
 
 export type ApiChangePasswordPayload = ChangePasswordRequest;
@@ -122,7 +122,7 @@ export type ApiForgotPasswordResponse = ApiResponse<ForgotPasswordResponse>;
 export interface ResetPasswordRequest {
   user_id: string;
   code: string;
-  new_password: string; // minLength: 8, maxLength: 128
+  new_password: string; // minLength: 12, maxLength: 128
 }
 
 export type ApiResetPasswordPayload = ResetPasswordRequest;
@@ -150,7 +150,7 @@ export interface OTPVerifyResponse {
 export interface RegisterRequest {
   email?: string | null;
   phone?: string | null;
-  password: string; // minLength: 8, maxLength: 128
+  password: string; // minLength: 12, maxLength: 128
   role?: UserRole; // default: "rider"
 }
 
@@ -161,7 +161,7 @@ export interface RegisterResponse {
 
 export interface DriverRegisterRequest {
   invite_token: string;
-  password: string; // minLength: 8, maxLength: 128
+  password: string; // minLength: 12, maxLength: 128
 }
 
 export interface DriverVerifyInviteRequest {

@@ -23,9 +23,12 @@ import {
   useGetDisciplinaryKpis,
   useListDisciplinaryActions,
   useReinstateDisciplinaryAction,
+  useCreateDisciplinaryAction,
   useResolvedApiQuery,
 } from '../../../common';
 import { IssueDisciplinaryActionModal } from './ui/components';
+import type { DisciplinaryFormValues } from './ui/components/IssueDisciplinaryActionModal';
+import { toast } from 'sonner';
 import dayjs from 'dayjs';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -108,6 +111,41 @@ const statusMapToApi: Record<string, string> = {
 
 const statusTabs = ['All', 'Active', 'Issued', 'Expired', 'Reinstated'];
 
+// Form labels -> server values for a new disciplinary action.
+const actionTypeToApi: Record<string, string> = {
+  'Account Suspension': 'account_suspension',
+  'Driving Suspension': 'driving_suspension',
+  'Written Warning': 'written_warning',
+  'Account Warning': 'account_warning',
+  'Driving Ban': 'driving_ban',
+};
+
+// The form has no severity field, so it follows the action type.
+const severityForActionType: Record<string, string> = {
+  account_suspension: 'high',
+  driving_ban: 'high',
+  driving_suspension: 'medium',
+  written_warning: 'low',
+  account_warning: 'low',
+};
+
+function buildDisciplinaryPayload(values: DisciplinaryFormValues) {
+  const actionType = actionTypeToApi[values.actionType] ?? 'written_warning';
+  const incidentDigits = values.incidentReference.match(/\d+/)?.[0];
+  const days = values.duration.match(/(\d+)\s*day/i)?.[1];
+  return {
+    action_type: actionType,
+    severity: severityForActionType[actionType] ?? 'medium',
+    subject_type: values.subjectType.toLowerCase(),
+    subject_id: values.subjectId,
+    subject_name: values.subjectName,
+    incident_number: incidentDigits ? Number(incidentDigits) : null,
+    duration_text: values.duration,
+    duration_days: days ? Number(days) : null,
+    reason: values.reason,
+  };
+}
+
 export const DisciplinaryActionsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
@@ -120,6 +158,8 @@ export const DisciplinaryActionsPage = () => {
   // Hooks
   const { mutateAsync: reinstateDisciplinaryAction } =
     useReinstateDisciplinaryAction();
+  const { mutateAsync: createDisciplinaryAction } =
+    useCreateDisciplinaryAction();
 
   // Fetch KPIs
   const { data: kpisData } = useResolvedApiQuery(useGetDisciplinaryKpis, null);
@@ -185,6 +225,21 @@ export const DisciplinaryActionsPage = () => {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  };
+
+  const handleIssueAction = async (values: DisciplinaryFormValues) => {
+    if (!values.subjectId) {
+      toast.error('Please choose the driver or rider from the list.');
+      return;
+    }
+    try {
+      await createDisciplinaryAction(buildDisciplinaryPayload(values));
+      toast.success('Disciplinary action issued');
+      setIsModalOpen(false);
+      refetch();
+    } catch {
+      toast.error('Could not issue this action. Please check the details and try again.');
+    }
   };
 
   const handleReinstate = async (actionId: string) => {
@@ -715,10 +770,7 @@ export const DisciplinaryActionsPage = () => {
       <IssueDisciplinaryActionModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={(values) => {
-          console.log('Issue action:', values);
-          setIsModalOpen(false);
-        }}
+        onSubmit={handleIssueAction}
       />
     </AppDashboardLayout>
   );
