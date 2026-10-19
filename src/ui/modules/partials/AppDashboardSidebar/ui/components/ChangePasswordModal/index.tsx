@@ -11,6 +11,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import { Form, Formik, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
+import { newPasswordRule } from '@/common/utils/passwordRule';
 
 type ChangePasswordModalProps = {
   open: boolean;
@@ -26,9 +27,7 @@ type ChangePasswordFormValues = {
 
 const ChangePasswordSchema = Yup.object().shape({
   currentPassword: Yup.string().required('current password is required'),
-  newPassword: Yup.string()
-    .min(8, 'new password must be at least 8 characters')
-    .required('new password is required'),
+  newPassword: newPasswordRule('new password is required'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('newPassword')], 'confirm password must match new password')
     .required('confirm password is required'),

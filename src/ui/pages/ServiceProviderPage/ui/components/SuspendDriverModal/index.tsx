@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
-import { pxToRem } from '../../../../../../common';
+import { pxToRem, useDriversApi } from '../../../../../../common';
 import {
   AppButton,
   AppModal,
@@ -26,6 +26,7 @@ type SuspendDriverModalProps = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   driver: DriverProfileCardData | null;
+  onSuccess?: () => void;
 };
 
 // ─── Reason options ─────────────────────────────────────────────────────────
@@ -46,11 +47,6 @@ const timingOptions = [
     value: 'immediately',
     label: 'Immediately',
     description: 'Suspend right now',
-  },
-  {
-    value: 'after_trip',
-    label: 'After Current Trip',
-    description: 'Let them finish',
   },
 ];
 
@@ -76,7 +72,9 @@ export const SuspendDriverModal = ({
   open,
   setOpen,
   driver,
+  onSuccess,
 }: SuspendDriverModalProps) => {
+  const { suspendDriver } = useDriversApi();
   if (!driver) return null;
 
   const nameParts = driver.name.split(' ');
@@ -106,12 +104,19 @@ export const SuspendDriverModal = ({
         }}
         validationSchema={validationSchema}
         enableReinitialize
-        onSubmit={(values) => {
-          console.log('Suspend driver:', driver.id, values);
-          setOpen(false);
+        onSubmit={async (values, { setSubmitting }) => {
+          const reason = values.notes.trim()
+            ? `${values.reason}: ${values.notes.trim()}`
+            : values.reason;
+          const ok = await suspendDriver({ driverId: driver.id, reason });
+          setSubmitting(false);
+          if (ok) {
+            setOpen(false);
+            onSuccess?.();
+          }
         }}
       >
-        {({ values, setFieldValue, isValid, dirty }) => (
+        {({ values, setFieldValue, isValid, dirty, isSubmitting }) => (
           <Form>
             <Stack>
               {/* ── Header ──────────────────────────────────────────── */}
@@ -446,7 +451,7 @@ export const SuspendDriverModal = ({
                 </Box>
                 <AppButton
                   type="submit"
-                  disabled={!values.reason}
+                  disabled={!values.reason || isSubmitting}
                   sx={{
                     flex: 1,
                     height: '41px',

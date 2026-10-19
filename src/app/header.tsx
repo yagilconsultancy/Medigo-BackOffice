@@ -1,5 +1,3 @@
-import Script from 'next/script';
-
 export const Header = () => {
   return (
     <head>
@@ -7,18 +5,6 @@ export const Header = () => {
       <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
       <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" /> */}
       <link rel="icon" href="/favicon.svg" sizes="any" />
-      <Script
-        src="https://cdn.3guideai.com/sdk/guideai.js"
-        data-site-id="5922b17f-d24e-4a74-aa89-a33832c22247"
-        data-token="pk_live_QGIfFSNUNTJPbXJWYTUkAOZueAb-ZSnbv00bY6rkylw"
-        data-track-all="true"
-        data-behavioral-triggers="true"
-        data-bubble-label="Explore MediGo"
-        data-bubble-mode="hybrid"
-        data-theme-primary="#2F6FED"
-        data-bubble-text-color="#3B82F680"
-        data-theme-font="Inter, sans-serif"
-      ></Script>
     </head>
   );
 };

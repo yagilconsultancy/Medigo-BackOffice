@@ -1514,6 +1514,9 @@ export const ServiceProviderPage = () => {
         open={suspendModalOpen}
         setOpen={setSuspendModalOpen}
         driver={suspendDriver}
+        onSuccess={() => {
+          refetchDrivers();
+        }}
       />
 
       {/* Add Caregiver Drawer */}
