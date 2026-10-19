@@ -23,7 +23,7 @@ export const CustomTablePaginationActions = ({
   const totalPages = Math.ceil(count / rowsPerPage);
 
   // Calculate visible range
-  const start = page * rowsPerPage + 1;
+  const start = count === 0 ? 0 : page * rowsPerPage + 1;
   const end = Math.min((page + 1) * rowsPerPage, count);
 
   const getPageNumbers = () => {
@@ -70,7 +70,7 @@ export const CustomTablePaginationActions = ({
           color: 'text.secondary',
         }}
       >
-        Showing {start}–{end} of {count} vehicles
+        Showing {start}–{end} of {count} {count === 1 ? 'result' : 'results'}
       </Typography>
 
       <RowStack>
