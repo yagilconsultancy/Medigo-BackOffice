@@ -40,6 +40,11 @@ import {
   useResolvedApiQuery,
 } from '../../../common';
 import { LogStatCard, LogEntryRow } from './ui/components';
+import {
+  describeActivity,
+  describeCategory,
+  describeTitle,
+} from './describeActivity';
 
 // ─── Category Style Map ──────────────────────────────────────────────────────
 
@@ -401,19 +406,26 @@ export const ActivityLogsPage = () => {
               </Stack>
             ) : (
               logItems.map((item) => {
-                const style = getCategoryStyle(item.category);
+                const category = describeCategory(
+                  item.category,
+                  item.action_description
+                );
+                const style = getCategoryStyle(category);
                 return (
                   <LogEntryRow
                     key={item.id}
                     id={item.id}
-                    action={item.action_title}
-                    category={item.category}
+                    action={describeTitle(
+                      item.action_title,
+                      item.action_description
+                    )}
+                    category={category}
                     categoryBg={style.bg}
                     categoryColor={style.color}
                     description={
                       item.admin_name
-                        ? `${item.admin_name} · ${item.action_description}`
-                        : item.action_description
+                        ? `${item.admin_name} · ${describeActivity(item.action_description)}`
+                        : describeActivity(item.action_description)
                     }
                     date={dayjs(item.created_at).format(
                       'MMM D, YYYY · hh:mm A'
